@@ -2543,7 +2543,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::puzzle3d::PUZZLE3D_DIALECT)
             .document(["semio", "puzzle", "3d"])
             .artifact_kind(crate::artifacts::puzzle3d::artifact_kind())
-            .artifact_kind(crate::artifacts::puzzle3d::kit_catalog_artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])

@@ -361,14 +361,6 @@ pub fn create_draw_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🔗️StandaloneLinkage
-/// 🪶️ Satisfies the plugin runtime when this app is linked as its own WASM module.
-#[cfg(target_arch = "wasm32")]
-#[unsafe(no_mangle)]
-#[linkage = "weak"]
-pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
-//#endregion 🔗️StandaloneLinkage
-
 //#region 🔖️WasmBridge
 /// 🌉️ Generic `ArtifactStore` aliases used only by the WASM bridge below.
 pub type DrawEnvelope = store::ArtifactEnvelope<DrawSnapshot, DrawMutation>;

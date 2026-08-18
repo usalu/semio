@@ -163,7 +163,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]
 semio_framework_plugin::extension_exports!(bundle);
 //#endregion 🔖️Bundle
 

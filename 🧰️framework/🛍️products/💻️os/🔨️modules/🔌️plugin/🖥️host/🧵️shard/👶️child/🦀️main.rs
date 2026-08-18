@@ -24,10 +24,11 @@ use semio_framework_plugin_host::{GuestRuntime, PackageHash, PackageId, PackageR
 use std::sync::Arc;
 use std::time::Duration;
 
-/// ⛽️ Generous fixed budget for this packet's own kill/rebuild proof — a real per-turn `Budget`
-/// only a live `Kernel`/scheduler can hand down per envelope (out of scope here, same gap
-/// `🧵️shard/🦀️component.rs`'s own `JOB_STEP_BUDGET` constant already documents for job steps).
-const SHARD_CHILD_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
+/// ⛽️ Generous fixed budget for `GuestRuntime::instantiate`'s ONE-TIME initial fuel/deadline
+/// setting — unrelated to per-turn scheduling (terra-shard-grants: per-turn budgets now travel in
+/// `ShardFrame::Grant`, sent by whichever caller drives this process's stdin; this binary does not
+/// itself compute or need one for `instantiate`, which only runs once at startup).
+const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -54,7 +55,7 @@ fn main() {
         eprintln!("[semio-shard] compile failed: {error}");
         std::process::exit(1);
     });
-    let instance = runtime.instantiate(&compiled, ActorId(actor_id), &[], &SHARD_CHILD_BUDGET).unwrap_or_else(|error| {
+    let instance = runtime.instantiate(&compiled, ActorId(actor_id), &[], &INSTANTIATE_BUDGET).unwrap_or_else(|error| {
         eprintln!("[semio-shard] instantiate failed: {error}");
         std::process::exit(1);
     });
@@ -67,9 +68,14 @@ fn main() {
     // 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc
     // comment) — this loop is the thing that keeps calling it, exactly the role a thread shard's
     // OS-thread loop plays for a `ThreadTransport`-backed `ShardLoop` (not built in this repo yet,
-    // see the P1 report's `## gaps`; this binary is that loop's process-shard sibling).
+    // see the P1 report's `## gaps`; this binary is that loop's process-shard sibling). Per-turn
+    // budgets now arrive via `ShardFrame::Grant` on the wire (terra-shard-grants) — until a real
+    // caller sends one, envelopes for this actor run under `lane_defaults::budget_for(Lane::
+    // Maintenance)` (`ShardLoop::granted_budget`'s own documented fallback), a behavior change
+    // from the previous hardcoded 200M-fuel constant, and an honest one: this binary never
+    // computed a real per-turn budget itself either.
     loop {
-        if let Err(error) = shard.pump(|_actor| SHARD_CHILD_BUDGET) {
+        if let Err(error) = shard.pump() {
             eprintln!("[semio-shard] pump error: {error}");
         }
         std::thread::sleep(Duration::from_millis(5));

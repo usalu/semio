@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-server"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Authoritative application server product: CQRS command/query contracts, the actor turn protocol, policy vocabulary and the server-instance framework that hub and zentrale compose. Speaks the replication contract; never depends on the os product."
+
+[package.metadata.semio]
+role = "product"
+id = "server"
+
+[lints]
+workspace = true
+
+[lib]
+name = "server"
+path = "📦️glue.rs"
+
+[dependencies]
+semio-framework-replication = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

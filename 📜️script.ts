@@ -1021,6 +1021,16 @@ export class VerifyScript extends Script {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
+    // 🌐️ Cross-target compile coverage — the ONLY thing in this repo that compiles
+    // `#[cfg(target_arch = "wasm32")]` code. Native `cargo check`/`cargo test` skip those blocks
+    // entirely, so a signature change can leave the wasm bindings broken behind a fully green
+    // native build AND a green test suite; that is exactly how `🎭️actor`'s `📦️glue.rs` sat with an
+    // E0308 until MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME's Z1 ran clippy against the real triple.
+    // Scoped to the actor kernel because it is small, fast, purity-critical, and the one crate whose
+    // wasm glue every renderer depends on — the fleet-wide wasip2/native sweeps stay opt-in via
+    // `verify rust-warnings --target <triple>`, which is far too slow for a pre-close gate.
+    console.log("[verify] actor kernel wasm32 bindings…");
+    this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
     console.log("[verify] gate passed.");
   }
 

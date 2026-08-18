@@ -27,4 +27,9 @@ component-guest = []
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-wit-bindgen = { version = "0.36.0", features = ["macros"] }
+# 🧬️ Must track the guest SDK's pin (`🔌️plugin/📦️packages/🦀️rust`), which moved to 0.57.1 when the
+# schema gained WASI-0.3 `async func`/`stream<T>` syntax: this fixture has its OWN `generate!` over
+# the SAME `🧬️schema` package, so 0.36.0's wit-parser rejected the whole package and the fixture wasm
+# — and therefore the scale bench — could not build at all. Any crate with an independent `generate!`
+# against that schema has to move in lockstep; there is no per-world parsing.
+wit-bindgen = { version = "0.57.1", features = ["macros"] }

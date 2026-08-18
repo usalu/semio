@@ -11,7 +11,6 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-#![cfg_attr(target_arch = "wasm32", feature(linkage))]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
@@ -28,10 +27,6 @@ extern crate semio_framework_schema as schema;
 // limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
 // at all (the dependency is always-on), so rustc flags the value as unrecognized. Harmless, but a
 // hard error under `-D warnings` without this crate-wide allow.
-// 🪶️ Needed by `editor::draw::semio_plugin_bundle_installer_link_shim`'s `#[linkage = "weak"]` —
-// satisfies the plugin runtime when this app is linked as its own standalone WASM module. Gated to
-// wasm32 only: the attribute using it is itself `#[cfg(target_arch = "wasm32")]`, and an unused
-// nightly feature is a hard error under this crate's `-D warnings` gate on native targets.
 
 //#region 🗿️Artifacts
 #[path = "."]

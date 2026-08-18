@@ -1,0 +1,175 @@
+{
+  "renderer": "native",
+  "pluginCount": 50,
+  "extensionsPerPlugin": 50,
+  "shardCount": 4,
+  "seed": 1,
+  "generatedAt": "2026-08-18T21:39:44.239Z",
+  "budgets": [
+    {
+      "id": 1,
+      "description": "Registry: 2550 records parsed, instantiations == 0, < 150ms",
+      "status": "pass",
+      "measured": {
+        "elapsedMs": 3.875957999999997,
+        "recordCount": 2550,
+        "instantiations": 0
+      },
+      "threshold": {
+        "maxMs": 150,
+        "instantiations": 0
+      },
+      "note": "measured by this dev script directly (bun readFileSync + JSON.parse) — no wasm/kernel touched"
+    },
+    {
+      "description": "cold boot to first interactive frame, only on-startup-finished actors live",
+      "id": 2,
+      "measured": {
+        "activeActorsAfterBoot": 143,
+        "elapsedMs": 1413,
+        "faultCount": 0,
+        "faults": [],
+        "startupActorCount": 143
+      },
+      "note": "measured from process entry (before engine build/wasm compile) to the last on-startup-finished actor's InstanceOpen turn completing",
+      "status": "pass",
+      "threshold": {
+        "nativeMs": 1500
+      }
+    },
+    {
+      "description": "activate 50 plugins + 50 extensions of one plugin",
+      "id": 3,
+      "measured": {
+        "activatedCount": 100,
+        "activeActors": 100,
+        "faultCount": 0,
+        "maxShardLoad": 25,
+        "perShardCounts": {
+          "0": 25,
+          "1": 25,
+          "2": 25,
+          "3": 25
+        },
+        "shardCeiling": 26,
+        "shardsConfigured": 4,
+        "shardsReported": 4
+      },
+      "note": "shard assignment measured via the real Kernel::activate/ShardTable pin — single physical ShardLoop backs all K shard labels for execution",
+      "status": "pass",
+      "threshold": {
+        "activeActors": 100,
+        "maxShardLoadCeiling": "ceil(100/K)+1",
+        "shards": 4
+      }
+    },
+    {
+      "description": "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)",
+      "id": 4,
+      "measured": {
+        "activatedCount": 2550,
+        "activeActors": 2550,
+        "faultCount": 0,
+        "rssBytes": 414482432
+      },
+      "note": "RSS sampled once via `ps -o rss= -p <pid>` immediately after all 2550 records were instantiated and given their InstanceOpen turn",
+      "status": "pass",
+      "threshold": {
+        "maxBytes": 2415919104
+      }
+    },
+    {
+      "description": "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background",
+      "id": 5,
+      "measured": {
+        "p95Ms": 241.247291,
+        "roundFaults": 0,
+        "rounds": 30,
+        "samplesMs": [
+          149.351708,
+          149.482792,
+          149.87208299999998,
+          150.04245799999998,
+          150.064166,
+          150.383083,
+          150.612917,
+          150.697791,
+          151.073709,
+          151.239,
+          152.14604200000002,
+          152.45804199999998,
+          154.980584,
+          156.206333,
+          156.455,
+          159.155542,
+          170.688708,
+          175.061,
+          175.68145800000002,
+          176.345958,
+          177.117167,
+          181.333541,
+          193.889959,
+          198.109083,
+          205.1475,
+          207.064458,
+          210.470167,
+          213.94433400000003,
+          241.247291,
+          251.50145899999998
+        ]
+      },
+      "note": "single physical ShardLoop / single thread: the 40 cpu-actor turns and the interactive actor's turn are drained by the SAME pump() call each round, so this measures full-round serialized cost, not K-way parallel background threads",
+      "status": "fail",
+      "threshold": {
+        "nativeMs": 8
+      }
+    },
+    {
+      "description": "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms",
+      "id": 6,
+      "measured": {
+        "declaredDeadlineMs": 18,
+        "faultMessage": "guest trapped: error while executing at wasm backtrace:\n    0:   0x4513 - semio_framework_os_scale_fixture.wasm!semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::profile::spin_once\n    1:  0x1525d - semio_framework_os_scale_fixture.wasm!semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::profile::turn_hang::<semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::now_ms>\n    2:  0x14f4a - semio_framework_os_scale_fixture.wasm!semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::profile::turn::<semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::now_ms>\n    3:  0x132ae - semio_framework_os_scale_fixture.wasm!<semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::FixtureGuest as semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::exports::semio::framework::reactor::Guest>::poll\n    4:  0x1b125 - semio_framework_os_scale_fixture.wasm!semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::exports::semio::framework::reactor::_export_poll_cabi::<semio_framework_os_scale_fixture[9e3fcf98c671b8c5]::scale::component::guest::FixtureGuest>\n    5:  0x1388c - semio_framework_os_scale_fixture.wasm!semio:framework/reactor@1.0.0#poll",
+        "killed": true,
+        "killedOnInstanceOpenTurn": true,
+        "siblingCount": 3,
+        "siblingsRestored": true,
+        "totalPauseMs": 59
+      },
+      "note": "\"shard rebuilt\" is approximated as unregister+drop of the faulted GuestInstance on the same physical ShardLoop, then a successful next turn for its siblings — no separate OS thread is torn down/recreated in this single-shard-loop harness. Pause is measured from activation, since the hang overrun typically fires on the InstanceOpen turn itself (see note above), not a dedicated follow-up turn.",
+      "status": "pass",
+      "threshold": {
+        "killWithinMs": 36,
+        "totalPauseMs": 250
+      }
+    },
+    {
+      "description": "stateful actor LRU-suspended and resumed -> identical state hash",
+      "id": 7,
+      "measured": {
+        "checkpointHash": "395f1136ebe7d123d61138f57b13d3a5893cc7fda4dd22743bfafda435ca2e2c",
+        "identical": true,
+        "resumed": true,
+        "resumedCheckpointHash": "395f1136ebe7d123d61138f57b13d3a5893cc7fda4dd22743bfafda435ca2e2c"
+      },
+      "note": "measured through the REAL production dispatch path (K1, unblocked mid-session): ShardLoop::pump's Payload::Suspend/Resume -> GuestRuntime::checkpoint/restore -> ShardOutcome::Checkpoint/Resumed. The LRU-eviction TRIGGER (the policy deciding WHEN to suspend) is still not exercised here — this proves the suspend/resume/checkpoint wire path end-to-end, which is exactly what was blocked before K1 landed.",
+      "status": "pass",
+      "threshold": "Resumed outcome received and identical checkpoint bytes before suspend vs. after resume+re-checkpoint"
+    },
+    {
+      "description": "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero",
+      "id": 8,
+      "measured": {
+        "capabilityId": "scale-fixture-plugin-0000-ext-0015.io",
+        "capabilityRequested": true,
+        "requestedOnInstanceOpenTurn": true,
+        "statusAfterRevoke": "Idle",
+        "survivedFollowupTurn": true,
+        "survivedRevokeTurn": true
+      },
+      "note": "\"quota counters zero\" is read here as \"no TurnFault (fuel/deadline/trap) recorded across the revoke turn\": Kernel::complete() (the only path that updates Kernel-level ActorMetrics/ActorStatus) is never called by this harness — same documented gap as the production kernel_runtime module above — so the kernel's own quota counters cannot be read from here.",
+      "status": "pass",
+      "threshold": "no trap across or after the revoke turn"
+    }
+  ]
+}

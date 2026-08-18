@@ -507,9 +507,20 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 
-/// 🔌️ The `kit.catalog` artifact kind puzzle3d's `kit:in` port consumes — declared here too (harmless
-/// if a producer, e.g. block3d, declares an identical spec) so puzzle3d's own OS artifact catalog
-/// knows this kind exists even before any producer is wired up.
+/// 🔌️ The `kit.catalog` artifact kind puzzle3d's `kit:in` port CONSUMES — kept as a spec puzzle can
+/// read, but no longer registered as a declaration.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar, 2026-08-18): the old doc here called the
+/// duplicate declaration "harmless if a producer, e.g. block3d, declares an identical spec". It was
+/// not harmless — it was the last thing blocking `🎪️demonstrator`, which bundles six plugins and
+/// therefore registered `kit.catalog` twice, and the definition registry correctly rejected it.
+/// An artifact kind is a SCHEMA: N declarations are N sources of truth for one contract, and the
+/// first divergence between them would be undetectable. Ownership resolved to `🧱️block`, the only
+/// plugin that actually PRODUCES the kind (`catalog:out`, `KIT_CATALOG_ARTIFACT_ID` across its 3d
+/// and 5d artifact trees); `🧩️puzzle` and `🪵️sourcing` are consumers and reference it by `kind_id`
+/// on their ports, which is all a consumer ever needed. `🗄️stdio`'s own docstrings describe
+/// absorbing this kind into the shared vocabulary later — that move stays open and is not
+/// pre-empted here.
 pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "kit.catalog".into(),
@@ -559,7 +570,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.puzzle3d.grammar.3", "grammar", "puzzle.puzzle3d.diff", &[("grammar", "puzzle.puzzle3d.diff")], None),
         ("s.puzzle3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
         ("s.puzzle3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
-        ("s.puzzle3d.codec.document-1", "codec", "puzzle.3d.fixture:puzzle3d", &[("codec", "puzzle.3d.fixture"), ("extension", "puzzle3d")], None),
+        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle3dPlayApp>>()` derives
+        // its extension claim from `<Puzzle3dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
+        // (`…/🧬️mutations/🦀️component.rs`, the editor's real `Snapshot` type), which is
+        // `"puzzle3d-play"`, not the base `Puzzle3dSnapshot`'s `"puzzle3d"`.
+        ("s.puzzle3d.codec.document-1", "codec", "puzzle.3d.fixture:puzzle3d-play", &[("codec", "puzzle.3d.fixture"), ("extension", "puzzle3d-play")], None),
         ("s.puzzle3d.localization.en", "localization", "3D Puzzle", &[], Some(("en", "3D Puzzle"))),
         ("s.puzzle3d.localization.de", "localization", "3D-Puzzle", &[], Some(("de", "3D-Puzzle"))),
     ];

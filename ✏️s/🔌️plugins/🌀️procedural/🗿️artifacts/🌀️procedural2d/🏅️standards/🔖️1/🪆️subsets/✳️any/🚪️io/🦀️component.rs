@@ -1,7 +1,9 @@
 //! 🚪️ IO s.procedural2d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"] }
+// 🖊️ No "stdio.dwg" here (export-only list): procedural3d owns the EXPORT claim, see `🚪️IoRegistry`
+// region below. Import is unaffected — "stdio.dwg" stays in `import_stdio_kinds` above.
+pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
@@ -182,12 +184,10 @@ pub mod io_registry {
         let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
         Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
-    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
+    // 🖊️ No `compose_export_dwg`/`EXPORT_DWG_DIALECT` here: procedural3d owns the `s.stdio.dwg@ac1018/*`
+    // EXPORT claim (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — see `../../🦀️component.rs`'s
+    // `definition()` docstring for the ownership rule). `derived_composition`'s `reads()` above still
+    // lists `DEP_DWG`, so import is unaffected.
     const EXPORT_DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
     fn compose_export_dxf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let snapshot = rebuild_native_snapshot(sources)?;
@@ -204,7 +204,6 @@ pub mod io_registry {
             ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[PROCEDURAL2D_DIALECT], compose: compose_export_pdf },
             ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PROCEDURAL2D_DIALECT], compose: compose_export_png },
             ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROCEDURAL2D_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PROCEDURAL2D_DIALECT], compose: compose_export_dwg },
             ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[PROCEDURAL2D_DIALECT], compose: compose_export_dxf },
         ]).as_slice()
     }

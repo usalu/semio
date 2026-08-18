@@ -1,0 +1,1158 @@
+   Compiling serde_json v1.0.149
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling wasm-bindgen-shared v0.2.126
+   Compiling rustversion v1.0.22
+   Compiling bumpalo v3.20.2
+   Compiling wasm-bindgen-test-macro v0.3.76
+    Checking oorandom v11.1.5
+    Checking cast v0.3.0
+    Checking wasm-bindgen-test-shared v0.2.126
+    Checking nu-ansi-term v0.50.3
+   Compiling wasm-bindgen v0.2.126
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking typst-timing v0.14.2
+    Checking syntect v5.3.0
+    Checking gltf-json v1.4.1
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+    Checking referencing v0.29.1
+    Checking schemars v0.8.22
+    Checking wit-parser v0.252.0
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1137:12
+     |
+1137 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1163:12
+     |
+1163 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1182:12
+     |
+1182 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1197:12
+     |
+1197 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1206:12
+     |
+1206 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1216:12
+     |
+1216 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1238:12
+     |
+1238 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1248:12
+     |
+1248 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1261:12
+     |
+1261 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1271:12
+     |
+1271 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1284:12
+     |
+1284 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1297:12
+     |
+1297 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1359:12
+     |
+1359 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1370:12
+     |
+1370 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1475:12
+     |
+1475 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1517:12
+     |
+1517 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1574:12
+     |
+1574 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1584:12
+     |
+1584 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1254:16
+     |
+1254 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1290:16
+     |
+1290 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+    Checking fxprof-processed-profile v0.8.1
+   Compiling wasm-bindgen-macro-support v0.2.126
+warning: `semio-framework-replication` (lib) generated 20 warnings
+    Checking semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12372:6
+      |
+12372 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+12372 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+12372 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:42
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:97
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12374:64
+      |
+12374 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12374 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+12374 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12375:9
+      |
+12375 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12375 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+12375 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:49
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:101
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12378:21
+      |
+12378 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12378 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+12378 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12379:55
+      |
+12379 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12379 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+12379 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+    Checking typst-syntax v0.14.2
+    Checking two-face v0.4.5
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking jsonschema v0.29.1
+    Checking semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+    Checking semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+    Checking gltf v1.4.1
+    Checking wasmtime v47.0.3
+   Compiling wasm-bindgen-macro v0.2.126
+    Checking typst-library v0.14.2
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+    Checking js-sys v0.3.103
+    Checking typst-svg v0.14.2
+    Checking typst-layout v0.14.2
+    Checking typst-realize v0.14.2
+    Checking typst-eval v0.14.2
+    Checking wasmtime-wasi v47.0.3
+    Checking wasm-bindgen-futures v0.4.76
+    Checking typst-html v0.14.2
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+    Checking wasm-bindgen-test v0.3.76
+    Checking typst v0.14.2
+    Checking semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+    Checking semio-framework-surface v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust)
+    Checking semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust)
+warning: unused imports: `DagLayoutOptions` and `dag_take_pending_open_instance_id`
+  --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🕸️node-graph/🦀️component.rs:24:32
+   |
+24 | ...world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNod...
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                 ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-surface` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-surface` to apply 1 suggestion)
+    Checking semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+    Checking semio-framework-os-flow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust)
+    Checking semio-s-plugin-puzzle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+    Checking semio-framework-os-renderer-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu)
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1679:20
+     |
+1679 |             label: LocalizedLabel::data("Test"),
+     |                    ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1683:94
+     |
+1683 | ...tion { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, ...
+     |                                        ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1690:32
+     |
+1690 |                         label: LocalizedLabel::data(*id),
+     |                                ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1707:97
+     |
+1707 | ...lTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()...
+     |                                        ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2262:54
+     |
+2262 | ...   vec![UtilityDefinition::new("utility.a", LocalizedLabel::data("Utility A"), "circle"), UtilityDefinition { allows_actions_wh...
+     |                                                ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2262:193
+     |
+2262 | ...UtilityDefinition::new("utility.b", LocalizedLabel::data("Utility B"), "square") }];
+     |                                        ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2264:54
+     |
+2264 |             ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
+     |                                                      ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2266:55
+     |
+2266 | ...   args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework...
+     |                                             ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2266:240
+     |
+2266 | ...")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
+     |                                        ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `LocalizedLabel` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2268:61
+     |
+2268 |                 ..ActionDefinition::new_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
+     |                                                             ^^^^^^^^^^^^^^ use of undeclared type `LocalizedLabel`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::LocalizedLabel` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1656 +     use semio_framework_plugin::LocalizedLabel;
+     |
+1656 +     use ui_wgpu::wgpu::LocalizedLabel;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Interpreter/🧊️component.rs:888:23
+    |
+888 |             presence: UiPresence::default(),
+    |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+    |
+    = note: struct `crate::shell::context_menu_keyboard_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+    |
+695 +     use semio_framework_plugin::UiPresence;
+    |
+695 +     use ui_wgpu::wgpu::UiPresence;
+    |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Interpreter/🧊️component.rs:1364:111
+     |
+1364 | ...one, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children,...
+     |                                            ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::shell::context_menu_keyboard_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+1351 +     use semio_framework_plugin::UiPresence;
+     |
+1351 +     use ui_wgpu::wgpu::UiPresence;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1716:38
+     |
+1716 |             terminology_breadcrumbs: std::collections::HashMap::new(),
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1716 -             terminology_breadcrumbs: std::collections::HashMap::new(),
+1716 +             terminology_breadcrumbs: HashMap::new(),
+     |
+
+warning: unused import: `ui_wgpu::wgpu::UiPresence`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5390:9
+     |
+5390 |     use ui_wgpu::wgpu::UiPresence;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5453:25
+     |
+5453 |         let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5453 -         let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+5453 +         let modifiers = PointerModifiers::default();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5460:25
+     |
+5460 |         let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5460 -         let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+5460 +         let modifiers = PointerModifiers { ctrl: true, ..Default::default() };
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5467:25
+     |
+5467 |         let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5467 -         let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+5467 +         let modifiers = PointerModifiers::default();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5487:87
+     |
+5487 |         let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &ui_wgpu::wgpu::PointerModifiers::default());
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5487 -         let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &ui_wgpu::wgpu::PointerModifiers::default());
+5487 +         let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6993:38
+     |
+6993 |             terminology_breadcrumbs: std::collections::HashMap::new(),
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6993 -             terminology_breadcrumbs: std::collections::HashMap::new(),
+6993 +             terminology_breadcrumbs: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7027:131
+     |
+7027 | ...0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7027 -         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+7027 +         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7114:131
+     |
+7114 | ...0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7114 -         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+7114 +         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7131:131
+     |
+7131 | ...0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7131 -         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+7131 +         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7140:131
+     |
+7140 | ...0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7140 -         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+7140 +         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7171:131
+     |
+7171 | ...0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7171 -         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+7171 +         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7207:51
+     |
+7207 |         assert_eq!(args.get("commandId").and_then(semio_framework::DslValue::as_str), Some("os.setLocale"));
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7207 -         assert_eq!(args.get("commandId").and_then(semio_framework::DslValue::as_str), Some("os.setLocale"));
+7207 +         assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("os.setLocale"));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7208:47
+     |
+7208 |         assert_eq!(args.get("label").and_then(semio_framework::DslValue::as_str), Some("Set Locale"));
+     |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7208 -         assert_eq!(args.get("label").and_then(semio_framework::DslValue::as_str), Some("Set Locale"));
+7208 +         assert_eq!(args.get("label").and_then(DslValue::as_str), Some("Set Locale"));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7209:85
+     |
+7209 |         assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(semio_framework::DslValue::as_str), Some("de"));
+     |                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7209 -         assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(semio_framework::DslValue::as_str), Some("de"));
+7209 +         assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(DslValue::as_str), Some("de"));
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:11711:21
+      |
+11711 | ...   let config: serde_json::Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document"...
+      |                   ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11711 -         let config: serde_json::Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
+11711 +         let config: Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12692:50
+      |
+12692 |         assert_eq!(args.get("streamId").and_then(semio_framework::DslValue::as_str), Some("s1"));
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12692 -         assert_eq!(args.get("streamId").and_then(semio_framework::DslValue::as_str), Some("s1"));
+12692 +         assert_eq!(args.get("streamId").and_then(DslValue::as_str), Some("s1"));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12693:46
+      |
+12693 |         assert_eq!(args.get("name").and_then(semio_framework::DslValue::as_str), Some("clip.mp4"));
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12693 -         assert_eq!(args.get("name").and_then(semio_framework::DslValue::as_str), Some("clip.mp4"));
+12693 +         assert_eq!(args.get("name").and_then(DslValue::as_str), Some("clip.mp4"));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12694:46
+      |
+12694 | ...   assert!(args.get("payload").and_then(semio_framework::DslValue::as_str).is_some_and(|payload| payload.starts_with("data:app...
+      |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12694 -         assert!(args.get("payload").and_then(semio_framework::DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
+12694 +         assert!(args.get("payload").and_then(DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12709:92
+      |
+12709 | ...   assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework::DslValue::as_str), Some...
+      |                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12709 -         assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework::DslValue::as_str), Some("s1"));
+12709 +         assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(DslValue::as_str), Some("s1"));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12749:24
+      |
+12749 |         let mut draw = ui_wgpu::wgpu::DrawList::default();
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12749 -         let mut draw = ui_wgpu::wgpu::DrawList::default();
+12749 +         let mut draw = DrawList::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12750:25
+      |
+12750 |         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12750 -         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+12750 +         let mut atlas = FontAtlas::builtin();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12751:21
+      |
+12751 |         let icons = ui_wgpu::wgpu::IconAtlas::default();
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12751 -         let icons = ui_wgpu::wgpu::IconAtlas::default();
+12751 +         let icons = IconAtlas::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12752:25
+      |
+12752 |         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12752 -         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+12752 +         let mut input = InputState::<ActionDescriptor>::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12766:24
+      |
+12766 |         let mut draw = ui_wgpu::wgpu::DrawList::default();
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12766 -         let mut draw = ui_wgpu::wgpu::DrawList::default();
+12766 +         let mut draw = DrawList::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12767:25
+      |
+12767 |         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12767 -         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+12767 +         let mut atlas = FontAtlas::builtin();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12768:21
+      |
+12768 |         let icons = ui_wgpu::wgpu::IconAtlas::default();
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12768 -         let icons = ui_wgpu::wgpu::IconAtlas::default();
+12768 +         let icons = IconAtlas::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12770:25
+      |
+12770 |         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12770 -         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+12770 +         let mut input = InputState::<ActionDescriptor>::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12777:26
+      |
+12777 |         let mut input2 = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12777 -         let mut input2 = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+12777 +         let mut input2 = InputState::<ActionDescriptor>::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12790:24
+      |
+12790 |         let mut draw = ui_wgpu::wgpu::DrawList::default();
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12790 -         let mut draw = ui_wgpu::wgpu::DrawList::default();
+12790 +         let mut draw = DrawList::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12791:25
+      |
+12791 |         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12791 -         let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+12791 +         let mut atlas = FontAtlas::builtin();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12792:21
+      |
+12792 |         let icons = ui_wgpu::wgpu::IconAtlas::default();
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12792 -         let icons = ui_wgpu::wgpu::IconAtlas::default();
+12792 +         let icons = IconAtlas::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12793:25
+      |
+12793 |         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12793 -         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+12793 +         let mut input = InputState::<ActionDescriptor>::default();
+      |
+
+warning: unused variable: `stroke`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1256:9
+     |
+1256 |     let stroke = theme.stroke_hairline;
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_stroke`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `border`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1259:9
+     |
+1259 |     let border = if globally_active {
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_border`
+
+warning: unused variable: `maximized`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1634:17
+     |
+1634 |             let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
+     |                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_maximized`
+
+warning: unused variable: `input`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:2388:46
+     |
+2388 |     fn publish_presence_heartbeat(&mut self, input: &InputState<ActionDescriptor>) {
+     |                                              ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+error[E0560]: struct `store_sync::PresencePeer` has no field named `cursor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:555:175
+    |
+555 | ...None, role: Some("author".into()), cursor: None, viewport: None, drag_ghost_json: None, interaction: None };
+    |                                       ^^^^^^ `store_sync::PresencePeer` does not have this field
+    |
+    = note: available fields are: `color`, `surface`, `views`, `ui`
+
+error[E0560]: struct `store_sync::PresencePeer` has no field named `viewport`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:555:189
+    |
+555 | ...e("author".into()), cursor: None, viewport: None, drag_ghost_json: None, interaction: None };
+    |                                      ^^^^^^^^ `store_sync::PresencePeer` does not have this field
+    |
+    = note: available fields are: `color`, `surface`, `views`, `ui`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5531:109
+     |
+5531 | ...crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
+     |                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5423:69
+     |
+5423 |         let node = crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() };
+     |                                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5423:81
+     |
+5423 |         let node = crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() };
+     |                                                                                 ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5423:93
+     |
+5423 |         let node = crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() };
+     |                                                                                             ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5531:121
+     |
+5531 | ...:DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
+     |                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5531:133
+     |
+5531 | ...tack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
+     |                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5429:72
+     |
+5429 |         let left = crate::dock::DockNode::Stack { windows: vec!["left".into()], active: "left".into() };
+     |                                                                        ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5430:76
+     |
+5430 |         let right_top = crate::dock::DockNode::Stack { windows: vec!["top".into()], active: "top".into() };
+     |                                                                            ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5431:82
+     |
+5431 |         let right_bottom = crate::dock::DockNode::Stack { windows: vec!["bottom".into()], active: "bottom".into() };
+     |                                                                                  ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5439:66
+     |
+5439 |         let a = crate::dock::DockNode::Stack { windows: vec!["a".into()], active: "a".into() };
+     |                                                                  ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: the trait bound `dock::DockStackTab: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5440:66
+     |
+5440 |         let b = crate::dock::DockNode::Stack { windows: vec!["b".into()], active: "b".into() };
+     |                                                                  ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `dock::DockStackTab`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:24:1
+     |
+  24 | pub struct DockStackTab {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<dock::DockStackTab>`
+
+error[E0277]: can't compare `dock::DockStackTab` with `std::string::String`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2192:13
+     |
+2192 |             assert_eq!(windows, &vec!["b".to_string()]);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no implementation for `dock::DockStackTab == std::string::String`
+     |
+help: the trait `PartialEq<std::string::String>` is not implemented for `dock::DockStackTab`
+      but trait `PartialEq<dock::DockStackTab>` is implemented for it
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:23:24
+     |
+  23 | #[derive(Clone, Debug, PartialEq)]
+     |                        ^^^^^^^^^
+     = help: for that trait implementation, expected `dock::DockStackTab`, found `std::string::String`
+     = note: required for `Vec<dock::DockStackTab>` to implement `PartialEq<Vec<std::string::String>>`
+     = note: 1 redundant requirement hidden
+     = note: required for `&Vec<dock::DockStackTab>` to implement `PartialEq<&Vec<std::string::String>>`
+
+warning: field `corner` is never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1524:5
+     |
+1523 | struct StackCapGroupLayout {
+     |        ------------------- field in this struct
+1524 |     corner: WindowStackCorner,
+     |     ^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-renderer-wgpu` (lib) generated 5 warnings (run `cargo fix --lib -p semio-framework-os-renderer-wgpu` to apply 4 suggestions)
+Some errors have detailed explanations: E0277, E0433, E0560.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-framework-os-renderer-wgpu` (lib test) generated 37 warnings (4 duplicates)
+error: could not compile `semio-framework-os-renderer-wgpu` (lib test) due to 26 previous errors; 37 warnings emitted

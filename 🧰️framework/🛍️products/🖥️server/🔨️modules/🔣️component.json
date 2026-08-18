@@ -1,0 +1,16 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🧬️contract",
+        "id": "framework.product.server.module.contract",
+        "kind": "module",
+        "responsibility": "Defines the command/query envelopes, outcomes, offline policies, actor keys, lane records and instance manifests every party agrees on without sharing a runtime.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "hub"]
+        }
+      }
+    ]
+  }
+}

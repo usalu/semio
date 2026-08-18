@@ -279,6 +279,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.playbook.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.playbook.schema.artifact", "schema", "s.playbook.playbook", &[("schema", "s.playbook.playbook")], None),
         ("s.playbook.inference.artifact", "inference", "s.playbook.playbook.inference", &[("schema", "s.playbook.playbook.inference")], None),
+        // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers SIX composer rows, not
+        // five — the five below plus `composer_entry_of::<PlaybookAnyComposer>()` (`🚪️io/🦀️component.rs`),
+        // whose `writes` is this artifact's own native dialect (`PLAYBOOK_DIALECT`, `s.playbook@1/*`),
+        // the same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
+        ("s.playbook.composer.playbook", "composer", "s.playbook@1/*", &[("dialect", "s.playbook@1/*")], None),
         ("s.playbook.composer.txt", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
         ("s.playbook.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
         ("s.playbook.composer.docx", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),

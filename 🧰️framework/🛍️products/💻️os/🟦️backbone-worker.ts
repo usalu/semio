@@ -6,8 +6,10 @@
  */
 // #endregion Header
 
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactPresencePeer, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
-import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
+import type { ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️component";
+import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
+import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue } from "./🟦️component";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
@@ -1242,165 +1244,6 @@ if (import.meta.vitest) {
       expect(state.sessionColor).toBe(3);
     });
 
-    // 🎬️ Shared fixtures: the exact same bytes `store/sync/rs/lib.rs`'s
-    // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side
-    // (19 fixtures, one per `ClientFrame`/`ServerFrame` variant plus a `Bootstrap`/`ApplyOutcome`
-    // sub-variant each — see that test's doc). Decoding them here, then re-encoding the decoded
-    // value and diffing against the original bytes, proves the TS codec agrees with
-    // `protocol_wire`'s Rust codec byte-for-byte, not just shape-wise. `diff.payload`/
-    // `inverse.payload` are opaque `DemoOperation::encode_op()` bytes (W5) — this test only checks
-    // they're non-empty and format-tagged (`op_rt::OP_BINARY_FORMAT = 1`), not their semantic
-    // content (decoding a real op needs `DslVariants`, which this TS-only fallback has no twin of).
-    it("decodes the Rust-generated binary wire fixtures byte-identically", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { fileURLToPath } = await import("node:url");
-      const { dirname, join } = await import("node:path");
-      // 📦️ Written by `wire_fixtures_stay_byte_identical_across_rust_and_ts` in
-      // `🔨️modules/🏪️store/🔄️sync/🦀️component.rs`, which resolves them as `CARGO_MANIFEST_DIR/../fixtures/wire`
-      // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
-      // pre-restructure location that no longer exists, so this cross-language byte-identity check had
-      // been silently ENOENT-ing instead of comparing anything.
-      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/wire");
-
-      function loadClient(name: string) {
-        const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
-        const decoded = decodeClientFrame(bytes);
-        expect(encodeClientFrame(decoded.frame, decoded.lane)).toEqual(bytes);
-        return decoded;
-      }
-      function loadServer(name: string) {
-        const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
-        const decoded = decodeServerFrame(bytes);
-        expect(encodeServerFrame(decoded.frame, decoded.lane)).toEqual(bytes);
-        return decoded;
-      }
-      function assertOpBinaryPayload(payload: readonly number[]) {
-        expect(payload.length).toBeGreaterThan(0);
-        expect(payload[0]).toBe(1); // dsl::op_rt::OP_BINARY_FORMAT
-      }
-
-      const hello = loadClient("📦️client-hello.bin");
-      expect(hello.lane).toBe("command");
-      if (typeof hello.frame === "string" || !("Hello" in hello.frame)) throw new Error("expected a Hello frame");
-      expect(hello.frame.Hello.schema).toBe("demo/v1");
-      expect(hello.frame.Hello.actor).toBe("actor-1");
-
-      const commands = loadClient("📦️client-commands.bin");
-      if (typeof commands.frame === "string" || !("Commands" in commands.frame)) throw new Error("expected a Commands frame");
-      expect(commands.frame.Commands.envelopes).toHaveLength(1);
-      assertOpBinaryPayload(commands.frame.Commands.envelopes[0]?.diff.payload ?? []);
-
-      const frontierAdvertise = loadClient("📦️client-frontier-advertise.bin");
-      if (typeof frontierAdvertise.frame === "string" || !("FrontierAdvertise" in frontierAdvertise.frame)) throw new Error("expected a FrontierAdvertise frame");
-
-      const previewPublish = loadClient("📦️client-preview-publish.bin");
-      if (typeof previewPublish.frame === "string" || !("PreviewPublish" in previewPublish.frame)) throw new Error("expected a PreviewPublish frame");
-      expect(previewPublish.frame.PreviewPublish.key).toBe("cursor");
-
-      const presence = loadClient("📦️client-presence.bin");
-      if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
-      // 👥️ The fixture's `peer` bytes ARE a real `encode_presence_peer` blob now (Rust writes
-      // `sample_presence_peer_with_interaction()`), so this decodes them with the TS twin and checks
-      // the fields survive the crossing — the strongest form of this assertion, and the one the old
-      // `JSON.parse` could never make. It read the blob as JSON and would have failed the moment the
-      // fixture became real; it never did, because the fixture path above pointed at a directory that
-      // no longer existed.
-      // 👥️ A REAL `encode_presence_peer` blob (Rust writes `sample_presence_peer_with_interaction()`,
-      // whose own doc says these fixtures exist "so the TS vitest twin exercises every `PresencePeer`
-      // v3 flag bit (§C7.1) with a realistic payload"). Decoding it here proves the scalar fields,
-      // the bit-5 interaction section, the color/surface/views/ui fields all cross the language
-      // boundary, and re-encoding proves it byte-for-byte.
-      const peer = decodePresencePeer(new Uint8Array(presence.frame.Presence.peer), [0]);
-      expect(peer.actor).toBe("actor-1");
-      expect(peer.label).toBe("Ada");
-      expect(peer.userId).toBe("user-9");
-      expect(peer.role).toBe("owner");
-      expect(peer.connectedAtMs).toBe(1_700_000_000_000);
-      expect(peer.color).toBe(5);
-      expect(peer.surface).toBe("s.space.home@1/*#editor");
-      expect(peer.views).toHaveLength(2);
-      expect(peer.views[0]).toEqual({ windowId: "w1", space: "world", kind: { kind: "orbit", position: [1, 2, 3], target: [0, 0, 0], up: [0, 1, 0], fov: 45 }, size: [1024, 768], pointer: [0.5, 0.5, 0.5] });
-      expect(peer.views[1]).toEqual({ windowId: "w2", space: "canvas", kind: { kind: "canvas", x: 12.5, y: -4, zoom: 1 }, size: [800, 600], pointer: undefined });
-      expect(peer.ui).toEqual({ hoveredPath: "row[2]#t1", focusedPath: undefined, pressedPath: undefined });
-      expect(peer.interaction?.app_id).toBe("space");
-      expect(peer.interaction?.domains).toEqual([
-        { domain: "outline", granularity: "task", selected: ["t1", "t2"], hovered: [] },
-        { domain: "board", granularity: "card", selected: [], hovered: ["c1"] },
-        { domain: "canvas", granularity: "node", selected: ["n9"], hovered: ["n9", "n10"] },
-      ]);
-      expect(encodePresencePeer(peer)).toEqual(Array.from(new Uint8Array(presence.frame.Presence.peer)));
-
-      const creditGrant = loadClient("📦️client-credit-grant.bin");
-      if (typeof creditGrant.frame === "string" || !("CreditGrant" in creditGrant.frame)) throw new Error("expected a CreditGrant frame");
-      expect(creditGrant.frame.CreditGrant.n).toBe(16);
-
-      const bye = loadClient("📦️client-bye.bin");
-      expect(bye.frame).toBe("Bye");
-
-      const welcomeTail = loadServer("📦️server-welcome-tail.bin");
-      if (typeof welcomeTail.frame === "string" || !("Welcome" in welcomeTail.frame)) throw new Error("expected a Welcome frame");
-      expect(welcomeTail.frame.Welcome.resume_token).toBe("resume-1");
-      expect(welcomeTail.frame.Welcome.bootstrap).toBe("Tail");
-
-      const welcomeSnapshot = loadServer("📦️server-welcome-snapshot-inline.bin");
-      if (typeof welcomeSnapshot.frame === "string" || !("Welcome" in welcomeSnapshot.frame)) throw new Error("expected a Welcome frame");
-      if (welcomeSnapshot.frame.Welcome.bootstrap === "None" || welcomeSnapshot.frame.Welcome.bootstrap === "Tail" || !("Snapshot" in welcomeSnapshot.frame.Welcome.bootstrap)) throw new Error("expected a Snapshot bootstrap");
-      expect(welcomeSnapshot.frame.Welcome.bootstrap.Snapshot.inline).toEqual([9, 9, 9]);
-
-      const snapshotChunk = loadServer("📦️server-snapshot-chunk.bin");
-      if (typeof snapshotChunk.frame === "string" || !("SnapshotChunk" in snapshotChunk.frame)) throw new Error("expected a SnapshotChunk frame");
-      expect(snapshotChunk.frame.SnapshotChunk.bytes).toEqual([1, 2, 3, 4]);
-
-      const snapshotDone = loadServer("📦️server-snapshot-done.bin");
-      if (typeof snapshotDone.frame === "string" || !("SnapshotDone" in snapshotDone.frame)) throw new Error("expected a SnapshotDone frame");
-      expect(snapshotDone.frame.SnapshotDone.seq_count).toBe(4);
-
-      const serverCommands = loadServer("📦️server-commands.bin");
-      if (typeof serverCommands.frame === "string" || !("Commands" in serverCommands.frame)) throw new Error("expected a Commands frame");
-      expect(serverCommands.frame.Commands.envelopes).toHaveLength(1);
-
-      const ackAccepted = loadServer("📦️server-ack-accepted.bin");
-      if (typeof ackAccepted.frame === "string" || !("Ack" in ackAccepted.frame)) throw new Error("expected an Ack frame");
-      expect(ackAccepted.frame.Ack.batch_id).toBe(1);
-      expect(ackAccepted.frame.Ack.stages).toHaveLength(3);
-
-      const ackTransformed = loadServer("📦️server-ack-transformed.bin");
-      if (typeof ackTransformed.frame === "string" || !("Ack" in ackTransformed.frame)) throw new Error("expected an Ack frame");
-      expect(ackTransformed.frame.Ack.batch_id).toBe(2);
-
-      const ackRejected = loadServer("📦️server-ack-rejected.bin");
-      if (typeof ackRejected.frame === "string" || !("Ack" in ackRejected.frame)) throw new Error("expected an Ack frame");
-      expect(ackRejected.frame.Ack.batch_id).toBe(3);
-      const rejectedStage = ackRejected.frame.Ack.stages.find((stage) => typeof stage !== "string" && "Applied" in stage);
-      if (typeof rejectedStage === "string" || rejectedStage === undefined || !("Applied" in rejectedStage) || typeof rejectedStage.Applied.outcome === "string" || !("Rejected" in rejectedStage.Applied.outcome)) throw new Error("expected a rejected apply outcome");
-      expect(rejectedStage.Applied.outcome.Rejected.messages).toEqual([1, 2, 3]);
-
-      const preview = loadServer("📦️server-preview.bin");
-      if (typeof preview.frame === "string" || !("Preview" in preview.frame)) throw new Error("expected a Preview frame");
-      expect(preview.frame.Preview.key).toBe("cursor");
-
-      const serverPresence = loadServer("📦️server-presence.bin");
-      if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
-      // 👥️ Two peers, deliberately mixed by the Rust fixture: a plain JSON blob and a real
-      // `encode_presence_peer` payload — so this asserts the frame carries opaque per-peer bytes
-      // through untouched, and that the real one still decodes into the same peer as above.
-      expect(serverPresence.frame.Presence.peers).toHaveLength(2);
-      expect(JSON.parse(new TextDecoder().decode(new Uint8Array(serverPresence.frame.Presence.peers[0]!)))).toEqual({ id: "a" });
-      expect(decodePresencePeer(new Uint8Array(serverPresence.frame.Presence.peers[1]!), [0])).toEqual(peer);
-
-      const creditGrantServer = loadServer("📦️server-credit-grant.bin");
-      if (typeof creditGrantServer.frame === "string" || !("CreditGrant" in creditGrantServer.frame)) throw new Error("expected a CreditGrant frame");
-      expect(creditGrantServer.frame.CreditGrant.n).toBe(32);
-
-      const error = loadServer("📦️server-error.bin");
-      if (typeof error.frame === "string" || !("Error" in error.frame)) throw new Error("expected an Error frame");
-      expect(error.frame.Error.code).toBe("rejected");
-
-      const session = loadServer("📦️server-session.bin");
-      if (typeof session.frame === "string" || !("Session" in session.frame)) throw new Error("expected a Session frame");
-      expect(session.frame.Session.actor).toBe("actor-1");
-      expect(session.frame.Session.color).toBe(5);
-    });
   });
 
   //#region 🔖️IdentityTests

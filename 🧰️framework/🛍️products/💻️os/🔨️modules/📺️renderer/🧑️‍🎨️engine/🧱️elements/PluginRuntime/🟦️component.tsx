@@ -67,6 +67,7 @@ import {
   type ShardEventEnvelope,
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -182,24 +183,81 @@ const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";
  * this is that same budget's web twin, field-for-field against `ShardBudget`. */
 const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
 
-let sharedShardClient: ShardClient | null = null;
-function getShardClient(): ShardClient {
-  if (sharedShardClient) return sharedShardClient;
+/** 🧮️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): `min(hardwareConcurrency-1,
+ * 4)` — the SAME physical bound `getShardClient`'s own worker-pool `shardCount` uses (design-runtime.md
+ * §1 `ShardTable`), factored out once so it never drifts between the two call sites that both mean
+ * "how many wasm-boundary hops can genuinely run at once on this device": the shard pool itself, and
+ * {@link loadPluginModulesInDependencyOrder}'s per-level boot concurrency (that function's own doc has
+ * the "why reuse this exact number" reasoning). Falls back to `5` (so the clamp lands on `4`) when
+ * `navigator.hardwareConcurrency` is unavailable (SSR/test), matching `getShardClient`'s own fallback. */
+function poolConcurrency(): number {
   const hardwareConcurrency = typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 5;
-  const shardCount = Math.max(1, Math.min(hardwareConcurrency - 1, 4));
-  sharedShardClient = new ShardClient({
-    shardCount,
+  return Math.max(1, Math.min(hardwareConcurrency - 1, 4));
+}
+
+/** 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): `ShardClientOptions.onShardLost`'s
+ * real production wiring — before this packet, the callback here only `console.error`'d (a shard's
+ * whole actor roster silently stopped receiving turns, undetectable short of reading the console).
+ * `ActivationRegistry.handleShardLost` (`🎠️kernel/🟦️component.ts`, already coordinator-verified) is
+ * the REAL restore path: it bumps each affected actor's generation, cancels its stale queue, and
+ * `resume()`s it from its last checkpoint on a freshly rebuilt shard. Split out from
+ * {@link buildShardClientOptions} (rather than inlined as an arrow there) purely so a test can call it
+ * directly against a monkey-patched {@link sharedActivationRegistry} without constructing a real
+ * `ShardClient`/`Worker`. */
+function handlePluginShardLost(shardIndex: number, actorIds: readonly string[]): void {
+  console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
+  getActivationRegistry().handleShardLost(shardIndex, actorIds);
+}
+
+/** 🎭️ Split out from {@link getShardClient} so a test can construct a REAL `ShardClient` (exercising
+ * its actual lane/heartbeat/dispose machinery) against a FAKE `createWorker` — `getShardClient` itself
+ * is untestable in isolation since it hardcodes a real DOM `Worker`, which this suite's `jsdom`
+ * environment doesn't provide. `createWorker` defaults to the real `Worker` constructor for every
+ * production call (`getShardClient` never passes an override). */
+function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new Worker(SHARD_WORKER_URL, { type: "module" }) as unknown as ShardWorkerLike): {
+  readonly shardCount: number;
+  readonly createWorker: () => ShardWorkerLike;
+  readonly onActorTrap: (actorId: string, message: string) => void;
+  readonly onShardLost: (shardIndex: number, actorIds: readonly string[]) => void;
+} {
+  return {
+    shardCount: poolConcurrency(),
     // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
     // `🌐plugin-web-materialize.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
     // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
     // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
-    createWorker: () => new Worker(SHARD_WORKER_URL, { type: "module" }) as unknown as ShardWorkerLike,
+    createWorker,
     onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
-    onShardLost: (shardIndex, actorIds) => console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, actors needing restore: ${actorIds.join(", ")}`),
-  });
+    onShardLost: handlePluginShardLost,
+  };
+}
+
+let sharedShardClient: ShardClient | null = null;
+function getShardClient(): ShardClient {
+  if (sharedShardClient) return sharedShardClient;
+  sharedShardClient = new ShardClient(buildShardClientOptions());
+  // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before this packet, neither
+  // `checkHeartbeats` nor `pollHeartbeatSab` had a production caller anywhere in the repo (`ShardClient`'s
+  // own doc on `startWatchdog` — "the watchdog's whole failure ladder was wired but nothing in
+  // production ever turned the crank"), so a wedged shard went undetected forever in the real app.
+  // Self-ticks at `startWatchdog`'s own default cadence (`heartbeatTimeoutMs`) — see that method's doc.
+  sharedShardClient.startWatchdog();
   return sharedShardClient;
 }
 
+/** 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime) — metrics-publisher ownership
+ * decision: `autoStartMetricsPublisher` is left at its default (`false`) here, DELIBERATELY. This
+ * function is the constructor call site, yes, but it is not the DELIBERATE-choice construction site
+ * `ActivationRegistryOptions.autoStartMetricsPublisher`'s own doc asks for — `getActivationRegistry` is
+ * a lazy, shared, module-wide singleton created on the FIRST `loadPluginModule` call from anywhere (a
+ * plugin boot, not a user action), with no relationship to whether anyone is actually watching
+ * `metricsBus` right now. Turning it on here would start a real 2 Hz `setInterval` the moment the
+ * first plugin loads, for the lifetime of the tab, regardless of whether the task-manager window
+ * (`TaskManager/🟦️component.tsx`'s own header doc: still registrar-only, unmounted work) — the
+ * registry's own ONLY real subscriber — is even open. The deliberate choice belongs to whichever
+ * construction site mounts that consumer (`ShellHost`, registrar-only per this packet's lease) —
+ * turning this on here would silently change a shared default for every other current/future
+ * consumer of this singleton, exactly what `autoStartMetricsPublisher` exists to prevent. */
 let sharedActivationRegistry: ActivationRegistry | null = null;
 function getActivationRegistry(): ActivationRegistry {
   sharedActivationRegistry ??= new ActivationRegistry({ shardClient: getShardClient(), defaultBudget: DEFAULT_SHARD_BUDGET });
@@ -384,19 +442,168 @@ let nextGlobalInstanceId = 1;
  * `inFlightTurnActors` guard: "two turn requests for the SAME actorId overlapping is a caller bug —
  * the scheduler's job to prevent, not this worker's"). The OLD adapter's `withSerializedPluginWasmHandle`
  * (deleted alongside `PluginWorkerClient`, `🎠️kernel/🟦️component.ts`'s own doc comment names it)
- * queued concurrent `exchange()` calls transparently — this is that same guarantee's replacement, one
- * promise chain per actor, so two overlapping `handleAction`/`refreshUi`/etc. calls on the same
- * instance run turn-after-turn instead of the second one throwing. */
-const actorTurnQueue = new Map<string, Promise<unknown>>();
-export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
-  const previous = actorTurnQueue.get(actorId) ?? Promise.resolve();
-  const next = previous.then(run, run);
-  actorTurnQueue.set(
-    actorId,
-    next.catch(() => {}),
-  );
-  return next;
+ * queued concurrent `exchange()` calls transparently — this is that same guarantee's replacement.
+ *
+ * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): the ORIGINAL implementation
+ * here was a raw `Map<actorId, Promise>` FIFO chain — unbounded (a pointer-move burst queued 200 deep
+ * rather than coalescing), lane-blind (an urgent action waited behind a stale background probe), and
+ * un-cancellable. Both `serializePerActor` (below, a generic per-key run-this-thunk-serially utility —
+ * KEPT with its exact existing signature/contract since `@semio-tech/framework-renderer-react`'s
+ * `📦️index.tsx` re-exports it and `🧪️index.test.ts` asserts that generic contract directly, outside
+ * this packet's lease) and {@link submitPluginTurn} (this file's own internal turn-dispatch seam, used
+ * by every real `submitTurn` call site below) now both sit on top of the landed `TurnScheduler` —
+ * bounded mailbox, lane priority, latest-wins coalescing, `cancelQueued`/`teardownActor` — instead of
+ * hand-rolling a second queue. Two SEPARATE `TurnScheduler` instances (not one shared): `TurnScheduler`
+ * is transport/payload-agnostic by design (its own header doc), and `serializePerActor`'s payload
+ * (an arbitrary thunk) and `submitPluginTurn`'s (wire events + a request/response waiter list, needed
+ * because a mailbox's `coalesced` collapse silently drops the SUPERSEDED envelope's own callback
+ * otherwise) are genuinely different shapes — the same "one dedicated `TurnScheduler` per consumer"
+ * pattern `ActivationRegistry` already uses for its own internal `enqueueTurn`, not a reinvention.
+ *
+ * `ActivationRegistry.enqueueTurn` was considered and REJECTED for `submitPluginTurn`'s job: its
+ * `onTurnResult(actorId, result)` fires once per REGISTRY, not once per caller, so it has no way to
+ * hand a coalesced-away caller (or any specific caller, once more than one turn can be pending per
+ * actor) back its own turn's result — exactly what `handleAction`/`refreshUi`/etc.'s `Promise<...>`
+ * return contracts require. A dedicated scheduler whose `runTurn` seam we control ourselves is what
+ * makes per-caller correlation (via `PluginTurnPayload.waiters`, see below) possible at all. */
+
+//#region 🔖️GenericThunkQueue
+interface ThunkTurnPayload {
+  readonly run: () => Promise<unknown>;
+  readonly resolve: (value: unknown) => void;
+  readonly reject: (error: unknown) => void;
 }
+
+/** 🧮️ A generous but FINITE cap — large enough that no known real `serializePerActor` caller (this
+ * file's own `submitTurn` no longer uses it; the react-target package re-export is its only consumer)
+ * ever approaches it, small enough that a caller who genuinely never lets an actor's queue drain gets
+ * an honest rejection instead of the unbounded heap growth this file existed to fix. */
+const SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY = 256;
+
+let sharedThunkScheduler: TurnScheduler<ThunkTurnPayload, undefined> | null = null;
+function getThunkScheduler(): TurnScheduler<ThunkTurnPayload, undefined> {
+  sharedThunkScheduler ??= new TurnScheduler<ThunkTurnPayload, undefined>({
+    mailboxCapacity: SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY,
+    budgetFor: () => undefined,
+    runTurn: async (_actorId, payload) => {
+      try {
+        payload.resolve(await payload.run());
+      } catch (error) {
+        payload.reject(error);
+      }
+    },
+  });
+  return sharedThunkScheduler;
+}
+
+/** 🚦 Generic per-`actorId` serializer: `run` never starts for a given `actorId` before the previous
+ * `run` for that SAME id has settled (resolved OR rejected — a fault never wedges the queue, matching
+ * this file's pre-existing contract), while independent `actorId`s run fully concurrently. Backed by
+ * {@link getThunkScheduler} — bounded, so a caller that floods one `actorId` gets a rejected promise
+ * once {@link SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} is exceeded rather than growing memory forever. */
+export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const backpressure = getThunkScheduler().enqueue(actorId, { lane: "Interactive", payload: { run, resolve: resolve as (value: unknown) => void, reject } });
+    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
+  });
+}
+//#endregion 🔖️GenericThunkQueue
+
+//#region 🔖️PluginTurnScheduler
+interface PluginTurnWaiter {
+  readonly resolve: (result: WireTurnResult) => void;
+  readonly reject: (error: unknown) => void;
+}
+
+/** ✉️ `events` is mutable ON PURPOSE: a coalesced call replaces it in place (see {@link submitPluginTurn})
+ * rather than asking the mailbox to juggle a second envelope object, which is what would otherwise
+ * silently discard the superseded call's own `waiters`. `coalesceMapKey`, when set, is cleared from
+ * {@link pendingCoalescedTurns} the instant this payload's turn actually dispatches (in `runTurn`,
+ * before the `await`) — a call arriving AFTER that point must start a fresh coalescing cycle, not
+ * append to one that's already running or already finished. */
+interface PluginTurnPayload {
+  events: readonly ShardEventEnvelope[];
+  readonly waiters: PluginTurnWaiter[];
+  readonly coalesceMapKey?: string;
+}
+
+/** 🧮️ Matches `ActivationRegistry`'s own `DEFAULT_TURN_MAILBOX_CAPACITY` — no reason for this file's
+ * per-actor turn queue to be shaped differently from the kernel's own default. */
+const PLUGIN_TURN_MAILBOX_CAPACITY = 32;
+
+const pendingCoalescedTurns = new Map<string, PluginTurnPayload>();
+
+let sharedPluginTurnScheduler: TurnScheduler<PluginTurnPayload, ShardBudget> | null = null;
+/** 🧵️ Reads `getShardClient()` INSIDE `runTurn` (not once at construction) purely so a test can swap
+ * the module-private `sharedShardClient` for a fake between calls without this scheduler ever pinning
+ * itself to whichever shard client happened to exist first — in production there is only ever one. */
+function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget> {
+  sharedPluginTurnScheduler ??= new TurnScheduler<PluginTurnPayload, ShardBudget>({
+    mailboxCapacity: PLUGIN_TURN_MAILBOX_CAPACITY,
+    budgetFor: () => DEFAULT_SHARD_BUDGET,
+    runTurn: async (actorId, payload, budget) => {
+      if (payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
+      try {
+        const result = coerceTurnResult(await getShardClient().turn(actorId, payload.events, budget));
+        for (const waiter of payload.waiters) waiter.resolve(result);
+      } catch (error) {
+        for (const waiter of payload.waiters) waiter.reject(error);
+        throw error; // 🔁️ rethrown so `onTurnError` also observes it — diagnostics only, every waiter already settled above.
+      }
+    },
+    onTurnError: (actorId, error) => console.error(`[DEBUG] PluginRuntime: turn failed for actor ${actorId}`, error),
+  });
+  return sharedPluginTurnScheduler;
+}
+
+/**
+ * 🚦 This file's own internal turn-dispatch seam — replaces the old unbounded `actorTurnQueue` chain.
+ * `lane` prioritizes across an actor's own pending turns (`"Interactive"` for anything a caller awaits
+ * a specific reply from — `exchange`/`createApp`/`completeExtensionInvoke` all use it below —
+ * `"UserVisible"` for {@link loadPluginModule}'s opportunistic `refreshUi` probe, so a real command
+ * always preempts a mere redraw poll). `coalesceKey`, when passed, collapses a burst of same-key calls
+ * for the SAME actor into the single latest one — every caller in the burst (not just the winner) still
+ * gets the SAME final result, via {@link PluginTurnPayload.waiters} rather than the mailbox's own
+ * envelope-replacement (which has no callback for the superseded call).
+ *
+ * 🚧️ Honest gap: `BoundedMailbox.enqueue`'s `dropped` backpressure (this actor's mailbox at capacity,
+ * evicting the lowest-priority NONEMPTY lane below the incoming one) has no callback for the evicted
+ * envelope — a caller whose turn was silently evicted this way would never see its promise settle.
+ * Mitigated, not eliminated, by lane discipline: every call site below uses only two lanes
+ * (`"Interactive"`/`"UserVisible"`), and `"UserVisible"` traffic is deduplicated to at most one pending
+ * envelope per actor by `pendingCoalescedTurns` before it ever reaches the mailbox — so an eviction can
+ * only happen if a single actor accumulates more than `PLUGIN_TURN_MAILBOX_CAPACITY` (32) genuinely
+ * distinct `"Interactive"` turns, which no real call site here does. Flagged rather than silently
+ * risked, per this repo's own "must not assume" rule — see `📓️terra-web-plugin-runtime-report.md`
+ * `## honest gaps`.
+ */
+function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string): Promise<WireTurnResult> {
+  const scheduler = getPluginTurnScheduler();
+  return new Promise<WireTurnResult>((resolve, reject) => {
+    const waiter: PluginTurnWaiter = { resolve, reject };
+    if (coalesceKey !== undefined) {
+      const mapKey = `${actorId} ${coalesceKey}`;
+      const pending = pendingCoalescedTurns.get(mapKey);
+      if (pending) {
+        pending.events = events; // 🎯️ latest-wins: the mailbox still holds THIS SAME payload object.
+        pending.waiters.push(waiter);
+        return;
+      }
+      const payload: PluginTurnPayload = { events, waiters: [waiter], coalesceMapKey: mapKey };
+      pendingCoalescedTurns.set(mapKey, payload);
+      const backpressure = scheduler.enqueue(actorId, { lane, coalesce: coalesceKey, payload });
+      if (backpressure.kind === "rejected") {
+        pendingCoalescedTurns.delete(mapKey);
+        reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+      }
+      return;
+    }
+    const payload: PluginTurnPayload = { events, waiters: [waiter] };
+    const backpressure = scheduler.enqueue(actorId, { lane, payload });
+    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+  });
+}
+//#endregion 🔖️PluginTurnScheduler
 
 /** 🖼️ Last reconciled "window" body per actor — the ONE surface `⚛️reactor/🦀️component.rs`'s
  * `dirty_render` loop renders this wave (hardcoded `plugin_render(instance, "window", "{}")`
@@ -412,10 +619,10 @@ const retainedWindowByActor = new Map<string, RetainedSurface>();
  * adapts it exactly like the old wasm-Worker handle: `dispose()` disposes this instance's worker-side
  * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
  * to refcount anymore, one actor belongs to exactly one instance). */
-export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle> {
   const registry = getActivationRegistry();
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
-  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl);
+  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   let eventSeq = 0;
@@ -424,8 +631,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
     if (!actorId) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
   };
-  const submitTurn = async (actorId: string, events: readonly ShardEventEnvelope[]): Promise<WireTurnResult> =>
-    serializePerActor(actorId, async () => coerceTurnResult(await shardClient.turn(actorId, events, DEFAULT_SHARD_BUDGET)));
+  /** 🚦 `lane`/`coalesceKey` forward to {@link submitPluginTurn} — see that function's own doc for the
+   * lane-assignment reasoning. `registry.touch(actorId)` refreshes this actor's LRU position on every
+   * turn (its own doc: "call on every turn, not just activation"); turns dispatch through this file's
+   * own {@link submitPluginTurn} rather than `ActivationRegistry.enqueueTurn` (see that decision's
+   * write-up above `serializePerActor`), so nothing else would ever call it. */
+  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string }): Promise<WireTurnResult> => {
+    registry.touch(actorId);
+    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey);
+  };
 
   const handle: KernelPluginWasmHandle = {
     manifest: async () => encodePackValue(manifest),
@@ -494,7 +708,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
     if (windowTargets.length === 0) return {};
     const actorId = requireActorId(instanceId);
     eventSeq += 1;
-    const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }]);
+    // 🎯️ H1-react (terra-web-plugin-runtime) — a pointer-move-driven redraw burst hits this call
+    // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
+    // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
+    // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
+    const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }], { lane: "UserVisible", coalesceKey: "surface-visible" });
     if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
     const retained = retainedWindowByActor.get(actorId);
     if (!retained) return {};
@@ -540,16 +758,25 @@ function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiP
  * not a fabricated one, whenever no descriptor exists yet — as of this packet, only `🗒️note` has a
  * real committed one (`📓️status.md`'s "E2-builder-descriptor" entry); every other plugin hits this
  * fallback until W3 migrates it. Never instantiates wasm to ask — that's exactly the "no eager
- * loading" property `loadPluginModule` used to break (per H2's lease-request naming this file). */
-export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string): Promise<PluginManifest> {
+ * loading" property `loadPluginModule` used to break (per H2's lease-request naming this file).
+ *
+ * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): `signal`, when given, is
+ * forwarded straight to `fetch` — a caller (a component unmount mid-boot, or
+ * {@link loadPluginModulesInDependencyOrder}'s own `signal` option) that wants to give up on a slow
+ * descriptor fetch can now do so. An abort PROPAGATES rather than falling back to the empty-manifest
+ * default: silently continuing to load a plugin the caller explicitly gave up on would be a worse
+ * surprise than a rejected promise. A genuine network failure (not an abort) keeps the existing
+ * fallback — no descriptor existing yet is this wave's honest, expected default (see above). */
+export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
   const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
   try {
-    const response = await fetch(descriptorUrl);
+    const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
     if (response.ok) {
       const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
       if (descriptor.manifest) return descriptor.manifest;
     }
   } catch (error) {
+    if (signal?.aborted) throw error;
     console.warn(`[DEBUG] fetchDescriptorManifest: ${descriptorUrl} unreachable — using an empty manifest`, error);
   }
   console.warn(`[DEBUG] fetchDescriptorManifest: no descriptor for ${pluginId} yet (E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation`);
@@ -1111,21 +1338,128 @@ export class TransactionCoordinator {
 //#endregion 🔖️Transaction
 
 //#region 🔖️DependencyOrderedBoot
-/** 🎯️ Loads several plugin modules SEQUENTIALLY in dependency order (scout-2 §4: "boot must walk the
- * dependency order from `PluginGraph` instead of relying on array order") — loading a dependency and
- * letting it finish before its dependent starts is what "activate in dependency order" means at this
- * adapter layer; concurrent `Promise.all` loading gives no such guarantee. Entries a dependency-graph
- * fault blocks are reported in `errors` alongside the successfully loaded handles rather than
- * aborting the whole boot (the same fail-soft posture {@link orderPluginRegistryEntries} already
- * documents) — a caller wanting the localized dependency-fault UI turns each error into text via
- * `pluginGraphErrorMessage` (`@semio-tech/framework`). */
-export async function loadPluginModulesInDependencyOrder(entries: readonly PluginRegistryEntry[]): Promise<{ readonly handles: readonly PluginWasmHandle[]; readonly errors: readonly PluginGraphError[] }> {
-  const { order, errors } = orderPluginRegistryEntries(entries);
-  const handles: PluginWasmHandle[] = [];
+/** 🎯️ One plugin `loadPluginModule` itself rejected on (network/activation failure) — kept SEPARATE
+ * from {@link PluginGraphError} (a static graph fault: missing dependency, version mismatch, cycle)
+ * since the two are different failure classes with different callers-facing meaning; conflating a
+ * runtime load failure into a `PluginGraphError` code would mislead `pluginGraphErrorMessage`
+ * (`@semio-tech/framework`) into describing a graph problem that never happened. */
+export interface PluginLoadFailure {
+  readonly pluginId: string;
+  readonly error: unknown;
+}
+
+/** 🧮️ Groups `order`'s already-topologically-sorted entries into dependency LEVELS: level 0 has no
+ * dependency inside `order` at all, level N+1's members depend on at least one level-N member (and on
+ * nothing deeper). Every entry in the SAME level is independent of every other entry in that level —
+ * that's exactly the "siblings may run in parallel" property {@link loadPluginModulesInDependencyOrder}
+ * needs. Walking `order` in its own sequence (rather than re-deriving a topological order here) is
+ * sufficient: Kahn's-algorithm output (`orderPluginRegistryEntries`'s own implementation) guarantees
+ * every dependency of an entry appears strictly before it, so `levelOf` is always populated for a
+ * dependency by the time its dependent is visited. A dependency id that ISN'T in `order` (already
+ * dropped as blocked by a graph fault, or simply not part of this call's own entry set) contributes no
+ * edge — same fail-soft posture as `orderPluginRegistryEntries` itself. */
+function computeDependencyLevels(order: readonly PluginRegistryEntry[]): readonly (readonly PluginRegistryEntry[])[] {
+  const levelOf = new Map<string, number>();
+  const levels: PluginRegistryEntry[][] = [];
   for (const entry of order) {
-    handles.push(await loadPluginModule(entry.pluginId, entry.moduleUrl));
+    let level = 0;
+    for (const dependency of entry.dependencies ?? []) {
+      const dependencyLevel = levelOf.get(dependency.pluginId);
+      if (dependencyLevel !== undefined) level = Math.max(level, dependencyLevel + 1);
+    }
+    levelOf.set(entry.pluginId, level);
+    (levels[level] ??= []).push(entry);
   }
-  return { handles, errors };
+  return levels;
+}
+
+/** 🧵️ Runs `run` over every item in `items`, at most `limit` concurrently — a plain worker-pool loop
+ * (each of `limit` workers pulls the next unclaimed index until the list is exhausted), not a batched
+ * `Promise.all` chunking, so a fast item's slot is reused immediately rather than waiting for its whole
+ * batch to finish. */
+async function runBounded<T>(items: readonly T[], limit: number, run: (item: T) => Promise<void>): Promise<void> {
+  let cursor = 0;
+  const workerCount = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (cursor < items.length) {
+        const item = items[cursor]!;
+        cursor += 1;
+        await run(item);
+      }
+    }),
+  );
+}
+
+/**
+ * 🎯️ Loads several plugin modules in dependency order (scout-2 §4: "boot must walk the dependency
+ * order from `PluginGraph` instead of relying on array order") — a dependency's WHOLE level finishes
+ * before any of its dependents starts, but independent siblings within one level load CONCURRENTLY,
+ * bounded to `options.concurrency` (default {@link poolConcurrency}, the exact `min(hardwareConcurrency
+ * -1, 4)` bound `getShardClient`'s own worker pool uses).
+ *
+ * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before this packet, this
+ * function was a strict serial `for` loop — dependencies WERE respected, but so were completely
+ * independent siblings (~20 plugins boot strictly one-after-another on the real app's real cold boot,
+ * `📌️important.md`'s own "Flaky OS Dev Preview" note). The concurrency bound is deliberately the SAME
+ * number as the shard pool's own worker count: `activate()`'s real cost (worker-side wasm
+ * instantiation) is bounded by how many shard workers exist to run it, not by how many `activate()`
+ * calls are in flight — requesting more concurrent activations than there are shards to service them
+ * would only add memory pressure (`ActivationRegistry.evictForMemoryPressure`'s LRU thrashing) for zero
+ * extra real parallelism, so `poolConcurrency()` (not, say, `entries.length`) is the bound that
+ * actually reflects the hardware.
+ *
+ * Two independent failure classes, BOTH fail-soft (never abort the whole boot): a static graph fault
+ * (missing dependency/version mismatch/cycle, `errors`, `orderPluginRegistryEntries`'s own existing
+ * posture) drops the entry before it is ever attempted; a RUNTIME `loadPluginModule` rejection
+ * (`loadFailures`, new in this packet) drops that entry AND cascades to skip every not-yet-attempted
+ * descendant that (transitively) depends on it — a dependent can't sensibly boot on a dependency that
+ * never loaded. `options.signal`, when aborted, stops STARTING new loads (in-flight ones still settle
+ * naturally) — forwarded to `loadPluginModule`'s own descriptor-fetch abort for whichever entries
+ * haven't started yet. `handles` stays in the same topological sequence `order` always had, regardless
+ * of the level-parallel loading order underneath, for caller stability. */
+export async function loadPluginModulesInDependencyOrder(
+  entries: readonly PluginRegistryEntry[],
+  options?: {
+    readonly loadModule?: (pluginId: string, moduleUrl: string, signal?: AbortSignal) => Promise<PluginWasmHandle>;
+    readonly concurrency?: number;
+    readonly signal?: AbortSignal;
+  },
+): Promise<{ readonly handles: readonly PluginWasmHandle[]; readonly errors: readonly PluginGraphError[]; readonly loadFailures: readonly PluginLoadFailure[] }> {
+  const loadModule = options?.loadModule ?? loadPluginModule;
+  const limit = options?.concurrency ?? poolConcurrency();
+  const signal = options?.signal;
+  const { order, errors } = orderPluginRegistryEntries(entries);
+  const levels = computeDependencyLevels(order);
+  const handleByPluginId = new Map<string, PluginWasmHandle>();
+  const failedPluginIds = new Set<string>();
+  const loadFailures: PluginLoadFailure[] = [];
+
+  for (const level of levels) {
+    const loadable = level.filter((entry) => {
+      const blockedDependency = (entry.dependencies ?? []).find((dependency) => failedPluginIds.has(dependency.pluginId));
+      if (!blockedDependency) return true;
+      failedPluginIds.add(entry.pluginId);
+      loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — dependency ${blockedDependency.pluginId} failed to load`) });
+      return false;
+    });
+    await runBounded(loadable, limit, async (entry) => {
+      if (signal?.aborted) {
+        failedPluginIds.add(entry.pluginId);
+        loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — boot aborted`) });
+        return;
+      }
+      try {
+        handleByPluginId.set(entry.pluginId, await loadModule(entry.pluginId, entry.moduleUrl, signal));
+      } catch (error) {
+        failedPluginIds.add(entry.pluginId);
+        loadFailures.push({ pluginId: entry.pluginId, error });
+      }
+    });
+  }
+
+  const handles = order.map((entry) => handleByPluginId.get(entry.pluginId)).filter((handle): handle is PluginWasmHandle => handle !== undefined);
+  return { handles, errors, loadFailures };
 }
 //#endregion 🔖️DependencyOrderedBoot
 //#endregion 🔖️plugin-runtime
@@ -1611,5 +1945,259 @@ if (import.meta.vitest) {
       expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
     });
   });
+
+  //#region 🧪️terra-web-plugin-runtime
+  /** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime). No real sleeps anywhere
+   * below — every wait is a `queueMicrotask` flush or a deferred promise the test itself settles. */
+  const flushMicrotasks = async (times = 4): Promise<void> => {
+    for (let index = 0; index < times; index += 1) await new Promise<void>((resolve) => queueMicrotask(resolve));
+  };
+
+  describe("submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue)", () => {
+    function withFakeShardClient<T>(turnImpl: (actorId: string, events: readonly ShardEventEnvelope[], budget: ShardBudget) => Promise<unknown>, run: () => Promise<T>): Promise<T> {
+      const previous = sharedShardClient;
+      sharedShardClient = { turn: turnImpl } as unknown as ShardClient;
+      return run().finally(() => {
+        sharedShardClient = previous;
+      });
+    }
+
+    it("dispatches a queued Interactive-lane turn before an already-queued UserVisible-lane turn for the SAME actor, regardless of arrival order", async () => {
+      const dispatchOrder: string[] = [];
+      await withFakeShardClient(
+        async (_actorId, events) => {
+          dispatchOrder.push((events[0]!.payload as { readonly marker: string }).marker);
+          return { uiPatches: [], effects: [], nextWake: null };
+        },
+        async () => {
+          const actorId = "turn-test-lane-actor";
+          // 🎯️ UserVisible enqueued FIRST, Interactive second — both land before the scheduler's first
+          // microtask pump, so dispatch order must reflect lane priority, not arrival order.
+          const userVisible = submitPluginTurn(actorId, [{ kind: "surface-visible", payload: { marker: "user-visible-1" } }], "UserVisible", "surface-visible");
+          const interactive = submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: "interactive-1" } }], "Interactive");
+          await Promise.all([userVisible, interactive]);
+          expect(dispatchOrder).toEqual(["interactive-1", "user-visible-1"]);
+        },
+      );
+    });
+
+    it("collapses a 200-call coalescing burst to a single dispatched turn, resolving EVERY waiter (not just the last) with the winning result", async () => {
+      let dispatchCount = 0;
+      await withFakeShardClient(
+        async (_actorId, events) => {
+          dispatchCount += 1;
+          return { uiPatches: [], effects: [{ tag: "notify", val: { message: String((events[0]!.payload as { readonly marker: number }).marker) } }], nextWake: null };
+        },
+        async () => {
+          const actorId = "turn-test-coalesce-actor";
+          const results = await Promise.all(
+            Array.from({ length: 200 }, (_, index) => submitPluginTurn(actorId, [{ kind: "surface-visible", payload: { marker: index } }], "UserVisible", "surface-visible")),
+          );
+          expect(dispatchCount).toBe(1);
+          for (const result of results) expect(result.effects).toEqual(results[0]!.effects);
+        },
+      );
+    });
+
+    it("surfaces Rejected once an actor's mailbox is genuinely full of distinct turns, instead of growing without bound", async () => {
+      await withFakeShardClient(
+        () => new Promise(() => {}), // 🎯️ never settles — every submitted turn for this actor stays queued behind the first, in flight forever.
+        async () => {
+          const actorId = "turn-test-rejected-actor";
+          const settled: Array<"accepted" | "rejected"> = [];
+          // 🎯️ One turn dispatches immediately (goes "in flight"); the rest queue behind it in the same
+          // lane (no coalescing, no lower lane to evict) until PLUGIN_TURN_MAILBOX_CAPACITY (32) is hit.
+          for (let index = 0; index < 41; index += 1) {
+            submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: `t-${index}` } }], "Interactive").then(
+              () => settled.push("accepted"),
+              () => settled.push("rejected"),
+            );
+          }
+          await flushMicrotasks();
+          expect(settled.filter((outcome) => outcome === "rejected").length).toBeGreaterThan(0);
+        },
+      );
+    });
+
+    it("never dispatches a second turn for an actor before the first settles, even while a DIFFERENT actor's turns run concurrently", async () => {
+      const inFlightByActor = new Map<string, number>();
+      const maxInFlightByActor = new Map<string, number>();
+      await withFakeShardClient(
+        async (actorId) => {
+          inFlightByActor.set(actorId, (inFlightByActor.get(actorId) ?? 0) + 1);
+          maxInFlightByActor.set(actorId, Math.max(maxInFlightByActor.get(actorId) ?? 0, inFlightByActor.get(actorId)!));
+          await flushMicrotasks(2);
+          inFlightByActor.set(actorId, inFlightByActor.get(actorId)! - 1);
+          return { uiPatches: [], effects: [], nextWake: null };
+        },
+        async () => {
+          const actorA = "turn-test-interleave-a";
+          const actorB = "turn-test-interleave-b";
+          await Promise.all([
+            submitPluginTurn(actorA, [{ kind: "app-command", payload: {} }], "Interactive"),
+            submitPluginTurn(actorA, [{ kind: "app-command", payload: {} }], "Interactive"),
+            submitPluginTurn(actorA, [{ kind: "app-command", payload: {} }], "Interactive"),
+            submitPluginTurn(actorB, [{ kind: "app-command", payload: {} }], "Interactive"),
+          ]);
+          expect(maxInFlightByActor.get(actorA)).toBe(1);
+          expect(maxInFlightByActor.get(actorB)).toBe(1);
+        },
+      );
+    });
+  });
+
+  describe("PluginRuntime shard-loss wiring (real restore, not just a console.error)", () => {
+    it("handlePluginShardLost delegates to ActivationRegistry.handleShardLost for EXACTLY the affected actorIds", () => {
+      const restoreCalls: Array<{ readonly shardIndex: number; readonly actorIds: readonly string[] }> = [];
+      const fakeRegistry = { handleShardLost: (shardIndex: number, actorIds: readonly string[]) => restoreCalls.push({ shardIndex, actorIds }) } as unknown as ActivationRegistry;
+      const previous = sharedActivationRegistry;
+      sharedActivationRegistry = fakeRegistry;
+      try {
+        handlePluginShardLost(2, ["plugin-a#1", "plugin-b#7"]);
+        expect(restoreCalls).toEqual([{ shardIndex: 2, actorIds: ["plugin-a#1", "plugin-b#7"] }]);
+      } finally {
+        sharedActivationRegistry = previous;
+      }
+    });
+
+    it("buildShardClientOptions wires onShardLost to handlePluginShardLost (not a bare console.error) and sizes shardCount via poolConcurrency", () => {
+      const fakeCreateWorker = () => ({ postMessage: () => {}, terminate: () => {}, onmessage: null, onerror: null }) as unknown as ShardWorkerLike;
+      const options = buildShardClientOptions(fakeCreateWorker);
+      expect(options.onShardLost).toBe(handlePluginShardLost);
+      expect(options.shardCount).toBe(poolConcurrency());
+      expect(options.createWorker).toBe(fakeCreateWorker);
+    });
+  });
+
+  describe("fetchDescriptorManifest AbortSignal", () => {
+    it("propagates an aborted signal's fetch rejection instead of silently falling back to an empty manifest", async () => {
+      const controller = new AbortController();
+      controller.abort();
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () => {
+        throw new DOMException("aborted", "AbortError");
+      }) as typeof fetch;
+      try {
+        await expect(fetchDescriptorManifest("p", "https://x/p.js", controller.signal)).rejects.toThrow();
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("still falls back to an empty manifest on a genuine (non-abort) fetch failure — the existing E1-describe/W3 gap, unchanged", async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () => {
+        throw new Error("network down");
+      }) as typeof fetch;
+      try {
+        const manifest = await fetchDescriptorManifest("p", "https://x/p.js");
+        expect(manifest.pluginId).toBe("p");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("loadPluginModulesInDependencyOrder — level-parallel boot", () => {
+    it("runs independent siblings in parallel within a level, holding a dependent until its dependency's WHOLE level finishes", async () => {
+      const started: string[] = [];
+      const releaseFns = new Map<string, () => void>();
+      const loadModule = (pluginId: string): Promise<PluginWasmHandle> =>
+        new Promise<PluginWasmHandle>((resolve) => {
+          started.push(pluginId);
+          releaseFns.set(pluginId, () => resolve(fakeHandle(pluginId, [], [])));
+        });
+      const entries: PluginRegistryEntry[] = [
+        { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
+        { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [] },
+        { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a", version: "*" }] },
+      ];
+      const resultPromise = loadPluginModulesInDependencyOrder(entries, { loadModule, concurrency: 4 });
+      await flushMicrotasks();
+      expect(new Set(started)).toEqual(new Set(["a", "b"]));
+      expect(started).not.toContain("c");
+      releaseFns.get("a")!();
+      releaseFns.get("b")!();
+      await flushMicrotasks();
+      expect(started).toContain("c");
+      releaseFns.get("c")!();
+      const result = await resultPromise;
+      expect(result.handles.map((handle) => handle.pluginId)).toEqual(["a", "b", "c"]);
+      expect(result.errors).toEqual([]);
+      expect(result.loadFailures).toEqual([]);
+    });
+
+    it("bounds within-level concurrency to the given limit — a third independent sibling waits for a free slot", async () => {
+      const started: string[] = [];
+      const releaseFns: Array<() => void> = [];
+      const loadModule = (pluginId: string): Promise<PluginWasmHandle> =>
+        new Promise<PluginWasmHandle>((resolve) => {
+          started.push(pluginId);
+          releaseFns.push(() => resolve(fakeHandle(pluginId, [], [])));
+        });
+      const entries: PluginRegistryEntry[] = ["a", "b", "c"].map((id) => ({ pluginId: id, moduleUrl: `https://x/${id}.js`, dependencies: [] }));
+      const resultPromise = loadPluginModulesInDependencyOrder(entries, { loadModule, concurrency: 2 });
+      await flushMicrotasks();
+      expect(started).toHaveLength(2);
+      releaseFns[0]!();
+      await flushMicrotasks();
+      expect(started).toHaveLength(3);
+      releaseFns[1]!();
+      releaseFns[2]!();
+      await resultPromise;
+    });
+
+    it("cascades a runtime load failure to skip dependents, while unrelated siblings still load — a distinct PluginLoadFailure, not a PluginGraphError", async () => {
+      const loadModule = (pluginId: string): Promise<PluginWasmHandle> => (pluginId === "a" ? Promise.reject(new Error("boom")) : Promise.resolve(fakeHandle(pluginId, [], [])));
+      const entries: PluginRegistryEntry[] = [
+        { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
+        { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [] },
+        { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a", version: "*" }] },
+      ];
+      const result = await loadPluginModulesInDependencyOrder(entries, { loadModule, concurrency: 4 });
+      expect(result.handles.map((handle) => handle.pluginId)).toEqual(["b"]);
+      expect(result.errors).toEqual([]);
+      expect(result.loadFailures.map((failure) => failure.pluginId).sort()).toEqual(["a", "c"]);
+    });
+
+    it("defaults its concurrency bound to poolConcurrency() when the caller doesn't override it", async () => {
+      const cap = poolConcurrency();
+      let inFlight = 0;
+      let maxInFlight = 0;
+      const loadModule = (pluginId: string): Promise<PluginWasmHandle> =>
+        new Promise<PluginWasmHandle>((resolve) => {
+          inFlight += 1;
+          maxInFlight = Math.max(maxInFlight, inFlight);
+          queueMicrotask(() => {
+            inFlight -= 1;
+            resolve(fakeHandle(pluginId, [], []));
+          });
+        });
+      const entries: PluginRegistryEntry[] = Array.from({ length: cap + 6 }, (_, index) => ({ pluginId: `p${index}`, moduleUrl: `https://x/p${index}.js`, dependencies: [] }));
+      await loadPluginModulesInDependencyOrder(entries, { loadModule });
+      expect(maxInFlight).toBeLessThanOrEqual(cap);
+      expect(maxInFlight).toBeGreaterThan(0);
+    });
+
+    it("aborts cleanly: aborting mid-boot stops starting new loads without throwing, while an already-started load still settles normally", async () => {
+      const controller = new AbortController();
+      const started: string[] = [];
+      const loadModule = (pluginId: string): Promise<PluginWasmHandle> => {
+        started.push(pluginId);
+        if (pluginId === "a") controller.abort(); // 🎯️ abort while level 0 ("a") is already in flight.
+        return Promise.resolve(fakeHandle(pluginId, [], []));
+      };
+      const entries: PluginRegistryEntry[] = [
+        { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
+        { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [{ pluginId: "a", version: "*" }] },
+      ];
+      const result = await loadPluginModulesInDependencyOrder(entries, { loadModule, signal: controller.signal });
+      // "a" (already in flight when abort fired) settles normally; "b" (level 1, not yet started) never starts.
+      expect(started).toEqual(["a"]);
+      expect(result.handles.map((handle) => handle.pluginId)).toEqual(["a"]);
+      expect(result.loadFailures.some((failure) => failure.pluginId === "b")).toBe(true);
+    });
+  });
+  //#endregion 🧪️terra-web-plugin-runtime
 }
 //#endregion 🧪️Tests

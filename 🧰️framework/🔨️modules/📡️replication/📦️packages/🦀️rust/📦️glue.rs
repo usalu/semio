@@ -26,6 +26,9 @@ pub mod diagnostic;
 #[path = "../../../⚠️diagnostic/📍️span/🦀️component.rs"]
 pub mod span;
 
+#[path = "../../../🌱️value/🦀️component.rs"]
+pub mod value;
+
 #[path = "../../🆔️ids/🦀️component.rs"]
 pub mod ids;
 
@@ -80,4 +83,5 @@ pub use crate::mutation::*;
 pub use crate::scalar::*;
 pub use crate::source::*;
 pub use crate::span::*;
+pub use crate::value::*;
 pub use crate::wire::*;

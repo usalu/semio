@@ -5,17 +5,21 @@
  * one-worker-per-plugin capped the browser at ~20 plugins; this pools K = `min(hardwareConcurrency-1,
  * 4)` (design's `ShardTable`) workers and pins actors onto them instead.
  *
- * 🚧 KNOWN GAP (H2, tracked for a follow-up packet once `🤖️generated/🟦️actor.ts` lands — see A1's
- * report): the design's `ShardTransport` carries the SAME hand-rolled `Envelope`/`TurnResult` pack
- * encoding as the native thread/process transports (`🎭️actor/🦀️component.rs`'s `pack` module). That
- * codec has no TS mirror yet (A1 flagged `🤖️generated/🟦️actor.ts` as not-yet-emitted). `turn()` below
- * is therefore typed as opaque `Uint8Array` in, `Uint8Array` out at THIS module's public boundary —
- * matching `ShardTransport::send(bytes)`/`recv() -> Option<Vec<u8>>` exactly — but `🟨️shard-worker.js`
- * (see `🌐plugin-web-materialize.ts`'s `shardWorkerSource`) currently decodes the interim
- * `ShardEventEnvelope[]` JSON shape declared below rather than the real binary pack format. Swapping
- * the worker's decode step for the generated codec is mechanical once it exists; nothing in this
- * class's shard-assignment/heartbeat/multiplexing logic depends on the wire format.
+ * 🚧 UPDATE (terra-web-shardframe): A1's `🤖️generated/🟦️actor.ts` has now landed clean (no more
+ * un-typeable `object & string` intersections — `Lane`/`Envelope`/`Payload`/`Origin` are real types),
+ * which is what makes the region below possible. `turn()`/`activate()` stay EXACTLY as they were —
+ * opaque-to-this-module `ShardEventEnvelope[]` JSON in, `unknown` out, nothing broken — while
+ * `📨️ShardFrame` below adds the Rust `ShardFrame` enum's SHAPE (`Register`/`Unregister`/`Grant`/
+ * `Envelope`) as a NEW, additive wire alongside them: {@link ShardClient.grant}/{@link
+ * ShardClient.envelope}. Deliberately shape-only, not byte-for-byte — see that region's own header
+ * doc for the encoding decision (structured clone, no hand-rolled pack codec, on purpose, for now).
  */
+
+//#region 🔌️WireTypes
+/** ⚖️ `Lane`/`CoalesceKey` taken from the now-clean ts-rs mirror — real wire types, same reasoning
+ * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
+import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
+//#endregion 🔌️WireTypes
 
 //#region 🧬️Types
 /** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_actor::Budget` (same pattern as A1's own
@@ -83,6 +87,144 @@ export interface ShardMetricsSample {
 }
 //#endregion 🧬️Types
 
+//#region 📨️ShardFrame
+/** ⚖️ `semio_framework_actor::lane_defaults::budget_for(Lane::Maintenance)` (`🎭️actor/🦀️component.rs`,
+ * `lane_defaults` module) — the ONLY floor a granted-less actor may fall back to, mirrored field-for-
+ * field/value-for-value: `{ fuel: 80_000_000, wall_ms: 200, memory_bytes: 256 MiB, ui_nodes: 4_000,
+ * mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 }`. {@link GrantedBudgetTracker}
+ * falls back to this so a budget-less `Envelope` arriving before any `Grant` for its actor never
+ * invents its own number — the same floor `ShardLoop::granted_budget` falls back to natively. */
+export const MAINTENANCE_LANE_DEFAULT_BUDGET: ShardBudget = { fuel: 80_000_000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4_000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2_097_152 };
+
+/** ⚖️ Rust `Origin` mirror (`🎭️actor/🦀️component.rs`) — who sent a {@link ShardEnvelope}. `window`
+ * stays a plain `number` (the generated mirror's own `WindowId`), matching this file's existing
+ * convention of not importing bigint-carrying generated types across the `postMessage` boundary. */
+export type ShardOrigin = { readonly kind: "ui"; readonly window: number } | { readonly kind: "actor"; readonly id: string } | { readonly kind: "kernel" } | { readonly kind: "bus"; readonly topic: string };
+
+/** 🚧 terra-web-shardframe's own encoding decision (see this ticket's report, `## encoding decision`):
+ * the Rust `Payload` this field would literally mirror is `{"kind":"event", bytes:[...]}` — an opaque
+ * PACK-ENCODED blob no TS codec exists to decode yet (this file's header doc). Rather than carry
+ * unusable opaque bytes, `payload` stays the interim, ALREADY-DECODED {@link ShardEventEnvelope} shape
+ * `🟨️shard-worker.js` has executed since H2 — this packet adopts `ShardFrame`'s ENVELOPE-METADATA
+ * shape (`to`/`from`/`lane`/`seq`/`deadlineMs`/`coalesce`/`cancelOf`) over structured clone, not its
+ * byte codec. A future byte-level unification only needs to swap THIS field's type, once a real
+ * pack-decode step exists on web (see the header doc's own "mechanical once it exists" note). */
+export interface ShardEnvelope {
+  readonly to: string;
+  readonly from: ShardOrigin;
+  readonly lane: Lane;
+  readonly seq: number;
+  readonly deadlineMs: number | null;
+  readonly coalesce: CoalesceKey | null;
+  readonly cancelOf: number | null;
+  readonly payload: ShardEventEnvelope;
+}
+
+/** 📨️ TypeScript mirror of Rust `ShardFrame` (`🖥️host/🧵️shard/🦀️component.rs`) — see the in-source
+ * parity test below (and this ticket's report, `## ShardFrame TS ↔ Rust variant table`) for the
+ * enforcement that variant/field names stay in lockstep with that enum, read fresh off the Rust
+ * source on every test run. `actor` is a plain `string` here (this class's own established id
+ * vocabulary — see `ShardWorkerLike`'s header doc), not the generated mirror's bit-packed `ActorId`
+ * bigint. Adopted in the order the Rust enum's own doc prescribes: `Envelope` passthrough (wraps
+ * today's already-decoded turn payload; nothing existing breaks) lands with THIS packet alongside
+ * `Grant` (a budget travels WITH the envelopes it grants, read by {@link ShardClient.grant}). */
+export type ShardFrame =
+  | { readonly kind: "Register"; readonly actor: string }
+  | { readonly kind: "Unregister"; readonly actor: string }
+  | { readonly kind: "Grant"; readonly actor: string; readonly budget: ShardBudget; readonly envelopes: readonly ShardEnvelope[] }
+  | { readonly kind: "Envelope"; readonly envelope: ShardEnvelope };
+
+/** 🧬️ Runtime twin of {@link ShardFrame}'s own field names — TS union types erase at runtime, so the
+ * in-source parity test reads THIS array (not the type) to diff against the live Rust source. Keep in
+ * lockstep with the union above by hand; the test fails loudly the moment either drifts from
+ * `component.rs`. `Envelope`'s Rust variant is a TUPLE (`Envelope(Envelope)`, no Rust field name) —
+ * `"envelope"` is this mirror's OWN naming choice for that lone position, not a Rust-sourced name. */
+export const SHARD_FRAME_VARIANT_FIELDS: ReadonlyArray<{ readonly kind: ShardFrame["kind"]; readonly fields: readonly string[] }> = [
+  { kind: "Register", fields: ["actor"] },
+  { kind: "Unregister", fields: ["actor"] },
+  { kind: "Grant", fields: ["actor", "budget", "envelopes"] },
+  { kind: "Envelope", fields: ["envelope"] },
+];
+
+const SHARD_FRAME_LANE_ORDER: readonly Lane[] = ["Interactive", "UserVisible", "Background", "Maintenance"];
+
+/** 🎯️ Stable sort by {@link Lane} priority — the SAME `LANE_ORDER` `🧵️turn-scheduler.ts`'s
+ * `pickNextReadyActor` already applies ACROSS actors, applied here WITHIN one `Grant`'s own envelope
+ * batch so dispatch order follows the grant's priorities, not push/arrival order. Stable: envelopes
+ * tied on lane keep their relative order (mirrors `ShardLoop::pump`'s own "preserving arrival order"
+ * per-actor grouping for same-lane envelopes). */
+export function orderEnvelopesByLane(envelopes: readonly ShardEnvelope[]): readonly ShardEnvelope[] {
+  return envelopes
+    .map((envelope, index) => ({ envelope, index }))
+    .sort((left, right) => {
+      const rank = SHARD_FRAME_LANE_ORDER.indexOf(left.envelope.lane) - SHARD_FRAME_LANE_ORDER.indexOf(right.envelope.lane);
+      return rank !== 0 ? rank : left.index - right.index;
+    })
+    .map((entry) => entry.envelope);
+}
+
+/** ⚖️ TypeScript twin of `ShardLoop`'s own `granted_budgets: HashMap<u64, Budget>` +
+ * `granted_budget()` (`🖥️host/🧵️shard/🦀️component.rs`) — remembers the LAST `ShardFrame::Grant`
+ * budget per actor so a later budget-less `Envelope` frame for the same actor runs under it instead of
+ * any caller-cached constant. An actor never granted at all resolves to
+ * {@link MAINTENANCE_LANE_DEFAULT_BUDGET} — the same documented floor the Rust side uses, never an
+ * invented number. */
+export interface GrantedBudgetTracker {
+  recordGrant(actorId: string, budget: ShardBudget): void;
+  forget(actorId: string): void;
+  granted(actorId: string): ShardBudget;
+}
+
+export function createGrantedBudgetTracker(fallback: ShardBudget = MAINTENANCE_LANE_DEFAULT_BUDGET): GrantedBudgetTracker {
+  const budgets = new Map<string, ShardBudget>();
+  return {
+    recordGrant(actorId, budget) {
+      budgets.set(actorId, budget);
+    },
+    forget(actorId) {
+      budgets.delete(actorId);
+    },
+    granted(actorId) {
+      return budgets.get(actorId) ?? fallback;
+    },
+  };
+}
+
+/** 📤️ What interpreting one {@link ShardFrame} resolves to. */
+export type ShardFrameDispatch =
+  | { readonly action: "register" | "unregister"; readonly actor: string }
+  | { readonly action: "runEnvelopes"; readonly actor: string; readonly budget: ShardBudget; readonly envelopes: readonly ShardEnvelope[] }
+  | { readonly action: "unknown"; readonly frame: unknown };
+
+/** 🧠️ Mirrors `ShardLoop::pump`'s per-frame dispatch: `Grant` records its budget (via `tracker`) and
+ * hands back its envelopes IN LANE-PRIORITY ORDER; a budget-less `Envelope` resolves its actor's LAST
+ * granted budget (never a fixed constant — see {@link GrantedBudgetTracker}); `Register`/`Unregister`
+ * are pure bookkeeping (`Register` has no local instantiation side effect, matching that variant's own
+ * Rust doc); a frame kind this file has never heard of resolves to `"unknown"` rather than throwing,
+ * so a future Rust-side `ShardFrame` variant can reach a caller before its TS mirror lands without
+ * wedging it. `🟨️shard-worker.js`'s own `"frame"` message handler (`plugin-web-materialize.ts`'s
+ * `shardWorkerSource`) is a hand-transcribed mirror of exactly this function — a template-string
+ * worker body cannot `import` it, so the logic is duplicated-by-necessity, not by choice; exercising
+ * THIS function is how the in-source tests below prove the budget-threading/lane-ordering/forward-
+ * compat behavior without spinning up a real `Worker`. */
+export function interpretShardFrame(frame: ShardFrame, tracker: GrantedBudgetTracker): ShardFrameDispatch {
+  switch (frame.kind) {
+    case "Register":
+      return { action: "register", actor: frame.actor };
+    case "Unregister":
+      tracker.forget(frame.actor);
+      return { action: "unregister", actor: frame.actor };
+    case "Grant":
+      tracker.recordGrant(frame.actor, frame.budget);
+      return { action: "runEnvelopes", actor: frame.actor, budget: frame.budget, envelopes: orderEnvelopesByLane(frame.envelopes) };
+    case "Envelope":
+      return { action: "runEnvelopes", actor: frame.envelope.to, budget: tracker.granted(frame.envelope.to), envelopes: [frame.envelope] };
+    default:
+      return { action: "unknown", frame };
+  }
+}
+//#endregion 📨️ShardFrame
+
 //#region 🌉️WorkerLike
 /** 🌉️ The slice of `Worker` `ShardClient` depends on — lets tests (and any non-browser host) inject a
  * fake without a real `Worker`/`MessagePort`. A real browser `Worker` satisfies this structurally. */
@@ -105,7 +247,13 @@ type OutboundMessage =
   | { readonly kind: "cancelJob"; readonly actorId: string; readonly job: number }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
-  | { readonly kind: "dispose"; readonly actorId: string };
+  | { readonly kind: "dispose"; readonly actorId: string }
+  /** 📨️ terra-web-shardframe: the ONE new wire message every {@link ShardFrame} variant travels over —
+   * additive alongside `"activate"`/`"turn"`/etc above, none of which this message kind replaces or
+   * changes. `actorId` is carried alongside `frame` (rather than requiring every handler to destructure
+   * it back out of `frame`) purely so `send()`'s existing `"actorId" in message` pending-entry bookkeeping
+   * keeps working unmodified for this kind too. */
+  | { readonly kind: "frame"; readonly requestId: string; readonly actorId: string; readonly frame: ShardFrame };
 
 type InboundMessage =
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
@@ -365,6 +513,30 @@ export class ShardClient {
     const slot = this.shards[shardIndex]!;
     const requestId = this.nextRequestId();
     return this.send(slot, { kind: "turn", requestId, actorId, events, budget }, requestId);
+  }
+
+  /** 📨️ terra-web-shardframe: `ShardFrame::Envelope` passthrough — wraps ONE envelope's worth of work
+   * in the Rust-mirrored shape, deliberately budget-LESS on the wire (the worker resolves
+   * `envelope.to`'s LAST {@link ShardFrame.Grant} via a {@link GrantedBudgetTracker}, falling back to
+   * {@link MAINTENANCE_LANE_DEFAULT_BUDGET} for an actor never granted one) — exactly the incremental
+   * adoption step the Rust `ShardFrame::Envelope` doc calls for ("kept so the web `ShardClient`... can
+   * adopt this wire incrementally... without both ends changing atomically"). {@link turn} is left
+   * completely untouched by this method; both wire shapes coexist on purpose. */
+  async envelope(shardEnvelope: ShardEnvelope): Promise<unknown> {
+    const slot = this.requireShard(shardEnvelope.to);
+    const requestId = this.nextRequestId();
+    return this.send(slot, { kind: "frame", requestId, actorId: shardEnvelope.to, frame: { kind: "Envelope", envelope: shardEnvelope } }, requestId);
+  }
+
+  /** ⚖️ terra-web-shardframe: `ShardFrame::Grant` — `budget` travels WITH `envelopes` in ONE wire
+   * message (design-runtime.md's DRR promise), sent to the worker in LANE-PRIORITY order via
+   * {@link orderEnvelopesByLane} rather than push/arrival order. The worker remembers `budget` as
+   * `actorId`'s new granted budget for any later {@link envelope} passthrough. */
+  async grant(actorId: string, budget: ShardBudget, envelopes: readonly ShardEnvelope[]): Promise<unknown> {
+    const slot = this.requireShard(actorId);
+    const requestId = this.nextRequestId();
+    const ordered = orderEnvelopesByLane(envelopes);
+    return this.send(slot, { kind: "frame", requestId, actorId, frame: { kind: "Grant", actor: actorId, budget, envelopes: ordered } }, requestId);
   }
 
   async startJob(actorId: string, job: number, jobKind: string, input: Uint8Array): Promise<void> {
@@ -871,6 +1043,153 @@ if (import.meta.vitest) {
       expect(sample!.metrics.heartbeatAgeMs).toBe(300);
     });
   });
+
+  //#region 📨️ShardFrame tests
+  function makeEnvelope(to: string, lane: Lane, seq: number, kind = "wake"): ShardEnvelope {
+    return { to, from: { kind: "kernel" }, lane, seq, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind, payload: {} } };
+  }
+
+  describe("orderEnvelopesByLane", () => {
+    it("sorts by Lane priority, not arrival order, stable within a tied lane", () => {
+      const envelopes = [makeEnvelope("a", "Background", 1), makeEnvelope("a", "Interactive", 2), makeEnvelope("a", "Maintenance", 3), makeEnvelope("a", "Interactive", 4)];
+      const ordered = orderEnvelopesByLane(envelopes);
+      expect(ordered.map((envelope) => envelope.seq)).toEqual([2, 4, 1, 3]);
+    });
+
+    it("is a no-op for an already-lane-sorted, single-lane batch", () => {
+      const envelopes = [makeEnvelope("a", "Interactive", 1), makeEnvelope("a", "Interactive", 2)];
+      expect(orderEnvelopesByLane(envelopes).map((envelope) => envelope.seq)).toEqual([1, 2]);
+    });
+  });
+
+  describe("GrantedBudgetTracker + interpretShardFrame", () => {
+    it("a Grant records its budget and hands back envelopes in lane-priority order", () => {
+      const tracker = createGrantedBudgetTracker();
+      const envelopes = [makeEnvelope("a", "Background", 1), makeEnvelope("a", "Interactive", 2)];
+      const grantBudget: ShardBudget = { ...BUDGET, fuel: 999 };
+      const result = interpretShardFrame({ kind: "Grant", actor: "a", budget: grantBudget, envelopes }, tracker);
+      expect(result).toEqual({ action: "runEnvelopes", actor: "a", budget: grantBudget, envelopes: [envelopes[1], envelopes[0]] });
+      expect(tracker.granted("a")).toBe(grantBudget);
+    });
+
+    it("an Envelope with no prior Grant runs under the Maintenance-lane default, never an invented constant", () => {
+      const tracker = createGrantedBudgetTracker();
+      const lonelyEnvelope = makeEnvelope("never-granted", "Interactive", 1);
+      const result = interpretShardFrame({ kind: "Envelope", envelope: lonelyEnvelope }, tracker);
+      expect(result).toEqual({ action: "runEnvelopes", actor: "never-granted", budget: MAINTENANCE_LANE_DEFAULT_BUDGET, envelopes: [lonelyEnvelope] });
+    });
+
+    it("an Envelope AFTER a Grant for the same actor runs under THAT granted budget — proving the old constant no longer influences it", () => {
+      const tracker = createGrantedBudgetTracker();
+      const grantBudget: ShardBudget = { ...BUDGET, fuel: 42 };
+      interpretShardFrame({ kind: "Grant", actor: "a", budget: grantBudget, envelopes: [] }, tracker);
+      const followUp = makeEnvelope("a", "Interactive", 5);
+      const result = interpretShardFrame({ kind: "Envelope", envelope: followUp }, tracker);
+      expect(result.action).toBe("runEnvelopes");
+      expect((result as { readonly budget: ShardBudget }).budget).toBe(grantBudget);
+      expect((result as { readonly budget: ShardBudget }).budget).not.toBe(MAINTENANCE_LANE_DEFAULT_BUDGET);
+    });
+
+    it("Register/Unregister are pure bookkeeping; Unregister forgets a previously granted budget", () => {
+      const tracker = createGrantedBudgetTracker();
+      interpretShardFrame({ kind: "Grant", actor: "a", budget: BUDGET, envelopes: [] }, tracker);
+      expect(tracker.granted("a")).toBe(BUDGET);
+      expect(interpretShardFrame({ kind: "Register", actor: "a" }, tracker)).toEqual({ action: "register", actor: "a" });
+      expect(interpretShardFrame({ kind: "Unregister", actor: "a" }, tracker)).toEqual({ action: "unregister", actor: "a" });
+      expect(tracker.granted("a")).toEqual(MAINTENANCE_LANE_DEFAULT_BUDGET); // forgotten — back to the floor, not a stale grant
+    });
+
+    it("an unknown/future frame variant resolves to 'unknown' instead of throwing (forward-compat)", () => {
+      const tracker = createGrantedBudgetTracker();
+      const futureFrame = { kind: "Checkpoint", actor: "a" } as unknown as ShardFrame;
+      expect(() => interpretShardFrame(futureFrame, tracker)).not.toThrow();
+      expect(interpretShardFrame(futureFrame, tracker)).toEqual({ action: "unknown", frame: futureFrame });
+    });
+  });
+
+  describe("ShardClient.grant / ShardClient.envelope wire adoption", () => {
+    it("grant() sends a ShardFrame::Grant frame with envelopes pre-sorted by lane, budget carried alongside them", async () => {
+      const { client, workers } = harness(1);
+      const activatePromise = client.activate("a", "https://x/a.js", [], BUDGET);
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[0] as { requestId: string }).requestId, ok: true, value: undefined });
+      await activatePromise;
+
+      const grantBudget: ShardBudget = { ...BUDGET, fuel: 12345 };
+      const envelopes = [makeEnvelope("a", "Background", 1), makeEnvelope("a", "Interactive", 2)];
+      void client.grant("a", grantBudget, envelopes);
+
+      const sent = workers[0]!.sent[1] as { readonly kind: string; readonly frame: ShardFrame };
+      expect(sent.kind).toBe("frame");
+      expect(sent.frame.kind).toBe("Grant");
+      const grantFrame = sent.frame as { readonly kind: "Grant"; readonly actor: string; readonly budget: ShardBudget; readonly envelopes: readonly ShardEnvelope[] };
+      expect(grantFrame.budget).toBe(grantBudget);
+      expect(grantFrame.envelopes.map((envelope) => envelope.seq)).toEqual([2, 1]); // Interactive dispatched before Background
+    });
+
+    it("envelope() sends a ShardFrame::Envelope frame with NO budget field on the wire at all", async () => {
+      const { client, workers } = harness(1);
+      const activatePromise = client.activate("a", "https://x/a.js", [], BUDGET);
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[0] as { requestId: string }).requestId, ok: true, value: undefined });
+      await activatePromise;
+
+      void client.envelope(makeEnvelope("a", "Interactive", 1));
+      const sent = workers[0]!.sent[1] as { readonly kind: string; readonly frame: ShardFrame };
+      expect(sent.kind).toBe("frame");
+      expect(sent.frame.kind).toBe("Envelope");
+      expect(Object.keys(sent.frame)).toEqual(["kind", "envelope"]); // structurally budget-less on the wire
+    });
+
+    it("turn()/activate() keep working completely unchanged alongside the new frame wire (incremental adoption really is incremental)", async () => {
+      const { client, workers } = harness(1);
+      const activatePromise = client.activate("legacy", "https://x/legacy.js", [], BUDGET);
+      const activateMsg = workers[0]!.sent[0] as { readonly kind: string; readonly requestId: string };
+      expect(activateMsg.kind).toBe("activate");
+      workers[0]!.deliver({ kind: "result", requestId: activateMsg.requestId, ok: true, value: undefined });
+      await activatePromise;
+
+      const turnPromise = client.turn("legacy", [{ kind: "wake", payload: {} }], BUDGET);
+      const turnMsg = workers[0]!.sent[1] as { readonly kind: string; readonly requestId: string };
+      expect(turnMsg.kind).toBe("turn");
+      workers[0]!.deliver({ kind: "result", requestId: turnMsg.requestId, ok: true, value: { effects: [] } });
+      await expect(turnPromise).resolves.toEqual({ effects: [] });
+    });
+  });
+
+  describe("ShardFrame parity with Rust component.rs", () => {
+    it("TS ShardFrame variant/field names match the live Rust enum in 🖥️host/🧵️shard/🦀️component.rs", async () => {
+      const { readFileSync } = await import("node:fs");
+      const rustUrl = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs", import.meta.url);
+      const source = readFileSync(rustUrl, "utf8");
+      const enumMatch = source.match(/pub enum ShardFrame \{([\s\S]*?)\n\}\s*\n\s*impl ShardFrame/);
+      expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum ShardFrame { ... } impl ShardFrame` shape not found — Rust source changed, update this test's regex
+      const body = enumMatch![1]!.replace(/\/\/\/.*$/gm, "").replace(/\/\/.*$/gm, "");
+      const variantPattern = /(\w+)\s*(?:\{([^{}]*)\}|\(([^()]*)\))?\s*,/g;
+      const rustVariants: Array<{ readonly name: string; readonly fields: readonly string[] | null }> = [];
+      let match: RegExpExecArray | null;
+      while ((match = variantPattern.exec(body)) !== null) {
+        const [, name, structFields, tupleType] = match;
+        if (structFields !== undefined) {
+          const fields = structFields
+            .split(",")
+            .map((part) => part.trim())
+            .filter((part) => part.length > 0)
+            .map((part) => part.split(":")[0]!.trim());
+          rustVariants.push({ name: name!, fields });
+        } else if (tupleType !== undefined) {
+          rustVariants.push({ name: name!, fields: null });
+        }
+      }
+
+      // Same variant NAMES, in the same order, as this file's own runtime twin.
+      expect(rustVariants.map((variant) => variant.name)).toEqual(SHARD_FRAME_VARIANT_FIELDS.map((variant) => variant.kind));
+      for (const rustVariant of rustVariants) {
+        if (rustVariant.fields === null) continue; // tuple variant (`Envelope(Envelope)`) — Rust has no field name to diff against; see SHARD_FRAME_VARIANT_FIELDS's own doc
+        const tsVariant = SHARD_FRAME_VARIANT_FIELDS.find((variant) => variant.kind === rustVariant.name)!;
+        expect(tsVariant.fields).toEqual(rustVariant.fields);
+      }
+    });
+  });
+  //#endregion 📨️ShardFrame tests
 
   void vi;
 }

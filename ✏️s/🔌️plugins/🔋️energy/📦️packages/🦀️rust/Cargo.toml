@@ -15,6 +15,7 @@ package = "semio:energy"
 role = "plugin"
 
 [lib]
+crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]

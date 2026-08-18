@@ -14,6 +14,13 @@
 //! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
 //! ([`ShardFrame::Grant`]) instead of `pump` re-deriving one from local constants.
 
+// 🏃️ terra-shard-grants: `ShardExecutor` — one `ShardLoop` per dedicated OS thread. Declared here
+// (not in `🖥️host/🦀️component.rs`, a file this packet only touches for narrow Part A fallout) —
+// `#[path]` on a submodule resolves relative to THIS file's own directory, so this reaches
+// `🧵️shard/🏃️executor.rs` without any edit to the crate-root module tree.
+#[path = "🏃️executor.rs"]
+pub mod executor;
+
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use super::{GuestInstance, GuestRuntime, JobBudget, JobStep, PluginHostError, TurnFault};
@@ -292,11 +299,15 @@ impl ShardLoop {
 
         let mut driven = 0usize;
         for (actor_id, events) in events_by_actor {
+            // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)` needs `&self`
+            // (the whole struct), which conflicts with the `&mut self.instances` borrow `instance`
+            // holds for the rest of this iteration (E0502).
+            let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id));
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget_from_grant(self.granted_budget(actor_id))) {
+            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget) {
                 Ok(result) => {
                     // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
                     // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
@@ -361,11 +372,13 @@ impl ShardLoop {
         to_step.sort_by_key(|pair| if matches!(self.job_placement.get(pair), Some(JobPlacement::Exclusive)) { 0u8 } else { 1u8 });
 
         for (actor_id, job) in to_step {
+            // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
+            let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.step_job(instance, job, job_budget_from_grant(self.granted_budget(actor_id))) {
+            let outcome = match self.runtime.step_job(instance, job, job_budget) {
                 Ok(step) => {
                     match &step {
                         JobStep::Running { .. } => {}
@@ -941,4 +954,280 @@ mod tests {
         assert_eq!(job_order, vec![exclusive_job, inline_job], "the Exclusive-placed job must be stepped before the Inline one despite being spawned second");
     }
     //#endregion 🔖️K1SuspendResumePlacement
+
+    //#region 🔖️ShardFrameRoundTrips
+    /// 🎯️ terra-shard-grants requirement: every `ShardFrame` variant round-trips through the pack
+    /// codec, INCLUDING the `Envelope` passthrough — the variant the packet brief explicitly says
+    /// must not be removed as redundant.
+    macro_rules! shard_frame_round_trip {
+        ($name:ident, $value:expr) => {
+            #[test]
+            fn $name() {
+                let value: ShardFrame = $value;
+                let mut bytes = Vec::new();
+                value.pack_encode(&mut bytes);
+                let mut pos = 0usize;
+                let decoded = ShardFrame::pack_decode(&bytes, &mut pos).expect("pack_decode");
+                assert_eq!(pos, bytes.len(), "pack_decode must consume exactly what pack_encode wrote");
+                assert_eq!(decoded, value);
+            }
+        };
+    }
+
+    shard_frame_round_trip!(shard_frame_round_trip_register, ShardFrame::Register { actor: ActorId(7) });
+    shard_frame_round_trip!(shard_frame_round_trip_unregister, ShardFrame::Unregister { actor: ActorId(9) });
+    shard_frame_round_trip!(
+        shard_frame_round_trip_grant,
+        ShardFrame::Grant {
+            actor: ActorId(11),
+            budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive),
+            envelopes: vec![Envelope {
+                to: ActorId(11),
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Interactive,
+                seq: 1,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Event { bytes: vec![1, 2, 3] },
+            }],
+        }
+    );
+    shard_frame_round_trip!(
+        shard_frame_round_trip_envelope_passthrough,
+        ShardFrame::Envelope(Envelope {
+            to: ActorId(13),
+            from: semio_framework_actor::Origin::Kernel,
+            lane: semio_framework_actor::Lane::Background,
+            seq: 2,
+            deadline_ms: None,
+            coalesce: None,
+            cancel_of: None,
+            payload: Payload::Cancel { seq: 4 },
+        })
+    );
+
+    /// 🎯️ A `Grant` with ZERO bundled envelopes must still record its budget — proven separately
+    /// from the "budget actually executes under" test below, which needs at least one envelope to
+    /// drive a turn.
+    #[test]
+    fn grant_with_no_envelopes_still_records_the_budget() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(61);
+        let package = PackageRef { package: PackageId("grant-empty".to_string()), hash: PackageHash([20u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
+        let (transport, probe) = LoopbackTransport::paired();
+        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+        budget.fuel = 123_456;
+        let mut bytes = Vec::new();
+        ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes);
+        probe.push_inbound(bytes);
+
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+        let driven = shard.pump().expect("pump");
+        assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
+        assert_eq!(shard.granted_budget(actor.0).fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
+    }
+    //#endregion 🔖️ShardFrameRoundTrips
+
+    //#region 🔖️GrantBudgetExecution
+    /// 🧪️ A `GuestRuntime` that records the EXACT `Budget`/`JobBudget` it was invoked with — unlike
+    /// `MockGuestRuntime` (owned by `🖥️host/🦀️component.rs`, out of this packet's edit scope, and
+    /// which ignores its `budget` parameter entirely), this proves the property the packet brief
+    /// demands: "a Grant's budget is what the turn actually executes under (prove the constants
+    /// are gone, not merely unused)".
+    struct RecordingRuntime {
+        last_turn_budget: Mutex<Option<Budget>>,
+        last_job_budget: Mutex<Option<JobBudget>>,
+    }
+
+    impl RecordingRuntime {
+        fn new() -> Self {
+            Self { last_turn_budget: Mutex::new(None), last_job_budget: Mutex::new(None) }
+        }
+    }
+
+    impl GuestRuntime for RecordingRuntime {
+        fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::super::CompiledHandle, PluginHostError> {
+            Ok(super::super::CompiledHandle { package_hash: package.hash.0, component: None })
+        }
+        fn instantiate(&self, _compiled: &super::super::CompiledHandle, actor: ActorId, _caps: &[super::super::BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+            Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::super::MockInstanceState::default()) })
+        }
+        fn drop_instance(&self, _inst: GuestInstance) {}
+        fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+            *self.last_turn_budget.lock().expect("lock") = Some(budget);
+            Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
+        }
+        fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
+            Ok(())
+        }
+        fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+            *self.last_job_budget.lock().expect("lock") = Some(budget);
+            Ok(JobStep::Running { progress: None })
+        }
+        fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+            Ok(())
+        }
+        fn checkpoint(&self, _inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+            Ok(vec![])
+        }
+        fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> Result<(), PluginHostError> {
+            Ok(())
+        }
+    }
+
+    /// 🎯️ Headline property test for terra-shard-grants Part B: a `Grant`'s budget — NOT any
+    /// leftover constant, since `TURN_BUDGET`/`JOB_STEP_BUDGET` are deleted from this file entirely
+    /// — is what `execute_turn` actually receives. Two DIFFERENT `Grant`s (deliberately distinct
+    /// `fuel` values) prove the budget travels PER-GRANT, not a single hardcoded number that would
+    /// happen to match by coincidence.
+    #[test]
+    fn a_grants_budget_is_what_the_turn_actually_executes_under() {
+        let runtime = Arc::new(RecordingRuntime::new());
+        let actor = ActorId(71);
+        let package = PackageRef { package: PackageId("grant-budget".to_string()), hash: PackageHash([21u8; 32]) };
+        let compiled = runtime.compile(&package, &[]).expect("compile");
+        let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+
+        let (transport, probe) = LoopbackTransport::paired();
+        let mut shard = ShardLoop::new(runtime.clone(), Box::new(transport));
+        shard.register(actor, instance);
+
+        let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+        first_budget.fuel = 111_111;
+        let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() } };
+        let mut bytes = Vec::new();
+        ShardFrame::Grant { actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes);
+        probe.push_inbound(bytes);
+        shard.pump().expect("pump 1");
+        assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called").fuel, 111_111, "the FIRST Grant's own fuel must reach execute_turn, not a constant");
+
+        let mut second_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background);
+        second_budget.fuel = 222_222;
+        let envelope2 = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() } };
+        let mut bytes2 = Vec::new();
+        ShardFrame::Grant { actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2);
+        probe.push_inbound(bytes2);
+        shard.pump().expect("pump 2");
+        assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called again").fuel, 222_222, "a DIFFERENT second Grant's fuel must reach execute_turn too — proving it travels per-Grant, not a fixed constant");
+
+        let _ = probe.take_outbound();
+    }
+
+    /// 🎯️ Same property for job stepping: `step_job`'s `JobBudget` comes from the SAME actor's last
+    /// granted budget (point 2 of the brief: "job steps take the owning actor's last granted budget
+    /// on the Maintenance lane").
+    #[test]
+    fn job_step_uses_the_owning_actors_last_granted_budget() {
+        let runtime = Arc::new(RecordingRuntime::new());
+        let actor = ActorId(72);
+        let package = PackageRef { package: PackageId("grant-job-budget".to_string()), hash: PackageHash([22u8; 32]) };
+        let compiled = runtime.compile(&package, &[]).expect("compile");
+        let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+
+        let (transport, probe) = LoopbackTransport::paired();
+        let mut shard = ShardLoop::new(runtime.clone(), Box::new(transport));
+        shard.register(actor, instance);
+
+        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
+        budget.fuel = 333_333;
+        let mut bytes = Vec::new();
+        ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes);
+        probe.push_inbound(bytes);
+        // 🔀️ An explicit `JobStep` re-arming, not a `SpawnJob` effect — simplest way to reach the
+        // step phase without depending on `RecordingRuntime::execute_turn`'s effects (it always
+        // returns none).
+        let job_bytes = {
+            let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { job: 999 } };
+            let mut out = Vec::new();
+            ShardFrame::Envelope(envelope).pack_encode(&mut out);
+            out
+        };
+        probe.push_inbound(job_bytes);
+
+        shard.pump().expect("pump");
+        assert_eq!(runtime.last_job_budget.lock().unwrap().expect("step_job must have been called").fuel, 333_333, "step_job must run under the SAME actor's last granted budget, not a deleted JOB_STEP_BUDGET constant");
+        let _ = probe.take_outbound();
+    }
+
+    /// 🎯️ An actor that was NEVER granted a budget still gets a real, principled one (the
+    /// Maintenance lane's default) — never a panic, never a zeroed budget.
+    #[test]
+    fn an_actor_never_granted_a_budget_falls_back_to_the_maintenance_lane_default() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(73);
+        let shard = ShardLoop::new(mock, Box::new(LoopbackTransport::default()));
+        let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
+        assert_eq!(shard.granted_budget(actor.0), expected);
+    }
+    //#endregion 🔖️GrantBudgetExecution
+
+    //#region 🔖️RegisterUnregisterFrames
+    /// 🛑️ An incoming `ShardFrame::Unregister` must unregister the actor exactly like calling
+    /// [`ShardLoop::unregister`] directly — real behavior, unlike `Register`'s wire-symmetry-only
+    /// role (see that variant's own doc).
+    #[test]
+    fn unregister_frame_drops_the_instance_exactly_like_the_direct_call() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(81);
+        let package = PackageRef { package: PackageId("unreg-frame".to_string()), hash: PackageHash([23u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
+        let (transport, probe) = LoopbackTransport::paired();
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+        assert!(shard.is_registered(actor));
+
+        let mut bytes = Vec::new();
+        ShardFrame::Unregister { actor }.pack_encode(&mut bytes);
+        probe.push_inbound(bytes);
+        let driven = shard.pump().expect("pump");
+        assert_eq!(driven, 0, "Unregister is handled entirely in the drain loop");
+        assert!(!shard.is_registered(actor), "an incoming Unregister frame must drop the instance");
+    }
+
+    /// 📌️ `Register` is decoded without error but has no LOCAL side effect (see its own doc) — this
+    /// proves `pump` does not choke on it or mistake it for anything else.
+    #[test]
+    fn register_frame_is_accepted_without_error_and_has_no_local_side_effect() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(82);
+        let (transport, probe) = LoopbackTransport::paired();
+        let mut bytes = Vec::new();
+        ShardFrame::Register { actor }.pack_encode(&mut bytes);
+        probe.push_inbound(bytes);
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let driven = shard.pump().expect("pump must not error on a Register frame");
+        assert_eq!(driven, 0);
+        assert!(!shard.is_registered(actor), "Register never instantiates locally — see its own doc");
+    }
+    //#endregion 🔖️RegisterUnregisterFrames
+
+    //#region 🔖️BudgetBridge
+    #[test]
+    fn to_actor_turn_result_maps_status_and_carries_host_measured_usage() {
+        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999 };
+        let bridged = to_actor_turn_result(&kernel_result, 1234, 5678);
+        assert_eq!(bridged.next_wake, Some(42));
+        assert_eq!(bridged.status, semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() }, "status must map 1:1, and the actor crate's struct-variant Faulted (Part A) must be what this bridge constructs");
+        assert_eq!(bridged.usage.fuel, 999, "usage.fuel comes from the kernel TurnResult's own fuel_used");
+        assert_eq!(bridged.usage.wall_us, 1234, "wall_us is host-measured, passed straight through");
+        assert_eq!(bridged.usage.memory_bytes, 5678, "memory_bytes is host-measured, passed straight through");
+    }
+
+    #[test]
+    fn to_actor_turn_result_status_maps_idle_more_work_and_checkpoint_ready() {
+        for (kernel_status, expected) in [
+            (semio_framework::kernel::TurnStatus::Idle, semio_framework_actor::TurnStatus::Idle),
+            (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
+            (semio_framework::kernel::TurnStatus::CheckpointReady, semio_framework_actor::TurnStatus::CheckpointReady),
+        ] {
+            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: kernel_status, fuel_used: 0 };
+            assert_eq!(to_actor_turn_result(&kernel_result, 0, 0).status, expected);
+        }
+    }
+    //#endregion 🔖️BudgetBridge
 }

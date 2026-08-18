@@ -1,0 +1,23 @@
+{
+  "descriptorVersion": 1,
+  "role": "plugin",
+  "manifest": {
+    "pluginId": "empty",
+    "label": "Empty",
+    "version": "0.0.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [],
+    "commands": [],
+    "artifactKinds": []
+  },
+  "execution": "isolated",
+  "quotas": {},
+  "contributions": {},
+  "hashes": {
+    "wasmSha256": "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0",
+    "coreWasmSha256": "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0",
+    "descriptorSha256": "4f06e341b211c507f489e3929838512d79015d79a3b8fd97f3c4ef1f3a2ee43e"
+  }
+}

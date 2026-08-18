@@ -23,6 +23,8 @@
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",

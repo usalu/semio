@@ -9,7 +9,6 @@ extern crate self as semio_framework_os_kernel;
 extern crate self as dsl_grammar;
 extern crate self as dsl_notation;
 extern crate self as store;
-extern crate self as pack;
 extern crate self as spr;
 extern crate self as vcs;
 pub extern crate self as semio_format;
@@ -98,36 +97,24 @@ pub mod os_pack {
   mod component;
   pub use component::*;
 
-  #[path = "../../🔨️modules/🎒️pack/⏳️async/🦀️component.rs"]
-  pub mod async_;
-
   #[cfg(not(target_arch = "wasm32"))]
   #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
   pub mod cli;
 
-  // 📡️ Container identity, codec primitives and pack sources are owned by the replication crate
-  // (`protocol::codec`) — the `.spr` record format and the pack container share one codec.
-  pub use protocol::codec::ids;
-  pub use protocol::codec;
-  pub use protocol::source;
-
-  pub use self::ids::*;
-  pub use self::source::*;
-  // 🎾️ Re-export codec primitives without PackSource/PackSink (those live in `source`).
-  pub use self::codec::{
-    ByteReader, ByteWriter, CompressionCodec, DeflateCodec, NoCompression, PackError, PackLimits, crc32c,
-    is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64,
-  };
-
-  #[path = "../../🔨️modules/🎒️pack/📐️format/🦀️component.rs"]
-  pub mod format;
-
-  #[path = "../../🔨️modules/🎒️pack/🌐️http/🦀️component.rs"]
-  pub mod http;
-
+  // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
+  // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
+  // below is only the schema-driven half: the record value codec and the arbitrary/law testkit.
+  pub use pack::async_;
+  pub use pack::codec;
+  pub use pack::codec::ids;
+  pub use pack::format;
+  pub use pack::http;
+  pub use pack::source;
   #[cfg(not(target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/🎒️pack/🔌️io/🦀️component.rs"]
-  pub mod io;
+  pub use pack::io;
+
+  // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
+  // re-exporting it a second time here would make every primitive an ambiguous glob.
 
   #[path = "../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs"]
   pub mod testkit;
@@ -279,3 +266,26 @@ pub use crate::os_extension as extension;
 pub use crate::os_dsl::notation::*;
 pub use crate::os_dsl::grammar::*;
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+
+//#region 🧪️Tests
+/// 🚨️ Every `#[path]` in this file must point at a file that exists. A mount whose target moved
+/// turns into "os-kernel does not compile" for every session in the tree, with an error that names
+/// a path rather than a cause; this turns it into one named failing test in the owning crate.
+#[test]
+fn every_path_mount_in_this_glue_resolves_to_an_existing_file() {
+    let here = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let source = include_str!("📦️glue.rs");
+    let mut missing = Vec::new();
+    for line in source.lines() {
+        let Some(rest) = line.trim().strip_prefix("#[path = \"") else { continue };
+        let Some(target) = rest.split('"').next() else { continue };
+        if target == "." {
+            continue;
+        }
+        if !here.join(target).exists() {
+            missing.push(target.to_string());
+        }
+    }
+    assert!(missing.is_empty(), "glue.rs mounts files that do not exist: {missing:?}");
+}
+//#endregion 🧪️Tests

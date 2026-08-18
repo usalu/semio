@@ -132,21 +132,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .descriptor(b"s.stdio.ply@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
         )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.png")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.png@1.2/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.json")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.json@rfc8259/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.dwg")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.dwg@ac1018/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
-        )?
+        // 🗺️ No `composer.png`/`composer.json`/`composer.dwg` here: all three collide with gismap's
+        // identical literal EXPORT claims (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 —
+        // `ArtifactDefinitionRegistry` rejects two artifacts in the same plugin exporting the same
+        // dialect coordinate). gismap is the plugin's real top-level artifact — it alone gets
+        // `.activation(...)` in `../../🦀️component.rs` and owns the plugin's only `host_media_handler`
+        // (SVG export); gisterrain is a composed CHILD of gismap's own snapshot, never independently
+        // activated (see that file's own doc comment) — so gismap keeps every shared EXPORT claim.
+        // Import still works: `reads()` on gisterrain's own native composer is unaffected.
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.stl")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.stl@ascii/*")?

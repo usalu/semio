@@ -50,6 +50,14 @@ pub mod shell;
 #[path = "../../../../🧱️elements/IconRenderHost/🧊️component.rs"]
 pub mod icon_atlas;
 
+// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop): the real multi-shard `Kernel`
+// loop — `ParallelRuntime` — used by both `kernel_runtime` (below) and `scale_bench`. Native-only,
+// same reason `kernel_runtime`/`scale_bench` themselves are: real OS threads (`ShardExecutor`s +
+// their outcome forwarders), not available on wasm32.
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎠️runtime.rs"]
+pub mod parallel_runtime;
+
 use infinite_world::{
     apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel,
     orbit_camera_action,
@@ -84,19 +92,22 @@ use winit::window::Fullscreen;
 use winit::window::{Window, WindowAttributes, WindowId};
 
 //#region 🎠️KernelRuntime
-/// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native), `📓️design-runtime.md` §1's
-/// "wgpu native" host: `Kernel` runs on a dedicated kernel thread; the winit thread only submits
-/// requests and drains outbound results (`📓️terra-H3-wgpu-native-report.md` has the full design
-/// writeup and the honest list of what is NOT wired yet — DRR `tick()`-based fairness, multi-shard
-/// `ShardTable` routing, checkpoint/restore). `ProgramBridgeBackend::Wasm` (in `ProgramBridge/`)
-/// holds a [`KernelClient`] instead of the deleted `Arc<WasmPluginRuntime>`; every plugin turn now
-/// executes on this thread via the real `semio_framework_actor::Kernel` + `GuestRuntime`/
-/// `WasmtimeRuntime` + `ShardLoop`, never in-process on the winit thread.
+/// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native; upgraded by terra-kernel-loop):
+/// `📓️design-runtime.md` §1's "wgpu native" host — `Kernel` runs on a dedicated kernel thread; the
+/// winit thread only submits requests and drains outbound results. terra-kernel-loop replaced the
+/// original single-`ShardLoop` request-servant with `crate::parallel_runtime::ParallelRuntime`: real
+/// `Kernel::submit`/`tick`/`complete` (DRR fairness, failure-ladder/metrics bookkeeping) dispatched
+/// across K real `ShardExecutor` OS threads, one per `ShardTable`-pinned shard — see
+/// `📓️terra-kernel-loop-report.md` for what is (and, per that report's own honest-gaps section, is
+/// NOT) wired all the way through. `ProgramBridgeBackend::Wasm` (in `ProgramBridge/`) holds a
+/// [`KernelClient`] instead of the deleted `Arc<WasmPluginRuntime>`; every plugin turn now executes
+/// on this thread via `Kernel` + `GuestRuntime`/`WasmtimeRuntime` + `ParallelRuntime`, never
+/// in-process on the winit thread.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, PatchOp, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
-    use semio_framework_actor::{ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload, ShardKind, ShardTransport, ThreadTransport};
-    use semio_framework_plugin_host::shard::{ShardLoop, ShardOutcome};
+    use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use std::collections::HashMap;
     use std::future::Future;
@@ -106,6 +117,7 @@ pub(crate) mod kernel_runtime {
     use std::sync::mpsc;
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
+    use std::time::Duration;
     use ui_wgpu::wgpu::UiNode;
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
@@ -117,6 +129,20 @@ pub(crate) mod kernel_runtime {
     /// through (same honestly-flagged gap `PluginInstanceHandle`'s `RELAY_JOB_BUDGET` already
     /// documents on the host side for jobs — this is its `reactor::poll` turn-budget twin).
     const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
+
+    /// ⏳️ terra-kernel-loop: same tripwire shape as `scale_bench`'s own `PUMP_OUTCOME_TIMEOUT` —
+    /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
+    const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
+
+    /// 🧵️ terra-kernel-loop, item 3 of the packet brief: K sized from `semio_framework_async::
+    /// thread_plan(cores).shards` rather than a fresh ad-hoc formula — "the global thread budget
+    /// exists so no component sizes itself per-CPU." `available_parallelism()` failing (rare; a
+    /// sandboxed/exotic host) falls back to `4` cores' worth of shards rather than panicking the
+    /// kernel thread before it can even start.
+    fn native_shard_count() -> u16 {
+        let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        semio_framework_async::thread_plan(cores).shards as u16
+    }
 
     //#region 🔖️Requests/Outcomes
     pub(crate) enum KernelRequest {
@@ -262,10 +288,16 @@ pub(crate) mod kernel_runtime {
     }
 
     struct KernelThreadState {
-        kernel: Kernel,
-        runtime: Arc<dyn GuestRuntime>,
-        shard: ShardLoop,
-        kernel_transport: ThreadTransport,
+        guest_runtime: Arc<dyn GuestRuntime>,
+        /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
+        /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Thread, K, 2,
+        /// 64)` (`exclusive_reserve: 2` — item 3 of the packet brief — makes `request_exclusive`
+        /// real; no caller in this file exercises it yet, but the reserve pool now genuinely exists).
+        runtime: crate::parallel_runtime::ParallelRuntime,
+        /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — this
+        /// crate's purity-respecting clock source (`Kernel` itself takes no clock, per `🎭️actor`'s
+        /// own rule), incremented once per `run_turn`-internal tick, never wall-clock-read.
+        now_ms: u64,
         plugin_ordinals: HashMap<String, u16>,
         /// 📇️ `instance_id` (the `u32` `ProgramBridgeEntry`'s callers already address plugin apps
         /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
@@ -287,11 +319,9 @@ pub(crate) mod kernel_runtime {
 
     impl KernelThreadState {
         fn new() -> Self {
-            let runtime: Arc<dyn GuestRuntime> = Arc::new(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds"));
-            let kernel = Kernel::new(ShardKind::Thread, 1, 0, 64);
-            let (kernel_transport, shard_transport) = ThreadTransport::new_pair();
-            let shard = ShardLoop::new(runtime.clone(), Box::new(shard_transport));
-            Self { kernel, runtime, shard, kernel_transport, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
+            let guest_runtime: Arc<dyn GuestRuntime> = Arc::new(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds"));
+            let runtime = crate::parallel_runtime::ParallelRuntime::new(guest_runtime.clone(), native_shard_count(), 2, 64);
+            Self { guest_runtime, runtime, now_ms: 0, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
         }
 
         fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
@@ -304,13 +334,11 @@ pub(crate) mod kernel_runtime {
             let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
-            let compiled = self.runtime.compile(&package_ref, &bytes).map_err(|error| error.to_string())?;
+            let compiled = self.guest_runtime.compile(&package_ref, &bytes).map_err(|error| error.to_string())?;
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
-            let actor = self.kernel.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, semio_framework_actor::ActivationEvent::Manual);
-            let guest_instance = self.runtime.instantiate(&compiled, actor, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).map_err(|error| error.to_string())?;
-            self.shard.register(actor, guest_instance);
+            let actor = self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET)?;
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -330,7 +358,7 @@ pub(crate) mod kernel_runtime {
 
         fn destroy_app(&mut self, instance: u32) {
             if let Some(actor) = self.instances.remove(&instance) {
-                self.shard.unregister(actor);
+                self.runtime.unregister(actor);
             }
             self.retained.retain(|(inst, _), _| *inst != instance);
             self.pending_rejections.retain(|(inst, _), _| *inst != instance);
@@ -349,44 +377,102 @@ pub(crate) mod kernel_runtime {
             self.run_turn(actor, instance, events)
         }
 
+        /// 🎠️ terra-kernel-loop: the real loop the packet brief's item 1 asks for — `Kernel::submit`
+        /// (honouring `Backpressure`; a non-`Accept` result is logged rather than silently ignored,
+        /// but does not abort the turn since `Coalesced`/`Dropped` both still leave AT LEAST one
+        /// envelope queued and `Rejected` on a freshly-activated actor's own generous Interactive-lane
+        /// mailbox should not occur in practice) → `Kernel::tick` → dispatch to the actor's OWN pinned
+        /// shard (a REAL `ShardExecutor` OS thread, not the single physical `ShardLoop` this host used
+        /// to drive) → wait for that shard's `ShardOutcome` → `Kernel::complete` (closing the bridging
+        /// gap this method's OWN doc comment used to flag as unreached) → hand the result to
+        /// `apply_turn_result`. Loops `tick_and_dispatch` until nothing is left to grant — normally
+        /// one iteration (this host submits for exactly one actor per call), but `Kernel::tick`'s DRR
+        /// scheduler is global, so this stays correct if that ever changes.
+        ///
+        /// 🕳️ Honest gap: `Kernel::commit_frame`/`apply_scene_patch` are NOT called here —
+        /// `KernelThreadState::activate` (via `ParallelRuntime::activate`) still passes `window: None`
+        /// for every actor, so `Kernel`'s own `SceneStore` would stay permanently empty regardless;
+        /// this host's UI pipeline already has its own frame-boundary mechanism (`retained`/
+        /// `apply_ui_patch`, "item 4" of the original H3 packet). Wiring per-window `Kernel::
+        /// commit_frame` for real would mean migrating THIS host's whole UI-patch pipeline onto
+        /// `Kernel`'s `SceneStore`, a substantially larger, separate refactor out of this packet's
+        /// scope (see `📓️terra-kernel-loop-report.md`'s own gaps section).
         fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
-            let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(serde_json::to_vec(&events.first().cloned().unwrap_or(Event::Wake)).map_err(|error| error.to_string())?) };
-            // 🐛️ `ShardLoop::pump` groups envelopes per actor and runs exactly one `execute_turn` per
-            // actor per pump — one envelope per turn is enough for every event in `events` when they
-            // share a destination actor, so each is sent as its own envelope and drained by the SAME
-            // pump call (its inbound queue is drained fully before any turn executes).
-            self.kernel_transport.send(&pack_envelope(&envelope));
-            for event in events.iter().skip(1) {
-                let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(serde_json::to_vec(event).map_err(|error| error.to_string())?) };
-                self.kernel_transport.send(&pack_envelope(&envelope));
+            let mut envelopes = Vec::with_capacity(events.len().max(1));
+            if events.is_empty() {
+                envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? } });
+            } else {
+                for event in &events {
+                    envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(|error| error.to_string())? } });
+                }
             }
-            self.shard.pump(|_| TURN_BUDGET).map_err(|error| error.to_string())?;
-            let Some(bytes) = self.kernel_transport.recv() else {
-                return Err("kernel: shard produced no outcome for this turn".to_string());
-            };
-            let outcome: ShardOutcome = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
-            match outcome {
-                ShardOutcome::Turn { result, .. } => self.apply_turn_result(actor, instance, result),
-                ShardOutcome::Fault { message, .. } => Err(message),
-                ShardOutcome::Job { .. } => Err("kernel: unexpected job outcome for an app-command turn".to_string()),
-                // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session): `ShardOutcome`
-                // grew `Checkpoint`/`Resumed`/`Cancelled` for the newly-wired `Payload::Suspend`/
-                // `Resume`/`Cancel` dispatch (`🖥️host/🧵️shard/🦀️component.rs`). This kernel thread
-                // never SENDS those payloads (only `run_turn`'s own `Payload::Event`), so reaching
-                // this arm would mean a bug elsewhere, not a real outcome for an app-command turn —
-                // surfaced as an error rather than silently ignored, matching the `Job` arm above.
-                ShardOutcome::Checkpoint { .. } | ShardOutcome::Resumed { .. } | ShardOutcome::Cancelled { .. } => Err("kernel: unexpected suspend/resume/cancel outcome for an app-command turn".to_string()),
+            for envelope in &envelopes {
+                if !matches!(self.runtime.submit(envelope), Backpressure::Accept) {
+                    crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
+                }
+            }
+            let mut turn_result: Option<TurnResult> = None;
+            let mut fault: Option<String> = None;
+            loop {
+                self.now_ms += 1;
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive));
+                if decision.run.is_empty() {
+                    break;
+                }
+                let outcomes = self.runtime.wait_for_outcomes(decision.run.len(), RUN_TURN_OUTCOME_TIMEOUT);
+                if outcomes.len() < decision.run.len() {
+                    return Err("kernel: shard produced no outcome for this turn".to_string());
+                }
+                for outcome in &outcomes {
+                    match outcome {
+                        ShardOutcome::Turn { actor: reported, result } => {
+                            let _ = self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms);
+                            if *reported == actor.0 {
+                                turn_result = Some(result.clone());
+                            }
+                        }
+                        // 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
+                        // the failure ladder (`FailureState::on_signal`) never sees it, staying just as
+                        // inert for the trap path as `Kernel::complete` being uncalled at all used to
+                        // leave it. `ShardOutcome::Fault` carries no `TurnResult` (no `fuel_used`, no
+                        // `Effect`s — the turn never returned one), so a minimal `Faulted` `TurnResult`
+                        // is synthesized from its `message` — the same shape `apply_turn_result`'s
+                        // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
+                        ShardOutcome::Fault { actor: reported, message } => {
+                            let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+                            let _ = self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms);
+                            if *reported == actor.0 {
+                                fault = Some(message.clone());
+                            }
+                        }
+                        // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
+                        // `ShardOutcome` grew `Job`/`Checkpoint`/`Resumed`/`Cancelled` for job-stepping
+                        // and the newly-wired `Payload::Suspend`/`Resume`/`Cancel` dispatch. This
+                        // kernel thread never sends those payloads (only `run_turn`'s own
+                        // `Payload::Event`), so any of them reaching here — for `actor` OR any other
+                        // actor `Kernel::tick` happened to grant in the SAME call — is silently
+                        // ignored rather than aborting an otherwise-successful turn; unlike the
+                        // ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
+                        // for actors OTHER than `actor` (DRR is global), so those must not error out.
+                        _ => {}
+                    }
+                }
+            }
+            if let Some(message) = fault {
+                return Err(message);
+            }
+            match turn_result {
+                Some(result) => self.apply_turn_result(actor, instance, result),
+                None => Err("kernel: shard produced no outcome for this turn".to_string()),
             }
         }
 
         fn apply_turn_result(&mut self, actor: ActorId, instance: u32, result: TurnResult) -> Result<ExchangeOutcome, String> {
-            // 🚧️ `Kernel::complete` wants `semio_framework_actor::TurnResult` (opaque pack-encoded
-            // `ui_patches`/`effects` bytes, the crate's own mirror type — A1 was deliberately kept
-            // free of a `semio_framework` dependency, see `📌️important.md`'s naming-hazard note) —
-            // NOT `semio_framework::kernel::TurnResult`, which is what `GuestRuntime::execute_turn`
-            // actually returns. Bridging the two needs a real pack-encode step this packet didn't
-            // reach; `Kernel`'s failure-ladder/metrics bookkeeping is skipped for now (honest gap,
-            // not silently wrong data) rather than passing a fabricated `TurnResult`.
+            // 🎠️ terra-kernel-loop: `Kernel::complete` (the bridge this doc comment used to flag as
+            // unreached — "bridging the two needs a real pack-encode step this packet didn't reach")
+            // is now genuinely called, from `run_turn`, for EVERY `ShardOutcome::Turn` a tick grants
+            // (including `actor`'s own, before this method is even invoked) — so `Kernel`'s
+            // failure-ladder/metrics bookkeeping is live for this host now, not skipped.
             let _ = actor;
             let mut frames = Vec::new();
             let mut effects = Vec::new();
@@ -428,12 +514,6 @@ pub(crate) mod kernel_runtime {
                 self.pending_rejections.insert(key, local_revision);
             }
         }
-    }
-
-    fn pack_envelope(envelope: &Envelope) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        envelope.pack_encode(&mut bytes);
-        bytes
     }
 
     fn run_kernel_thread(rx: mpsc::Receiver<(KernelRequest, Arc<ResponseSlot>)>) {
@@ -487,31 +567,59 @@ pub(crate) mod kernel_runtime {
 }
 //#endregion 🎠️KernelRuntime
 
+//#region 🔖️ActorBudgetBridge
+/// ⚖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop, unblocking terra-shard-grants'
+/// `ShardFrame::Grant` wire change): `semio_framework::kernel::Budget` (what this crate's own
+/// `kernel_runtime::TURN_BUDGET`/`scale_bench::turn_budget_of` already speak) →
+/// `semio_framework_actor::Budget` (what a `Grant` frame carries over `ShardTransport`, replacing
+/// the deleted `ShardLoop::pump(|actor| ..)` budget closure). Shared by both native call sites
+/// (`kernel_runtime::run_turn`, `scale_bench::Env::send_payload`) rather than duplicated — CLAUDE.md's
+/// "if code is repeated, it MUST be close to each other" — so it lives here, the one file both
+/// `#[cfg(not(target_arch = "wasm32"))]` modules already share. `memory_bytes`/`ui_nodes`/
+/// `mailbox_len` have no source field on the kernel-`Budget` side; defaulted from `lane` via
+/// `lane_defaults::budget_for` rather than invented — the same documented-gap shape
+/// `🖥️host/🧵️shard/🦀️component.rs`'s own `BudgetBridge` region already uses for the REVERSE
+/// direction (`GRANT_BUDGET_DEFAULT_MAX_FRAMES`).
+#[cfg(not(target_arch = "wasm32"))]
+fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, lane: semio_framework_actor::Lane) -> semio_framework_actor::Budget {
+    let base = semio_framework_actor::lane_defaults::budget_for(lane);
+    semio_framework_actor::Budget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, ..base }
+}
+//#endregion 🔖️ActorBudgetBridge
+
 //#region 🔖️ScaleBench
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet V1b-bench): the native half of the ticket's
 /// headline claim — "50+ plugins x 50+ extensions concurrently" — turned from measurable into
 /// measured. Drives the REAL `semio-framework-os-scale-fixture` `wasm32-wasip2` component (one
 /// compile, many instantiations, exactly the pooling-allocator scenario `build_shared_engine` was
-/// built for) through `Kernel`/`ShardLoop`/`WasmtimeRuntime` — the same trio `//#region 🎠️KernelRuntime`
-/// above already wires for the winit renderer, reused here without the winit/GPU half. Runs entirely
-/// single-process, single physical `ShardLoop` (see `run` doc for the honest scope note on what that
-/// does and does not prove for budgets 5/6). `bun ./📜️script.ts bench plugins --renderer native`
+/// built for) through `crate::parallel_runtime::ParallelRuntime` (terra-kernel-loop) — the same engine `//#region 🎠️KernelRuntime`
+/// above already wires for the winit renderer, reused here without the winit/GPU half. terra-kernel-loop
+/// upgraded this from a single physical `ShardLoop` behind all K shard labels to K real `ShardExecutor`
+/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun ./📜️script.ts bench plugins --renderer native`
 /// (`🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts`'s `//#region 🔖️Bench`) drives this via
 /// `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 #[cfg(not(target_arch = "wasm32"))]
 pub mod scale_bench {
     use semio_framework::kernel::{
-        AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema,
+        AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult,
     };
-    use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload, ShardKind, ShardTransport, ThreadTransport};
-    use semio_framework_plugin_host::shard::{ShardLoop, ShardOutcome};
+    use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use serde::Deserialize;
     use serde_json::json;
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::sync::Arc;
-    use std::time::Instant;
+    use std::time::{Duration, Instant};
+
+    /// ⏳️ terra-kernel-loop: how long `Env::pump` waits, per `Kernel::tick` call, for that tick's
+    /// granted turns' `ShardOutcome`s to arrive from their K real `ShardExecutor` threads before
+    /// treating the round as failed — generous (well past any interactive budget this ticket
+    /// measures) so it is a genuine "something is stuck" tripwire, never a floor under budget 5's
+    /// own timing (budget 5 measures the ACTUAL wait via `wait_for_outcomes`'s elapsed time, not
+    /// this ceiling).
+    const PUMP_OUTCOME_TIMEOUT: Duration = Duration::from_secs(10);
 
     //#region 🔖️RegistryJson
     #[derive(Deserialize, Clone, Copy)]
@@ -617,29 +725,37 @@ pub mod scale_bench {
     //#endregion 🔖️Row
 
     //#region 🔖️Env
-    /// 🧵️ One `Kernel` (bookkeeping/shard-pinning only — `Kernel::complete()` is never called, the
-    /// SAME documented gap `//#region 🎠️KernelRuntime`'s own `apply_turn_result` doc comment already
-    /// flags for the winit renderer: bridging `GuestRuntime::execute_turn`'s `semio_framework::kernel::
-    /// TurnResult` into `Kernel::complete`'s `semio_framework_actor::TurnResult` pack-encoding is
-    /// unbuilt) driving ONE physical `ShardLoop` over an in-process `ThreadTransport` pair — `shards ==
-    /// K` bookkeeping (`ShardTable::pin`) is real per-actor, but every actor's actual `execute_turn`
-    /// still runs on this ONE thread; budgets 5/6's timings are single-thread-serialized, not K-way
-    /// parallel shard threads. Recorded once here rather than repeated at every call site.
+    /// 🧵️ terra-kernel-loop: `Env` now drives its actors through `crate::parallel_runtime::
+    /// ParallelRuntime` — real `Kernel::submit`/`tick`/`complete` plus K real `ShardExecutor` OS
+    /// threads, ONE per configured shard, replacing the single physical `ShardLoop` every actor's
+    /// turn used to serialize behind regardless of `shard_count`. This is what makes budget 3's
+    /// "shard assignment" check and budget 5's "interactive p95 under 40 cpu actors" measure a REAL
+    /// K-way-parallel instrument for the first time — see `📓️terra-kernel-loop-report.md`.
+    /// `Kernel::complete` is also now genuinely called from `pump` (closing the gap `//#region
+    /// 🎠️KernelRuntime`'s own `apply_turn_result` doc and budget 8's own note both used to flag).
     struct Env {
-        kernel: Kernel,
-        shard: ShardLoop,
-        tx: ThreadTransport,
+        runtime: super::parallel_runtime::ParallelRuntime,
         budgets: HashMap<u64, TurnBudget>,
         seq: u64,
         ordinals: HashMap<String, u16>,
+        now_ms: u64,
+        /// 🌀️ `ShardOutcome`s already pulled off `runtime`'s aggregated forwarder channel by `pump`
+        /// but not yet handed to a caller's `drain()` — mirrors the pre-existing single-`ShardLoop`
+        /// `Env::drain`'s own "whatever's on the wire right now" contract, just sourced from a
+        /// buffer instead of a single in-process channel (outcomes now arrive asynchronously from K
+        /// real threads, so `pump` must collect them eagerly rather than leaving them for `drain` to
+        /// read off a transport that no longer exists as a single queue).
+        pending: Vec<ShardOutcome>,
     }
 
     impl Env {
         fn new(runtime: Arc<dyn GuestRuntime>, shard_count: u16) -> Self {
-            let kernel = Kernel::new(ShardKind::Thread, shard_count.max(1), 0, 64);
-            let (kernel_tx, shard_tx) = ThreadTransport::new_pair();
-            let shard = ShardLoop::new(runtime, Box::new(shard_tx));
-            Self { kernel, shard, tx: kernel_tx, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new() }
+            let runtime = super::parallel_runtime::ParallelRuntime::new(runtime, shard_count.max(1), 0, 64);
+            Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
+        }
+
+        fn kernel(&self) -> &Kernel {
+            self.runtime.kernel()
         }
 
         fn ordinal(&mut self, package_id: &str) -> u16 {
@@ -647,7 +763,7 @@ pub mod scale_bench {
             *self.ordinals.entry(package_id.to_string()).or_insert(next)
         }
 
-        fn activate(&mut self, runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
+        fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
             let kind = if record.kind == "extension" {
                 ActorKind::Extension { plugin: PackageId(record.parent_id.clone().unwrap_or_default()), extension_id: record.id.clone() }
             } else {
@@ -655,43 +771,91 @@ pub mod scale_bench {
             };
             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
             let ordinal = self.ordinal(&package_id);
-            let actor = self.kernel.activate(PackageId(package_id), ordinal, kind, Lane::Background, None, ActorActivationTrigger::Manual);
             let budget = turn_budget_of(record);
-            let instance = runtime.instantiate(compiled, actor, &[], &budget).map_err(|error| error.to_string())?;
-            self.shard.register(actor, instance);
+            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, Lane::Background, None, ActorActivationTrigger::Manual, compiled, &[], &budget)?;
             self.budgets.insert(actor.0, budget);
             Ok(actor)
         }
 
         fn send(&mut self, actor: ActorId, event: &Event) {
-            self.send_payload(actor, Payload::Event(serde_json::to_vec(event).unwrap_or_default()));
+            self.send_payload(actor, Payload::Event { bytes: serde_json::to_vec(event).unwrap_or_default() });
         }
 
         /// 🔀️ `Payload::Suspend`/`Payload::Resume`/`Payload::Cancel` need the same envelope plumbing
         /// as `send`'s `Payload::Event` — factored out so budget 7 (K1's now-unblocked Suspend/Resume
         /// dispatch) can drive them without duplicating the seq/envelope bookkeeping.
+        ///
+        /// 🐛️ terra-kernel-loop: now a real `Kernel::submit` — the DRR mailbox enqueue, drained by
+        /// the NEXT `pump`'s `tick_and_dispatch` call — replacing the ad-hoc direct `ShardFrame::
+        /// Grant` this method sent before `Env` had a real `Kernel::tick` loop to submit into.
+        /// `Backpressure` is intentionally not surfaced to the caller: every round this bench drives
+        /// sends at most a handful of envelopes per actor, far under any lane's mailbox capacity
+        /// (128-1024 depending on lane, `lane_defaults::budget_for`), so treating a reject as fatal
+        /// here would be testing the mailbox ceiling, not the budget this harness measures.
         fn send_payload(&mut self, actor: ActorId, payload: Payload) {
             self.seq += 1;
             let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Background, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
-            let mut bytes = Vec::new();
-            envelope.pack_encode(&mut bytes);
-            self.tx.send(&bytes);
+            let _ = self.runtime.submit(&envelope);
         }
 
+        /// ⏱️ terra-kernel-loop: `Kernel::tick`-drives every actor with a non-empty mailbox to
+        /// completion — looping `tick_and_dispatch` until a tick grants nothing (`grants_per_tick`
+        /// caps a SINGLE tick's grants at 64, so draining >64 pending actors, e.g. budget 3/4/5's
+        /// 100-2550-actor rounds, genuinely takes several ticks; this loop is what makes that real
+        /// instead of assuming one call suffices). Each tick's `ShardOutcome`s are awaited via
+        /// `wait_for_outcomes` — a genuine blocking wait on the SAME aggregated channel K real
+        /// `ShardExecutor` threads report through, so the elapsed time IS the K-real-shard dispatch
+        /// latency (this is the instrument budget 5 measures). `Kernel::complete` is called for every
+        /// `ShardOutcome::Turn` collected, closing the gap budget 8's own note used to flag.
         fn pump(&mut self) -> Result<usize, String> {
-            let budgets = self.budgets.clone();
-            let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-            self.shard.pump(|actor| budgets.get(&actor.0).copied().unwrap_or(fallback)).map_err(|error| error.to_string())
+            let mut total = 0usize;
+            loop {
+                self.now_ms += 1;
+                // 🔀️ Cloned BEFORE the call (a small `HashMap<u64, TurnBudget>`, one per activated
+                // actor) so the closure below borrows THIS local binding, not `self` — `self.runtime.
+                // tick_and_dispatch(..)` already holds `self.runtime` mutably for the duration of the
+                // call, and a closure capturing `&self.budgets` directly would conflict with that.
+                let budgets = self.budgets.clone();
+                let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background));
+                if decision.run.is_empty() {
+                    break;
+                }
+                let outcomes = self.runtime.wait_for_outcomes(decision.run.len(), PUMP_OUTCOME_TIMEOUT);
+                if outcomes.len() < decision.run.len() {
+                    let missing = decision.run.len() - outcomes.len();
+                    self.pending.extend(outcomes);
+                    return Err(format!("Env::pump: {missing} of {} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}", decision.run.len()));
+                }
+                for outcome in &outcomes {
+                    match outcome {
+                        ShardOutcome::Turn { actor, result } => {
+                            let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms);
+                        }
+                        // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
+                        // `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
+                        // failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
+                        // deliberately exercise.
+                        ShardOutcome::Fault { actor, message } => {
+                            let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+                            let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms);
+                        }
+                        _ => {}
+                    }
+                }
+                total += outcomes.len();
+                self.pending.extend(outcomes);
+            }
+            Ok(total)
         }
 
         fn drain(&mut self) -> Vec<ShardOutcome> {
-            let mut outcomes = Vec::new();
-            while let Some(bytes) = self.tx.recv() {
-                if let Ok(outcome) = serde_json::from_slice::<ShardOutcome>(&bytes) {
-                    outcomes.push(outcome);
-                }
-            }
-            outcomes
+            self.pending.extend(self.runtime.try_recv_outcomes());
+            std::mem::take(&mut self.pending)
+        }
+
+        fn unregister(&mut self, actor: ActorId) {
+            self.runtime.unregister(actor);
         }
     }
     //#endregion 🔖️Env
@@ -715,7 +879,7 @@ pub mod scale_bench {
         let mut env = Env::new(runtime.clone(), shard_count);
         let mut actors = Vec::with_capacity(startup.len());
         for (index, record) in startup.iter().enumerate() {
-            match env.activate(runtime, compiled, record) {
+            match env.activate(compiled, record) {
                 Ok(actor) => actors.push(actor),
                 Err(error) => return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "activate/instantiate failed mid cold-boot"),
             }
@@ -727,7 +891,7 @@ pub mod scale_bench {
         let outcomes = env.drain();
         let elapsed_ms = process_start.elapsed().as_millis() as u64;
         let faults = unexpected_faults(&outcomes, &actors, &startup);
-        let active = env.kernel.metrics().actors;
+        let active = env.kernel().metrics().actors;
         let only_startup_live = active as usize == startup.len();
         let pass = faults.is_empty() && only_startup_live && elapsed_ms <= native_budget_ms;
         row(
@@ -754,7 +918,7 @@ pub mod scale_bench {
         let selected: Vec<&RegistryRecord> = plugin_records.iter().chain(ext_records.iter()).copied().collect();
         let mut instance_id = 1u32;
         for record in &selected {
-            match env.activate(runtime, compiled, record) {
+            match env.activate(compiled, record) {
                 Ok(actor) => {
                     env.send(actor, &instance_open_event(record, instance_id));
                     instance_id += 1;
@@ -768,14 +932,14 @@ pub mod scale_bench {
         }
         let outcomes = env.drain();
         let faults = unexpected_faults(&outcomes, &activated, &selected).len();
-        let active = env.kernel.metrics().actors;
+        let active = env.kernel().metrics().actors;
         let mut per_shard: HashMap<u16, u32> = HashMap::new();
         for actor in &activated {
-            if let Some(record) = env.kernel.actor_record(*actor) {
+            if let Some(record) = env.kernel().actor_record(*actor) {
                 *per_shard.entry(record.shard.0).or_insert(0) += 1;
             }
         }
-        let shards_used = env.kernel.metrics().shards;
+        let shards_used = env.kernel().metrics().shards;
         let max_shard_load = per_shard.values().copied().max().unwrap_or(0);
         let ceiling = ((activated.len() as f64) / (shard_count.max(1) as f64)).ceil() as u32 + 1;
         let pass = active as usize == 100 && activated.len() == 100 && faults == 0 && shards_used == shard_count as u32 && max_shard_load <= ceiling;
@@ -799,7 +963,7 @@ pub mod scale_bench {
         let mut activated: Vec<(ActorId, String)> = Vec::with_capacity(records.len());
         let mut instance_id = 1u32;
         for record in records {
-            match env.activate(runtime, compiled, record) {
+            match env.activate(compiled, record) {
                 Ok(actor) => {
                     env.send(actor, &instance_open_event(record, instance_id));
                     instance_id += 1;
@@ -820,7 +984,7 @@ pub mod scale_bench {
             activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
         let faults = outcomes.iter().filter(|o| matches!(o, ShardOutcome::Fault { actor, .. } if !by_design.contains(actor))).count();
         let rss = process_rss_bytes();
-        let active = env.kernel.metrics().actors;
+        let active = env.kernel().metrics().actors;
         let pass4 = faults == 0 && active as usize == activated.len() && rss.map(|bytes| bytes <= memory_budget_bytes).unwrap_or(false);
         let row4 = row(
             4,
@@ -887,14 +1051,14 @@ pub mod scale_bench {
         let mut env = Env::new(runtime.clone(), 1);
         let deadline_ms = hang_record.quotas.deadline_ms;
         let pause_start = Instant::now();
-        let hang_actor = match env.activate(runtime, compiled, hang_record) {
+        let hang_actor = match env.activate(compiled, hang_record) {
             Ok(actor) => actor,
             Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "hang actor activate/instantiate failed"),
         };
         env.send(hang_actor, &instance_open_event(hang_record, 1));
         let mut siblings = Vec::new();
         for (index, record) in sibling_records.iter().enumerate() {
-            match env.activate(runtime, compiled, record) {
+            match env.activate(compiled, record) {
                 Ok(actor) => {
                     env.send(actor, &instance_open_event(record, index as u32 + 2));
                     siblings.push(actor);
@@ -933,7 +1097,7 @@ pub mod scale_bench {
             let killed = message.as_deref().map(|m| { let lower = m.to_ascii_lowercase(); lower.contains("deadline") || lower.contains("fuel") || lower.contains("cannot enter") }).unwrap_or(false);
             (killed, message)
         };
-        env.shard.unregister(hang_actor);
+        env.unregister(hang_actor);
         for actor in &siblings {
             env.send(*actor, &Event::Wake);
         }
@@ -970,7 +1134,7 @@ pub mod scale_bench {
             return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
         };
         let mut env = Env::new(runtime.clone(), 1);
-        let actor_a = match env.activate(runtime, compiled, record) {
+        let actor_a = match env.activate(compiled, record) {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "activate/instantiate failed"),
         };
@@ -996,10 +1160,10 @@ pub mod scale_bench {
         };
 
         // The "evicted" half of LRU-suspend: drop A's live instance from this shard.
-        env.shard.unregister(actor_a);
+        env.unregister(actor_a);
 
         // The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
-        let actor_b = match env.activate(runtime, compiled, record) {
+        let actor_b = match env.activate(compiled, record) {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
         };

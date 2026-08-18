@@ -46,7 +46,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "procedural.2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
+        // 🖊️ "stdio.dwg" stays out of exports (procedural3d owns that EXPORT claim, D3) but stays in
+        // imports below — see `🚪️io/🦀️component.rs`'s `🚪️IoRegistry` region for the ownership rule.
+        export_stdio_kinds: vec!["stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"],
     }
 }
@@ -92,11 +94,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural2d.composer.dwg")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.dwg@ac1018/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
-        )?
+        // 🖊️ No `composer.dwg` here: procedural3d owns the `s.stdio.dwg@ac1018/*` EXPORT claim
+        // (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — `ArtifactDefinitionRegistry` rejects
+        // two artifacts in the same plugin exporting the identical literal dialect coordinate; procedural3d
+        // has a real host-media DWG↔mesh bridge, `HostMediaHandlerDeclaration::mesh_dwg_bridge` in
+        // `../../🦀️component.rs`, procedural2d has none). Import still works: `derived_composition`'s
+        // `Procedural2dComposerComposition::reads()` still lists `DEP_DWG`, unaffected by this removal.
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural2d.composer.dxf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dxf@r12/*")?

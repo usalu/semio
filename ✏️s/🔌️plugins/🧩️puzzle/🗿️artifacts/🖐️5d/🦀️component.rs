@@ -870,7 +870,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.puzzle5d.grammar.3", "grammar", "puzzle.puzzle5d.diff", &[("grammar", "puzzle.puzzle5d.diff")], None),
         ("s.puzzle5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
         ("s.puzzle5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
-        ("s.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d", &[("codec", "puzzle.5d"), ("extension", "puzzle5d")], None),
+        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle5dPlayApp>>()` derives
+        // its extension claim from `<Puzzle5dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
+        // (`…/🧬️mutations/🦀️component.rs`, the editor's real `Snapshot` type), which is
+        // `"puzzle5d-play"`, not the base `Puzzle5dSnapshot`'s `"puzzle5d"`.
+        ("s.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d-play", &[("codec", "puzzle.5d"), ("extension", "puzzle5d-play")], None),
         ("s.puzzle5d.localization.en", "localization", "5D Puzzle", &[], Some(("en", "5D Puzzle"))),
         ("s.puzzle5d.localization.de", "localization", "5D-Puzzle", &[], Some(("de", "5D-Puzzle"))),
     ];

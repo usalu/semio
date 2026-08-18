@@ -10,6 +10,12 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+// 🧩️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — the five `🧩️extensions/*/🦀️component.rs`
+// files mounted below each carry a `#[cfg(feature = "extension-entry")]` guard on their own
+// `extension_exports!` call (this crate's `Cargo.toml` declares no such feature, so it always
+// evaluates false here — see any extension's own `Cargo.toml` for the full rationale).
+#![allow(unexpected_cfgs)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;

@@ -18,3 +18,11 @@ PRE-EXISTING TEST-BUILD ISSUES FOUND LATER (baseline only ran `cargo check`, not
 2. db_preview test `preview_crate_never_references_wal_shaped_symbols` substring-scans db's
    Cargo.toml for "db_storage"; a legitimate COMMENT on line 49 tripped it (present in HEAD,
    confirmed via git diff). FIXED by rewording the comment (no dependency change).
+
+CONCURRENT-SESSION CHURN (NOT this ticket):
+`cargo check --workspace` shows failures in semio-framework-plugin-host (2x E0502 borrow errors in
+🔌️plugin/🧵️shard/🦀️component.rs) and semio-framework-os-renderer-wgpu (6 errors).
+🔌️plugin/🧵️shard/ NO LONGER EXISTS on disk — another session is mid-restructure of plugin host
+(🔌️plugin/ now holds ⚛️reactor, 🌐host, 🏗️builder, ...). Commit f69271685f 2026-08-18 20:18 landed
+during this ticket. Neither crate references any moved protocol symbol.
+=> Judge only scoped `-p` targets for this ticket.

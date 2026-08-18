@@ -47,7 +47,7 @@ pub mod guest {
         Budget as WitBudget, Effect as WitEffect, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult, TurnStatus as WitTurnStatus,
     };
     use semio::framework::capabilities::CapabilityChange;
-    use semio::framework::effects::{RequestCapabilityEffect};
+    use semio::framework::effects::{RequestCapabilityEffect, RequestCapabilityParams};
     use semio::framework::events::CompletionResult;
     use semio::framework::types::PluginError;
     use semio::framework::ui::{PatchOp, PatchReplace, SurfaceRef, UiPatch};
@@ -103,7 +103,7 @@ pub mod guest {
                 .into_iter()
                 .map(|effect| match effect {
                     PlainEffect::RequestCapability { req, id, scope, reason, optional } => {
-                        WitEffect::RequestCapability(RequestCapabilityEffect { req, id, scope, reason, optional })
+                        WitEffect::RequestCapability(RequestCapabilityEffect { req, params: RequestCapabilityParams { id, scope, reason, optional } })
                     }
                 })
                 .collect();

@@ -19,6 +19,12 @@
         "id": "framework.product.repo",
         "kind": "product",
         "responsibility": "Provides repository discovery, validation, orchestration, and developer tooling."
+      },
+      {
+        "directory": "🖥️server",
+        "id": "framework.product.server",
+        "kind": "product",
+        "responsibility": "Hosts the authoritative application server: CQRS command/query buses, the actor turn protocol, replication gateway, policy engine, and the server-instance framework instances compose."
       }
     ]
   }

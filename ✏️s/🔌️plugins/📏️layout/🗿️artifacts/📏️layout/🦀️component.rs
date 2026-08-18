@@ -527,6 +527,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.layout.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),
         ("s.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
+        // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers THREE composer rows, not
+        // two — the two below plus `composer_entry_of::<LayoutAnyComposer>()` (`🚪️io/🦀️component.rs`),
+        // whose `writes` is this artifact's own native dialect (`LAYOUT_DIALECT`, `s.layout@1/*`), the
+        // same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
+        ("s.layout.composer.layout", "composer", "s.layout@1/*", &[("dialect", "s.layout@1/*")], None),
         ("s.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
         ("s.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),

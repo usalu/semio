@@ -47,7 +47,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "procedural.3d".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        // 🖼️ "stdio.json"/"stdio.png" stay out of exports (procedural2d owns those EXPORT claims, D3)
+        // but stay in imports below — see `🚪️io/🦀️component.rs`'s `🚪️IoRegistry` region.
+        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.las", "stdio.obj", "stdio.ply", "stdio.stl"],
         import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
     }
 }
@@ -83,16 +85,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .descriptor(b"s.stdio.ply@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
         )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural3d.composer.png")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.png@1.2/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural3d.composer.json")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.json@rfc8259/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
-        )?
+        // 🖼️ No `composer.png`/`composer.json` here: both are generic bridge dialects with no
+        // real per-artifact fidelity difference (both procedural2d's and procedural3d's export stubs
+        // are equally `print_dsl` placeholders), so procedural2d — the plugin's first-declared,
+        // primary 2D artifact — keeps the EXPORT claim (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+        // D3, a documented tie-break, not evidence-backed like the DWG↔mesh-bridge split below). Import
+        // still works: `reads()` on this artifact's own native composer is unaffected by this removal.
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural3d.composer.dwg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dwg@ac1018/*")?

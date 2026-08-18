@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/framework-pack-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "root": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": ["lang:rust", "role:framework", "family:pack"],
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", "command": "bun ./📜️script.ts build", "forwardAllArgs": true }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true }
+    }
+  }
+}

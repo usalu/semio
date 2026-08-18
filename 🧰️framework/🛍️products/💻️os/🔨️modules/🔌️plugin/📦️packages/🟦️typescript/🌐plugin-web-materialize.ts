@@ -63,6 +63,20 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
  * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
  * interim JSON rather than pack bytes.
+ *
+ * 📨️ terra-web-shardframe: also handles the NEW `"frame"` message kind — `ShardClient.grant`/
+ * `ShardClient.envelope`'s `ShardFrame::Grant`/`ShardFrame::Envelope` wire, additive alongside `"turn"`
+ * above (unchanged). `interpretFrame`/`grantedBudgets`/`orderEnvelopesByLane` below are a hand-
+ * transcribed mirror of `🧵️shard-client.ts`'s `interpretShardFrame`/`GrantedBudgetTracker`/
+ * `orderEnvelopesByLane` — this string can't `import` that module, so the logic is duplicated by
+ * necessity; that file's own in-source tests are what's actually exercised for this behavior, this
+ * copy is kept byte-for-byte equivalent by hand. A `Grant` remembers its budget for `frame.actor`;
+ * a later budget-less `Envelope` for that actor runs under it (falling back to
+ * `MAINTENANCE_LANE_DEFAULT_BUDGET` — `semio_framework_actor::lane_defaults::budget_for(Lane::
+ * Maintenance)` — for an actor never granted one) instead of any caller-cached constant. An unknown
+ * frame `kind` this worker has never heard of is acknowledged as `{ ignored: true }` rather than
+ * thrown, so a future Rust-side `ShardFrame` variant can reach a live worker before its TS mirror
+ * lands without wedging it.
  */
 export function shardWorkerSource(): string {
   return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
@@ -77,6 +91,38 @@ const inFlightTurnActors = new Set();
 let turnSeq = 0;
 let heartbeatSabView = null;
 let heartbeatShardIndex = -1;
+
+// 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
+const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
+const SHARD_FRAME_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
+const grantedBudgets = new Map(); // actorId -> last ShardFrame::Grant budget, mirrors ShardLoop::granted_budgets
+
+function orderEnvelopesByLane(envelopes) {
+  return envelopes
+    .map((envelope, index) => ({ envelope, index }))
+    .sort((left, right) => {
+      const rank = SHARD_FRAME_LANE_ORDER.indexOf(left.envelope.lane) - SHARD_FRAME_LANE_ORDER.indexOf(right.envelope.lane);
+      return rank !== 0 ? rank : left.index - right.index;
+    })
+    .map((entry) => entry.envelope);
+}
+
+// 🧠️ Mirrors 🧵️shard-client.ts's interpretShardFrame — see that function's own doc for the semantics.
+function interpretFrame(frame, actorId) {
+  switch (frame.kind) {
+    case "Register":
+      return { action: "register" };
+    case "Unregister":
+      return { action: "unregister" };
+    case "Grant":
+      grantedBudgets.set(frame.actor, frame.budget);
+      return { action: "runEnvelopes", budget: frame.budget, envelopes: orderEnvelopesByLane(frame.envelopes) };
+    case "Envelope":
+      return { action: "runEnvelopes", budget: grantedBudgets.has(actorId) ? grantedBudgets.get(actorId) : MAINTENANCE_LANE_DEFAULT_BUDGET, envelopes: [frame.envelope] };
+    default:
+      return { action: "unknown" };
+  }
+}
 
 function heartbeat() {
   turnSeq += 1;
@@ -148,6 +194,7 @@ self.addEventListener("message", async (event) => {
   if (kind === "dispose") {
     actors.delete(msg.actorId);
     inFlightTurnActors.delete(msg.actorId);
+    grantedBudgets.delete(msg.actorId);
     return;
   }
   const { requestId, actorId } = msg;
@@ -187,6 +234,31 @@ self.addEventListener("message", async (event) => {
         await actor.api.restore(msg.state);
         reply(requestId, undefined);
         break;
+      case "frame": {
+        const result = interpretFrame(msg.frame, actorId);
+        if (result.action === "register") {
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unregister") {
+          grantedBudgets.delete(actorId);
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unknown") {
+          reply(requestId, { ignored: true });
+          break;
+        }
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        try {
+          const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
+          reply(requestId, await actor.api.poll(events, result.budget));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
       default:
         throw new Error(\`unknown shard worker message kind: \${kind}\`);
     }

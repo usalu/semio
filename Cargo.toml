@@ -95,6 +95,8 @@ members = [
     "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
@@ -131,6 +133,8 @@ semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geom
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
 semio-framework-os-scale-fixture = { path = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust" }

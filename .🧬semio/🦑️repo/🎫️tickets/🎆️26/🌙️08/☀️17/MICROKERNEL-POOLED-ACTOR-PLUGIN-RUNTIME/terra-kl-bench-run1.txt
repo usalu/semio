@@ -1,0 +1,156 @@
+
+> nx run @semio-tech/framework-os-dev:bench plugins --renderer native --count 50 --extensions 50 --shards 4 --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🔣️bench-kernel-loop.json
+
+> bun ./📜️script.ts bench plugins --renderer native --count 50 --extensions 50 --shards 4 --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🔣️bench-kernel-loop.json
+
+bench: building scale-fixture wasm (CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-v1b)
+   Compiling anyhow v1.0.104
+   Compiling wit-parser v0.220.1
+   Compiling wasm-metadata v0.220.1
+   Compiling wit-component v0.220.1
+   Compiling wit-bindgen-core v0.36.0
+   Compiling wit-bindgen-rust v0.36.0
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling wit-bindgen v0.36.0
+   Compiling semio-framework-os-scale-fixture v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust)
+error: failed to resolve directory while parsing WIT for path [/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema]
+       
+       Caused by:
+         failed to parse package: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema
+       
+       Caused by:
+         expected keyword `func`, found an identifier
+            --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit:911:17
+             |
+         911 |   storage-read: async func(params: storage-read-params) -> result<option<pack>, pack>;
+             |                 ^
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:37:5
+   |
+37 | /     generate!({
+38 | |         world: "actor",
+39 | |         path: "../../../../🔨️modules/🔌️plugin/🧬️schema",
+40 | |     });
+   | |______^
+   |
+   = note: this error originates in the macro `generate` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:43:9
+   |
+43 |     use exports::semio::framework::checkpoint::Guest as CheckpointGuest;
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:44:9
+   |
+44 |     use exports::semio::framework::describe::Guest as DescribeGuest;
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:45:9
+   |
+45 |     use exports::semio::framework::jobs::{Guest as JobsGuest, JobBudget, JobStep};
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:46:9
+   |
+46 |     use exports::semio::framework::reactor::{
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:49:9
+   |
+49 |     use semio::framework::capabilities::CapabilityChange;
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:50:9
+   |
+50 |     use semio::framework::effects::{RequestCapabilityEffect};
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:51:9
+   |
+51 |     use semio::framework::events::CompletionResult;
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:52:9
+   |
+52 |     use semio::framework::types::PluginError;
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:53:9
+   |
+53 |     use semio::framework::ui::{PatchOp, PatchReplace, SurfaceRef, UiPatch};
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error: cannot find macro `export` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/./../../🦀️component.rs:159:5
+    |
+159 |     export!(FixtureGuest);
+    |     ^^^^^^
+
+For more information about this error, try `rustc --explain E0433`.
+error: could not compile `semio-framework-os-scale-fixture` (lib) due to 11 previous errors
+[0m[1m4467 |[0m     [0m[35mif[0m (renderer === [0m[32m"native"[0m) {
+[0m[1m4468 |[0m       [0m[35mconst[0m targetDir = benchTargetDir()[0m[2m;[0m
+[0m[1m4469 |[0m       [0m[35mconst[0m cargoEnv = { ...process.env, CARGO_TARGET_DIR: targetDir }[0m[2m;[0m
+[0m[1m4470 |[0m       console[0m[3m[1m.log[0m([0m[32m`bench: building scale-fixture wasm (CARGO_TARGET_DIR=[0m${targetDir}[0m[32m)`[0m)[0m[2m;[0m
+[0m[1m4471 |[0m       [0m[35mif[0m (runCmdStatus([0m[32m"cargo"[0m, [[0m[32m"build"[0m, [0m[32m"-p"[0m, [0m[32m"semio-framework-os-scale-fixture"[0m, [0m[32m"--target"[0m, [0m[32m"wasm32-wasip2"[0m, [0m[32m"--features"[0m, [0m[32m"component-guest"[0m], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== [0m[33m0[0m) {
+[0m[1m4472 |[0m         [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m"bench: scale-fixture wasm build failed"[0m)[0m[2m;[0m
+                         [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mbench: scale-fixture wasm build failed[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m4472[0m[2m:[33m19[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m4509[0m[2m:[33m73[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m878[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m908[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts bench plugins --renderer native --count 50 --extensions 50 --shards 4 --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🔣️bench-kernel-loop.json" exited with non-zero status code
+
+
+ NX   Running target bench for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:bench
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run @semio-tech/framework-os-dev:bench plugins --renderer native --count 50 --extensions 50 --shards 4 --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🔣️bench-kernel-loop.json exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:1395:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15435:11
+
+Bun v1.3.14 (macOS arm64)

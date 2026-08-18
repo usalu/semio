@@ -605,6 +605,9 @@ mod tests {
         shard_b.kill();
     }
 
+    /// terra-shard-grants: wraps in `crate::shard::ShardFrame::Envelope` — the wire now carries
+    /// `ShardFrame`, not raw `Envelope` bytes (`ShardLoop::pump`'s own change), so this fixture's
+    /// hand-rolled encoder must wrap here too, even though its one caller is `#[ignore]`d.
     fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::Payload) -> Vec<u8> {
         let envelope = semio_framework_actor::Envelope {
             to: semio_framework_actor::ActorId(actor),
@@ -617,7 +620,7 @@ mod tests {
             payload,
         };
         let mut bytes = Vec::new();
-        envelope.pack_encode(&mut bytes);
+        crate::shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes);
         bytes
     }
 
@@ -633,12 +636,12 @@ mod tests {
             quotas: semio_framework::kernel::QuotaSchema::default(),
         };
         let event_bytes = serde_json::to_vec(&event).expect("encode Event::InstanceOpen");
-        encode_envelope(actor, seq, semio_framework_actor::Payload::Event(event_bytes))
+        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes })
     }
 
     fn wake_envelope(actor: u64, seq: u64) -> Vec<u8> {
         let event_bytes = serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("encode Event::Wake");
-        encode_envelope(actor, seq, semio_framework_actor::Payload::Event(event_bytes))
+        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes })
     }
 
     fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<crate::shard::ShardOutcome> {

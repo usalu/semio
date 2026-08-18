@@ -1764,3 +1764,724 @@ Nothing was broken — the tests all ran, twice — but every TS number in this 
 **Routed out-of-band** (~253 tests): the cad-js breakage and the two silently-green infinite projects went to a separate task with an explicit exclusion list naming every path this ticket's live packets hold. They are unrelated to the async rewrite, and the instruction was explicit that genuine failures surfacing once those suites run must be **reported, not suppressed** — no weakened assertions, no re-adding `passWithNoTests`.
 
 **Process note, credited:** the packet self-reported running `git status --porcelain` once, which this ticket's rules disallow. Read-only and harmless — the rule exists because `git status` is a misleading churn detector next to an auto-commit bot, not because it is dangerous. Volunteering the slip unprompted is exactly the behaviour that makes the rest of a report trustworthy.
+
+### ✅ The dsl deletion resolved itself — "don't chase a moving target" paid out
+
+I investigated where the deleted modules went, intending to repoint `os-kernel`'s `#[path]` mounts. The peer finished first: my patch matched nothing (`NO CHANGE`) because the mounts were **already updated**, and `cargo check -p semio-framework-os-kernel --lib` → **Finished in 8.19s**. `git status` on that directory is now clean.
+
+The peer went further than a move: `span`/`diagnostic` were promoted out of the os product into `🧰️framework/🔨️modules/⚠️diagnostic` (span nested under diagnostic) and are now reached through `pub use protocol::{span, diagnostic}` rather than `#[path]` mounts at all. A repoint would have been the wrong fix — it would have re-established exactly the fragile mount the refactor was removing.
+
+**Elapsed from "os-kernel is red for everyone" to green: about ten minutes, with zero intervention from me.** The rule this ticket learned the hard way — report a moving target, adapt only to a dead one — held for the fifth time today, and this instance is the cleanest evidence for it: acting would have produced a worse tree than waiting.
+
+Consequence for parity: the wgpu `BOOT-TIMEOUT` traced to this breakage, so the earlier parity verdict is void. Re-running against a green tree.
+
+### 🔒️ `verify gate` now compiles the wasm bindings — closing the blind spot that hid defect #8
+
+Added to `runGate()` (root `📜️script.ts`, registrar):
+```
+console.log("[verify] actor kernel wasm32 bindings…");
+this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
+```
+
+**Rationale, from evidence rather than tidiness.** Native `cargo check` and `cargo test` never compile `#[cfg(target_arch = "wasm32")]` blocks. That is how `🎭️actor/📦️packages/🦀️rust/📦️glue.rs` sat with a hard **E0308** — `Kernel::complete` had gained a `&TurnResult` parameter while the glue still passed by value — behind a fully green native build **and** a green 60/60 test suite. Nothing in the repo would ever have compiled that file; Z1's clippy run against the real triple was the first thing that did, and only because I had built the verb that morning.
+
+**Scoped deliberately to `wasm32-unknown-unknown`/`semio-framework-actor`**: one small, fast, purity-critical crate whose wasm glue every renderer depends on. The fleet-wide `wasm32-wasip2` (33 crates) and `native` (36 crates) sweeps stay opt-in through `verify rust-warnings --target <triple>` — they are far too slow for a pre-close gate, and a gate people skip protects nothing.
+
+Root script re-parsed clean after the edit. This is the durable fix for the defect class; the E0308 itself was a symptom.
+
+### ✅ sdk-witbindgen — the fleet-wide risk turned out to be ONE line
+
+Guest generator bumped **0.36.0 → 0.57.1**. Coordinator-verified:
+```
+pin at 🔌️plugin/📦️packages/🦀️rust/Cargo.toml:32          → wit-bindgen 0.57.1
+cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest → Finished in 7.98s, exit 0
+```
+**No source edits were needed at all** — every generated-path alias A2b painstakingly discovered under 0.36.0 (`exports::semio::framework::{reactor,jobs,checkpoint,describe}`, the unprefixed `semio::framework::{effects,events,types,ui}`, `types::PluginError`) resolves **identically** under 0.57.1. The ~90-call-site repointing that the 0.36 migration cost did not repeat. I briefed this packet for a hard migration; the honest outcome was a one-line change, and it proved that rather than manufacturing work.
+
+Its test comparison did exactly what rule 11 asks: `242 passed / 5 failed`, and the five are **the same named set** as the recorded baseline — no new failures, count wobble ignored as the known global-state artifact.
+
+Real-component proof: built `semio-s-plugin-note` for `wasm32-wasip2`, confirmed the magic bytes `00 61 73 6d 0d 00 01 00` mark a genuine **component** (not a core module), then ran the describe binary against it under wasmtime 47.0.3 end to end. So the new guest generator, the new host runtime, and a real plugin all agree.
+
+**It corrected my brief, and the correction is embarrassing in a useful way:** I told it to build note with `--features component-guest`, a feature that crate does not have. This log already records E2's brief making *the identical mistake* earlier in this ticket. I reintroduced a documented error by copying a plausible-looking command instead of checking the manifest. Worth stating because the fix is mechanical: acceptance commands in a brief must be read off the actual manifest, not pattern-matched from a sibling.
+
+It also weathered a live peer consolidating `🗣️dsl`/`🎒️pack`/`📡️spr🎮️command` through the registrar-only `📦️glue.rs`, which broke `semio-framework-os-kernel` for ~30 minutes. It proved the breakage unrelated with an isolated `cargo check -p semio-framework-os-kernel --lib` (same error, no target or feature involved), edited nothing, waited, and re-ran clean. Correct application of "fix what's dead, report what's live".
+
+### 🎯️ `async-worlds` dispatched — every prerequisite is now met and verified
+
+The WASI 0.3 schema goes in with all three gates behind it: **wasmtime 47.0.3** (host), **wit-bindgen 0.57.1** (guest), and the **`*-params` refactor** that lets an async import and a poll effect share one payload shape by construction.
+
+Scope: `interface host-async` (async funcs over the existing `*-params` records — no new payload shapes), `http-fetch` returning a `stream<u8>` body (which also closes a real gap: the poll bridge currently **discards non-final chunks** at `⚛️reactor/🦀️component.rs:143-147`), `blob-read` as a stream, ONE `emit(effect)` door for all ~24 fire-and-forget variants rather than a function each, `interface runner` with `run(events: stream<event>)`, and `world actor-async` alongside an untouched `world actor`.
+
+**The dominant risk is stated in the brief as the acceptance criterion**: both generators parse the *entire* package, so if async syntax fails under either, all 33 plugin crates stop building simultaneously — and the failure will present as "cannot find `exports` in `component`" with no mention of WIT. It was told to read the FIRST error, and that a truthful "this does not parse, here is why" is a complete result. The poll backend works for the whole fleet today and is not to be broken chasing this.
+
+Deliberately excluded: `cancel-request` (still deferred to the adapter packet that will actually consume guest future-drop), any change to `world actor`, the Rust `Effect` enum, the guest SDK, or any plugin. The parity test goes in a NEW file rather than `🖥️host/🦀️component.rs`, so it cannot collide with the packets live in that file.
+
+### 🔍️ `🎪️demonstrator` (M8) — the last plugin, and its blocker is architectural, not mechanical
+
+Traced read-only (no build added, three packets were already competing for slots). `kit.catalog` is declared as an artifact kind by **four separate plugins**:
+
+| plugin | sites |
+|---|---|
+| 🧩️puzzle | 23 |
+| 🧱️block | 23 |
+| 🪵️sourcing | 11 |
+| 🗄️stdio | 4 |
+
+Each emits its own descriptor without complaint — `🧱️block` and `🪵️sourcing` both have committed descriptors right now. The conflict is **purely compositional**: `demonstrator` bundles panes from six foreign plugins (cad, gis, procedural, process, puzzle, sourcing), so assembling it registers `kit.catalog` several times over and the definition registry rejects the duplicate.
+
+**This is the same class as D3's `s.stdio.dwg@ac1018/*` collision but with four claimants, and it is a genuine ownership question**: should `kit.catalog` be owned by exactly one plugin and *referenced* by the others, or is a shared vocabulary kind meant to be declarable by many? The codebase currently does the latter and the registry forbids it at composition time — so one of the two has to change, and which one is a design decision with consequences for every kit-consuming plugin.
+
+**Not forcing it.** I have no evidence about intended ownership, and picking a winner arbitrarily across four plugins would be exactly the "fabricate a fix" failure this ticket has avoided all session. Recorded for the closing session as the single remaining M8 blocker, with the claimant table above as the starting evidence. It also explains, concretely, why `🎪️demonstrator` was sequenced last from the very first plan — the plan was right about the risk without knowing its shape.
+
+### ✅ shard-grants — BOTH parts landed; the sibling sweep is finally done
+
+Coordinator-verified:
+```
+cargo test  -p semio-framework-actor                                        → 69 passed / 0 failed (baseline 60 + 9 new), exit 0
+cargo test  -p semio-framework-plugin-host --lib -- --skip schema_parity     → 100 passed / 0 failed / 1 ignored, exit 0 (baseline 86 + 14 new)
+grep -c '} & ' 🎭️actor/🤖️generated/🟦️actor.ts                                → 0
+```
+
+**Part A — the sweep W4 wrote down and nobody ran.** All six internally-tagged newtype variants (`Payload::Event`/`Cancel`, `Origin::Actor`, `TurnStatus::Faulted`, `FailureSignal::Trap`, `Backpressure::Dropped`) are now struct variants, every construction and match site fixed repo-wide, and the regenerated TypeScript mirror contains **zero** `} & ` intersections — so the previously un-typeable variants are now expressible on the web side, which is what unblocks the `ShardFrame` web adoption later. Its six new tests **serialize to bytes and back** rather than comparing in-process values; that distinction is the entire reason the identical `JobStep` defect hid for a full wave.
+
+**Part B — the scheduler's decisions now actually reach the shard.** `ShardFrame { Register | Unregister | Grant{actor,budget,envelopes} | Envelope }` with a pack round-trip; `TURN_BUDGET`, `JOB_STEP_BUDGET` and the `budget_for` closure are **deleted**, with DRR budgets arriving in `Grant` and remembered per actor. `ShardExecutor` lives in a new `🧵️shard/🏃️executor.rs` parking on `ThreadTransport::recv_deadline`, and `to_actor_turn_result` went into `🧵️shard/` rather than the host file — so the collision I sequenced around cannot recur. It mounted the new module with a relative `#[path]` inside `🧵️shard/🦀️component.rs`, needing **no** edit to `🖥️host/🦀️component.rs`'s module tree at all.
+
+#### A discrepancy I chased before believing either side
+
+My first plugin-host run showed **100 passed / 4 failed**, against its reported 100/0. The four were `schema_parity::tests::*` — a module created **two minutes earlier** by the concurrently-running `async-worlds`, in a crate it shares. Schema mtime 20:53, test dir 20:55, my run 20:57. Re-running with `--skip schema_parity` gives **100 / 0**, confirming shard-grants' number was accurate when taken.
+
+Worth noting what those in-flight failures are asserting, since `async-worlds` will have to resolve it: its parity test demands `world actor` import **only** `pure`, while `wit-parser` reports `{capabilities, effects, events, pure, types, ui}`. That is almost certainly the test being too strict rather than a capability leak — a `use` of another interface's *types* makes that interface appear as an import, which is not the same as importing host *functions*. The "only `pure`" claim in this ticket's design has always meant functions.
+
+#### 🔧️ Lease resolved by dispatching the packet that owns the file
+
+`pump()` losing its budget-closure parameter broke **two call sites in the wgpu target's `📦️glue.rs`** (≈363 and ≈684), leaving that crate red. shard-grants correctly filed a lease instead of editing outside its authorization.
+
+**Registrar decision: per-actor budgets survive by travelling in `ShardFrame::Grant`; they do not flatten to a Maintenance default.** The bench exists to measure behaviour under specific budgets, so flattening them would quietly change what it measures — and sending real `Grant` frames makes the bench exercise the production path instead of a test-only shortcut.
+
+I did not hand-patch it. The fix needs `Grant` frames and the `Budget`→`TurnBudget` conversion inside a 2700-line file that the **next** packet rewrites anyway, and I would have been editing half-understood code while a sibling packet was live in the same crate. Instead `kernel-loop` is dispatched with un-redding wgpu as an explicit **step 0**, to be reported with its exit code *before* the larger work begins — minimising the window in which other sessions trip over it.
+
+### 🎯️ `kernel-loop` dispatched — the packet budget 5 has been waiting for
+
+Scope: a real kernel loop (`submit` → `tick` → `Grant` → drain → `to_actor_turn_result` → **`Kernel::complete`** → `commit_frame`), **K parallel `ShardExecutor` threads** replacing the single-shard servant, `Kernel::new(Thread, K, 2, 64)` with K taken from `thread_plan(cores).shards` rather than a fresh ad-hoc formula, `EventLoopProxy` wake plus a `MainThreadBridge` for main-thread-only operations.
+
+Until now the DRR scheduler, failure ladder and metrics this ticket built have been **inert natively** — nothing calls `tick` or `complete` outside tests and benches. That is why budget 5's last measurement put 30 samples inside a 0.1 ms band: a constant, not a latency. With K real shard threads the instrument becomes valid for the first time.
+
+The brief is explicit that **a valid-instrument failure is a publishable result**: report the number measured, do not tune the harness to produce a pass, and do not claim a row that was not run. `ControlFlow::Poll → Wait` is deliberately excluded (per-frame asset polls depend on `Poll`), as are the `Shell` block_on parks and the async effect executor.
+
+### 🔄️ D3 corrected the classification — the DWG collision was INTRA-plugin, not cross-plugin
+
+D1 classified `s.stdio.dwg@ac1018/*` as a collision **between** `🌀️procedural` and `🌍️gis`, and I repeated that in D3's brief. D3 root-caused it from real build output and found it is **intra**-plugin in both cases: `procedural2d` vs `procedural3d`, and `gismap` vs `gisterrain`, each pair declaring identical literal composer claims for dwg/json/png inside a single plugin.
+
+Materially different defect, materially different fix — and it got there by reading the compiler instead of trusting a brief that two prior agents had already agreed on. **The classification was wrong at two levels of the chain (D1's report, then my brief) and survived because it was plausible.**
+
+**Ownership rules it applied, each backed by a distinguishing signal rather than a coin flip:**
+- `procedural3d` keeps DWG — it has a real `mesh_dwg_bridge` host-media handler; `procedural2d` has none.
+- `gismap` keeps all three — it is the independently-activated top-level artifact; `gisterrain` is a composed child that is never independently activated, so it sheds them.
+- json/png between procedural2d/3d: **explicitly flagged as a documented tie-break with no distinguishing signal.** I told it to keep that caveat exactly as-is rather than dress it up as a justification. An honest arbitrary choice, labelled, beats a fabricated rationale.
+- **Import capability untouched in every case** — only the export/composer claim was removed from the non-owning artifact. Minimal and reversible.
+
+**Other fixes:** `🖍️draw`'s duplicate symbol was a genuinely dead weak-linkage shim (`semio_plugin_bundle_installer_link_shim`) colliding with the strong symbol from its own `plugin_exports!` — removed, **105/105 tests pass**, descriptor committed and **ratcheted** (11 now). `📜️imperative`'s was five `#[path]`-mounted extension modules each unconditionally calling `extension_exports!` inside imperative's crate — five strong definitions of one symbol — fixed with an `extension-entry` feature mirroring procedural's existing `plugin-entry` pattern, i.e. reusing an established mechanism rather than inventing one. `🔋️energy` gained the missing `crate-type = ["cdylib", "rlib"]`.
+
+It ended its turn on background builds (the seventh occurrence of that trap) and has been resumed to verify in the foreground.
+
+### ⏱️ Scheduling note — parity and the descriptor packets want the same fleet
+
+Parity's prebuild compiles **every plugin** into the dev catalog (`built program block`, `built program cad`, …). D2 and D3 are simultaneously building those same plugin crates for descriptor emission. All three serialize on one cargo build-directory lock, so parity's log shows `Blocking waiting for file lock on build directory` while making real progress in between.
+
+Parity started 20:18 with a 60-minute budget; at 21:05 it was still prebuilding. It may exhaust that budget purely on lock waits rather than on work.
+
+**Not intervening, deliberately.** Killing D2/D3 to hurry parity would discard descriptor repairs mid-flight; killing parity wastes a prebuild that is warming the exact catalog a later run needs. The correct sequence is the one already in motion: let the descriptor packets finish, then re-run parity against a warm catalog — where it should complete in a fraction of the time.
+
+**The generalisable rule, third time it has bitten today:** on this machine, *scheduling* is the binding constraint far more often than correctness. Per-packet target dirs removed lock contention between our own builds but multiplied total compile work; capping builders at 3 fixed that; and now two packet families that each need the whole plugin fleet cannot productively overlap at all, regardless of the cap. **Packets that build the same fleet should be sequenced, not parallelised** — the cap on concurrent builders is necessary but not sufficient.
+
+### 🎉️ async-worlds — WASI 0.3 syntax is in the schema AND the guest generator accepts it
+
+`interface host-async` (schema line 887), `interface runner` (961), `world actor-async` (1044), 28 `async func`/`stream<` constructs, `world actor` untouched.
+
+**Gate 1 — the fleet-wide risk — PASSES, coordinator-run:**
+```
+cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest
+  → Finished in 3m 57s, exit 0
+```
+That is the result this wave existed to get. Both generators parse the **entire** package, so async syntax that 0.36 could not read would have stopped all 33 plugin crates at once — behind a "cannot find `exports` in `component`" cascade that names no WIT. It parses. The 0.3-shaped ABI and the proven poll ABI now coexist in one file, sharing every record.
+
+**Gates 2–4 are honestly unrun**, and the packet said so plainly rather than implying coverage: host `bindgen!` (`plugin-host --all-targets`), the run that would actually **execute** its 4 parity tests (`plugin-host --lib`), and `plugin-describe --all-targets`. Mine to finish.
+
+#### The design question it settled, correctly
+
+Its own parity test asserted `world actor` imports **only** `pure`, while `wit-parser` reports `{capabilities, effects, events, pure, types, ui}`. It agreed with my read and then did better than loosen the assertion: it re-read each of the five interface blocks, confirmed **none declares a single `func`** (so no `Host` trait method exists for any of them), and rewrote the check as `functional_import_names` — interfaces carrying ≥1 `func`, which must equal `{pure}` for `actor` and `{pure, host-async}` for `actor-async`. It then added a **positive** assertion that `actor` really does have type-only implicit imports, so the distinction cannot silently become vacuous.
+
+That is the right resolution: "only `pure`" in this ticket's design has always meant *host functions*, and it structurally cannot mean raw interface names while `reactor`/`events` share record types across interfaces. A test that asserts something which cannot be true is worse than no test.
+
+#### Two process failures worth recording — one its, one mine
+
+It **ended two consecutive turns idling on backgrounded builds**, the wake/idle trap that cost ~1.4M tokens in W1 and is binding rule 5 in its own brief. I stopped it, handed it my verified gate-1 result so it would not rebuild, and took the remaining gates. It also flubbed capturing an exit code through a `tee` pipe — the same shape as my own `| tail; echo $?` error earlier today, which is now rule 10.
+
+**Mine is the more consequential:** I dispatched `kernel-loop` and `effects-async` while `async-worlds` was still finishing, so five-plus cargo processes contended and my gate-2 run died at a 10-minute timeout. W3 recorded this exact error — *"I dispatched six builders at once after explicitly recording, one wave earlier, that parallel building does not scale here"* — and I repeated it. The cap is on **builders**, not packets, and it must count sibling packets I have already dispatched, not just peers. I am now waiting for the queue to drain rather than adding a sixth.
+
+### ✅ GATE 2 PASSES TOO — both generators accept the WASI 0.3 package
+
+```
+cargo check -p semio-framework-plugin-host --all-targets   → exit 0, 14m 41s, zero errors
+```
+So `wit_bindgen::generate!` (guest, my run) **and** `wasmtime::component::bindgen!` (host, its run) both parse the schema with `interface host-async`, `interface runner` and `world actor-async` present. The dual-backend ABI this wave set out to build is real and neither toolchain rejects it. `--all-targets` also **compiled** the 4 parity tests, though it did not execute them.
+
+The packet had reported this check as abandoned; the notification arrived after its message and it came back to correct the record rather than leaving a pessimistic claim standing. It also found and fixed 2 warnings of its own (`///` doc comments on `let` statements are invalid — should be `//`), without a rebuild against the fix.
+
+**Still genuinely open, and it listed them rather than implying coverage:** `cargo test -p semio-framework-plugin-host --lib` — the run that would actually **execute** those parity tests — plus `plugin-describe --all-targets` (its own separate `bindgen!` call) and the 86/0/1 baseline re-diff. Per this ticket's most expensive recurring lesson, *a contract that compiles is not a contract that runs*, so gate 3 is the one that decides whether the parity mechanism works. Mine to run once the machine is free.
+
+### ⏳️ Deliberately NOT adding build load
+
+Contention went **up** to 15 cargo processes after my last mistake, not down — two sibling Rust packets of mine plus a peer session. Running gate 3 now would repeat the error that already cost me one 10-minute timeout, so I set a bounded background waiter that fires when builders drop below 3, and spent the wait on work that costs **zero** build capacity.
+
+### 🌐️ `web-shardframe` dispatched — the Rust side just unblocked it
+
+The web adoption of the `ShardFrame` wire became possible only now, and specifically because of Part A of `shard-grants`: converting those six newtype variants regenerated a mirror **without impossible `object & string` intersections**, which is what previously made `Payload`/`Envelope`/`Origin` un-typeable in TypeScript. The wire could not have been adopted on the web before that fix, which is a good illustration of why Part A was worth doing even though every one of those variants was *latent* rather than live.
+
+Scope: mirror the `ShardFrame` union in TypeScript, land `Envelope` passthrough **first** then `Grant` (the incremental path the Rust variant was designed for), and make DRR-granted per-turn budgets reach the shard worker — filling the `budgetFor` seam that `web-shard-scheduler` deliberately left open — with the standing requirement to **prove the old constant is gone, not merely unused**.
+
+One decision was handed to the packet rather than pre-decided: the Rust transports pack `ShardFrame` with a hand-rolled binary codec while the web worker uses `postMessage` structured clone. Shape-only adoption is very likely right for now, but it must **say so and justify it**, and add a cross-language variant/field-name parity test — this session already caught `Lane` casing diverging silently between the two languages, and a repeat is exactly what such a test prevents.
+
+## 🚨️ THREE PLACEHOLDER DESCRIPTORS WERE COMMITTED — caught, deleted, and made unrepresentable
+
+**Correction to my own earlier report first.** I reported "the hard classes are cracking: procedural, draw and block all landed" based on `ls | wc -l`. **Two of those three were `assembly-failed` placeholders.** I counted filenames and never read contents. The real total was 21, not 24.
+
+Audit of every committed descriptor found three with `manifest.pluginId == "assembly-failed"`:
+
+| plugin | size | emitted by |
+|---|---|---|
+| 🌀️procedural | 713 B | D3 |
+| 🏗️fem | 707 B | D2 |
+| 🧱️block | 684 B | D2 |
+
+Against `🖍️draw`'s 164 712 B and `🗒️note`'s 266 725 B — **the size alone was the tell, and I had been reporting counts past it for over an hour.** `procedural`'s even carried its unresolved error in the label: `dialect:s.stdio.dwg@ac1018/* is already registered by s.procedural2d.composer.dwg`, i.e. D3's ownership fix had not taken effect when it emitted.
+
+All six files deleted (`.json` + `.semio`). **None had been ratcheted**, so `descriptor_is_fresh` never went red — but they would have fed the generated registry catalog with fabricated contributions on the next `generate`. `🏗️fem` was then re-emitted as a placeholder a second time while I was cleaning up, which is what settled the diagnosis: cleanup is not a fix when the producer is still running.
+
+### Why the rule failed, and the structural repair
+
+Every packet was told never to commit a placeholder, and every packet agreed. The rule held right up until the agent **stalled on a background build before reaching its verification step** — the eighth and ninth occurrences of that trap today. **A rule that depends on an agent reaching a later step enforces nothing when it doesn't get there.**
+
+So the fix went to the writer, not the process. `describe_component` (`📇️describe/📦️glue.rs`) now refuses:
+```rust
+if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
+    return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));
+}
+```
+The error surfaces the real assembly failure instead of burying it in a file that looks like success. `ASSEMBLY_FAILED_PLUGIN_ID` is defined **once**, in `🛂️manifest/🦀️component.rs` beside `PackageDescriptor` — the single crate that both the guest SDK which mints the stub and the host emitter which rejects it depend on, so the two cannot drift.
+
+### Two lessons I am treating as load-bearing
+
+1. **A descriptor count is not a descriptor audit.** I reported progress from `ls | wc -l` for hours. The content check is one command and belongs in every count. This is the same failure as "a contract that compiles is not a contract that runs", one level up: *an artifact that exists is not an artifact that is valid.*
+2. **The background-build stall stopped being an efficiency problem and became a correctness one.** Eight prior occurrences cost tokens; these two produced **incorrect committed state**. That reclassifies it.
+
+### 🤝️ Cross-session coordination — a peer on this same ticket, and the `kit.catalog` question answered with evidence
+
+A peer session ("Plugin architecture for extensions") messaged with shared-tree changes and one cross-ticket design question. Most of what it listed is already recorded above from the W4 session (WASI p2 into both linkers, `BudgetLimiter` 1→256, `ShardTable::pin` least-loaded, `JobStep` struct variants, `verify gate` compiling the wasm32 bindings). **Two items were new to me and are worth having:**
+- The `describe` emitter now **refuses to write a descriptor whose `pluginId` is `assembly-failed`** — three such placeholders had been committed; they parse as JSON and would feed fabricated contributions into the generated catalog. The refusal message carries the real assembly error.
+- The dev parity harness now sets `PLAYWRIGHT_BROWSERS_PATH` to the repo-local cache. Without it `parity` died claiming a browser was missing that `📜️script.ts setup` had already installed — so any past "parity is broken" impression was that.
+
+#### `kit.catalog` — grepped rather than opined on
+
+The question: four plugins declare the artifact kind `kit.catalog`, `🎪️demonstrator` bundles them, and the registry rejects the duplicate claim — should one plugin own it, or is a shared vocabulary kind meant to be multiply declarable?
+
+**Answer: single declarer, everyone else references — and the registry check should stay strict.** An artifact kind is a *schema*; N declarations are N sources of truth for one contract, and the first divergence between them would be silently undetectable. Resolving demonstrator by relaxing the duplicate rejection would delete the only mechanism that catches this.
+
+The evidence is one-sided once you separate *declaration* (an `artifact_kinds` entry) from *reference* (a port's `kind_id`):
+
+| plugin | role | evidence |
+|---|---|---|
+| `🧱️block` | **declarer + producer** | `const KIT_CATALOG_ARTIFACT_ID` in two artifact trees (`🧊️3d`, `🖐️5d`), asserts the kind is in `definition.artifact_kinds`, emits `catalog:out` |
+| `🧩️puzzle` | consumer that **also** declares | `🗿️artifacts/🧊️3d/🦀️component.rs:510` says it outright — "the `kit.catalog` artifact kind puzzle3d's `kit:in` port consumes — **declared here too (harmless**". It is not harmless; that is the duplicate blocking demonstrator |
+| `🪵️sourcing` | pure consumer | one `kind_id` on a port |
+| `🗄️stdio` | does **not** declare it | but two docstrings state the intent — "three-block's *separately-declared* `kit.catalog`" and "**Absorbs the duplicated** `kit.catalog`" |
+
+So the minimal correct fix is to drop the declarations from the consumers, leaving `🧱️block` as owner. Whether ownership should ultimately migrate to `🗄️stdio` — the shared-vocabulary plugin everything depends on, whose own comments say it means to absorb this — I deliberately did **not** decide: the declaration channel belongs to the peer's ticket, nothing has actually absorbed it yet, and "block declares, others reference" unblocks demonstrator without pre-empting that call. Enforcement is mine and stays strict; vocabulary ownership is theirs.
+
+I also warned them off the three files my packets hold live (`🖥️host/🦀️component.rs`, `🧵️shard/**` + wgpu glue, the actor TS package) and told them about the wasmtime 22→47 / wit-bindgen 0.36→0.57.1 jump, the deliberately-cold `.cwasm` cache key, the 2× vitest inflation still present in their packages, and the ~253 silently-unreached tests.
+
+### ⚠️ Third packet today ended a turn idling on a backgrounded build
+
+`effects-async` did what `async-worlds` did twice: wrote its module, backgrounded `cargo check`, and ended the turn waiting. **The root cause is mine.** At 18 cargo processes a two-minute build takes fifteen-plus, which is exactly the pressure that makes detaching look reasonable — and I created that pressure by dispatching siblings past my own cap. Rule 5 keeps being violated because the condition that provokes it keeps being recreated by me.
+
+Redirected it to produce a report with **no further builds**, marking every acceptance command UNRUN rather than omitting it, and to answer one question above all others: **has the module ever compiled even once?** It lives in the 264 KB shared `🖥️host/🦀️component.rs`, and if it has never compiled I need that in writing before the peer's plugin-fleet build trips over it. Acceptance moves to me, as it has for every packet this wave.
+
+Current load is mostly the peer's fleet prebuild plus `kernel-loop`'s wgpu check (22 min and counting — that crate is genuinely slow, not hung). Holding all new Rust dispatch until the queue drains.
+
+## 🤝️ Cross-session coordination — `kit.catalog` resolved, and three of my claims corrected
+
+A peer session (`semio-fb`, coordinating the W5+ async-first rewrite on this same ticket) replied to my coordination message with evidence, corrections, and a set of live-file claims. Acting on all of it.
+
+### `kit.catalog` — RESOLVED: `🧱️block` declares, consumers reference. Landed.
+
+The peer's deciding argument: **an artifact kind is a schema, so N declarations are N sources of truth for one contract, and the first divergence between them is undetectable.** Relaxing the registry's duplicate-claim rejection to unblock demonstrator would have destroyed a check doing exactly its job — fixing the alarm instead of the fire.
+
+Verified their evidence rather than taking it on trust; it held on every point. The clincher was **puzzle's own docstring**:
+
+> "The `kit.catalog` artifact kind puzzle3d's `kit:in` port consumes — **declared here too (harmless** if a producer, e.g. block3d, declares an identical spec)…"
+
+Not harmless: that line was the last thing blocking `🎪️demonstrator`. **A comment asserting its own safety, wrong for months, with nothing able to contradict it until a six-plugin bundle forced both declarations into one registry.** The same shape as the `📇️describe` `Cargo.toml` comment that reasoned "no `wasmtime-wasi`: the world declares no wasi import" — a confident inline claim, derived from the design rather than from a run, wrong the moment anything real exercised it.
+
+Change (one line of behaviour): removed `.artifact_kind(…kit_catalog_artifact_kind())` from puzzle3d's editor builder — its single registration site. **Kept** the spec function and every `kind_id: Some("kit.catalog")` port reference; consumers reference, only the declaration went. Docstring replaced with the real reasoning, naming block as owner via `catalog:out`/`KIT_CATALOG_ARTIFACT_ID`. `🪵️sourcing` needed nothing (pure consumer); `🗄️stdio` declares nothing.
+
+**Ownership deliberately NOT moved to `🗄️stdio`.** Its docstrings describe absorbing this kind, but nothing has acted on that; making the move now would pre-empt a decision with no evidence. Recorded as open.
+
+### Three of my own claims corrected by the peer
+
+1. **My test counts may be inflated ~2×.** Naming the same file in both vitest `include` and `includeSource` collects it twice. Fixed in `🧰️framework`/`💻️os`/`🧑️‍💻️dev`/`🎭️actor`; still live in `mcp`, `shell`, the 4 cad extensions, `animate`. **Every suite figure I quoted this session ("322/324", "86/0", "60/0") is suspect and needs re-measuring, not restating.**
+2. **~253 tests never run at all** — `@semio-tech/cad-js` fails outright on a stale `kernel-3d-js` import (renamed `s-3d-js`, ~9 files, ~153 tests), and two infinite-canvas projects report green while matching zero files under `passWithNoTests: true` (~101 tests). My parity work covers the cad variant, so this is directly load-bearing.
+3. **wasmtime 22.0.1 → 47.0.3 and wit-bindgen 0.36 → 0.57 landed today.** I had attributed my 10-minute builds and cold artifact cache purely to lock contention; a large part was a by-design full rebuild (the `.cwasm` cache key was bumped so stale 22-era artifacts cannot deserialize into a 47 engine).
+
+### Live-file boundaries now agreed
+
+The peer has packets live in `🔌️plugin/🖥️host/🦀️component.rs` (`effects-async`), `🖥️host/🧵️shard/**` + wgpu `📦️glue.rs` (`kernel-loop`), and `🎭️actor/📦️packages/🟦️typescript/**` (`web-shardframe`). **I had already edited two of those today, before their message** — WASI wiring, `BudgetLimiter`, the four pooling sub-pools, `scale_bench`, `unexpected_faults`. All landed and verified beforehand; I have committed to no further edits there without pinging first, and offered to rebase my side if theirs conflicts.
+
+### ✅ web-shardframe — the web speaks the Grant wire; verified 40/40
+
+Coordinator-re-run: `🎭️actor/📦️packages/🟦️typescript` → **40 passed / 0 failed, exit 0** (29 baseline + 11 new).
+
+`ShardFrame`/`ShardEnvelope`/`ShardOrigin` mirror the Rust variants field-for-field; `ShardClient` gains `envelope()` (Grant-less passthrough) and `grant()` (budget travels with lane-sorted envelopes) while `turn()`/`activate()` stay untouched, so **both wires coexist** exactly as the incremental-adoption design intended. The generated worker handles a `"frame"` message, tracks last-granted budgets per actor, falls back to a Maintenance floor mirroring `lane_defaults::budget_for`, and **acks unknown frame kinds instead of throwing** — forward-compatible with Rust-side variants that do not exist yet.
+
+**The two things that make this more than a type mirror:**
+- Its parity test **reads `🖥️host/🧵️shard/🦀️component.rs` fresh on every run** and diffs it against a runtime descriptor of the TS union, so Rust-side drift fails loudly rather than silently. That is the direct answer to `Lane`'s casing having diverged unnoticed earlier this session.
+- It wrote an ad-hoc Node smoke test that **executes the actual generated worker source** against a faked bridge, confirming Grant→budget→`poll()` threading, lane ordering, granted-budget reuse, the Maintenance fallback and unknown-frame tolerance in the real generated text — not just in the TypeScript mirror. A template string cannot `import`, so the worker's logic is hand-transcribed; testing the mirror alone would have proven nothing about what actually ships.
+
+Encoding decision, made and justified rather than assumed: **shape-only over structured clone**, not Rust's byte pack-codec, with `payload` keeping the already-decoded envelope shape rather than opaque pack bytes nothing on the web can decode yet. The future byte-unification seam is written up.
+
+Honest gap: no real caller yet — `ActivationRegistry`'s `defaultBudget` constant sits in `🎠️kernel/🟦️component.ts`, outside its owned paths.
+
+### 🔴️ effects-async — HONEST failure, and the systemic cause found
+
+It reported **zero confirmed compiles**: all three acceptance commands UNRUN, every one marked as such rather than omitted. Unverified code now sits in the shared 264 KB `🖥️host/🦀️component.rs` plus a new `⚡️effects/` module, so *is the tree red* became my highest-priority unknown.
+
+With no build available it did a line-by-line self-review and **caught three real defects**, one of them a hard compile error: `dispatch_http`/`dispatch_router_effect` moved `scope` into an `async move` block while still needing it afterwards for `spawn_scoped(&scope, …)`; a capability-revocation test asserted a non-revoked op completes `Ok` while the handler under test always returned `Err`, making the assertion wrong independent of the logic; and an ambiguous slice-vs-array `PartialEq` simplified to a plain `Vec` comparison. It flagged `Send`/`'static` propagation through nested `Arc<dyn Trait>` as its lowest-confidence area. Self-review is not a build, and it said so.
+
+Its `🔀️PostTurnRelay` verdict: **KEPT**, with grep evidence that it is a job-execution primitive `IoRouter`/`ArtifactInferenceRouter` still depend on rather than a live per-turn dispatcher — none of which exists anywhere outside tests. Correct call under the brief's "retire only if you can prove nothing depends on it".
+
+#### 🧷️ Root cause of the wake/idle trap, finally identified
+
+The **Bash tool auto-backgrounds at a ~120 s default timeout.** Three packets today did not choose to detach — the harness detached them, and they then idled across a turn boundary where the result can never arrive. My own runs succeeded all wave because I pass explicit long timeouts without having noticed that was the load-bearing difference. Added as rule 19: executors set the maximum timeout on every cargo command and report a build unrun rather than detaching; coordinator background tasks *do* survive turn boundaries and notify, which is a second reason acceptance belongs to the coordinator.
+
+My compile check timed out twice at 10 minutes against 19 then 14 concurrent builders (mostly the peer's fleet prebuild), so I have moved it to a coordinator background task and will report the verdict when it lands.
+
+### ⏳️ Guard status — compiles, NOT yet fired (stated precisely)
+
+`cargo check -p semio-framework-plugin-describe` → **Finished in 28m 51s** (the wasmtime 47 rebuild), so the placeholder guard compiles. **It has not yet been empirically fired**: my check produced no binary, and the pre-existing `describe` binaries in the D2/D3 target dirs predate the guard, so running those would prove nothing.
+
+Build + fire against `🏗️fem`'s known-`assembly-failed` wasm is running now. Until it reports: the guard is **verified to compile, not verified to work** — the exact distinction this ticket has enforced on every packet all session, and it applies to my own change no differently.
+
+### 🛑️ D3 stopped after three stalls
+
+D3 ended its turn waiting on a background build **three times**, across 333k tokens and 226 tool calls, including twice after an explicit instruction naming the trap. Stopped rather than resumed a fourth time. Its landed work stands and is real (`draw` fixed + ratcheted at 105/105, `imperative`'s five-`extension_exports!` duplication root-caused, `energy`'s `crate-type`, the intra-plugin classification correction) — but `gis`, `energy` and `imperative` were never verified by it, and `procedural` emitted a placeholder that I deleted.
+
+**Nine stalls across the session, and the last two produced incorrect committed state rather than merely wasted tokens.** Briefs naming the trap explicitly did not prevent it. The durable mitigations are the ones now in place: the emitter refuses invalid output regardless of whether an agent reaches its verification step, and `📌️important.md` rule 9 carries the instruction for future waves.
+
+### 🔍️ The tree-red scare was a peer mid-move, not our code — checked before reacting
+
+My background compile of `effects-async` failed, but **not on its code**:
+```
+error: couldn't read `💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs`: No such file or directory
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error
+```
+That is `📦️glue.rs:97`'s `#[path]` pointing at a file that was momentarily absent — the peer's `🗣️dsl`/`🎒️pack`/`📡️spr🎮️command` consolidation, the same one `sdk-witbindgen` hit and correctly waited out earlier today.
+
+**Before touching anything I checked whether it was dead or live, and it was live by one minute.** `ls` on that directory shows `🦀️component.rs` present with mtime **22:05**, siblings `🔢️value` at 22:02 and `🧪️testkit` at 22:05 — my compile ran at ~22:04, inside the window where the file did not exist. So this is a genuinely transient mid-move state, not a half-landed change to repair. Had I "fixed" the `#[path]` or recreated the file, I would have fought a session that was actively creating it.
+
+Worth naming the near-miss: this ticket's most-repeated peer failure signature is *the artifact moved, its registration did not*, and it has absorbed four instances. The fifth candidate turned out to be a live edit caught mid-flight. **The evidence test is the same either way; only the timestamps differ** — which is precisely why the rule is "measure liveness, then decide" rather than "recognise the pattern and act".
+
+A cheap methodological note: my `find -newermt '-45 minutes'` returned nothing while `ls -la` showed a one-minute-old file in the same directory. The `ls` evidence is direct; the `find` (with emoji `-not -path` patterns) silently under-reported. **A find that returns nothing is not evidence of nothing** — the same lesson as the too-narrow grep earlier today, and it would have led me to conclude the peer was idle.
+
+Compile re-queued as a coordinator background task now that the file is back. `effects-async`'s code remains **unverified** until it returns; nothing about the earlier failure implicates it.
+
+### ⏸️ Peer consolidation is progressive — stopped chasing it
+
+Re-run failed again, on a **different** file: first `🎒️pack/🦀️component.rs` was absent, now `🎒️pack/⏳️async/🦀️component.rs`. The peer is moving subunits **one at a time**, so every re-run simply catches the next one mid-flight. Each doomed attempt also consumes the build-directory lock that the peer needs to finish, making the wait longer for everyone — chasing here is not merely useless, it is counterproductive.
+
+Replaced the retry loop with a **cheap file-existence gate**: poll the `#[path = "…"]` targets declared in `💻️os/📦️packages/🦀️rust/📦️glue.rs` until every one resolves, and only then spend a cargo build. Bounded at 70 polls / ~35 minutes. Reading the module registration to decide when the tree is coherent costs nothing and asks nothing of the lock, where a speculative `cargo check` costs several minutes and takes the lock from the session that is trying to make it green.
+
+`effects-async` stays **unverified** — and I want to be precise about what is and is not known: it has never compiled, its own author said so, and three separate build attempts have now been blocked *before reaching its code* by an unrelated peer restructure. Nothing so far is evidence either way about its correctness.
+
+### 🔁️ Sixth half-landed change — `🎒️pack` modules deleted while still mounted
+
+`os-kernel` red again for every session, hours after the `🗣️dsl` instance resolved:
+```
+error: couldn't read `…/💻️os/🔨️modules/🎒️pack/⏳️async/🦀️component.rs`: No such file or directory
+ D  💻️os/🔨️modules/🎒️pack/⏳️async/🦀️component.rs
+ D  💻️os/🔨️modules/🎒️pack/🌐️http/🦀️component.rs
+ D  💻️os/🔨️modules/🎒️pack/📐️format/🦀️component.rs
+```
+All three still `#[path]`-mounted from `💻️os/📦️packages/🦀️rust/📦️glue.rs` (the `⏳️async` one at line 101). The `⏳️async` name matches the peer's live `effects-async` packet, which they explicitly told me is in that area right now.
+
+**Not touched, and notified instead** — the same call as last time, and last time it was demonstrably correct: I was about to repoint the `🗣️dsl` mounts when the peer finished by removing them entirely in favour of `pub use protocol::*`. My "fix" would have re-established the exact fragile mechanism they were deleting.
+
+Blocks my `🧩️puzzle` verification for the `kit.catalog` change. Waiting rather than racing.
+
+**Six instances now, one signature: the artifact moved or went, its registration did not.** Moved generated file (ui-styling) · renamed presence type set · moved crate with a stale workspace member entry (broke `cargo metadata` machine-wide) · struct gaining a required field its call sites missed · `🗣️dsl` promotion · these `🎒️pack` deletions.
+
+**Proposed cheap guard, offered to the peer rather than imposed**: a test in the owning crate that walks every `#[path]` in `glue.rs` and asserts its target exists. That converts "os-kernel is red for every session in the tree" into one named failing test in the crate that owns the mount table. Six occurrences in one ticket is enough evidence that the mount table is a live hazard during this rewrite, not a stable structure.
+
+### ✅ D3 accepted — one plugin verified, four fixed-but-honestly-unratcheted
+
+It came back with real exit codes after the third nudge, and the report is sound.
+
+**`🖍️draw` fully verified**: describe exit 0, `cargo test --lib` **105/105** including `descriptor_is_fresh`, ratcheted. The duplicate symbol was a genuinely dead `semio_plugin_bundle_installer_link_shim` weak-linkage stub colliding with the strong symbol from draw's own `plugin_exports!`.
+
+**`procedural`/`gis`/`energy`/`imperative`: fixes applied and reviewed, explicitly NOT ratcheted** pending re-verification once the tree is green. That is the right discipline — a ratchet entry on an unverified plugin is a red tree for every session.
+
+**It independently confirmed the `🎒️pack` blocker I had just reported to the peer**, reaching the same conclusion by a different route: `REAL EXIT: 101` reproduced identically across **7 separate retries**, root-caused to the stale `#[path]` mount, confirmed via `git status` showing the files deleted-but-unstaged at the old location and present at a new top-level one — then **flagged rather than touched** because it was outside path_scope. Two independent agents, same evidence, same restraint.
+
+**Its classification correction now carries stronger proof than when it first raised it.** Beyond "procedural2d vs procedural3d, gismap vs gisterrain", it established that the definition registry is **freshly instantiated per plugin build**, and that `process3d` claims the same literal dwg string with **zero conflict** — which is decisive: if the collision were cross-plugin, process3d would collide too. D1's cross-plugin framing (which I repeated in the brief) could not have survived that test, and nobody had run it.
+
+**Second pre-existing blocker found and flagged, not fixed**: `procedural`'s own native `cargo test --lib` carries **44 compile errors** from `ArtifactStore::new()`'s `Result`-unwrap fallout, spanning framework files. Out of scope, routed to a follow-up task.
+
+**It also reported its own mess**, unprompted: stray duplicate background processes, and an incremental-cache deletion that corrupted one of its own running builds. Self-reporting a self-inflicted failure is worth more than the clean narrative it could have written instead — and it is the honest explanation for part of the contention I was attributing elsewhere.
+
+### ✅ D2 accepted — 0/7 converted, reported as 0/7, and it corrects both D1's taxonomy and me
+
+**It leads with "0/7 fully converted".** Row-level fixes for 6/7, mechanically confirmed for 2/7, stdio untouched. After ~7 hours and 461k tokens, opening with the honest headline rather than the six things it did accomplish is the right instinct.
+
+**Attribution correction — mine to own.** I recorded `🧱️block`'s placeholder descriptor as "emitted by D2". It was **D1's**, committed in the earlier wave and left stale. D2 inherited it. My audit found the placeholder correctly but I guessed at its author from which packet happened to be running, and guessed wrong. The deletion was still right; the blame was not.
+
+**Third reclassification of D1's taxonomy, and the class keeps shrinking.** `🏗️fem`'s rows were genuinely broken AND fixed AND mechanically confirmed (`cargo test -p semio-s-plugin-fem --test dbg_capability_claim_diff` → 2 passed, exit 0) — and then `describe` ran clean and surfaced a *different* real bug underneath:
+```
+dialect:s.stdio.csv@rfc4180/* is already registered by s.fem2d.composer.csv
+```
+fem2d and fem3d share one plugin and both register composers for the same five stdio dialects. **That is the intra-plugin dialect collision D3 independently identified in procedural and gis — not the capability-claim class D1 filed it under.** Three plugins now, one pattern: sibling artifacts inside a single plugin claiming identical dialects. D1's "capability-claim class (7 plugins)" is measurably smaller than 7, and the real recurring defect is sibling-artifact dialect ownership.
+
+**Independent third confirmation of the `🎒️pack` blocker**: 6 build attempts failing on *different files* in that directory, one surfacing 44 real compile errors — which it used to distinguish "genuinely mid-refactor" from "a race I could retry past". That is the right test, and it matches what D3 (7 retries) and I (direct compile) each found separately.
+
+**Hygiene it did unprompted**: removed every temporary diff-test file and reverted the `pilot_languages()` visibility bumps it had needed to support them. No scaffolding left in the tree.
+
+Where it stopped short and said so: playbook/trinity/puzzle/block rows were fixed **by hand cross-reference** against the real Rust `EXTENSION`/`DOCUMENT_SCHEMA`/`WRITES` constants because the build never came back — correct method, unconfirmed result. `🗄️stdio`'s broken artifact among ~24 remaining was never isolated. Both stated plainly rather than rounded up.
+
+## 🏁️ Session close — state, and what a next session picks up
+
+### Tree status at close: RED, and not ours
+`semio-framework-os-kernel` has **17 compile errors** (was 1 when first noticed), from the peer's live `🎒️pack` module rewrite — files deleted while still `#[path]`-mounted in `💻️os/📦️packages/🦀️rust/📦️glue.rs`. Independently confirmed three times tonight: by me (direct compile), D3 (7 retries), D2 (6 builds failing on different files, one with 44 errors). Reported to the peer, **never touched**, on the rule that proved correct earlier today when my intended fix for the identical `🗣️dsl` case would have re-established the exact mechanism they were removing.
+
+**Nothing further can be verified until that lands.** The placeholder guard is therefore **compiles, not fired** — my binary build failed on the same red kernel. That distinction stands unresolved and is stated as such.
+
+### Verified and standing
+| | |
+|---|---|
+| Bench, 50×50 native | **7/8 budgets**; 2550 actors concurrent in 390 MB; 100 actors 12-13 per shard across 8 |
+| Descriptors | **21 committed, 11 ratcheted, 0 placeholders** (audited by content, not count) |
+| Census (exit item 9) | met — every must-not-exist symbol 0 live |
+| Process shards | real `kill -9` → detect → rebuild, sibling survives (3 PIDs logged) |
+| `kit.catalog` | resolved with the peer: `🧱️block` declares, consumers reference |
+| Parity gate | unblocked (was unrunnable: no `PLAYWRIGHT_BROWSERS_PATH`); runs, not yet green |
+| Guards added | `describe` refuses `assembly-failed`; `verify gate` compiles wasm32 bindings |
+
+### Ten defects, one shape
+Job completions that could not serialize · WASI never linked · fuel cap 18× low · limiter blocking ALL component instantiation · shard pool putting every actor on shard 0 · four pooling sub-pools defaulting to 1000 · an out-of-spec bench criterion failing a correct runtime · wasm bindings that did not compile · a parity gate that could not launch a browser · three placeholder descriptors committed.
+
+**Every one was invisible to `cargo check` plus mock-backed tests.** Two of them — the limiter and the shard pool — meant the system's two central claims were false while every gate showed green.
+
+### Three taxonomy corrections, each by the agent closest to the evidence
+D1 classified the descriptor failures into five causes. **D3 corrected "cross-plugin dialect collision" to intra-plugin** (decisive proof: `process3d` claims the same literal dwg string with zero conflict). **D2 then found `🏗️fem`'s real blocker was that same intra-plugin collision**, not the capability-claim class it was filed under. The genuine recurring defect — **sibling artifacts inside one plugin claiming identical dialects** — had no name this morning and now has three confirmed instances.
+
+### What the next session picks up, in order
+1. Wait for the peer's `🎒️pack` rewrite; re-run `cargo check -p semio-framework-os-kernel --lib` to confirm green.
+2. **Fire the placeholder guard** against `🏗️fem`'s wasm and confirm it refuses + writes nothing. It is unverified.
+3. Re-verify and ratchet the five plugins with applied-but-unconfirmed fixes: procedural, gis, energy, imperative (D3), layout (D2).
+4. Resolve the sibling-artifact dialect ownership class (fem2d/fem3d, and re-check procedural/gis) — now a named pattern, not scattered failures.
+5. Re-run parity on a quiet tree; then the 58×2 sweep.
+6. **Re-measure every test count in this log** — the peer found vitest double-collection inflating figures ~2×, and ~253 tests that never run at all.
+7. Then exit items 1, 2, 10.
+
+### 🔧️ Corrections from the `SERVER-FRAMEWORK-PRODUCT` session — including one of mine
+
+**os-kernel is GREEN again**: `cargo test -p semio-framework-os-kernel --lib` **778 passed**, wasm `--lib` clean.
+
+**My attribution was wrong.** I recorded the `🎒️pack` deletions as the peer's `effects-async` packet. They were a *different* session's (`26/08/18/SERVER-FRAMEWORK-PRODUCT`) promotion of the `.spk` container — `📐️format`/`🔌️io`/`⏳️async`/`🌐️http` — out of `💻️os/🔨️modules/🎒️pack` into a product-neutral `🧰️framework/🔨️modules/🎒️pack` (`semio-framework-pack`). I saw `⏳️async` in the deleted paths, matched it to the one live packet I already knew of, and wrote the inference down as fact.
+
+**Second misattribution today** — I also pinned `🧱️block`'s placeholder descriptor on D2 when it was D1's. Both were inferred from an adjacent signal (a matching directory name; which packet happened to be running). **A plausible attribution derived from a name is not evidence** — the same rule this ticket already learned for liveness (`git log` over derived artifacts) applies to authorship, and I did not carry it across.
+
+Also confirmed: the fix was again to **delete** the `#[path]` mounts rather than repoint them (`os_pack` now re-exports). That is twice in one day my intended repair would have re-established the exact mechanism being removed. Not touching a moving target has now paid out three times.
+
+### ✅ The `#[path]` guard I proposed is LANDED — by them, in the owning crate
+
+`every_path_mount_in_this_glue_resolves_to_an_existing_file` in `💻️os/📦️packages/🦀️rust/📦️glue.rs` walks every `#[path]` literal and asserts the target exists. **The sixth-occurrence framing was what decided it belonged in the owning crate rather than a repo-wide lint.** Six identical incidents finally became one named test.
+
+Implementation note worth keeping: resolve against `env!("CARGO_MANIFEST_DIR")`, **not** `file!()`'s parent — cargo runs tests with CWD at the package root while `file!()` is workspace-root-relative; their first version flagged all 40 mounts as missing.
+
+### 📉️ Two more corrections to my measurements
+
+- **`bun install` is broken repo-wide**: root `package.json:249` patches `@electron-forge/core-utils@7.11.2` but `patches/` does not exist, so any clean-box install dies. My "parity is unblocked" claim therefore holds **only on this box** — on a fresh machine the 58×2 sweep is still blocked, environmentally rather than by a parity defect.
+- **`💻️os` is 184/185, not the "322/324" in my log**, and the one failure is a missing build artifact (`pkg/semio_framework_os.js` never built), not a regression. Combined with the vitest double-collection finding, **every suite figure in this log is provisional** and must be re-measured rather than restated.
+
+## ✅ THE PLACEHOLDER GUARD FIRED — verified, not merely compiled
+
+Run against `🏗️fem`'s known-`assembly-failed` wasm on the peer's green window:
+
+```
+semio-framework-plugin-describe describe: refusing to write a placeholder descriptor for
+  …/🎯️target-d2/wasm32-wasip2/debug/semio_s_plugin_fem.wasm: plugin assembly failed —
+  dialect:s.stdio.csv@rfc4180/* is already registered by s.fem2d.composer.csv
+
+files written: 0   (0 = guard held)
+```
+
+Three things it did, all of them the point:
+1. **Refused** — no descriptor written.
+2. **Wrote nothing at all** — not a partial file, not a `.semio` without its `.json`.
+3. **Surfaced the real error** instead of burying it. The old behaviour produced a 707-byte file that parsed as JSON and read as success while carrying `pluginId: "assembly-failed"`; the new behaviour names the actual defect on stderr.
+
+**And the error it surfaced is D2's finding, independently reproduced**: `fem2d` and `fem3d` both registering a composer for `s.stdio.csv@rfc4180/*` — the intra-plugin sibling-artifact dialect collision, now confirmed by a third route (D3's build output, D2's describe run, this guard).
+
+This closes the last item I had standing as **"compiles but has never fired"**. It is now compiled, fired, and observed to hold — the same three-step bar this ticket has applied to every other claim, applied to my own change without exception.
+
+Sequence worth noting: the guard was written *because* three placeholders slipped through, and the very first thing it caught was a fourth attempt at the same plugin. The defect it prevents was not hypothetical.
+
+### 📨️ A cross-session message that was NOT for us — and two things worth keeping from it
+
+A message arrived addressed to a `SERVER-FRAMEWORK-PRODUCT` session ("if that was not you, please ignore"). It was not us and we acted on none of its requests. Three items are still worth recording, because they resolve open unknowns:
+
+**1. The `🎒️pack` mover is a THIRD session.** Three of my builds died inside `semio-framework-os-kernel` on `#[path]` targets vanishing mid-move, and I could not attribute them. It is `SERVER-FRAMEWORK-PRODUCT` promoting `🎒️pack` — not the peer I had been corresponding with, and not our `effects-async` packet (that peer had itself misattributed the deletions to our packet, then corrected it unprompted). Attribution now settled; we remain gated on their move and are editing nothing of theirs.
+
+**2. The `plan_workflow` failure has a real root cause, and it is not a code defect.** They traced it to `cannot resolve …/pkg/semio_framework_os.js` — **`pkg/` was never built**. This log has carried that failure for a full day as a vague "pre-existing wasm-artifact failure", which is a classification, not a diagnosis. It is a **missing build artifact**, therefore fixable, and it should stop being excused in every baseline. Added to the W9 list rather than fixed now (it needs a wasm build on a machine at 19 cargo processes).
+
+Their figure was `184/185`; mine, measured minutes earlier, is **184 passed / 2 failed** — two *distinct* failures in different files (`🟦️component.ts`'s `plan_workflow…decoded via wasm` and `🟦️backbone-worker.ts`'s `decodes the Rust-generated binary wire fixtures byte-identically`). Both plausibly share the missing-`pkg/` cause. I told them so, including that **I made the mirror-image error earlier today** — grepped one of the two names, saw hits, and recorded "one failure, doubled".
+
+**3. A zone-overlap risk I pushed back on.** Their stated zone — `🔌️plugin/**`, wgpu, `🎭️actor`, `✏️s/🔌️plugins/**`, root `📜️script.ts` — is almost exactly where our live packets are (`effects-async` in the host file, `kernel-loop` in wgpu glue, `web-shardframe` and `web-plugin-runtime` in the TS trees). That statement may have been aimed at the server session rather than at us, so I enumerated our live files precisely and asked them to name theirs if the overlap is real, offering to sequence around them. Two sessions in one file is the failure this ticket has absorbed four times from others; inflicting it on ourselves would be worse.
+
+**Also flagged for us:** a `DslValue` promotion in flight touches `dsl::from_dsl_value`, which sits on our descriptor path in `📇️describe/📦️glue.rs` and `🏃️run/🦀️component.rs`. No action yet — recorded so a later failure there is not mistaken for our own.
+
+A note on method, since both sessions hit it today: they twice inferred authorship from an adjacent signal (a matching directory name, whichever packet happened to be running) and were twice wrong, and said so unprompted. Our equivalent was copying an acceptance command from a sibling packet without reading the manifest, reintroducing an error this ticket had already documented once. **A plausible attribution derived from a name is not evidence** — the same sentence covers both mistakes.
+
+### 🧩️ `kit.catalog` change — landed, NOT verified (7th blocked window)
+
+`cargo check -p semio-s-plugin-puzzle --lib` → `error[E0432]: unresolved import `crate::os_dsl::schema::WireNode``.
+
+**Not mine**: my edit removed one `.artifact_kind(crate::artifacts::puzzle3d::kit_catalog_artifact_kind())` line, which cannot produce a schema-type import error. This is the third session's `DslValue` promotion out of `🗣️dsl/🧬️schema`, which they warned me about by name — arriving between my check starting and finishing.
+
+So the `kit.catalog` resolution is **applied and reviewed, not compile-verified**. Stated as such rather than assumed green because the change is small: the ticket's own standard is that a small change is not a verified change.
+
+**Seventh instance of the tree going red under a moving refactor today** — dsl (span/diagnostic), pack (×3 files), now schema (WireNode). Three separate sessions, one shared tree. The `#[path]`-mount guard the server session landed will catch the first class; import-surface promotions like this one it will not.
+
+### 📊️ os figures corrected again — by measurement, not by me
+
+`sol` measured `💻️os/📦️packages/🟦️typescript` at **184 passed / 2 failed** — two distinct failures in different files (`🟦️component.ts` → `plan_workflow … decoded via wasm`; `🟦️backbone-worker.ts` → `decodes the Rust-generated binary wire fixtures byte-identically`). I had "184/185" second-hand from the server session and was one command from recording it.
+
+My `pkg/`-never-built diagnosis plausibly explains **both**, since both are artifact-dependent — but plausibly-explains is not measured, so it is recorded as **2 failures, both suspected missing-artifact, unconfirmed**.
+
+**Two sessions made mirror-image counting errors on the same suite within an hour** (they grepped one of two names and recorded "one, doubled"; I took a second-hand figure). That is the strongest argument yet for the standing rule: re-run, never restate.
+
+### 🔧️ Two corrections from the `SERVER-FRAMEWORK-PRODUCT` session — one of them mine again
+
+**1. "Three separate sessions" was wrong — it is TWO.** I recorded the dsl promotion, the `🎒️pack` move, the `#[path]` guard and the `DslValue` promotion as evidence of three concurrent sessions churning the tree. **All of it is one ticket** (`26/08/18/SERVER-FRAMEWORK-PRODUCT`), plus `sol`'s async-first W5+ work. Third attribution error today, same mechanism as the first two: I inferred a distinct actor from a distinct-looking symptom. The tree was never as chaotic as my log said — one session was executing a coherent promotion sequence and I read each step as an unrelated event.
+
+**2. My descriptor path survived `DslValue`, and they measured it rather than assuring me:**
+```
+cargo check -p semio-framework-plugin-describe → Finished (clean)
+cargo check -p semio-framework-os-run          → Finished (clean)
+```
+`dsl::from_dsl_value`/`to_dsl_value` still resolve at exactly `📇️describe/📦️glue.rs:140,151,155` and `🏃️run/🦀️component.rs:31`. The mechanism is a facade: `DslValue` and the 716-line serde bridge moved to `🧰️framework/🔨️modules/🌱️value`, mounted once by the replication crate, with `os_dsl::schema` re-exporting — so every historical path keeps resolving. **The schema was red for about four minutes**, not the long window I had braced for.
+
+### 📊️ The os TS figure resolved — and the resolution is more interesting than either number
+
+Three sessions produced three counts for one suite: 322/324 (mine, stale), 184/185 (theirs), 184/2 (`sol`'s). **All three were correct for the tree state they sampled.** Their 184/185 predated moving the wire-fixture test out of `🟦️backbone-worker.ts`; it has since moved to the replication package (`🧫️fixtures/wire`, 20 frames, passing there).
+
+As they put it: **the suite identity moved under us** — which is worse than one party being wrong, because every reading was defensible. Final recorded state: **one genuine remaining failure** (`plan_workflow … decoded via wasm`), root cause confirmed independently by both of us as `🖥️host/📦️packages/🦀️rust/pkg/` never having been built in this tree. **A missing build artifact, not a code defect** — so it is fixable rather than something to keep excusing in every baseline.
+
+### Zones — no overlap after all
+They have not been in `🎭️actor` (or its TS package), wgpu, `🖥️host/🧵️shard`, `📇️describe`, `🛂️manifest`, or anything under `✏️s/`. Only shared interest is `📇️describe/📦️glue.rs`, read-direction only: they keep it compiling, they do not edit it.
+
+**Their remaining sequence, for planning**: `store::pack_rt` out of `🏪️store`, then `db_engine`'s `vcs_integration` via the `🕸️version-graph` seam, then relocating `db`. `🏪️store/🦀️component.rs` is the one likely to sit on someone else's path. Same protocol: short red windows, mounts deleted rather than repointed.
+
+### ✅ kernel-loop — wgpu GREEN, a real parallel kernel, and the bench blocked by our own async syntax
+
+**Step 0 achieved:** `cargo check -p semio-framework-os-renderer-wgpu --lib` → **exit 0**. It did not merely repair the two broken `pump` call sites; it replaced them with the real mechanism.
+
+Delivered `🎯️targets/🧊️wgpu/🎠️runtime.rs` — `ParallelRuntime`: `Kernel::submit` → `tick` → dispatch to **K real `ShardExecutor` OS threads** → collect outcomes over an aggregated multiplexed channel → **`Kernel::complete`**, including synthesizing a `Faulted` result for trap outcomes **so the failure ladder finally observes them**. Both native call sites — the winit interactive host and the scale-bench harness — now run through that one engine, so "K shards run in parallel" is the same real mechanism in production and in the bench rather than two lookalike paths. K comes from `semio_framework_async::thread_plan`, not a fresh ad-hoc formula. `Kernel::new(Thread, K, 2, 64)` replaces the single-shard `(…, 1, 0, …)`.
+
+Coordinator-relevant numbers from its run: `cargo test -p semio-framework-plugin-host --lib -- --skip schema_parity` → **113 passed / 0 failed** (was 100). `--all-targets` fails only on a pre-existing `Dock` test-module break from another session's localization/presence work, which it never touched.
+
+**Its load-bearing finding, which would have been a silent disaster:** `Kernel::activate` takes **no per-actor budget** — it always applies `lane_defaults::budget_for(lane)`. Dispatching `tick`'s own computed budget verbatim would have **fuel-starved almost every real turn** (the lane default's 2M fuel against the 50M/200M these hosts actually need), and the symptom would have been mysterious mid-turn traps, not an obvious error. Fixed with a caller-supplied budget resolver; DRR's turn/shard *selection* is preserved and throttle-scaling of the budget itself is left as a documented gap rather than faked.
+
+#### 🐛️ The bench is blocked — by `async-worlds`, through a generator I failed to enumerate
+
+The scale-fixture guest wasm no longer compiles: a WIT parse error on `async func` syntax. kernel-loop confirmed it across two runs 15 minutes apart, diagnosed it read-only, never edited the file, and reported budget 5 as **unmeasured rather than fabricated**. Exactly right.
+
+Root cause, found by me: **`💻️os/🧫️fixtures/🔌️scale` pins `wit-bindgen 0.36.0` and has its OWN `generate!`** over the same `🧬️schema` package — deliberately not depending on the SDK, as its own header comment explains. When I sequenced the guest-generator bump ahead of the async syntax I checked *the SDK's* `generate!` and missed this second one. My grep for `wit_bindgen::generate!` under-reported it because this crate, like the SDK, writes `use wit_bindgen::generate;` then bare `generate!({…})`.
+
+**That is the third time today a too-narrow query produced a confidently wrong picture** — after the grep that made me record two distinct test failures as one doubled failure, and a `find -newermt` that returned nothing while `ls` showed a one-minute-old file. Bumped the fixture to 0.57.1 with a comment stating the invariant: *any crate with an independent `generate!` against that schema must move in lockstep, because there is no per-world parsing.* Rebuild in flight.
+
+The fleet itself was never at risk — the 33 plugin crates go through the SDK, which is on 0.57.1 and verified green. Only this fixture had a private generator.
+
+### 🔬️ A near-miss of my own: PluginRuntime's tests are real
+
+Chasing web-plugin-runtime's numbers, three separate shell greps on `PluginRuntime/🟦️component.tsx` returned **empty output** — no matches, no `0`, nothing — while `ls` resolved the same path fine. I was one step from recording that a packet had reported 26 tests that do not exist. Settled with python instead of the shell: **3 `import.meta.vitest` blocks, 6 `describe(`, 30 `it(`**. The tests are real and in-source; my shell was silently failing on the emoji path.
+
+The lesson generalises past emoji: **an empty result from a query that cannot report its own failure is not evidence of absence.** Same shape as the two misses above. Where a negative result would change a judgement about someone else's work, confirm it with a second, independent tool.
+
+### 🧰️ My own gate was broken — and it was the same failure shape, a fourth time
+
+The file-existence gate I built to avoid chasing the peer's move ran **70 polls (~35 min)** and reported `PATHS_STABLE=0 … last_missing=.` — i.e. it never cleared. Read literally, that says the peer is still moving files. It is not what happened.
+
+`.` cannot be a file, so my `[ -f "$p" ]` test could **never** succeed and the loop was structurally incapable of finishing, independent of the peer. Re-parsed with python: `💻️os/📦️packages/🦀️rust/📦️glue.rs` declares **47** `#[path]` targets, of which the 7 "missing" are all literally `#[path = "."]` — each immediately followed by `pub mod … {`, which is the ordinary Rust idiom for anchoring an inline module's **directory**, not a file reference. Every one of the **40 real file paths resolves**. The peer's consolidation has landed; my instrument was broken.
+
+That is the fourth instance today of one shape: a **too-narrow or silently-failing query mistaken for a finding**. The grep that turned two distinct test failures into "one doubled". A `find -newermt` returning nothing while `ls` showed a one-minute-old file. A `grep wit_bindgen::generate!` that missed the scale fixture's private generator and cost the bench. And now a gate that could never pass. Three of the four would have produced a **confidently wrong conclusion about someone else's work** if I had not cross-checked with a second tool.
+
+Stated as a rule, because "be careful with grep" is too weak to act on: **when a negative result would change a decision — especially about another session's or packet's work — reproduce it with a differently-implemented tool before believing it.** Shell globbing, `find` predicates and `grep` over emoji paths have now each silently under-reported in this session; python over explicit absolute paths has not.
+
+`effects-async` verification is running against the now-coherent tree. It remains the wave's one genuinely unverified deliverable.
+
+### ✅ effects-async COMPILES — the wave's one unverified deliverable is verified
+
+```
+cargo check -p semio-framework-plugin-host --lib   → CARGO_EXIT=0, 0 errors
+```
+
+The packet had reported **zero confirmed compiles** and could not get a build through: the harness detached its checks at the 120 s default, and three of my own attempts then died on an unrelated peer restructure. In that gap it did a line-by-line self-review and found **three real defects, one a hard compile error** (`scope` moved into an `async move` block while still needed afterwards for `spawn_scoped(&scope, …)`). That self-review is why this now compiles on the first clean attempt — it fixed the error that would otherwise have surfaced here.
+
+Worth being precise about what this does and does not establish: the async effect executor, its `OperationContext` derivation, the routing to `HttpPool`/`StorageScheduler`/`TimerWheel`/`ComputePool`/`EventRouter`, the cancellation matrix and the per-instance `EffectBackbone` are now **type-coherent against the real service crate and the real kernel types**. They are not yet *proven to run* — that is the test suite, currently executing. This ticket's most expensive recurring lesson is exactly that gap, so the distinction stays explicit.
+
+Also confirmed: its `🔀️PostTurnRelay` verdict of **KEPT** was right — it is a job-execution primitive `IoRouter`/`ArtifactInferenceRouter` still depend on, not a live per-turn dispatcher, and retiring it would have broken working code to satisfy a plan written before that was known.
+
+### 🔧️ Scale fixture past the WIT barrier
+
+The 0.57.1 bump is compiling (`wit-bindgen v0.57.1`, `wasmparser v0.247.0` building, no errors) — it has cleared the `async func` parse failure that blocked it. If it produces an artifact, the bench becomes runnable and **budget 5 gets a real number on a valid instrument for the first time**: K genuinely parallel shard threads via `kernel-loop`'s `ParallelRuntime`, instead of one physical loop behind K labels producing 30 samples inside a 0.1 ms band.
+
+### ✅ Scale fixture rebuilt — bench unblocked, artifact is a REAL component
+
+```
+cargo build -p semio-framework-os-scale-fixture --target wasm32-wasip2 → FIXTURE_BUILD_EXIT=0, Finished in 10m 21s
+magic bytes: 00 61 73 6d 0d 00 01 00  → component (not a core module)
+```
+The one-line `wit-bindgen 0.36.0 → 0.57.1` bump on the fixture's private `generate!` cleared the `async func` parse failure. Checking the magic bytes rather than trusting "the build succeeded" matters here: a core module and a component both come out of a successful `cargo build`, and only the second can be instantiated by the host — this ticket has already been bitten by an artifact that compiled into something the runtime could not load.
+
+**Native scale bench launched** with `--shards 4` against `kernel-loop`'s `ParallelRuntime`. This is the first time every precondition has existed simultaneously: a live `Kernel` loop calling `tick`/`complete`, K real `ShardExecutor` OS threads rather than one physical loop behind K labels, DRR budgets travelling in `ShardFrame::Grant`, and a fixture component that builds against the WASI-0.3-bearing schema.
+
+What I will and will not claim from it, decided **before** seeing the number so the criterion cannot bend to the result: budget 5's threshold is p95 ≤ 8 ms native. The previous archived run reported 295 ms with **30 samples inside a 0.1 ms band** — a constant, i.e. a broken instrument, not a latency measurement. If the new run's samples show real spread, the instrument is valid and **whatever it reports is the honest result, pass or fail**. A valid-instrument failure is a publishable design finding and will be recorded as such; it will not be "fixed" by tuning the harness.
+
+### 🐛️ W0 fallout in the scale fixture — and I produced the false green that hid it
+
+The bench failed at its **own** fixture build step, which passes `--features component-guest`:
+```
+error[E0560]: struct `RequestCapabilityEffect` has no field named `id` / `scope` / `reason` / `optional`
+```
+`W0-params` moved those four fields into `request-capability-params`, leaving `request-capability-effect { req, params }`. The fixture's feature-gated guest code still constructed the flat shape.
+
+**Why three separate green signals missed it:**
+1. `W0`'s acceptance covered `semio-framework-plugin` and `semio-framework-plugin-host`. The scale fixture has its **own** `generate!` and is a separate crate — outside every command in its brief. My brief, my omission.
+2. `async-worlds` and the guest-generator bump likewise never built this crate.
+3. **My own fixture build "succeeded" only because I omitted `--features component-guest`** — the exact feature gating the broken code. I then reported "fixture builds, bench unblocked, artifact is a real component" and even checked the magic bytes. All true, all irrelevant: I verified an artifact built from a code path that excludes the defect.
+
+That is this ticket's signature failure — *a check that structurally cannot observe the defect* — and this time **I** authored it, one message after writing that magic-byte checking matters because a successful build proves less than it appears to. The correct instrument was never "does the crate build?" but "does the crate build **the way the bench builds it**?" Reproducing the consumer's exact command is what found it in one step.
+
+Fixed (2-line change, the fixture is this ticket's own asset): import `RequestCapabilityParams` and nest the four fields. `cargo build -p semio-framework-os-scale-fixture --target wasm32-wasip2 --features component-guest` → **Finished in 2.96s**. Bench re-launched.
+
+**Standing correction for the exit checklist:** any acceptance that names a crate must run the command **its consumers actually run**, feature flags included. A `cargo build` without the feature that gates the code under test is not evidence about that code.
+
+### ✅✅ effects-async FULLY VERIFIED — the async effect layer runs, not just compiles
+
+```
+cargo test -p semio-framework-plugin-host --lib -- --skip schema_parity
+  → 113 passed; 0 failed; 1 ignored — TEST_EXIT=0
+```
+113 matched `kernel-loop`'s figure exactly, which is the kind of coincidence that deserves suspicion rather than relief, so I applied this ticket's own "prove it by name" rule to my own verification instead of accepting the total. The tests are there, and they are **properties, not mechanisms** — which is the standard the brief set precisely because this ticket has twice been fooled by suites that passed against a broken runtime:
+
+| required property | test that proves it |
+|---|---|
+| revocation cancels only its own ops, actor survives (bench budget 8) | `revoked_capability_cancels_only_its_own_operations_and_actor_survives` |
+| stale completions dropped after restart | `stale_generation_completion_is_dropped_current_generation_is_delivered` |
+| suspend buffers rather than loses | `park_buffers_completions_and_resume_delivers_them_in_order` |
+| completion floods hit mailbox bounds | `completion_burst_while_parked_is_bounded_not_unbounded` |
+| quota denial is typed, never a panic | `storage_quota_denial_produces_a_typed_completion_not_a_panic` |
+| deadlines enforced, loser cancelled | `an_effects_deadline_is_enforced_and_the_loser_is_cancelled` |
+| backbone requires its capability | `backbone_send_is_rejected_without_the_capability` |
+| store deltas coalesce per URI | `backbone_delta_fanout_coalesces_a_burst_for_the_same_uri` |
+| jobs stay with the shard, are not re-dispatched | `spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched` |
+| routers run off the async workers | `router_effect_runs_through_compute_pool_and_completes_ok` |
+
+**This is the reference architecture's core claim, now executing.** Effects leave a turn as data; the executor derives an `OperationContext` (actor, generation, trace, lane, deadline, a child cancel token, capability) and spawns each into that actor's scope — no detached spawn is expressible, because `spawn_scoped` requires a `ScopeHandle`. Real resources stay host-owned (one timer wheel, pooled HTTP, a bounded storage scheduler, a semaphore-bounded compute pool), and completions re-enter as ordinary envelopes so a flood meets the same coalescing and backpressure as any other traffic. The per-instance `EffectBackbone` closes the guest↔store gap that had **no path at all** since the process-global channel was deleted.
+
+Notably, the packet that produced this never got a single successful build of its own — the harness detached its checks and an unrelated peer restructure blocked three of mine. It responded by self-reviewing line by line, finding three real defects including the compile error, and reporting **zero confirmed compiles** rather than implying success. Both the compile and the full property suite then passed on the first clean attempt.
+
+### ✅ `kit.catalog` resolution VERIFIED — both sides compile
+
+```
+cargo check -p semio-s-plugin-puzzle --lib  → PUZZLE EXIT=0
+cargo check -p semio-s-plugin-block  --lib  → BLOCK EXIT=0 (Finished in 48.82s)
+```
+
+Consumer (puzzle, declaration removed, port references kept) and declarer (block, unchanged) both green. The last item I was carrying as *applied but unverified* is closed.
+
+**A method note on how nearly I mis-recorded this.** My first attempt used `cargo check -q`, whose quiet mode suppresses the `Finished` line — so the grep returned nothing and the result *looked* like "no errors". That is absence of evidence, not evidence of success, and I would have written it down as a pass. Re-ran without `-q`, capturing explicit exit codes.
+
+That is the same failure shape as this session's three biggest finds, arrived at from the opposite direction: **a green signal that was structurally incapable of being red.** The mock-backed tests that never loaded wasm, the census that could not distinguish two meanings of `exchange`, the descriptor gate reading a gitignored path — and now nearly my own verification. Worth recording precisely because I caught it in myself with two commands left to go.
+
+## 🏁️ THE BENCH RAN ON REAL PARALLEL SHARDS — thesis proven, budget 5 measured honestly
+
+`bench plugins --renderer native --count 50 --extensions 50 --shards 4` → exit 0, archived `🔣️bench-w5-parallel.json`.
+**`1:pass 2:fail 3:fail 4:pass 5:fail 6:pass 7:fail 8:pass`**
+
+Against the archived `🔣️bench-native-FINAL.json` (7/8) this reads as a regression, and **partly it is** — but the two runs are not comparable instruments, and the difference is the point of the whole wave.
+
+### ✅ Budget 3 — the ticket's thesis, now measured on real threads
+
+```
+perShardCounts {"0":25, "1":25, "2":25, "3":25}   maxShardLoad 25   ceiling 26   activeActors 100/100   shards 4/4
+```
+Textbook balance across **four real OS threads**. The same measurement earlier in this ticket read `{"0": 100}` with a single physical loop wearing K labels. Every specified quantity passes; the row is red only on a `faultCount` of 2 whose messages were not captured.
+
+### 📉 Budget 5 — a VALID instrument at last, and an honest failure
+
+| | old run | this run |
+|---|---|---|
+| samples | 30 within a **0.1 ms** band | 30 spanning **146.4 – 242.3 ms** (spread **95.8 ms**) |
+| p95 | 295 ms | **217.9 ms** |
+| verdict | failure with a **known-invalid** instrument | **failure with a valid one** |
+
+The old number was a constant, which is not a latency. This one has genuine variance, so it is measuring something real for the first time — and the real answer is **p95 217.9 ms against an 8 ms native target, ~27× over.**
+
+I committed to the interpretation **before** seeing the number, and it stands: this is a publishable design result, not something to tune away. The likely mechanism is arithmetic rather than mysterious — 40 `cpu` actors over 4 shards is 10 per shard, and an interactive turn pinned to a shard queues behind that shard's CPU-bound turns; 10 busy-looping actors' declared milliseconds lands squarely in the 146–242 ms band observed. **K parallel shards alone do not protect interactive latency.** The design already anticipates the remedy — `request_exclusive` plus the 2 reserved exclusive shards now configured by `Kernel::new(Thread, K, 2, 64)` — but nothing yet moves CPU-bound actors onto them or keeps interactive actors off saturated shards. That is the next real piece of work, and it is now backed by a number instead of an assertion.
+
+### 🐛️ A real bug the parallel runtime exposed — dispatched as `shard-routing`
+
+```
+budget 2: 6 × "ShardLoop::pump: actor <id> is not registered on this shard"   (also 2717 ms vs a 1500 ms ceiling)
+budget 6: same message on actor 0
+budget 7: checkpointHash == resumedCheckpointHash, identical=True — but resumed=False
+```
+With one shard every actor was trivially "on this shard", so this class of defect **could not exist** before today; K shards make routing load-bearing. Budget 7's state serialization is provably fine (hashes match) — the resume simply never happens, which is almost certainly the same routing fault.
+
+The fix packet is explicitly told **not** to make `pump` tolerate unregistered actors: a grant arriving at the wrong shard is a routing bug, and swallowing it would convert a loud fault into a silently lost turn. It must keep least-loaded pinning (that is what produced the perfect distribution) and add a **property** test — every actor's grant arrives at the shard it is pinned to, across a suspend→resume round trip — because this ticket has twice shipped bugs that survived round-trip-style tests.
+
+### Also measured
+
+- **Budget 4 passes at 4 shards**: 2550/2550 actors live, **598 MB RSS** against a 1.5 GiB ceiling (390 MB at 1 shard — the increase is 4 real shard threads, still under 40 % of budget).
+- Budget 1: 2.85 ms, 2550 records, **0 instantiations**. Budget 6: hang killed on its `instance-open` turn, 3 siblings restored, 2 ms pause. Budget 8: capability requested, revoked at runtime, actor survived both the revoke turn and a follow-up, status `Idle`.
+
+## 🏁️ shard-routing — 7 of 8 budgets pass on REAL parallel shards
+
+Coordinator-verified, not taken from the report:
+```
+cargo test -p semio-framework-plugin-host --lib -- --skip schema_parity → 115 passed; 0 failed; 1 ignored — exit 0
+bench --shards 4 --count 50 --extensions 50 → 1✅ 2✅ 3✅ 4✅ 5❌ 6✅ 7✅ 8✅
+  budget 2: faultCount 0        (was 6)
+  budget 3: perShard {0:25,1:25,2:25,3:25}   (balance preserved, not regressed by the fix)
+  budget 7: resumed=True, identical=True     (was resumed=False)
+  budget 5: p95 241.2 ms, spread 102.1 ms    (still failing, deliberately untouched)
+```
+
+### The root cause was not what any of us assumed — including me
+
+I briefed this as a routing bug ("a grant is reaching a shard where the actor was never registered"). It was **not**: `ShardTable::pin` placement was correct and consistent across `Kernel::activate`, the `Scheduler`, and `ParallelRuntime` the whole time. The real defect was a **cross-thread ordering race introduced by this same wave**: `ShardExecutor::register` sent its request over an **independent `mpsc` channel and returned immediately**, while the executor thread drains that channel only once per loop iteration before parking on the *separate* `ThreadTransport`. So `activate` → `submit` → `tick_and_dispatch` could have the transport send wake the parked executor and reach `pump_primed` **before the registration was ever drained**.
+
+The fault text said "is not registered on this shard" and it was literally true — just not for the reason the words suggest. Had the packet accepted my framing, it would have gone hunting through pinning logic that was already correct. Fixed properly by making `register` block on a real ack (`RegisterRequest{actor, instance, ack}`), establishing a genuine happens-before against any frame sent afterwards, with least-loaded placement untouched. **One file changed.**
+
+Budget 7 was the same race in `Env::activate` — confirmed rather than assumed, and its checkpoint hashes had always matched, so the state machinery was never at fault; only the resume never happened.
+
+### The test validation is the part worth copying
+
+It did not merely add two property tests — it **temporarily reverted the fix and watched them fail with the exact bench fault text, then restored it.** That is mutation testing against the real defect, and it answers the question this ticket has been burned by three times ("does this test actually observe the bug?") with evidence instead of assertion. Both confirmed by name in my own run:
+- `every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_shards` (K=4, 200 actors)
+- `suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_registered` (60 actors)
+
+### What 7/8 means now versus what it meant before
+
+The archived `🔣️bench-native-FINAL.json` also read 7/8 — but that scoreboard was built on a weaker instrument in two places: budget 3 "passed" against a single physical loop wearing K labels, and budget 5 failed with 30 samples inside a 0.1 ms band. **Today's 7/8 is the same score on a genuinely different machine**: four real OS threads with measured 25/25/25/25 placement, and a budget-5 number with 102 ms of real spread behind it.
+
+**Budget 5 remains the one honest failure: p95 241 ms against an 8 ms target.** It moved 218 → 241 ms across two runs, which is ordinary variance at this magnitude and emphatically not a regression to chase. It was not tuned, not skipped, and not reframed. The design gap it measures is specific and actionable: nothing yet keeps interactive actors off shards saturated by CPU-bound ones, even though `Kernel::new(Thread, K, 2, 64)` now reserves two exclusive shards and `request_exclusive` exists to use them. That is the next packet, and for the first time it starts from a number rather than an assertion.

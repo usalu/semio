@@ -21,6 +21,16 @@ wasm-opt = false
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
+[features]
+# 🔌️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — mirrors `🌀️procedural`'s `plugin-entry`
+# pattern. Default-on so this extension exports its own `extension_exports!` bundle when built as its
+# own component; OFF when this file's `🦀️component.rs` is `#[path]`-mounted inline into the
+# `imperative` plugin's own crate (`imperative`'s `Cargo.toml` declares no such feature, so the cfg
+# check below is simply false there) — five extensions mounted into one crate each defining the same
+# `#[no_mangle]` `semio_extension_bundle_installer_link_shim` is a duplicate-symbol link error.
+default = ["extension-entry"]
+extension-entry = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"

@@ -90,3 +90,40 @@ Rules that follow:
 | `💻️os/📦️packages/🟦️typescript` | **184 passed / 2 failed** (was reported 370/2 pre-fix). The 2 failures are **two DISTINCT pre-existing** Rust-fixture/wasm tests, not one doubled: `🟦️component.ts` → `matches the Rust plan_workflow … decoded via wasm`, and `🟦️backbone-worker.ts` → `decodes the Rust-generated binary wire fixtures byte-identically`. I previously mis-recorded these as a single doubled failure because I grepped for only one of the two names — a narrow grep is not a census |
 | `🧑️‍💻️dev/📦️packages/🟦️typescript` | **17 passed** (was reported 34 pre-fix) |
 | repo-wide `tsc --noEmit` | **19 pre-existing errors** in trinity / stdio schemas / vscode extension — routed to a separate task, not this ticket's. Exit code observed as both 1 and 2 by different runs; report what you see |
+
+## W4 additions — measured 2026-08-18, binding on every packet
+
+These are not advice. Each cost a packet real time this session, and several were discovered twice
+because the first discovery stayed buried in a report nobody else read.
+
+1. **`--features component-guest` is NOT a plugin-crate feature.** Plugin crates declare no
+   `[features]` section at all; `component-guest` is a *dependency* feature each enables on
+   `semio-framework-plugin`. Passing it to `cargo -p <plugin>` fails with "does not contain this
+   feature". Found by D0, re-found by Z1 after it blocked an entire target, and present in sol's own
+   `verify rust-warnings` verb until Z1 hit it.
+2. **Descriptors live at the plugin OWNER ROOT**, sibling of `🛂️manifest.json` — never under
+   `🤖️generated/`, which is globally gitignored and therefore cannot hold a committed artifact.
+3. **A descriptor is only ratcheted after its `descriptor_is_fresh` test passes.** Emitting is safe;
+   ratcheting a plugin whose declarations may still move turns the tree red for every session.
+   Unratcheted descriptors still feed the generated catalog, so a stale one is a silent
+   data-correctness bug — that is the trade, and it is deliberate.
+4. **`[DEBUG] ` means DELETE ME.** It has been repurposed for permanent operator diagnostics
+   (312+ repo-wide); a blind sweep would strip the bench's entire error reporting. Re-prefix
+   permanent diagnostics; only genuinely temporary lines carry the marker.
+5. **Fuel exhaustion and pooling caps surface as a bare "error while executing"** with no mention of
+   fuel or of which pool. Measure, never estimate: `🗒️note`'s `describe()` alone burns ~92M fuel in
+   an unoptimized wasip2 build, and wasmtime meters component instances, core instances, memories,
+   tables and GC heaps from FIVE separate pools that each default to 1000.
+6. **Native builds never compile `#[cfg(target_arch = "wasm32")]` code.** A signature change can
+   leave the wasm bindings broken behind a green native build AND a green test suite. `verify gate`
+   now compiles the actor kernel's wasm bindings for exactly this reason.
+7. **A test that passes against `MockGuestRuntime` is not a test of the runtime.** Every one of the
+   ten defects found this session was covered by a green `cargo check` plus mock-backed tests.
+8. **Cross-packet findings must be lifted HERE or into a coordinator message the moment they are
+   read.** A finding left in a packet report does not reach a sibling packet. Item 1 above is the
+   proof: correct, written down, and still cost a second packet a fully blocked target.
+9. **Executors: run cargo in the FOREGROUND, in one turn.** Background watchers do not survive a
+   subagent turn boundary. Six packets have now lost budget to this; briefs alone do not prevent it.
+10. **Prune `🎯️target-*/**/incremental/` and stale `.wasm` between plugins.** One packet reached
+    84 GB before doing so; after pruning it held ~12 GB for the rest of its run.
+19. **Pass an explicit long `timeout` to every build command — the Bash tool auto-backgrounds at ~120 s by default.** This, not carelessness, is the mechanism behind the wake/idle trap: three packets in one wave "chose" to background builds because the harness detached them at the default, then idled across a turn boundary where the result can never arrive. Executors: set `timeout` to the maximum (600000 ms) on every cargo command, and if a build still exceeds it, report it unrun rather than detaching. Coordinator: your `run_in_background` tasks DO survive turn boundaries and notify you — subagents' do not. That asymmetry is why acceptance runs belong to the coordinator.

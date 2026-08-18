@@ -1,0 +1,29 @@
+{
+  "name": "@semio-tech/framework-server-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "root": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": ["lang:rust", "role:product", "family:server"],
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

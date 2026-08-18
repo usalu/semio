@@ -1,0 +1,22 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio
+
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > runs proposal -> prepare x2 -> commit, committing in reverse discovery order 7ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > undoGroup fans TransactionUndo out to every member of a completed transaction 1ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > rolls back a commit-failed transaction: undoes what already committed, rolls back the rest 1ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-target when the initiator plugin has no registered handle 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-target when InstanceDirectory has no entry for the foreign target 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-mutation when the router has no entry for a foreign step 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.contribution-not-permitted when a contributed mutation has no planner wired 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > plans and prepares a contributed mutation using the target's cached document pack 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.cycle when the same (artifact, mutation, payload) step repeats 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.depth-exceeded when a foreign-step chain runs past MAX_TRANSACTION_DEPTH 1ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime TransactionCoordinator > passes a member's TransactionPrepared.rejection code straight through — instance-busy, generation-mismatch, and the member-rejected default all reachable 0ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime documentPack/transaction wire adapter > adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient 2ms
+ ✓ |terra-web-plugin-runtime-baseline| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-web-plugin-runtime-scratch/before-component.tsx > PluginRuntime documentPack/transaction wire adapter > documentPack() reflects the cache after loadAppDocumentPack() — the adapter reads the SAME live channel it just loaded through 0ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  22:36:01
+   Duration  1.79s (transform 1.49s, setup 0ms, import 1.58s, tests 13ms, environment 0ms)
+

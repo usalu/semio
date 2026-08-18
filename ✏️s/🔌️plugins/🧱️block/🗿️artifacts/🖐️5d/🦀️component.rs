@@ -150,7 +150,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.block5d.grammar.3", "grammar", "block.block5d.diff", &[("grammar", "block.block5d.diff")], None),
         ("s.block5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
         ("s.block5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
-        ("s.block5d.codec.document-1", "codec", "block.5d:block", &[("codec", "block.5d"), ("extension", "block")], None),
+        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block5dPlayApp>>()` derives
+        // its extension claim from `<Block5dSnapshot as store::ArtifactDsl>::EXTENSION`
+        // (`…/🧬️schema/📸️snapshot/🦀️component.rs`), which is `"block5d"`, not `"block"`.
+        ("s.block5d.codec.document-1", "codec", "block.5d:block5d", &[("codec", "block.5d"), ("extension", "block5d")], None),
         ("s.block5d.localization.en", "localization", "5D Block", &[], Some(("en", "5D Block"))),
         ("s.block5d.localization.de", "localization", "5D-Baustein", &[], Some(("de", "5D-Baustein"))),
     ];

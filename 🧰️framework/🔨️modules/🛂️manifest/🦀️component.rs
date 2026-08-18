@@ -4552,6 +4552,15 @@ pub struct ContributionSet {
     pub composer_entries: Vec<ComposerEntryDescriptor>,
 }
 
+/// 🚨️ The `plugin_id` a failed assembly mints instead of a real one. `plugin_manifest()`
+/// (`🔌️plugin/🦀️component.rs`) returns this stub whenever `PLUGIN_ASSEMBLY_ERROR` is set, carrying
+/// the real error text in `label`. It looks like a descriptor, parses as JSON, and would feed the
+/// generated registry catalog with fabricated contributions — so the emitter refuses to write one
+/// (`📇️describe/📦️packages/🦀️rust/📦️glue.rs`). Lives here, beside [`PackageDescriptor`], because it
+/// is the one crate BOTH the guest SDK that mints it and the host emitter that rejects it depend
+/// on; a duplicated string literal in either would drift silently.
+pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
+
 /// 📦️ The static, build-time-emitted description of a plugin or extension package —
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️descriptor.semio`/`🔣️descriptor.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet

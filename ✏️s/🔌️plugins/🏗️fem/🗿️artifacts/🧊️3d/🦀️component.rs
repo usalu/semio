@@ -235,6 +235,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.fem3d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.fem3d.schema.artifact", "schema", "s.fem.fem3d", &[("schema", "s.fem.fem3d")], None),
         ("s.fem3d.inference.artifact", "inference", "s.fem.fem3d.inference", &[("schema", "s.fem.fem3d.inference")], None),
+        // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers SEVEN composer rows, not
+        // five — the six below plus `composer_entry_of::<Fem3dAnyComposer>()` (`🚪️io/🦀️component.rs`),
+        // whose `writes` is this artifact's own native dialect (`FEM3D_DIALECT`, `s.fem3d@1/*`), the
+        // same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
+        ("s.fem3d.composer.fem3d", "composer", "s.fem3d@1/*", &[("dialect", "s.fem3d@1/*")], None),
         ("s.fem3d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
         ("s.fem3d.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
         ("s.fem3d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
@@ -245,7 +250,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.fem3d.grammar.diff", "grammar", "fem.fem3d.diff", &[("grammar", "fem.fem3d.diff")], None),
         ("s.fem3d.grammar.pack", "grammar", "fem3d.pack", &[("grammar", "fem3d.pack")], None),
         ("s.fem3d.grammar.spr", "grammar", "fem3d.spr", &[("grammar", "fem3d.spr")], None),
-        ("s.fem3d.codec.document.v1", "codec", "fem.fem3d:fem3d", &[("codec", "fem.fem3d"), ("extension", "fem3d")], None),
+        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Fem3dPlayApp>>()` derives its
+        // codec claim from `Fem3dPlayApp::DOCUMENT_SCHEMA` (= `FEM_3D_SCHEMA`, `🦀️component.rs`),
+        // which is `"fem.3d"`, not `"fem.fem3d"`.
+        ("s.fem3d.codec.document.v1", "codec", "fem.3d:fem3d", &[("codec", "fem.3d"), ("extension", "fem3d")], None),
         ("s.fem3d.localization.en", "localization", "Finite element model 3D", &[], Some(("en", "Finite element model 3D"))),
         ("s.fem3d.localization.de", "localization", "Finite-Elemente-Modell 3D", &[], Some(("de", "Finite-Elemente-Modell 3D"))),
     ];

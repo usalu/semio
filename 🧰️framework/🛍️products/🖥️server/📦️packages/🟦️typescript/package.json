@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/framework-server",
+  "version": "0.1.0",
+  "description": "framework · server — typed client for the authoritative server: command submit, projection queries, live subscriptions",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️glue.ts"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/framework-server:test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/product/server"
+  },
+  "bundleKind": "library"
+}

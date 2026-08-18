@@ -6,6 +6,12 @@ pub mod shard;
 // `StdioTransport` — see that file's own module doc for why they live here and not in `🎭️actor`.
 #[path = "🧵️shard/🚚️process-transport/🦀️component.rs"]
 pub mod process_transport;
+// ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): async effect execution — the
+// `AsyncEffectExecutor` that classifies each post-turn `Effect`, derives its `OperationContext` and
+// spawns it into the emitting actor's scope on `semio-framework-os-services`' pools — see that
+// module's own doc.
+#[path = "⚡️effects/🦀️component.rs"]
+pub mod effects;
 
 use semio_framework::{
     kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},

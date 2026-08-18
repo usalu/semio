@@ -1294,7 +1294,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options)?;
 
     let symbols_payload = crate::os_pack::format::encode_symbols(&symbols);
-    writer.write_segment(crate::os_pack::KIND_SYMBOLS, &symbols_payload)?;
+    writer.write_segment(crate::KIND_SYMBOLS, &symbols_payload)?;
 
     let field_count = record.fields.values().filter(|v| !matches!(v, FieldValue::Absent)).count() as u64;
     let doc_payload = {
@@ -1306,7 +1306,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     let doc_start = writer.position();
     let mut frame_count: u64 = 0;
     for frame in doc_payload.chunks(frame_size) {
-        writer.write_segment(crate::os_pack::KIND_DOCUMENT, frame)?;
+        writer.write_segment(crate::KIND_DOCUMENT, frame)?;
         frame_count += 1;
     }
     let doc_end = writer.position();

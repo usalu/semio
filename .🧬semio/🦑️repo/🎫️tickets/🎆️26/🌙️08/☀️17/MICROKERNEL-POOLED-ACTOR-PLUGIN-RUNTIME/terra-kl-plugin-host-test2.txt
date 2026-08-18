@@ -1,0 +1,436 @@
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1137:12
+     |
+1137 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1163:12
+     |
+1163 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1182:12
+     |
+1182 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1197:12
+     |
+1197 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1206:12
+     |
+1206 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1216:12
+     |
+1216 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1238:12
+     |
+1238 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1248:12
+     |
+1248 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1261:12
+     |
+1261 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1271:12
+     |
+1271 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1284:12
+     |
+1284 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1297:12
+     |
+1297 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1359:12
+     |
+1359 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1370:12
+     |
+1370 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1475:12
+     |
+1475 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1517:12
+     |
+1517 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1574:12
+     |
+1574 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1584:12
+     |
+1584 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1254:16
+     |
+1254 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1290:16
+     |
+1290 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: `semio-framework-replication` (lib) generated 20 warnings
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12372:6
+      |
+12372 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+12372 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+12372 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:42
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:97
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12374:64
+      |
+12374 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12374 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+12374 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12375:9
+      |
+12375 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12375 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+12375 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:49
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:101
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12378:21
+      |
+12378 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12378 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+12378 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12379:55
+      |
+12379 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12379 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+12379 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 15.44s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-kl/debug/deps/semio_framework_plugin_host-4a71ddf56e8aaffd)
+
+running 114 tests
+test component::app_router_tests::contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner ... ok
+test component::app_router_tests::contribution_without_a_declared_dependency_is_rejected ... ok
+test component::app_router_tests::duplicate_app_ref_is_a_conflict ... ok
+test component::artifact_mutation_router_tests::conflicting_owner_rows_are_rejected_unless_byte_identical ... ok
+test component::app_router_tests::unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim ... ok
+test component::app_router_tests::owner_surface_sorts_first_then_plugin_id_then_app_id ... ok
+test component::artifact_mutation_router_tests::a_contribution_onto_a_non_dependency_is_rejected ... ok
+test component::app_router_tests::owned_surface_gaps_reports_the_missing_role_only ... ok
+test component::app_router_tests::w1_d_parity_fixture_owner_two_contributors_duplicate_and_unknown_dialect ... ok
+test component::artifact_inference_router_tests::only_exactly_echoed_guest_results_are_publishable ... ok
+test component::artifact_mutation_router_tests::owner_and_contributed_rows_both_resolve_correctly ... ok
+test component::artifact_mutation_router_tests::unregister_drops_only_that_plugins_rows ... ok
+test component::effects::tests::backbone_send_is_rejected_without_the_capability ... ok
+test component::effects::tests::backbone_send_reaches_the_registered_transport_once_granted ... ok
+test component::effects::tests::park_buffers_completions_and_resume_delivers_them_in_order ... ok
+test component::effects::tests::backbone_delta_fanout_coalesces_a_burst_for_the_same_uri ... ok
+test component::effects::tests::storage_quota_denial_produces_a_typed_completion_not_a_panic ... ok
+test component::host_transaction_coordinator_tests::a_chain_deeper_than_max_plan_depth_is_rejected ... ok
+test component::effects::tests::stale_generation_completion_is_dropped_current_generation_is_delivered ... ok
+test component::effects::tests::revoked_capability_cancels_only_its_own_operations_and_actor_survives ... ok
+test component::effects::tests::an_effects_deadline_is_enforced_and_the_loser_is_cancelled ... ok
+test component::effects::tests::router_effect_runs_through_compute_pool_and_completes_ok ... ok
+test component::effects::tests::shell_effects_are_reported_shell_owned_never_dispatched ... ok
+test component::effects::tests::spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched ... ok
+test component::effects::tests::race_deadline_returns_the_primary_result_when_it_finishes_first ... ok
+test component::host_transaction_coordinator_tests::a_cycle_is_rejected ... ok
+test component::effects::tests::completion_burst_while_parked_is_bounded_not_unbounded ... ok
+test component::host_transaction_coordinator_tests::an_unknown_mutation_is_rejected ... ok
+test component::host_transaction_coordinator_tests::a_two_member_transaction_commits_and_group_undo_restores_both ... ok
+test component::host_transaction_coordinator_tests::a_member_rejection_rolls_back_every_already_prepared_member ... ok
+test component::instance_directory_tests::bind_resolve_and_unbind_round_trip ... ok
+test component::host_transaction_coordinator_tests::an_unknown_target_is_rejected_before_any_prepare_is_sent ... ok
+test component::mock_guest_runtime_tests::checkpoint_then_restore_round_trips_through_a_fresh_instance ... ok
+test component::instance_directory_tests::rebinding_the_same_artifact_id_replaces_the_prior_location ... ok
+test component::mock_guest_runtime_tests::drop_instance_forgets_the_actors_script_queue ... ok
+test component::mock_guest_runtime_tests::controllable_clock_advances_deterministically ... ok
+test component::mock_guest_runtime_tests::exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn ... ok
+test component::mock_guest_runtime_tests::scripted_fault_surfaces_as_trapped ... ok
+test component::mock_guest_runtime_tests::scripted_turn_is_returned_exactly_once_fifo ... ok
+test component::opening_resolver_tests::step1_explicit_default_still_in_router_wins ... ok
+test component::opening_resolver_tests::step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale ... ok
+test component::opening_resolver_tests::step4_unknown_dialect_when_the_router_has_nothing ... ok
+test component::opening_resolver_tests::step3_first_entry_when_the_owner_has_no_surface_for_this_role ... ok
+test component::plugin_graph_tests::hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement ... ok
+test component::plugin_graph_tests::a_later_registration_that_would_close_a_cycle_is_rejected ... ok
+test component::plugin_graph_tests::register_rejects_a_missing_dependency ... ok
+test component::plugin_graph_tests::register_rejects_a_version_mismatch ... ok
+test component::plugin_graph_tests::load_order_respects_a_real_dependency_edge ... ok
+test component::process_transport::tests::process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy ... ignored, needs a pre-built wasm32-wasip2 component at SEMIO_SCALE_FIXTURE_WASM; see this test's own doc comment
+test component::plugin_graph_tests::contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared ... ok
+test component::process_transport::tests::a_data_frame_round_trips_arbitrary_bytes_including_zero_and_newline ... ok
+test component::plugin_graph_tests::unload_is_refused_while_a_dependent_is_registered ... ok
+test component::process_transport::tests::a_heartbeat_frame_carries_no_payload_and_does_not_desync_the_next_frame ... ok
+test component::process_transport::tests::poll_with_liveness_fires_immediately_on_a_dead_child_without_waiting_out_the_timeout ... ok
+test component::process_transport::tests::read_frame_reports_clean_eof_as_none_not_an_error ... ok
+test component::process_transport::tests::watchdog_does_not_fire_while_heartbeats_keep_advancing ... ok
+test component::process_transport::tests::watchdog_fires_after_three_consecutive_stale_windows ... ok
+test component::process_transport::tests::watchdog_resets_the_miss_count_on_a_fresh_heartbeat ... ok
+test component::runtime_metrics_publisher_tests::maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host ... ok
+test component::shard::tests::an_actor_never_granted_a_budget_falls_back_to_the_maintenance_lane_default ... ok
+test component::shard::tests::cancel_job_effect_stops_a_job_before_it_is_ever_stepped ... ok
+test component::shard::tests::a_grants_budget_is_what_the_turn_actually_executes_under ... ok
+test component::shard::tests::cancel_unregisters_the_instance_and_no_further_step_job_happens ... ok
+test component::shard::tests::exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump ... ok
+test component::shard::tests::grant_with_no_envelopes_still_records_the_budget ... ok
+test component::shard::executor::tests::stop_joins_the_thread_and_is_idempotent_with_drop ... ok
+test component::shard::executor::tests::shard_executor_drives_a_turn_for_a_registered_actor_from_its_own_thread ... ok
+test component::shard::tests::job_step_uses_the_owning_actors_last_granted_budget ... ok
+test component::shard::tests::pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome ... ok
+test component::shard::tests::pump_reports_an_envelope_for_an_unregistered_actor_as_a_fault_not_a_silent_drop ... ok
+test component::shard::tests::shard_frame_round_trip_envelope_passthrough ... ok
+test component::shard::tests::register_frame_is_accepted_without_error_and_has_no_local_side_effect ... ok
+test component::process_transport::tests::kill_terminates_the_child_and_is_observed_as_eof_on_recv_side ... ok
+test component::shard::tests::suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome ... ok
+test component::shard::tests::to_actor_turn_result_maps_status_and_carries_host_measured_usage ... ok
+test component::shard::tests::to_actor_turn_result_status_maps_idle_more_work_and_checkpoint_ready ... ok
+test component::shard::tests::unregister_drops_the_instance_and_shrinks_actor_count ... ok
+test component::shard::tests::unregister_frame_drops_the_instance_exactly_like_the_direct_call ... ok
+test component::shard::tests::shard_frame_round_trip_grant ... ok
+test component::shard::tests::shard_frame_round_trip_register ... ok
+test component::shard::tests::shard_frame_round_trip_unregister ... ok
+test component::shard::tests::suspend_then_resume_round_trips_byte_identical_checkpoint_state ... ok
+test component::shard::tests::spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completion_reaches_the_originating_actor ... ok
+test component::shared_wasmtime_engine_tests::compiled_component_round_trips_through_cache_for_a_real_wasm_file ... ok
+test component::shared_wasmtime_engine_tests::compiled_cache_path_is_namespaced_by_both_hashes ... ok
+test component::shared_wasmtime_engine_tests::shared_engine_config_hash_is_deterministic_and_config_sensitive ... ok
+test component::process_transport::tests::shard_runtime_kind_defaults_to_thread_and_opts_into_process_explicitly ... ok
+test component::tests::io_router_register_plugin_rejects_conflicting_io_entry_ownership ... ok
+test component::tests::io_router_compose_resolves_ownership_but_dispatch_is_not_yet_wired ... ok
+test component::tests::io_router_route_is_deterministic_across_load_order ... ok
+test component::tests::io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops ... ok
+test component::process_transport::tests::process_transport_round_trips_bytes_through_a_real_child_process ... ok
+test component::process_transport::tests::an_externally_killed_child_is_detected_as_dead_without_this_type_calling_kill ... ok
+test component::shared_wasmtime_engine_tests::build_shared_engine_forced_on_demand_reports_on_demand ... ok
+test component::tests::io_router_route_respects_max_hops ... ok
+test component::tests::io_router_run_io_reentrancy_guard_predicate ... ok
+test component::tests::io_router_run_io_crosses_two_real_plugin_instance_handles ... ok
+test component::wasmtime_runtime_tests::compile_accepts_a_real_component_and_caches_it ... ok
+test component::tests::wasmtime_runtime_compiles_real_stdio_and_cad_but_neither_exports_actor_yet ... ok
+test component::tests::plugin_instance_handle_drives_io_run_job_to_completion_through_a_running_step ... ok
+test component::tests::plugin_instance_handle_io_sniff_decodes_the_confidence_byte ... ok
+test component::wasmtime_runtime_tests::instantiate_rejects_a_component_that_does_not_export_the_actor_world ... ok
+test component::wasmtime_runtime_tests::io_run_effect_is_a_reported_error_not_a_silent_mismap ... ok
+test component::wasmtime_runtime_tests::message_endpoint_round_trips_through_wit_and_back ... ok
+test component::wasmtime_runtime_tests::wit_turn_status_conversion_is_a_plain_rename ... ok
+test opening_config::component::tests::opening_preferences_default_is_empty ... ok
+test opening_config::mutations::component::tests::clear_default_app_without_a_pin_is_no_op ... ok
+test opening_config::mutations::clear_default_app::mutation::tests::clear_default_app_label_names_role_and_dialect ... ok
+test opening_config::mutations::component::tests::set_default_app_already_pinned_is_no_op ... ok
+test opening_config::mutations::component::tests::set_default_app_and_clear_default_app_invert_each_other ... ok
+test opening_config::mutations::set_default_app::mutation::tests::set_default_app_label_names_role_and_dialect ... ok
+test component::shared_wasmtime_engine_tests::build_shared_engine_defaults_to_pooling ... ok
+test component::shared_wasmtime_engine_tests::epoch_ticker_starts_and_stops_cleanly_around_a_deadline_bearing_store ... ok
+test component::runtime_metrics_publisher_tests::runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry ... ok
+
+test result: ok. 113 passed; 0 failed; 1 ignored; 0 measured; 4 filtered out; finished in 0.52s
+

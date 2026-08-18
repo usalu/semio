@@ -2882,6 +2882,39 @@
       }
     },
     {
+      "name": "🧪️test📡️replication",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-replication:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.7
+      }
+    },
+    {
+      "name": "🧪️test🖥️server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-server-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.8
+      }
+    },
+    {
+      "name": "📦️build🖥️server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-server-rs:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.9
+      }
+    },
+    {
       "name": "🛠️dev🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",

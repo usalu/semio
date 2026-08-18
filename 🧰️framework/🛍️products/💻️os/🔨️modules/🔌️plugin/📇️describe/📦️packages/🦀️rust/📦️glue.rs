@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as dsl;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use semio_framework::PackageDescriptor;
+use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
 use sha2::{Digest, Sha256};
 
 //#region 🔖️ActorBindings
@@ -156,6 +156,17 @@ pub fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDes
     let final_bytes = store::pack_rt::encode_wire_value(&final_value);
     let final_json = serde_json::to_string_pretty(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor as JSON: {error}")))?;
 
+    // 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
+    // assembly failed. `plugin_manifest()` mints a `pluginId: "assembly-failed"` stub when
+    // `PLUGIN_ASSEMBLY_ERROR` is set, carrying the real error in `label` — a shape that looks like a
+    // descriptor, passes JSON parsing, and feeds the generated registry catalog with fabricated
+    // contributions. Three were committed this session by packets that emitted and then stalled
+    // before verifying: the "never commit a placeholder" rule held only while an agent reached its
+    // verification step, and enforced nothing when it did not. Failing at the writer makes the
+    // invalid state unrepresentable instead of relying on every caller to remember.
+    if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
+        return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));
+    }
     fs::create_dir_all(out_dir).map_err(|error| DescribeError(format!("creating {}: {error}", out_dir.display())))?;
     fs::write(out_dir.join("🛂️descriptor.semio"), &final_bytes).map_err(|error| DescribeError(format!("writing 🛂️descriptor.semio: {error}")))?;
     fs::write(out_dir.join("🔣️descriptor.json"), format!("{final_json}\n")).map_err(|error| DescribeError(format!("writing 🔣️descriptor.json: {error}")))?;

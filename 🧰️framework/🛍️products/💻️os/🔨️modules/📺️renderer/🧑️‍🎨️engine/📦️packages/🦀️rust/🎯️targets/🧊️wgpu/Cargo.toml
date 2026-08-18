@@ -56,6 +56,10 @@ semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️h
 # vocabulary the native kernel thread (`📦️glue.rs`'s `kernel_runtime` module) drives directly — see
 # `📓️terra-H3-wgpu-native-report.md`.
 semio-framework-actor = { workspace = true }
+# 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop): `thread_plan(cores).shards` sizes
+# `🎠️runtime.rs`'s `ParallelRuntime` — "the global thread budget exists so no component sizes itself
+# per-CPU" (that function's own doc).
+semio-framework-async = { workspace = true }
 blake3 = "1"
 # 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D): `ureq`
 # added alongside the pre-existing `sync` so `os_directory::client::native::NativeDirectoryTransport`
