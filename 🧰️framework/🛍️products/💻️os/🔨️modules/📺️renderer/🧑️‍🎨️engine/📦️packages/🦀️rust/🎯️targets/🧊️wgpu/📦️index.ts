@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
-import { acquirePluginModule, pluginHandleForBridge } from "@semio-tech/framework";
+import { loadPluginModule, pluginHandleForBridge } from "./🟦️typescript/🐚️plugin-bridge.ts";
 
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;
@@ -107,10 +107,12 @@ export async function buildIconAtlas(): Promise<{
  * coexist on one page.
  *
  * Returns a dispose callback for hosts (e.g. Storybook, the multi-shell harness) that need to unmount —
- * it detaches the canvas and releases this call's `acquirePluginModule` leases. The underlying wasm event
- * loop still has no JS-visible stop handle (see the doc comment on `semio_wgpu_mount` in `📦️glue.rs` for
- * why a real one isn't wired up yet), so this remains a best-effort cleanup, not a full runtime teardown:
- * the mount keeps rendering into a detached canvas until the page unloads.
+ * it detaches the canvas and disposes this call's `loadPluginModule` actors (`ShardClient.dispose`,
+ * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME `wgpu-web-shard` — replaces the deleted `acquirePluginModule`
+ * lease/release pair). The underlying wasm event loop still has no JS-visible stop handle (see the doc
+ * comment on `semio_wgpu_mount` in `📦️glue.rs` for why a real one isn't wired up yet), so this remains a
+ * best-effort cleanup, not a full runtime teardown: the mount keeps rendering into a detached canvas
+ * until the page unloads.
  */
 export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => void> {
   const rootId = options.rootId ?? "root";
@@ -126,11 +128,11 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   root.replaceChildren(canvas);
 
   const pluginEntries = options.plugins ?? [];
-  const [leases, iconAtlas] = await Promise.all([
-    Promise.all(pluginEntries.map((entry) => acquirePluginModule(entry.pluginId, entry.moduleUrl))),
+  const [loadedHandles, iconAtlas] = await Promise.all([
+    Promise.all(pluginEntries.map((entry) => loadPluginModule(entry.pluginId, entry.moduleUrl))),
     buildIconAtlas(),
   ]);
-  const handles = leases.map((lease, index) => ({ pluginId: pluginEntries[index]!.pluginId, handle: pluginHandleForBridge(lease.handle) }));
+  const handles = loadedHandles.map((handle, index) => ({ pluginId: pluginEntries[index]!.pluginId, handle: pluginHandleForBridge(handle) }));
 
   const rendererUrl = options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL;
   const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
@@ -149,6 +151,6 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   return () => {
     root.replaceChildren();
-    for (const lease of leases) lease.release();
+    for (const handle of loadedHandles) handle.dispose();
   };
 }

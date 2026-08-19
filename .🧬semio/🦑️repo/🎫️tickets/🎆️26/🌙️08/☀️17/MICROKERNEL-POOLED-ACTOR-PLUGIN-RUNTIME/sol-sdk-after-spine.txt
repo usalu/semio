@@ -1,0 +1,1722 @@
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:382:5
+    |
+382 |     async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+382 -     async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle;
+382 +     fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> impl std::future::Future<Output = ScopeHandle> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:5
+    |
+387 |     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+387 -     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+387 +     fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:391:5
+    |
+391 |     async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+391 -     async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>);
+391 +     fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:399:5
+    |
+399 |     async fn sleep_until(&self, deadline_ms: u64);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+399 -     async fn sleep_until(&self, deadline_ms: u64);
+399 +     fn sleep_until(&self, deadline_ms: u64) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:405:5
+    |
+405 |     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+405 -     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport;
+405 +     fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> impl std::future::Future<Output = ScopeDrainReport> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:410:5
+    |
+410 |     async fn now_ms(&self) -> u64;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+410 -     async fn now_ms(&self) -> u64;
+410 +     fn now_ms(&self) -> impl std::future::Future<Output = u64> + Send;
+    |
+
+warning: `semio-framework-async` (lib) generated 6 warnings
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:308:5
+    |
+308 |     async fn id(&self) -> CodecId;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+308 -     async fn id(&self) -> CodecId;
+308 +     fn id(&self) -> impl std::future::Future<Output = CodecId> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:310:5
+    |
+310 |     async fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+310 -     async fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError>;
+310 +     fn compress(&self, raw: &[u8]) -> impl std::future::Future<Output = Result<Vec<u8>, PackError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:312:5
+    |
+312 |     async fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+312 -     async fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
+312 +     fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> impl std::future::Future<Output = Result<Vec<u8>, PackError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+ --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:9:5
+  |
+9 |     async fn len(&self) -> u64;
+  |     ^^^^^
+  |
+  = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+  |
+9 -     async fn len(&self) -> u64;
+9 +     fn len(&self) -> impl std::future::Future<Output = u64> + Send;
+  |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:11:5
+   |
+11 |     async fn is_empty(&self) -> bool {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+11 ~     fn is_empty(&self) -> impl std::future::Future<Output = bool> + Send {async {
+12 |         self.len().await == 0
+13 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:15:5
+   |
+15 |     async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+15 -     async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError>;
+15 +     fn read_at(&self, offset: u64, buf: &mut [u8]) -> impl std::future::Future<Output = Result<usize, PackError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:17:5
+   |
+17 |     async fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> Result<(), PackError> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+17 ~     fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> impl std::future::Future<Output = Result<(), PackError>> + Send {async {
+18 |         let mut filled = 0usize;
+...
+26 |         Ok(())
+27 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:61:5
+   |
+61 |     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+61 -     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;
+61 +     fn write_all(&mut self, bytes: &[u8]) -> impl std::future::Future<Output = Result<(), PackError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:63:5
+   |
+63 |     async fn position(&self) -> u64;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+63 -     async fn position(&self) -> u64;
+63 +     fn position(&self) -> impl std::future::Future<Output = u64> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:65:5
+   |
+65 |     async fn flush(&mut self) -> Result<(), PackError> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+65 ~     fn flush(&mut self) -> impl std::future::Future<Output = Result<(), PackError>> + Send {async {
+66 |         Ok(())
+67 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:12:5
+   |
+12 |     async fn hash(&self, bytes: &[u8]) -> [u8; 32];
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+12 -     async fn hash(&self, bytes: &[u8]) -> [u8; 32];
+12 +     fn hash(&self, bytes: &[u8]) -> impl std::future::Future<Output = [u8; 32]> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:17:5
+   |
+17 |     async fn scheme(&self) -> &str;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+17 -     async fn scheme(&self) -> &str;
+17 +     fn scheme(&self) -> impl std::future::Future<Output = &str> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:18:5
+   |
+18 |     async fn key_id(&self) -> &str;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+18 -     async fn key_id(&self) -> &str;
+18 +     fn key_id(&self) -> impl std::future::Future<Output = &str> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:19:5
+   |
+19 |     async fn sign(&self, message: &[u8; 32]) -> Result<Vec<u8>, ProtocolError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+19 -     async fn sign(&self, message: &[u8; 32]) -> Result<Vec<u8>, ProtocolError>;
+19 +     fn sign(&self, message: &[u8; 32]) -> impl std::future::Future<Output = Result<Vec<u8>, ProtocolError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:24:5
+   |
+24 |     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+24 -     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
+24 +     fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> impl std::future::Future<Output = Result<bool, ProtocolError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:52:5
+   |
+52 |     async fn apply(&self, base: &P) -> MutationApplyResult<P>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+52 -     async fn apply(&self, base: &P) -> MutationApplyResult<P>;
+52 +     fn apply(&self, base: &P) -> impl std::future::Future<Output = MutationApplyResult<P>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:67:5
+   |
+67 |     async fn absorb(&mut self, other: Self);
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+67 -     async fn absorb(&mut self, other: Self);
+67 +     fn absorb(&mut self, other: Self) -> impl std::future::Future<Output = ()> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:81:5
+   |
+81 |     async fn inverse(&self, base: &P) -> Self;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+81 -     async fn inverse(&self, base: &P) -> Self;
+81 +     fn inverse(&self, base: &P) -> impl std::future::Future<Output = Self> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:83:5
+   |
+83 |     async fn between(base: &P, other: &P) -> Self;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 -     async fn between(base: &P, other: &P) -> Self;
+83 +     fn between(base: &P, other: &P) -> impl std::future::Future<Output = Self> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:85:5
+   |
+85 |     async fn is_empty(&self) -> bool;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+85 -     async fn is_empty(&self) -> bool;
+85 +     fn is_empty(&self) -> impl std::future::Future<Output = bool> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:101:5
+    |
+101 |     async fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+101 -     async fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
+101 +     fn diff(&self, base: &P) -> impl std::future::Future<Output = MutationOutcome<Self::Diff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:102:5
+    |
+102 |     async fn inverse(&self, base: &P) -> Vec<Self>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+102 -     async fn inverse(&self, base: &P) -> Vec<Self>;
+102 +     fn inverse(&self, base: &P) -> impl std::future::Future<Output = Vec<Self>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:104:5
+    |
+104 |     async fn mutation_id(&self) -> Option<crate::ids::MutationId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+104 ~     fn mutation_id(&self) -> impl std::future::Future<Output = Option<crate::ids::MutationId>> + Send {async {
+105 |         None
+106 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:107:5
+    |
+107 |     async fn dependencies(&self) -> Vec<crate::ids::MutationId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+107 ~     fn dependencies(&self) -> impl std::future::Future<Output = Vec<crate::ids::MutationId>> + Send {async {
+108 |         Vec::new()
+109 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:110:5
+    |
+110 |     async fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+110 ~     fn base_version(&self) -> impl std::future::Future<Output = Option<crate::ids::ArtifactVersion>> + Send {async {
+111 |         None
+112 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:113:5
+    |
+113 |     async fn author_id(&self) -> Option<crate::ids::ActorId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+113 ~     fn author_id(&self) -> impl std::future::Future<Output = Option<crate::ids::ActorId>> + Send {async {
+114 |         None
+115 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:116:5
+    |
+116 |     async fn timestamp(&self) -> Option<crate::ids::HybridLogicalTimestamp> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+116 ~     fn timestamp(&self) -> impl std::future::Future<Output = Option<crate::ids::HybridLogicalTimestamp>> + Send {async {
+117 |         None
+118 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:119:5
+    |
+119 |     async fn undo_policy(&self) -> crate::UndoPolicy {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+119 ~     fn undo_policy(&self) -> impl std::future::Future<Output = crate::UndoPolicy> + Send {async {
+120 |         crate::UndoPolicy::ExactBaseOnly
+121 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:123:5
+    |
+123 |     async fn state_class(&self) -> crate::StateClass {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+123 ~     fn state_class(&self) -> impl std::future::Future<Output = crate::StateClass> + Send {async {
+124 |         crate::StateClass::Artifact
+125 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:130:5
+    |
+130 |     async fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+130 ~     fn foreign_steps(&self, _base: &P) -> impl std::future::Future<Output = Vec<ForeignStep>> + Send {async {
+131 |         Vec::new()
+132 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:330:5
+    |
+330 |     async fn print_op(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+330 -     async fn print_op(&self) -> String;
+330 +     fn print_op(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:331:5
+    |
+331 |     async fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+331 -     async fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+331 +     fn parse_op(line: &str) -> impl std::future::Future<Output = Result<Self, crate::diagnostic::TextError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:344:5
+    |
+344 |     async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+344 -     async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+344 +     fn encode_op(&self) -> impl std::future::Future<Output = Result<Vec<u8>, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:345:5
+    |
+345 |     async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+345 -     async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+345 +     fn decode_op(bytes: &[u8]) -> impl std::future::Future<Output = Result<Self, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:364:5
+    |
+364 |     async fn print_diff(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+364 -     async fn print_diff(&self) -> String;
+364 +     fn print_diff(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:365:5
+    |
+365 |     async fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+365 -     async fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+365 +     fn parse_diff(line: &str) -> impl std::future::Future<Output = Result<Self, crate::diagnostic::TextError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:366:5
+    |
+366 |     async fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+366 -     async fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+366 +     fn encode_diff(&self) -> impl std::future::Future<Output = Result<Vec<u8>, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:367:5
+    |
+367 |     async fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+367 -     async fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+367 +     fn decode_diff(bytes: &[u8]) -> impl std::future::Future<Output = Result<Self, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:240:5
+    |
+240 |     async fn transform(&self, against: &Self) -> TransformOutcome<Self>
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+240 -     async fn transform(&self, against: &Self) -> TransformOutcome<Self>
+240 +     fn transform(&self, against: &Self) -> impl std::future::Future<Output = TransformOutcome<Self>> + Send
+    |
+
+warning: `semio-framework-replication` (lib) generated 59 warnings
+    Checking semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+error: method should be `async` or return a future, but it is synchronous
+  --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:96:9
+   |
+96 |         fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError> {
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: method should be `async` or return a future, but it is synchronous
+  --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:51:9
+   |
+51 |         fn len(&self) -> u64 {
+   |         ^^^^^^^^^^^^^^^^^^^^
+
+error: method should be `async` or return a future, but it is synchronous
+  --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:55:9
+   |
+55 |         fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: method should be `async` or return a future, but it is synchronous
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:102:9
+    |
+102 |         fn position(&self) -> u64 {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: method should be `async` or return a future, but it is synchronous
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:106:9
+    |
+106 |         fn flush(&mut self) -> Result<(), PackError> {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:876:12
+    |
+876 |     if len < HEADER_SIZE as u64 {
+    |        --- ^ ------------------ u64
+    |        |
+    |        impl Future<Output = u64>
+
+error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:850:12
+    |
+850 |     if len < FOOTER_SIZE as u64 {
+    |        --- ^ ------------------ u64
+    |        |
+    |        impl Future<Output = u64>
+
+error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:702:16
+    |
+702 |         if len < FOOTER_SIZE as u64 {
+    |            --- ^ ------------------ u64
+    |            |
+    |            impl Future<Output = u64>
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:593:9
+    |
+593 |         self.sink.write_all(&encoded.bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:593:44
+    |
+590 |     pub fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
+    |     ---------------------------------------------------------------------------------- this is not `async`
+...
+593 |         self.sink.write_all(&encoded.bytes)?;
+    |                                            ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:627:13
+    |
+627 |             self.sink.write_all(&encoded.bytes)?;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:627:48
+    |
+621 |     pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    |     -------------------------------------------------------------------- this is not `async`
+...
+627 |             self.sink.write_all(&encoded.bytes)?;
+    |                                                ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:574:9
+    |
+574 |         sink.write_all(&header.write_bytes())?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:574:46
+    |
+564 |     pub fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, PackError> {
+    |     ---------------------------------------------------------------------------- this is not `async`
+...
+574 |         sink.write_all(&header.write_bytes())?;
+    |                                              ^
+
+error[E0599]: no method named `to_le_bytes` found for opaque type `impl Future<Output = u32>` in the current scope
+  --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:63:42
+   |
+63 |         buf[20..24].copy_from_slice(&crc.to_le_bytes());
+   |                                          ^^^^^^^^^^^ method not found in `impl Future<Output = u32>`
+   |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+   |
+63 |         buf[20..24].copy_from_slice(&crc.await.to_le_bytes());
+   |                                          ++++++
+
+error[E0277]: can't compare `u32` with `impl Future<Output = u32>`
+    --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:82:23
+     |
+  82 |         if stored_crc != computed_crc {
+     |                       ^^ no implementation for `u32 == impl Future<Output = u32>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = u32>>` is not implemented for `u32`
+help: `u32` implements trait `PartialEq<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1876:13
+     |
+1876 |               const impl PartialEq for $t {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq`
+...
+1898 | /     partial_eq_impl! {
+1899 | |         bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128
+1900 | |     }
+     | |_____- in this macro invocation
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/partial_eq.rs:76:13
+     |
+  76 |               impl PartialEq<Value> for $ty {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq<serde_json::value::Value>`
+...
+  97 | / partialeq_numeric! {
+  98 | |     eq_i64[i8 i16 i32 i64 isize]
+  99 | |     eq_u64[u8 u16 u32 u64 usize]
+ 100 | |     eq_f32[f32]
+ 101 | |     eq_f64[f64]
+ 102 | |     eq_bool[bool]
+ 103 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `partial_eq_impl` which comes from the expansion of the macro `partialeq_numeric` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:787:18
+    |
+787 |         if end > total_len {
+    |            ---   ^^^^^^^^^ expected `u64`, found associated type
+    |            |
+    |            expected because this is `u64`
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:703:45
+    |
+703 |             return Err(PackError::Truncated(len));
+    |                        -------------------- ^^^ expected `u64`, found associated type
+    |                        |
+    |                        arguments to this enum variant are incorrect
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+note: tuple variant defined here
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:17:5
+    |
+ 17 |     Truncated(u64),
+    |     ^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:583:9
+    |
+582 |     pub fn position(&self) -> u64 {
+    |                               --- expected `u64` because of return type
+583 |         self.sink.position()
+    |         ^^^^^^^^^^^^^^^^^^^^ expected `u64`, found associated type
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:628:52
+    |
+628 |             chunk_table_span = ByteRange { offset: base, len: encoded.bytes.len() as u64 };
+    |                                                    ^^^^ expected `u64`, found associated type
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:596:58
+    |
+596 |             self.symbols_span = Some(ByteRange { offset: base, len: encoded.bytes.len() as u64 });
+    |                                                          ^^^^ expected `u64`, found associated type
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:851:41
+    |
+851 |         return Err(PackError::Truncated(len));
+    |                    -------------------- ^^^ expected `u64`, found associated type
+    |                    |
+    |                    arguments to this enum variant are incorrect
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+note: tuple variant defined here
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:17:5
+    |
+ 17 |     Truncated(u64),
+    |     ^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:877:41
+    |
+877 |         return Err(PackError::Truncated(len));
+    |                    -------------------- ^^^ expected `u64`, found associated type
+    |                    |
+    |                    arguments to this enum variant are incorrect
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+note: tuple variant defined here
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:17:5
+    |
+ 17 |     Truncated(u64),
+    |     ^^^^^^^^^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:791:9
+    |
+791 |         self.source.read_exact_at(entry.offset, &mut stored)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:791:61
+    |
+780 |     pub fn read_chunk(&self, id: ChunkId, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
+    |     ---------------------------------------------------------------------------------------------------- this is not `async`
+...
+791 |         self.source.read_exact_at(entry.offset, &mut stored)?;
+    |                                                             ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:706:9
+    |
+706 |         source.read_exact_at(0, &mut header_bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:706:51
+    |
+700 |     pub fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
+    |     --------------------------------------------------------------------------------- this is not `async`
+...
+706 |         source.read_exact_at(0, &mut header_bytes)?;
+    |                                                   ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:880:5
+    |
+880 |     source.read_exact_at(0, &mut header_bytes)?;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:880:47
+    |
+874 | pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
+    | --------------------------------------------------------------------------------------------------- this is not `async`
+...
+880 |     source.read_exact_at(0, &mut header_bytes)?;
+    |                                               ^
+
+error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = u32>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:794:25
+    |
+794 |             if computed != entry.crc32 {
+    |                -------- ^^ ----------- u32
+    |                |
+    |                impl Future<Output = u32>
+
+error[E0369]: cannot subtract `u64` from `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:709:34
+    |
+709 |         source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes)?;
+    |                              --- ^ ------------------ u64
+    |                              |
+    |                              impl Future<Output = u64>
+
+error[E0369]: cannot add `u64` to `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:609:35
+    |
+609 |         let payload_offset = base + encoded.header_len as u64;
+    |                              ---- ^ ------------------------- u64
+    |                              |
+    |                              impl Future<Output = u64>
+
+error[E0369]: cannot subtract `u64` from `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:854:30
+    |
+854 |     source.read_exact_at(len - FOOTER_SIZE as u64, &mut buf)?;
+    |                          --- ^ ------------------ u64
+    |                          |
+    |                          impl Future<Output = u64>
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:709:9
+    |
+709 |         source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:709:74
+    |
+700 |     pub fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
+    |     --------------------------------------------------------------------------------- this is not `async`
+...
+709 |         source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes)?;
+    |                                                                          ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:651:9
+    |
+651 |         self.sink.write_all(&manifest_encoded.bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:651:53
+    |
+621 |     pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    |     -------------------------------------------------------------------- this is not `async`
+...
+651 |         self.sink.write_all(&manifest_encoded.bytes)?;
+    |                                                     ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:473:25
+    |
+473 |     let schema_symref = read_varint_u64(payload, &mut pos)?;
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:473:59
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+472 |     let mut pos = 0usize;
+473 |     let schema_symref = read_varint_u64(payload, &mut pos)?;
+    |                                                           ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:854:5
+    |
+854 |     source.read_exact_at(len - FOOTER_SIZE as u64, &mut buf)?;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:854:61
+    |
+848 | pub fn read_footer_only<S: PackSource>(source: &S) -> Result<Footer, PackError> {
+    | ------------------------------------------------------------------------------- this is not `async`
+...
+854 |     source.read_exact_at(len - FOOTER_SIZE as u64, &mut buf)?;
+    |                                                             ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:613:9
+    |
+613 |         self.sink.write_all(&encoded.bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:613:44
+    |
+606 |     pub fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
+    |     --------------------------------------------------------------------------- this is not `async`
+...
+613 |         self.sink.write_all(&encoded.bytes)?;
+    |                                            ^
+
+error[E0277]: can't compare `u64` with `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:711:28
+    |
+711 |         if footer.file_len != len {
+    |                            ^^ no implementation for `u64 == impl Future<Output = u64>`
+    |
+    = help: the trait `PartialEq<impl Future<Output = u64>>` is not implemented for `u64`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+700 |     pub fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> where u64: PartialEq<impl Future<Output = u64>> {
+    |                                                                                       +++++++++++++++++++++++++++++++++++++++++++++++
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+697 | impl<S: PackSource> PackFile<S> where u64: PartialEq<impl Future<Output = u64>> {
+    |                                 +++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:481:27
+    |
+481 |     let doc_frame_count = read_varint_u64(payload, &mut pos)?;
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:481:61
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+...
+481 |     let doc_frame_count = read_varint_u64(payload, &mut pos)?;
+    |                                                             ^
+
+error[E0369]: cannot subtract `u64` from `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:712:75
+    |
+712 | ...   return Err(PackError::Malformed { what: "footer", offset: len - FOOTER_SIZE as u64, detail: "file_len does not match actual s...
+    |                                                                 --- ^ ------------------ u64
+    |                                                                 |
+    |                                                                 impl Future<Output = u64>
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:447:18
+    |
+447 |     let offset = read_varint_u64(payload, pos)?;
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:447:47
+    |
+446 | fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackError> {
+    | ----------------------------------------------------------------------------- this is not `async`
+447 |     let offset = read_varint_u64(payload, pos)?;
+    |                                               ^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:652:49
+    |
+652 |         let manifest_span = ByteRange { offset: manifest_base, len: manifest_encoded.bytes.len() as u64 };
+    |                                                 ^^^^^^^^^^^^^ expected `u64`, found associated type
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:887:20
+    |
+887 |     while offset < len {
+    |           ------   ^^^ expected `u64`, found associated type
+    |           |
+    |           expected because this is `u64`
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:615:145
+    |
+615 | ... u64, raw_len: payload.len() as u64, crc32: stored_crc, blake3: *raw_hash.as_bytes() });
+    |                                                ^^^^^^^^^^ expected `u32`, found future
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:655:9
+    |
+655 |         self.sink.write_all(&end_encoded.bytes)?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:655:48
+    |
+621 |     pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    |     -------------------------------------------------------------------- this is not `async`
+...
+655 |         self.sink.write_all(&end_encoded.bytes)?;
+    |                                                ^
+
+error[E0369]: cannot add `u64` to `impl Future<Output = u64>`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:658:45
+    |
+658 |         let file_len = self.sink.position() + FOOTER_SIZE as u64;
+    |                        -------------------- ^ ------------------ u64
+    |                        |
+    |                        impl Future<Output = u64>
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:485:33
+    |
+485 |     let uncompressed_body_len = read_varint_u64(payload, &mut pos)?;
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:485:67
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+...
+485 |     let uncompressed_body_len = read_varint_u64(payload, &mut pos)?;
+    |                                                                   ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:448:15
+    |
+448 |     let len = read_varint_u64(payload, pos)?;
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:448:44
+    |
+446 | fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackError> {
+    | ----------------------------------------------------------------------------- this is not `async`
+447 |     let offset = read_varint_u64(payload, pos)?;
+448 |     let len = read_varint_u64(payload, pos)?;
+    |                                            ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:669:9
+    |
+669 |         self.sink.write_all(&footer.write_bytes())?;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:669:51
+    |
+621 |     pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    |     -------------------------------------------------------------------- this is not `async`
+...
+669 |         self.sink.write_all(&footer.write_bytes())?;
+    |                                                   ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:486:23
+    |
+486 |     let field_count = read_varint_u64(payload, &mut pos)?;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:486:57
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+...
+486 |     let field_count = read_varint_u64(payload, &mut pos)?;
+    |                                                         ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:376:17
+    |
+376 |     let count = read_varint_u64(payload, &mut pos)?;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:376:51
+    |
+374 | fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
+    | ----------------------------------------------------------------------------------------------------- this is not `async`
+375 |     let mut pos = 0usize;
+376 |     let count = read_varint_u64(payload, &mut pos)?;
+    |                                                   ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:487:23
+    |
+487 |     let chunk_count = read_varint_u64(payload, &mut pos)?;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:487:57
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+...
+487 |     let chunk_count = read_varint_u64(payload, &mut pos)?;
+    |                                                         ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:325:17
+    |
+325 |     let count = read_varint_u64(payload, &mut pos)?;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:325:51
+    |
+323 | fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
+    | ---------------------------------------------------------------------------------------- this is not `async`
+324 |     let mut pos = 0usize;
+325 |     let count = read_varint_u64(payload, &mut pos)?;
+    |                                                   ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:670:9
+    |
+670 |         self.sink.flush()?;
+    |         ^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:670:26
+    |
+621 |     pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    |     -------------------------------------------------------------------- this is not `async`
+...
+670 |         self.sink.flush()?;
+    |                          ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:488:24
+    |
+488 |     let symbol_count = read_varint_u64(payload, &mut pos)?;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:488:58
+    |
+471 | fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+    | ----------------------------------------------------------------------- this is not `async`
+...
+488 |     let symbol_count = read_varint_u64(payload, &mut pos)?;
+    |                                                          ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:382:22
+    |
+382 |         let offset = read_varint_u64(payload, &mut pos)?;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:382:56
+    |
+374 | fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
+    | ----------------------------------------------------------------------------------------------------- this is not `async`
+...
+382 |         let offset = read_varint_u64(payload, &mut pos)?;
+    |                                                        ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:226:5
+    |
+226 |     source.read_exact_at(offset, &mut buf)?;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:226:43
+    |
+224 | fn read_u8_at<S: PackSource>(source: &S, offset: u64) -> Result<u8, PackError> {
+    | ------------------------------------------------------------------------------ this is not `async`
+225 |     let mut buf = [0u8; 1];
+226 |     source.read_exact_at(offset, &mut buf)?;
+    |                                           ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:331:19
+    |
+331 |         let len = read_varint_u64(payload, &mut pos)? as usize;
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:331:53
+    |
+323 | fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
+    | ---------------------------------------------------------------------------------------- this is not `async`
+...
+331 |         let len = read_varint_u64(payload, &mut pos)? as usize;
+    |                                                     ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:247:17
+    |
+247 |     let value = read_varint_u64(&tmp, &mut pos)?;
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:247:48
+    |
+232 | fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u64), PackError> {
+    | ---------------------------------------------------------------------------------------------- this is not `async`
+...
+247 |     let value = read_varint_u64(&tmp, &mut pos)?;
+    |                                                ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:383:26
+    |
+383 |         let stored_len = read_varint_u64(payload, &mut pos)?;
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:383:60
+    |
+374 | fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
+    | ----------------------------------------------------------------------------------------------------- this is not `async`
+...
+383 |         let stored_len = read_varint_u64(payload, &mut pos)?;
+    |                                                            ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:384:23
+    |
+384 |         let raw_len = read_varint_u64(payload, &mut pos)?;
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<u64, protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<u64, protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:384:57
+    |
+374 | fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
+    | ----------------------------------------------------------------------------------------------------- this is not `async`
+...
+384 |         let raw_len = read_varint_u64(payload, &mut pos)?;
+    |                                                         ^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:188:14
+    |
+186 | fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
+    |                                                                                 -------------------------- expected `Result<Vec<u8>, protocol::PackError>` because of return type
+187 |     match codec.0 {
+188 |         0 => NoCompression.decompress(stored, raw_len, limit),
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec<u8>, PackError>`, found future
+
+error[E0308]: `match` arms have incompatible types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:180:14
+    |
+178 | /     match codec.0 {
+179 | |         0 => Ok(raw.to_vec()),
+    | |              ---------------- this is found to be of type `Result<Vec<u8>, protocol::PackError>`
+180 | |         1 => crate::codec::deflate_compress(raw),
+    | |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec<u8>, PackError>`, found future
+181 | |         other => Err(PackError::UnsupportedCodec(other)),
+182 | |     }
+    | |_____- `match` arms have incompatible types
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:259:18
+    |
+259 |     if offset >= total_len {
+    |        ------    ^^^^^^^^^ expected `u64`, found associated type
+    |        |
+    |        expected because this is `u64`
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:280:22
+    |
+280 |     if payload_end > total_len {
+    |        -----------   ^^^^^^^^^ expected `u64`, found associated type
+    |        |
+    |        expected because this is `u64`
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:285:5
+    |
+285 |     source.read_exact_at(offset, &mut frame)?;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:285:45
+    |
+257 | fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits, verify_crc: bool) -> Result<DecodedSegment, PackError> {
+    | ---------------------------------------------------------------------------------------------------------------------------------------- this is not `async`
+...
+285 |     source.read_exact_at(offset, &mut frame)?;
+    |                                             ^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:287:25
+    |
+287 |     if crc_offset + 4 > total_len {
+    |        --------------   ^^^^^^^^^ expected `u64`, found associated type
+    |        |
+    |        expected because this is `u64`
+    |
+    = note:         expected type `u64`
+            found associated type `impl Future<Output = u64>`
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:291:5
+    |
+291 |     source.read_exact_at(crc_offset, &mut crc_bytes)?;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<(), protocol::PackError>>`
+    |
+    = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<(), protocol::PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:291:53
+    |
+257 | fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits, verify_crc: bool) -> Result<DecodedSegment, PackError> {
+    | ---------------------------------------------------------------------------------------------------------------------------------------- this is not `async`
+...
+291 |     source.read_exact_at(crc_offset, &mut crc_bytes)?;
+    |                                                     ^
+
+error[E0277]: can't compare `u32` with `impl Future<Output = u32>`
+    --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:295:23
+     |
+ 295 |         if stored_crc != computed_crc {
+     |                       ^^ no implementation for `u32 == impl Future<Output = u32>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = u32>>` is not implemented for `u32`
+help: `u32` implements trait `PartialEq<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1876:13
+     |
+1876 |               const impl PartialEq for $t {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq`
+...
+1898 | /     partial_eq_impl! {
+1899 | |         bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128
+1900 | |     }
+     | |_____- in this macro invocation
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/partial_eq.rs:76:13
+     |
+  76 |               impl PartialEq<Value> for $ty {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq<serde_json::value::Value>`
+...
+  97 | / partialeq_numeric! {
+  98 | |     eq_i64[i8 i16 i32 i64 isize]
+  99 | |     eq_u64[u8 u16 u32 u64 usize]
+ 100 | |     eq_f32[f32]
+ 101 | |     eq_f64[f64]
+ 102 | |     eq_bool[bool]
+ 103 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `partial_eq_impl` which comes from the expansion of the macro `partialeq_numeric` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no method named `to_le_bytes` found for opaque type `impl Future<Output = u32>` in the current scope
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:134:36
+    |
+134 |         buf.extend_from_slice(&crc.to_le_bytes());
+    |                                    ^^^^^^^^^^^ method not found in `impl Future<Output = u32>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+134 |         buf.extend_from_slice(&crc.await.to_le_bytes());
+    |                                    ++++++
+
+error[E0277]: can't compare `u32` with `impl Future<Output = u32>`
+    --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:159:23
+     |
+ 159 |         if stored_crc != computed_crc {
+     |                       ^^ no implementation for `u32 == impl Future<Output = u32>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = u32>>` is not implemented for `u32`
+help: `u32` implements trait `PartialEq<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1876:13
+     |
+1876 |               const impl PartialEq for $t {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq`
+...
+1898 | /     partial_eq_impl! {
+1899 | |         bool char usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128
+1900 | |     }
+     | |_____- in this macro invocation
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/partial_eq.rs:76:13
+     |
+  76 |               impl PartialEq<Value> for $ty {
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `PartialEq<serde_json::value::Value>`
+...
+  97 | / partialeq_numeric! {
+  98 | |     eq_i64[i8 i16 i32 i64 isize]
+  99 | |     eq_u64[u8 u16 u32 u64 usize]
+ 100 | |     eq_f32[f32]
+ 101 | |     eq_f64[f64]
+ 102 | |     eq_bool[bool]
+ 103 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `partial_eq_impl` which comes from the expansion of the macro `partialeq_numeric` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no method named `to_le_bytes` found for opaque type `impl Future<Output = u32>` in the current scope
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:210:32
+    |
+210 |     buf.extend_from_slice(&crc.to_le_bytes());
+    |                                ^^^^^^^^^^^ method not found in `impl Future<Output = u32>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+210 |     buf.extend_from_slice(&crc.await.to_le_bytes());
+    |                                ++++++
+
+Some errors have detailed explanations: E0277, E0308, E0369, E0599.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-pack` (lib) due to 67 previous errors

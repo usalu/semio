@@ -462,10 +462,10 @@ impl Default for ArtifactEngineConfig {
 /// thread. Deliberately NOT `Send` (see `ArtifactAuthority`'s doc for why: `DocumentState` embeds
 /// `db_state::PMap`, which is `Rc`-based) — usable directly, single-threaded, wherever a mailbox
 /// isn't needed (e.g. this crate's own tests).
-pub struct ArtifactEngine {
+pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime> {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
-    storage: Arc<dyn DbStorage>,
+    storage: Arc<db_storage::DbBackend<R>>,
     wal: db_wal::ArtifactWal,
     state: DocumentState,
     vcs_head: Option<String>,
@@ -484,12 +484,15 @@ pub struct ArtifactEngine {
 
 const MAX_RECENT_TOUCHES: usize = 256;
 
-impl ArtifactEngine {
+impl<R: semio_framework_async::HostAsyncRuntime> ArtifactEngine<R> {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+    // 🚫️async: E5 executor bridge — `ArtifactEngine`'s methods run only on `ArtifactAuthority`'s
+    // own dedicated actor thread (R4 clause 2/4: the thread IS the executor for this bridge), so
+    // they stay plain sync fns and drive their async storage calls via `db_actor::block_on`.
+    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine<R>, DbError> {
         let core_id = to_core_document_id(&document);
-        let wal = db_actor::block_on(db_wal::ArtifactWal::create(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms))?;
+        let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config))
     }
 
@@ -499,14 +502,16 @@ impl ArtifactEngine {
     /// (per `db_wal::ArtifactWal::open`), then replays only the `WAL_COMMAND` records committed
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
-    pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+    // 🚫️async: E5 executor bridge — see `create`'s doc; same actor-thread bridge.
+    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine<R>, MaterializeReport), DbError> {
         let core_id = to_core_document_id(&document);
         let mut report = MaterializeReport::default();
 
         let mut state = DocumentState::new();
         let mut applied_head_seq = 0u64;
         let mut vcs_head = None;
-        let snapshot_manager = db_snapshot::SnapshotManager::new(storage.snapshot());
+        let snapshot_facet = db_actor::block_on(storage.snapshot());
+        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet);
         if let Some((generation, descriptor)) = db_actor::block_on(snapshot_manager.load_latest(&core_id))? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
@@ -524,14 +529,16 @@ impl ArtifactEngine {
             applied_head_seq = descriptor.head_seq;
             vcs_head = descriptor.vcs_head;
         }
+        drop(snapshot_manager);
+        drop(snapshot_facet);
 
-        let (wal, wal_recovery) = db_actor::block_on(db_wal::ArtifactWal::open(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms))?;
+        let (wal, wal_recovery) = db_actor::block_on(async { db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
         let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config);
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
-        let records = db_actor::block_on(db_wal::replay_document(storage.wal(), &core_id))?;
+        let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, &core_id).await })?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
         for record in records {
@@ -567,7 +574,7 @@ impl ArtifactEngine {
         Ok((engine, report))
     }
 
-    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine<R> {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -735,14 +742,17 @@ impl ArtifactEngine {
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
-        db_actor::block_on(self.wal.submit(self.storage.wal(), &records, options.durability, now_ms))?;
+        let wal_facet = db_actor::block_on(self.storage.wal());
+        db_actor::block_on(self.wal.submit(&wal_facet, &records, options.durability, now_ms))?;
+        drop(wal_facet);
         self.frontier = new_frontier.clone();
 
         // publish: durable indices
-        let command_index = db_index::CommandIndex::new(self.storage.index(), self.document.clone());
-        let inverse_index = db_index::InverseIndex::new(self.storage.index(), self.document.clone());
-        let actor_seq_index = db_index::ActorSeqIndex::new(self.storage.index(), self.document.clone());
-        db_actor::block_on(db_index::FrontierIndex::new(self.storage.index(), self.document.clone()).record(&new_frontier))?;
+        let index_facet = db_actor::block_on(self.storage.index());
+        let command_index = db_index::CommandIndex::new(&index_facet, self.document.clone());
+        let inverse_index = db_index::InverseIndex::new(&index_facet, self.document.clone());
+        let actor_seq_index = db_index::ActorSeqIndex::new(&index_facet, self.document.clone());
+        db_actor::block_on(db_index::FrontierIndex::new(&index_facet, self.document.clone()).record(&new_frontier))?;
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
             let seq = base_seq + offset as u64 + 1;
@@ -757,11 +767,12 @@ impl ArtifactEngine {
         // project: run every registered projection over each newly-applied envelope
         let projection_classes = (self.config.projections)();
         if !projection_classes.is_empty() {
-            let engine = db_projection::ProjectionEngine::new(self.storage.index(), self.document.clone(), projection_classes)?;
+            let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes)?;
             for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
                 db_actor::block_on(engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched))?;
             }
         }
+        drop(index_facet);
 
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
@@ -832,7 +843,8 @@ impl ArtifactEngine {
     pub fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
         let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
         let page = db_state::Page::new(encode_state_page(&entries));
-        let snapshot_manager = db_snapshot::SnapshotManager::new(self.storage.snapshot());
+        let snapshot_facet = db_actor::block_on(self.storage.snapshot());
+        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet);
         let origin = if db_actor::block_on(snapshot_manager.load_latest(&self.document))?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
         let body = db_snapshot::SnapshotBody {
             head_seq: self.frontier.head_seq,
@@ -860,14 +872,15 @@ impl ArtifactEngine {
     // ownership question onto every caller for no benefit.
     #[allow(clippy::needless_pass_by_value)]
     pub fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
-        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(self.storage.index(), self.document.clone()), frontiers: db_index::FrontierIndex::new(self.storage.index(), self.document.clone()) };
+        let index_facet = db_actor::block_on(self.storage.index());
+        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(&index_facet, self.document.clone()), frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()) };
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
             db_actor::block_on(db_query::resolve_consistency(&consistency, &resolver))?;
         }
         let source = StateQuerySource(&self.state.values);
-        db_actor::block_on(db_query::execute(&query, &source, None, &db_query::QueryLimits::default()))
+        db_actor::block_on(db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default()))
     }
 
     /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
@@ -889,7 +902,7 @@ impl ArtifactEngine {
         let limits = db_query::QueryLimits::default();
         let mut diffs = Vec::new();
         for (id, live_query) in self.live_queries.iter_mut() {
-            if let Ok(diff) = db_actor::block_on(live_query.refresh(&source, None, &limits)) {
+            if let Ok(diff) = db_actor::block_on(live_query.refresh(&source, None::<&db_query::NoFullTextLookup>, &limits)) {
                 if !diff.added.is_empty() || !diff.removed.is_empty() || !diff.updated.is_empty() {
                     diffs.push((*id, diff));
                 }
@@ -1124,7 +1137,7 @@ impl ArtifactAuthority {
     /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
     /// that construction succeeds or fails — a caller never holds a `ArtifactAuthority` whose
     /// engine failed to open.
-    pub fn spawn(build: impl FnOnce() -> Result<ArtifactEngine, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
+    pub fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let handle = std::thread::Builder::new()
@@ -1199,8 +1212,8 @@ mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
 
-    fn storage() -> StdArc<dyn db_storage::DbStorage> {
-        StdArc::new(db_storage::MemoryStorage::new())
+    fn storage() -> StdArc<db_storage::DbBackend<db_storage::InlineRuntime>> {
+        StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new()))
     }
 
     fn document_id() -> protocol::ArtifactId {

@@ -47,7 +47,7 @@ impl InteractionDefinition {
     /// 🪞️ Projects this declaration down to the label/icon-free `InteractionOutline` `validate_state`
     /// consumes — `semio-framework-os-kernel` cannot name `InteractionDefinition` itself (see this
     /// file's header comment), so callers build one of these per declared domain before validating.
-    pub fn outline(&self) -> InteractionOutline {
+    pub async fn outline(&self) -> InteractionOutline {
         InteractionOutline { id: self.id.clone(), granularity_ids: self.granularities.iter().map(|granularity| granularity.id.clone()).collect(), selection: self.selection.clone() }
     }
 }
@@ -72,11 +72,11 @@ pub struct GranularityDefinition {
 pub struct InteractionRef(String);
 
 impl InteractionRef {
-    pub fn new(id: impl Into<String>) -> Self {
+    pub async fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -99,7 +99,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn interaction_definition_round_trips_through_json() {
+    async fn interaction_definition_round_trips_through_json() {
         let def = InteractionDefinition {
             id: "graph".into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    fn outline_projects_id_granularity_ids_and_selection_only() {
+    async fn outline_projects_id_granularity_ids_and_selection_only() {
         let def = InteractionDefinition {
             id: "graph".into(),
             label: LocalizedLabel::native("Graph", "Graph"),

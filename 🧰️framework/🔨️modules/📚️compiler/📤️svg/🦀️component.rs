@@ -34,7 +34,7 @@ pub struct FontSet<'a> {
 // consequently no XML-injection surface here to escape against.
 
 //#region 🔖️Render
-fn font_for<'a>(fonts: &'a FontSet<'_>, kind: FontKind) -> Option<&'a Font<'a>> {
+async fn font_for<'a>(fonts: &'a FontSet<'_>, kind: FontKind) -> Option<&'a Font<'a>> {
     match kind {
         FontKind::Math => Some(fonts.math),
         FontKind::Serif => Some(fonts.serif),
@@ -53,7 +53,7 @@ struct GlyphPlacement {
     scale_y: f32,
 }
 
-fn write_glyph(out: &mut String, fonts: &FontSet<'_>, placement: &GlyphPlacement, font_size_pt: f32) {
+async fn write_glyph(out: &mut String, fonts: &FontSet<'_>, placement: &GlyphPlacement, font_size_pt: f32) {
     let Some(font) = font_for(fonts, placement.font) else { return };
     let Some(path) = crate::text::outline_glyph_path(font, placement.glyph_id) else { return };
     let units_per_em = font.units_per_em() as f32;
@@ -70,7 +70,7 @@ fn write_glyph(out: &mut String, fonts: &FontSet<'_>, placement: &GlyphPlacement
     ));
 }
 
-fn write_rule(out: &mut String, x: f32, y: f32, width: f32, height: f32, font_size_pt: f32) {
+async fn write_rule(out: &mut String, x: f32, y: f32, width: f32, height: f32, font_size_pt: f32) {
     let px = x * font_size_pt;
     let py = -y * font_size_pt;
     let pw = width * font_size_pt;
@@ -78,7 +78,7 @@ fn write_rule(out: &mut String, x: f32, y: f32, width: f32, height: f32, font_si
     out.push_str(&format!(r#"<rect x="{:.3}" y="{:.3}" width="{:.3}" height="{:.3}"/>"#, px, py - ph, pw, ph));
 }
 
-fn write_image(out: &mut String, data: &[u8], x: f32, y: f32, width: f32, height: f32, font_size_pt: f32) {
+async fn write_image(out: &mut String, data: &[u8], x: f32, y: f32, width: f32, height: f32, font_size_pt: f32) {
     let px = x * font_size_pt;
     let py = -y * font_size_pt - height * font_size_pt;
     let pw = width * font_size_pt;
@@ -88,7 +88,7 @@ fn write_image(out: &mut String, data: &[u8], x: f32, y: f32, width: f32, height
 }
 
 /// @emoji 🖨️ Renders `math_box` as a complete, standalone SVG document string.
-pub fn render_svg(math_box: &MathBox, fonts: &FontSet<'_>, options: SvgOptions) -> String {
+pub async fn render_svg(math_box: &MathBox, fonts: &FontSet<'_>, options: SvgOptions) -> String {
     let width_pt = math_box.width * options.font_size_pt + options.margin_pt * 2.0;
     let height_pt = (math_box.height + math_box.depth) * options.font_size_pt + options.margin_pt * 2.0;
     let baseline_y = options.margin_pt + math_box.height * options.font_size_pt;
@@ -116,7 +116,7 @@ mod tests {
     use crate::math::FontContext;
     use crate::syntax::parse_formula;
 
-    fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>, &FontSet<'_>) -> R) -> R {
+    async fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>, &FontSet<'_>) -> R) -> R {
         let embedded = crate::world::embedded_fonts();
         let math = Font::from_bytes(embedded.math, 0).expect("parse math font");
         let serif = Font::from_bytes(embedded.serif, 0).expect("parse serif font");
@@ -127,14 +127,14 @@ mod tests {
         f(&layout_ctx, &svg_ctx)
     }
 
-    fn render_src(layout_ctx: &FontContext<'_>, svg_ctx: &FontSet<'_>, src: &str) -> String {
+    async fn render_src(layout_ctx: &FontContext<'_>, svg_ctx: &FontSet<'_>, src: &str) -> String {
         let node = parse_formula(src).unwrap_or_else(|e| panic!("parse {src:?} failed: {e}"));
         let box_ = crate::math::layout(layout_ctx, &node);
         render_svg(&box_, svg_ctx, SvgOptions::default())
     }
 
     #[test]
-    fn renders_a_well_formed_svg_document_with_expected_root_attributes() {
+    async fn renders_a_well_formed_svg_document_with_expected_root_attributes() {
         with_fonts(|layout_ctx, svg_ctx| {
             let svg = render_src(layout_ctx, svg_ctx, "x^2");
             assert!(svg.starts_with("<svg "), "must start with an <svg> root: {svg}");
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn fraction_svg_contains_a_rect_for_the_bar() {
+    async fn fraction_svg_contains_a_rect_for_the_bar() {
         with_fonts(|layout_ctx, svg_ctx| {
             let svg = render_src(layout_ctx, svg_ctx, "frac(a, b)");
             assert!(svg.contains("<rect"), "a fraction must render a <rect> bar: {svg}");
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn emoji_svg_contains_an_embedded_png_image() {
+    async fn emoji_svg_contains_an_embedded_png_image() {
         with_fonts(|layout_ctx, svg_ctx| {
             let svg = render_src(layout_ctx, svg_ctx, ":rocket:");
             assert!(svg.contains("<image"), "an emoji shortcode must render an <image>: {svg}");
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn viewbox_dimensions_are_positive_and_account_for_margin() {
+    async fn viewbox_dimensions_are_positive_and_account_for_margin() {
         with_fonts(|layout_ctx, svg_ctx| {
             let svg = render_src(layout_ctx, svg_ctx, "x");
             let view_box = svg.split("viewBox=\"").nth(1).and_then(|s| s.split('"').next()).expect("viewBox attribute");

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 /// ⏱️ Records the most recent modification time seen across every watched source.
-fn note_newest(path: &Path, newest: &mut Option<SystemTime>) {
+async fn note_newest(path: &Path, newest: &mut Option<SystemTime>) {
     let Ok(modified) = fs::metadata(path).and_then(|meta| meta.modified()) else { return };
     if newest.map_or(true, |current| modified > current) {
         *newest = Some(modified);
@@ -16,7 +16,7 @@ fn note_newest(path: &Path, newest: &mut Option<SystemTime>) {
 
 /// 🌳️ Mirrors `📜️script.ts`'s own discovery: a manifest source is tagged by its `🛂️manifest*.json`
 /// filename, never by a directory convention, and dot-directories hold parallel worktree checkouts.
-fn watch_manifest_sources(dir: &Path, newest: &mut Option<SystemTime>) {
+async fn watch_manifest_sources(dir: &Path, newest: &mut Option<SystemTime>) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
         let name = entry.file_name();

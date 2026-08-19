@@ -10,7 +10,7 @@ pub enum Direction {
     Horizontal,
 }
 
-pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
+pub async fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
         Some("tight") => 4.0,
         Some("loose") => 12.0,
@@ -19,7 +19,7 @@ pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     }
 }
 
-pub fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {
+pub async fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
         Some("none") | Some("0") => 0.0,
         Some("tight") => 6.0,
@@ -28,7 +28,7 @@ pub fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     }
 }
 
-pub fn layout_vertical(bounds: Rect, gap: f32, padding: f32, child_heights: &[f32]) -> Vec<Rect> {
+pub async fn layout_vertical(bounds: Rect, gap: f32, padding: f32, child_heights: &[f32]) -> Vec<Rect> {
     let inner = bounds.inset(padding);
     let total_gap = gap * (child_heights.len().saturating_sub(1) as f32);
     let total_children: f32 = child_heights.iter().sum();
@@ -44,7 +44,7 @@ pub fn layout_vertical(bounds: Rect, gap: f32, padding: f32, child_heights: &[f3
     rects
 }
 
-pub fn layout_horizontal(bounds: Rect, gap: f32, padding: f32, child_widths: &[f32]) -> Vec<Rect> {
+pub async fn layout_horizontal(bounds: Rect, gap: f32, padding: f32, child_widths: &[f32]) -> Vec<Rect> {
     let inner = bounds.inset(padding);
     let total_gap = gap * (child_widths.len().saturating_sub(1) as f32);
     let total_children: f32 = child_widths.iter().sum();
@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vertical_layout_distributes_children() {
+    async fn vertical_layout_distributes_children() {
         let theme = Theme::default();
         let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
         let rects = layout_vertical(bounds, 4.0, 8.0, &[20.0, 30.0]);

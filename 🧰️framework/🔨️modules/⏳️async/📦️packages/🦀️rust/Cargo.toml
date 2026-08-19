@@ -30,3 +30,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 ts-rs = { version = "10", optional = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../✨️macros/📦️packages/🦀️rust" }

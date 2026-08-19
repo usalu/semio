@@ -31,7 +31,7 @@ pub struct Platform {
 }
 
 impl Platform {
-    pub fn new(spec: Option<PlatformSpec>) -> Self {
+    pub async fn new(spec: Option<PlatformSpec>) -> Self {
         let spec = spec.unwrap_or_default();
         let panel_visibility = spec.initial_panel_visibility.clone().unwrap_or_default();
         Self {
@@ -47,7 +47,7 @@ impl Platform {
         }
     }
 
-    pub fn add_app(&mut self, app: AppDefinition) {
+    pub async fn add_app(&mut self, app: AppDefinition) {
         if self.active_app_id.is_empty() {
             self.active_app_id = app.id.clone();
         }
@@ -55,14 +55,14 @@ impl Platform {
         self.notify();
     }
 
-    pub fn get_active_app(&self) -> Option<&AppDefinition> {
+    pub async fn get_active_app(&self) -> Option<&AppDefinition> {
         self.apps
             .iter()
             .find(|app| app.id == self.active_app_id)
             .or_else(|| self.apps.first())
     }
 
-    pub fn set_active_app_id(&mut self, id: String) {
+    pub async fn set_active_app_id(&mut self, id: String) {
         if self.active_app_id == id {
             return;
         }
@@ -70,7 +70,7 @@ impl Platform {
         self.notify_chrome();
     }
 
-    pub fn set_panel_visibility(&mut self, next: PanelVisibility) {
+    pub async fn set_panel_visibility(&mut self, next: PanelVisibility) {
         if self.panel_visibility == next {
             return;
         }
@@ -78,11 +78,11 @@ impl Platform {
         self.notify_chrome();
     }
 
-    pub fn notify(&mut self) {
+    pub async fn notify(&mut self) {
         self.generation = self.generation.saturating_add(1);
     }
 
-    pub fn notify_chrome(&mut self) {
+    pub async fn notify_chrome(&mut self) {
         self.chrome_generation = self.chrome_generation.saturating_add(1);
     }
 }
@@ -94,7 +94,7 @@ mod tests {
     use ui_wgpu::wgpu::LocalizedLabel;
 
     #[test]
-    fn adds_first_app_as_active() {
+    async fn adds_first_app_as_active() {
         let mut platform = Platform::new(None);
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
@@ -152,7 +152,7 @@ mod tests {
         assert_eq!(platform.active_app_id, "draw-play");
     }
 
-    fn minimal_app(id: &str) -> AppDefinition {
+    async fn minimal_app(id: &str) -> AppDefinition {
         AppDefinition {
             id: id.into(),
             role: crate::ui::AppRole::Editor,
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn set_active_app_id_is_noop_when_unchanged() {
+    async fn set_active_app_id_is_noop_when_unchanged() {
         let mut platform = Platform::new(None);
         platform.add_app(minimal_app("draw"));
         let generation_before = platform.chrome_generation;
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn get_active_app_falls_back_to_first_when_active_id_unknown() {
+    async fn get_active_app_falls_back_to_first_when_active_id_unknown() {
         let mut platform = Platform::new(None);
         platform.add_app(minimal_app("draw"));
         platform.active_app_id = "missing".into();
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn set_panel_visibility_is_noop_when_unchanged_else_bumps_chrome_generation() {
+    async fn set_panel_visibility_is_noop_when_unchanged_else_bumps_chrome_generation() {
         let mut platform = Platform::new(None);
         let generation_before = platform.chrome_generation;
         platform.set_panel_visibility(PanelVisibility::default());
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn notify_and_notify_chrome_increment_independently() {
+    async fn notify_and_notify_chrome_increment_independently() {
         let mut platform = Platform::new(None);
         platform.notify();
         platform.notify();

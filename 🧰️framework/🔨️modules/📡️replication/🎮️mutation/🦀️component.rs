@@ -23,18 +23,18 @@ pub struct MutationApplyError {
 
 impl MutationApplyError {
     /// 🏗️ Builds an untargeted typed rejection.
-    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+    pub async fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self { code: code.into(), message: message.into(), target: Vec::new() }
     }
 
     /// 🎯️ Attaches the rejected diff address, outermost segment first.
-    pub fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub async fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.target = target.into_iter().map(Into::into).collect();
         self
     }
 
     /// 🪆️ Prefixes outer address segments while retaining the inner error's exact target.
-    pub fn under(mut self, prefix: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub async fn under(mut self, prefix: impl IntoIterator<Item = impl Into<String>>) -> Self {
         let mut target: Vec<String> = prefix.into_iter().map(Into::into).collect();
         target.append(&mut self.target);
         self.target = target;
@@ -49,7 +49,7 @@ pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 /// malformed or base-incompatible persisted diff must return [`MutationApplyError`]; it must never
 /// clamp an index, ignore a missing target, or return the unchanged base as implicit success.
 pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
-    fn apply(&self, base: &P) -> MutationApplyResult<P>;
+    async fn apply(&self, base: &P) -> MutationApplyResult<P>;
     /// @emoji ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
     /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
@@ -61,10 +61,10 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
     /// method's — the CRDT-era concurrent-diff merge helper this docstring used to point at is
     /// deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
     /// LAW: whenever sequential application succeeds,
-    /// `absorb(d1, d2).apply(base) == d1.apply(base).and_then(|mid| d2.apply(&mid))`, associative
+    /// `absorb(d1, d2).await.apply(base).await == d1.apply(base).await.and_then(|mid| d2.apply(&mid).await)`, associative
     /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
     /// rejection; absorb must not manufacture an implicit success path.
-    fn absorb(&mut self, other: Self);
+    async fn absorb(&mut self, other: Self);
 }
 
 /// @emoji 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: inverse, state-delta
@@ -74,15 +74,15 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
 /// precedent below: land the trait standalone in a spine wave, adopt it per-type in later waves
 /// via a seeded shrink-only policy allowlist (`POLICY_DIFF_ALGEBRA`), never as a hard bound on
 /// `MutationDiff` itself until every implementor is covered.
-/// LAWS (for valid diffs): `d.inverse(base).apply(&d.apply(base)?) == Ok(*base)`;
-/// `Self::between(a, b).apply(a) == Ok(*b)`; `Self::between(a, a).is_empty()`.
+/// LAWS (for valid diffs): `d.inverse(base).await.apply(&d.apply(base).await?).await == Ok(*base)`;
+/// `Self::between(a, b).await.apply(a).await == Ok(*b)`; `Self::between(a, a).await.is_empty().await`.
 pub trait DiffAlgebra<P>: Sized {
     /// 🔁️ Diff-level undo: the diff that, applied after `self`, restores `base`.
-    fn inverse(&self, base: &P) -> Self;
+    async fn inverse(&self, base: &P) -> Self;
     /// 🧭️ State delta: the diff that, applied to `base`, yields `other`.
-    fn between(base: &P, other: &P) -> Self;
+    async fn between(base: &P, other: &P) -> Self;
     /// 🕳️ Whether this diff changes nothing relative to whatever base it was built against.
-    fn is_empty(&self) -> bool;
+    async fn is_empty(&self) -> bool;
 }
 
 /// @emoji 🔁️ Stored operation: emits a [`MutationOutcome`] (diff plus messages) and computes inverse
@@ -98,36 +98,36 @@ pub trait DiffAlgebra<P>: Sized {
 pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     type Diff: MutationDiff<P>;
 
-    fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
-    fn inverse(&self, base: &P) -> Vec<Self>;
+    async fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
+    async fn inverse(&self, base: &P) -> Vec<Self>;
 
-    fn mutation_id(&self) -> Option<crate::ids::MutationId> {
+    async fn mutation_id(&self) -> Option<crate::ids::MutationId> {
         None
     }
-    fn dependencies(&self) -> Vec<crate::ids::MutationId> {
+    async fn dependencies(&self) -> Vec<crate::ids::MutationId> {
         Vec::new()
     }
-    fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
+    async fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
         None
     }
-    fn author_id(&self) -> Option<crate::ids::ActorId> {
+    async fn author_id(&self) -> Option<crate::ids::ActorId> {
         None
     }
-    fn timestamp(&self) -> Option<crate::ids::HybridLogicalTimestamp> {
+    async fn timestamp(&self) -> Option<crate::ids::HybridLogicalTimestamp> {
         None
     }
-    fn undo_policy(&self) -> crate::UndoPolicy {
+    async fn undo_policy(&self) -> crate::UndoPolicy {
         crate::UndoPolicy::ExactBaseOnly
     }
     /// @emoji 🗂️ Which durability/visibility class this operation's diffs belong to.
-    fn state_class(&self) -> crate::StateClass {
+    async fn state_class(&self) -> crate::StateClass {
         crate::StateClass::Artifact
     }
     /// @emoji 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
-    /// for every ordinary single-artifact operation. Defaults to `Vec::new()` so no existing
+    /// for every ordinary single-artifact operation. Defaults to `Vec::new().await` so no existing
     /// `impl Mutation` breaks; only a composite mutation's delegating `MutationKind::foreign_steps`
     /// (see `🔖️Composite` below, `plan_foreign_steps`) ever returns anything here.
-    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+    async fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
         Vec::new()
     }
 }
@@ -156,38 +156,38 @@ pub struct MutationMessage {
 }
 
 impl MutationMessage {
-    fn at_level(level: crate::diagnostic::Severity, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+    async fn at_level(level: crate::diagnostic::Severity, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
         Self { level, code: code.into(), message: message.into(), target: Vec::new(), op_index: None }
     }
 
-    pub fn info(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        Self::at_level(crate::diagnostic::Severity::Info, code, message)
+    pub async fn info(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::diagnostic::Severity::Info, code, message).await
     }
-    pub fn warn(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        Self::at_level(crate::diagnostic::Severity::Warning, code, message)
+    pub async fn warn(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::diagnostic::Severity::Warning, code, message).await
     }
-    pub fn error(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        Self::at_level(crate::diagnostic::Severity::Error, code, message)
+    pub async fn error(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::diagnostic::Severity::Error, code, message).await
     }
-    pub fn fatal(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        Self::at_level(crate::diagnostic::Severity::Fatal, code, message)
+    pub async fn fatal(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        Self::at_level(crate::diagnostic::Severity::Fatal, code, message).await
     }
 
     /// 🎯️ Attaches the target address (outermost segment first).
-    pub fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub async fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.target = target.into_iter().map(Into::into).collect();
         self
     }
 
     /// 🔢️ Stamps which op (within a batch) produced this message.
-    pub fn at_op(mut self, op_index: u32) -> Self {
+    pub async fn at_op(mut self, op_index: u32) -> Self {
         self.op_index = Some(op_index);
         self
     }
 }
 
 /// @emoji 🚦️ The worst (highest) [`crate::diagnostic::Severity`] across `messages`, or `None` if empty.
-pub fn worst_level(messages: &[MutationMessage]) -> Option<crate::diagnostic::Severity> {
+pub async fn worst_level(messages: &[MutationMessage]) -> Option<crate::diagnostic::Severity> {
     messages.iter().map(|message| message.level).max()
 }
 
@@ -200,15 +200,15 @@ pub fn worst_level(messages: &[MutationMessage]) -> Option<crate::diagnostic::Se
 /// [`MutationOutcome::warn`]/[`MutationOutcome::absorb_messages`]), not enforced by this type
 /// itself — see `🧪️testkit`'s `assert_fatal_never_applies`/`assert_missing_target_is_error`.
 ///
-/// 🎯️ Naming note: the frozen contract's prose also lists chainable `.error(..)`/`.fatal(..)`
-/// instance builders alongside the static `::error(code,msg,target)`/`::fatal(code,msg,target)`
+/// 🎯️ Naming note: the frozen contract's prose also lists chainable `.error(..).await`/`.fatal(..).await`
+/// instance builders alongside the static `::error(code,msg,target).await`/`::fatal(code,msg,target).await`
 /// whole-outcome shortcuts — those two forms cannot share a name on the same inherent type (Rust
 /// E0592: an instance method and an associated function of the same name conflict across impl
 /// blocks whenever their `D` bounds overlap). This crate keeps `fatal`/`error` as the static,
 /// whole-outcome-rejecting shortcuts (the common case for a simple non-batch verb) and `info`/`warn`
-/// as the 2-arg chainable instance builders (the fan-out recipe's own `.info("mutation.cascade", ..)`
-/// example); a leaf needing a TARGETED error/warning alongside a non-empty diff (the batch-verb case)
-/// builds the message directly (`MutationMessage::error(code, msg).at(target)`) and attaches it via
+/// as the 2-arg chainable instance builders (the fan-out recipe's own `.info("mutation.cascade", ..).await`
+/// example); a leaf needing a TARGETED error/warning alongside a non-empty diff (the batch-verb case).await
+/// builds the message directly (`MutationMessage::error(code, msg).await.at(target).await`) and attaches it via
 /// [`MutationOutcome::absorb_messages`].
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -220,80 +220,80 @@ pub struct MutationOutcome<D> {
 
 impl<D: Default> MutationOutcome<D> {
     /// 🕳️ No change, no messages — the algebra's identity element.
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self { diff: D::default(), messages: Vec::new() }
     }
 
     /// 🚨️ Forces `diff = D::default()` (LAW 1) with one `Fatal` message.
-    pub fn fatal(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        Self { diff: D::default(), messages: vec![MutationMessage::fatal(code, message).at(target)] }
+    pub async fn fatal(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        Self { diff: D::default(), messages: vec![MutationMessage::fatal(code, message).await.at(target).await] }
     }
 
     /// 🚫️ Empty diff with one `Error` message — the caller's `diff` leaf never touched `target`.
-    pub fn error(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        Self { diff: D::default(), messages: vec![MutationMessage::error(code, message).at(target)] }
+    pub async fn error(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        Self { diff: D::default(), messages: vec![MutationMessage::error(code, message).await.at(target).await] }
     }
 }
 
 impl<D> MutationOutcome<D> {
     /// ✅️ A successful diff, no messages.
-    pub fn new(diff: D) -> Self {
+    pub async fn new(diff: D) -> Self {
         Self { diff, messages: Vec::new() }
     }
 
-    pub fn diff(&self) -> &D {
+    pub async fn diff(&self) -> &D {
         &self.diff
     }
 
-    pub fn messages(&self) -> &[MutationMessage] {
+    pub async fn messages(&self) -> &[MutationMessage] {
         &self.messages
     }
 
     /// ➡️ Consumes `self` into its raw `(diff, messages)` parts.
-    pub fn into_parts(self) -> (D, Vec<MutationMessage>) {
+    pub async fn into_parts(self) -> (D, Vec<MutationMessage>) {
         (self.diff, self.messages)
     }
 
     /// 🛡️ Applies this outcome atomically and converts an apply rejection into a fatal outcome.
-    pub fn apply_to<P>(self, snapshot: &mut P) -> Self
+    pub async fn apply_to<P>(self, snapshot: &mut P) -> Self
     where
         D: Default + MutationDiff<P>,
     {
-        let (diff, mut messages) = self.into_parts();
-        match diff.apply(snapshot) {
+        let (diff, mut messages) = self.into_parts().await;
+        match diff.apply(snapshot).await {
             Ok(next) => {
                 *snapshot = next;
                 Self { diff, messages }
             }
             Err(error) => {
-                messages.push(MutationMessage::fatal(error.code, error.message).at(error.target));
+                messages.push(MutationMessage::fatal(error.code, error.message).await.at(error.target).await);
                 Self { diff: D::default(), messages }
             }
         }
     }
 
     /// ➕️ Appends one `Info`-level message (e.g. a cascade note).
-    pub fn info(mut self, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        self.messages.push(MutationMessage::info(code, message));
+    pub async fn info(mut self, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        self.messages.push(MutationMessage::info(code, message).await);
         self
     }
 
     /// ➕️ Appends one `Warning`-level message.
-    pub fn warn(mut self, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
-        self.messages.push(MutationMessage::warn(code, message));
+    pub async fn warn(mut self, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
+        self.messages.push(MutationMessage::warn(code, message).await);
         self
     }
 
     /// ➕️ Appends every message in `messages`, in order — the general escape hatch for a targeted
     /// message that the 2-arg `info`/`warn` builders can't express (see the naming note above).
-    pub fn absorb_messages(mut self, messages: impl IntoIterator<Item = MutationMessage>) -> Self {
+    pub async fn absorb_messages(mut self, messages: impl IntoIterator<Item = MutationMessage>) -> Self {
         self.messages.extend(messages);
         self
     }
 
     /// 🔢️ Stamps `op_index` onto every message currently carried — called once per op during a
     /// batch replay, right after that op's `diff` is computed.
-    pub fn stamp_op_index(mut self, op_index: u32) -> Self {
+    pub async fn stamp_op_index(mut self, op_index: u32) -> Self {
         for message in &mut self.messages {
             message.op_index = Some(op_index);
         }
@@ -301,21 +301,21 @@ impl<D> MutationOutcome<D> {
     }
 
     /// 🚦️ The worst level across `self.messages`, or `None` if there are none.
-    pub fn worst_level(&self) -> Option<crate::diagnostic::Severity> {
-        worst_level(&self.messages)
+    pub async fn worst_level(&self) -> Option<crate::diagnostic::Severity> {
+        worst_level(&self.messages).await
     }
 
     /// ✅️ Whether `policy` would accept this outcome (i.e. does NOT reject its worst level). An
     /// outcome with no messages is always applicable.
-    pub fn is_applicable(&self, policy: crate::MergePolicy) -> bool {
-        match self.worst_level() {
-            Some(level) => !policy.rejects(level),
+    pub async fn is_applicable(&self, policy: crate::MergePolicy) -> bool {
+        match self.worst_level().await {
+            Some(level) => !policy.rejects(level).await,
             None => true,
         }
     }
 
     /// 🔀️ Maps the diff, keeping every message unchanged.
-    pub fn map<D2>(self, f: impl FnOnce(D) -> D2) -> MutationOutcome<D2> {
+    pub async fn map<D2>(self, f: impl FnOnce(D) -> D2) -> MutationOutcome<D2> {
         MutationOutcome { diff: f(self.diff), messages: self.messages }
     }
 }
@@ -325,10 +325,10 @@ impl<D> MutationOutcome<D> {
 /// @emoji ⚡️ Handcrafted ONE-LINE textual representation of an operation, implemented once per
 /// technology next to its `Mutation` enum. Moved verbatim from `os_store::OpText` (method order
 /// flipped to match the frozen contract; behavior unchanged). LAWS: `print_op` output never
-/// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op()`.
+/// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op().await`.
 pub trait OpText: Sized {
-    fn print_op(&self) -> String;
-    fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    async fn print_op(&self) -> String;
+    async fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
 }
 //#endregion 🔖️OpText
 
@@ -338,11 +338,11 @@ pub trait OpText: Sized {
 /// `Mutation` enum (in practice emitted by `#[derive(os_dsl::DslOps)]` through `os_dsl::op_rt`, the
 /// exact mirror of the `ArtifactDsl`/`ArtifactPack` pairing). Layout (owned by the runtime, not
 /// by implementors): `format u8 (=1) | variant ordinal varint | record body`. LAWS:
-/// `Op::decode_op(op.encode_op()) == op == Op::parse_op(op.print_op())`, and encoding is
+/// `Op::decode_op(op.encode_op().await).await == op == Op::parse_op(op.print_op().await).await`, and encoding is
 /// deterministic — byte-identical output for equal operations.
 pub trait OpBinary: Sized {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
 }
 //#endregion 🔖️OpBinary
 
@@ -358,13 +358,13 @@ pub trait OpBinary: Sized {
 /// proves the mechanism on a handful of real diff types (tracked in `script.ts`'s
 /// `POLICY_DIFF_COMPLETENESS_ALLOWLIST`); wiring it as a hard bound across all diff types is deferred
 /// to wave 6 (`## Master wave plan` `W6 — Lane C (B5)`), once every type is covered.
-/// LAWS: `Diff::parse_diff(&d.print_diff()) == d`, `Diff::decode_diff(&d.encode_diff()?)? == d`,
+/// LAWS: `Diff::parse_diff(&d.print_diff().await).await == d`, `Diff::decode_diff(&d.encode_diff().await?).await? == d`,
 /// `print_diff` output never contains `\n`, and `encode_diff` is deterministic.
 pub trait DiffCodec: Sized {
-    fn print_diff(&self) -> String;
-    fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
-    fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
-    fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    async fn print_diff(&self) -> String;
+    async fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    async fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    async fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
 }
 //#endregion 🔖️DiffCodec
 
@@ -490,6 +490,8 @@ impl Default for MutationOrigin {
 }
 impl MutationOrigin {
     /// 🕳️ Whether this is the (wire-omitted) default owner origin.
+    // 🚫️async: E1 — called by name from `#[serde(skip_serializing_if = "...")]`, whose generated
+    // call site is sync.
     pub fn is_owner(&self) -> bool {
         matches!(self, Self::Owner)
     }

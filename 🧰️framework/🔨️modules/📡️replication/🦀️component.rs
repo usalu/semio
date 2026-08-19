@@ -27,24 +27,24 @@ pub struct RecordSlice<'a> {
 /// target edit (e.g. an earlier dictionary base) are NOT included — a recipient shipping a slice
 /// over the wire is assumed to already hold that earlier context (this crate's own choice, the
 /// contract leaves exact slice bounds unspecified).
-pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64>) -> Result<RecordSlice<'a>, ProtocolError> {
+pub async fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64>) -> Result<RecordSlice<'a>, ProtocolError> {
     if ordinals.start >= ordinals.end {
-        return Err(ProtocolError::Malformed { what: "extract_range ordinals", offset: 0, detail: "range must be non-empty (start < end)".to_string() });
+        return Err(ProtocolError::Malformed { what: "extract_range ordinals", offset: 0, detail: "range must be non-empty (start < end).await".to_string() });
     }
-    let recovery = crate::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit)?;
+    let recovery = crate::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let mut cursor = FrameCursor::new(trusted, crate::format::HEADER_SIZE as u64);
+    let mut cursor = FrameCursor::new(trusted, crate::format::HEADER_SIZE as u64).await;
     let mut ordinal = 0u64;
     let mut start_offset: Option<u64> = None;
     let mut end_offset: Option<u64> = None;
-    while let Some(frame) = cursor.next_frame()? {
+    while let Some(frame) = cursor.next_frame().await? {
         if frame.kind == crate::REC_EDIT {
             if start_offset.is_none() && ordinal >= ordinals.start {
                 start_offset = Some(frame.offset);
             }
             if ordinal == ordinals.end - 1 {
-                end_offset = Some(frame.offset + frame.frame_len());
+                end_offset = Some(frame.offset + frame.frame_len().await);
                 break;
             }
             ordinal += 1;
@@ -68,8 +68,8 @@ pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64
 /// but rooted at nothing (no `chain_{n-1}` prefix) since a slice is deliberately position-agnostic.
 /// A caller (e.g. a semio_hub relaying a `RecordSlice`) computes this once at the source and ships the
 /// digest alongside the bytes; the receiver calls `verify_slice` to detect any in-transit tamper.
-pub fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
-    let computed = slice_content_chain(slice)?;
+pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
+    let computed = slice_content_chain(slice).await?;
     if &computed == expected_chain {
         Ok(())
     } else {
@@ -79,14 +79,14 @@ pub fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), Proto
 
 /// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
 /// bytes)` digest in `slice` into one combined digest, in frame order.
-fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
+async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     let hasher = crate::format::Blake3Hasher;
-    let mut cursor = FrameCursor::new(slice, 0);
+    let mut cursor = FrameCursor::new(slice, 0).await;
     let mut concat = Vec::new();
-    while let Some(frame) = cursor.next_frame()? {
-        let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len()) as usize];
-        concat.extend_from_slice(&hasher.hash(frame_bytes));
+    while let Some(frame) = cursor.next_frame().await? {
+        let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len().await) as usize];
+        concat.extend_from_slice(&hasher.hash(frame_bytes).await);
     }
-    Ok(hasher.hash(&concat))
+    Ok(hasher.hash(&concat).await)
 }
 //#endregion 🔖️Sync

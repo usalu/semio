@@ -21,39 +21,79 @@ use crate::{ByteRange, PackError};
 /// here requires `tokio`, so wasm/browser callers and native callers share one trait.
 #[async_trait::async_trait]
 pub trait AsyncPackSource: Send + Sync {
+    // 🚫️async: no suspension point — every implementor answers from an already-known length
+    // (see `pack_http::SharedState::len`'s doc comment); deliberately synchronous by contract.
     fn len(&self) -> u64;
     async fn read_at(&self, offset: u64, len: usize) -> Result<Vec<u8>, PackError>;
 }
 
+/// 🗄️ Cancellation flag plus the wakers parked on it, behind one mutex so a `cancel()` racing a
+/// `CancelWatch::poll`'s check-then-register can never produce a lost wakeup.
+struct CancellationInner {
+    cancelled: bool,
+    wakers: Vec<Waker>,
+}
+
 /// 🛑️ A clone-cheap, thread-safe flag a caller can flip to short-circuit an in-flight
-/// `ReadScheduler::read`. Cooperative: the scheduler observes it between poll cycles rather than
-/// truly preempting the underlying `AsyncPackSource::read_at` future.
+/// `ReadScheduler::read`. `cancel()` wakes every `CancelWatch` parked on it directly — no polling,
+/// no sleeping; see `CancelWatch::poll` below.
 #[derive(Clone)]
-pub struct CancellationToken(Arc<AtomicBool>);
+pub struct CancellationToken(Arc<Mutex<CancellationInner>>);
 
 impl CancellationToken {
+    // 🚫️async: no suspension point; also called from `Default::default` below, an E1 impl of
+    // the externally-declared `Default` trait whose fixed sync signature cannot `.await`.
     pub fn new() -> Self {
-        Self(Arc::new(AtomicBool::new(false)))
+        Self(Arc::new(Mutex::new(CancellationInner { cancelled: false, wakers: Vec::new() })))
     }
 
+    // 🚫️async: no suspension point, and load-bearing — the cancellation test drives this from a
+    // plain `std::thread::spawn` closure with no executor, simulating a foreign-thread cancel
+    // signal. Wakes every waker parked by `CancelWatch::poll` under the same lock `cancel` takes.
     pub fn cancel(&self) {
-        self.0.store(true, Ordering::SeqCst);
+        let mut inner = self.0.lock().unwrap();
+        inner.cancelled = true;
+        for waker in inner.wakers.drain(..) {
+            waker.wake();
+        }
     }
 
+    // 🚫️async: no suspension point; a cheap synchronous check kept sync so existing sync callers
+    // (including `CancelWatch::poll`'s own crate-private `poll_cancelled` below) never need an
+    // executor just to ask.
     pub fn is_cancelled(&self) -> bool {
-        self.0.load(Ordering::SeqCst)
+        self.0.lock().unwrap().cancelled
+    }
+
+    /// 👀️ Checks cancellation and, if not yet cancelled, registers `waker` to be woken by the
+    /// next `cancel()` — both under one lock, so this can never race a concurrent `cancel()` into
+    /// missing the registration.
+    // 🚫️async: E1 — the only caller is `CancelWatch::poll`, an impl of the externally-declared
+    // `Future` trait, whose fixed sync signature cannot `.await`.
+    fn poll_cancelled(&self, waker: &Waker) -> bool {
+        let mut inner = self.0.lock().unwrap();
+        if inner.cancelled {
+            return true;
+        }
+        if !inner.wakers.iter().any(|parked| parked.will_wake(waker)) {
+            inner.wakers.push(waker.clone());
+        }
+        false
     }
 }
 
+// 🚫️async: E1 impl of the externally-declared `Default` trait; `default`'s signature is fixed by
+// `std::default::Default` and must stay sync.
 impl Default for CancellationToken {
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// 👀️ Busy-polls `token` (with a short sleep between polls to avoid pegging a core) and resolves
-/// with a cancellation error the moment it flips. Raced via `futures_lite::future::or` against
-/// the real read/wait future so cancellation always wins as soon as it is observed.
+/// 👀️ Resolves with a cancellation error the moment `token` is cancelled, driven purely by
+/// `CancellationToken::cancel`'s waker registration — never polls in a loop or sleeps. Raced via
+/// `futures_lite::future::or` against the real read/wait future so cancellation always wins as
+/// soon as it is observed.
 struct CancelWatch<'a> {
     token: &'a CancellationToken,
 }
@@ -61,13 +101,16 @@ struct CancelWatch<'a> {
 impl Future for CancelWatch<'_> {
     type Output = Result<Arc<Vec<u8>>, PackError>;
 
+    // 🚫️async: E1 impl of the externally-declared `Future` trait; `poll`'s signature is fixed by
+    // `std::future::Future` and must stay sync. The wait for cancellation is satisfied entirely
+    // by `CancellationToken::poll_cancelled` registering this poll's waker — `cancel()` on
+    // another thread calls `Waker::wake` directly, so this never spins or sleeps.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if self.token.is_cancelled() {
-            return Poll::Ready(Err(PackError::Io("read cancelled".to_string())));
+        if self.token.poll_cancelled(cx.waker()) {
+            Poll::Ready(Err(PackError::Io("read cancelled".to_string())))
+        } else {
+            Poll::Pending
         }
-        cx.waker().wake_by_ref();
-        std::thread::sleep(std::time::Duration::from_micros(200));
-        Poll::Pending
     }
 }
 //#endregion 🔖️AsyncSource
@@ -86,6 +129,8 @@ pub enum LoadPriority {
 
 impl LoadPriority {
     /// 🏅️ Lower rank = served first.
+    // 🚫️async: E1 — the only caller is `AcquireFuture::poll` below, an impl of the
+    // externally-declared `Future` trait, whose fixed sync signature cannot `.await`.
     fn rank(self) -> u8 {
         match self {
             LoadPriority::Critical => 0,
@@ -107,6 +152,10 @@ pub struct ReadRequest {
 
 /// 🤝️ True iff `a` and `b` overlap or sit back-to-back (touching), so a single physical read of
 /// their union serves both.
+// 🚫️async: no suspension point — called by `join_or_create_group` while holding two
+// `std::sync::MutexGuard`s across a loop; those guards are not `Send` and awaiting here would
+// force them into the enclosing future's state, which R3 forbids (host-side `Send` must come
+// structurally, never from a bound). Pure arithmetic, never needs to suspend.
 fn ranges_touch(a: ByteRange, b: ByteRange) -> bool {
     let a_end = a.offset.saturating_add(a.len);
     let b_end = b.offset.saturating_add(b.len);
@@ -114,6 +163,7 @@ fn ranges_touch(a: ByteRange, b: ByteRange) -> bool {
 }
 
 /// ➕️ The smallest `ByteRange` spanning both `a` and `b`.
+// 🚫️async: no suspension point — same lock-held-across-the-call constraint as `ranges_touch`.
 fn ranges_union(a: ByteRange, b: ByteRange) -> ByteRange {
     let a_end = a.offset.saturating_add(a.len);
     let b_end = b.offset.saturating_add(b.len);
@@ -147,6 +197,9 @@ struct WaitForGroup {
 impl Future for WaitForGroup {
     type Output = Result<Arc<Vec<u8>>, PackError>;
 
+    // 🚫️async: E1 impl of the externally-declared `Future` trait; signature fixed by std. Already
+    // waker-correct (registers `cx.waker()` and returns `Pending`, woken by `finalize_group`'s
+    // `waker.wake()`) — no sleep here, nothing to fix.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut inner = self.group.lock().unwrap();
         match &inner.state {
@@ -172,11 +225,14 @@ pub struct ReadScheduler<S: AsyncPackSource> {
 
 impl<S: AsyncPackSource> ReadScheduler<S> {
     /// 🆕️ A scheduler with a sensible default concurrency cap. Use `with_capacity` to tune it.
+    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
+    // call sites (`let scheduler = ReadScheduler::new(source);`, unawaited) keep compiling.
     pub fn new(source: S) -> Self {
         Self::with_capacity(source, 4)
     }
 
     /// 🆕️ A scheduler that admits at most `max_concurrent_reads` physical reads at once.
+    // 🚫️async: no suspension point — same constructor reasoning as `new` above.
     pub fn with_capacity(source: S, max_concurrent_reads: usize) -> Self {
         Self { source, groups: Mutex::new(Vec::new()), demand: BoundedDemand::new(max_concurrent_reads) }
     }
@@ -202,6 +258,9 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 
     /// 🔎️ Finds a `Gathering` group whose range touches `range` and folds `range` into it
     /// (returning `is_leader = false`), or opens a fresh group (returning `is_leader = true`).
+    // 🚫️async: no suspension point — the whole body runs under `self.groups`'s lock (plus, per
+    // candidate, the group's own lock); never yields, so it stays a fast synchronous critical
+    // section rather than holding a non-`Send` `MutexGuard` across an `.await`.
     fn join_or_create_group(&self, range: ByteRange) -> (Arc<Mutex<Group>>, bool) {
         let mut groups = self.groups.lock().unwrap();
         for group in groups.iter() {
@@ -233,6 +292,8 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 
     /// 🏁️ Records `result` as the group's outcome, wakes every waiter, and drops the group from
     /// the lookup table so nothing else can merge into it.
+    // 🚫️async: no suspension point — runs entirely under `group`'s lock, then `self.groups`'s;
+    // never yields (same lock-across-await avoidance as `join_or_create_group`).
     fn finalize_group(&self, group: &Arc<Mutex<Group>>, result: Result<Arc<Vec<u8>>, PackError>) {
         let wakers = {
             let mut inner = group.lock().unwrap();
@@ -248,6 +309,7 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 
 /// ✂️ Slices `caller_range` out of `data`, which covers `group`'s (possibly wider, merged)
 /// final range starting at its own offset.
+// 🚫️async: no suspension point — pure byte-range arithmetic and a `Vec` copy, no I/O.
 fn slice_group_result(data: &Arc<Vec<u8>>, group: &Arc<Mutex<Group>>, caller_range: ByteRange) -> Result<Vec<u8>, PackError> {
     let group_range = group.lock().unwrap().range;
     let start = caller_range.offset.checked_sub(group_range.offset).ok_or_else(|| PackError::Malformed { what: "async_read_slice", offset: caller_range.offset, detail: "requested range precedes the coalesced group range".to_string() })? as usize;
@@ -268,6 +330,8 @@ struct DemandWaiter {
     granted: AtomicBool,
 }
 
+// 🚫️async: E1 impls of the externally-declared `PartialEq`/`Eq`/`PartialOrd`/`Ord` traits;
+// signatures fixed by `std::cmp`, required (sync) by `BinaryHeap<Arc<DemandWaiter>>`.
 impl PartialEq for DemandWaiter {
     fn eq(&self, other: &Self) -> bool {
         self.rank == other.rank && self.seq == other.seq
@@ -304,14 +368,19 @@ pub struct BoundedDemand {
 }
 
 impl BoundedDemand {
+    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
+    // call sites (`let demand = BoundedDemand::new(1);`, unawaited) keep compiling.
     pub fn new(capacity: usize) -> Self {
         Self { state: Mutex::new(DemandState { in_flight: 0, capacity: capacity.max(1), queue: BinaryHeap::new(), next_seq: 0 }) }
     }
 
+    // 🚫️async: no suspension point — a cheap synchronous accessor, exercised directly by
+    // `bounded_demand_reports_capacity_and_in_flight` as a plain sync call.
     pub fn capacity(&self) -> usize {
         self.state.lock().unwrap().capacity
     }
 
+    // 🚫️async: no suspension point — see `capacity` above.
     pub fn in_flight(&self) -> usize {
         self.state.lock().unwrap().in_flight
     }
@@ -325,6 +394,8 @@ impl BoundedDemand {
 
     /// 🔓️ Frees one slot: transfers it to the highest-priority queued waiter if any are waiting,
     /// else simply lowers the in-flight count.
+    // 🚫️async: E1 — the only caller is `DemandPermit::drop` below, an impl of the
+    // externally-declared `Drop` trait, whose fixed sync signature cannot `.await`.
     fn release(&self) {
         let mut state = self.state.lock().unwrap();
         if let Some(next) = state.queue.pop() {
@@ -343,6 +414,8 @@ pub struct DemandPermit<'a> {
     demand: &'a BoundedDemand,
 }
 
+// 🚫️async: E1 impl of the externally-declared `Drop` trait; `drop`'s signature is fixed by
+// `std::ops::Drop` and must stay sync.
 impl Drop for DemandPermit<'_> {
     fn drop(&mut self) {
         self.demand.release();
@@ -358,6 +431,9 @@ struct AcquireFuture<'a> {
 impl<'a> Future for AcquireFuture<'a> {
     type Output = DemandPermit<'a>;
 
+    // 🚫️async: E1 impl of the externally-declared `Future` trait; signature fixed by std.
+    // Already waker-correct: parks `cx.waker()` on the `DemandWaiter` and returns `Pending`,
+    // woken by `BoundedDemand::release`'s `waker.wake()` — no sleep, no spin.
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if let Some(waiter) = &self.waiter {
             if waiter.granted.load(Ordering::SeqCst) {
@@ -383,6 +459,10 @@ impl<'a> Future for AcquireFuture<'a> {
 //#endregion 🔖️Backpressure
 
 //#region 🧪️Tests
+// 🚫️async: every `futures_lite::future::block_on(...)` in this module drives one `#[test] fn` —
+// each is its own synchronous test-harness entry point, the same role `fn main` plays for a
+// binary (R4 item 1), so none are converted to `.await` here. See
+// `📓️terra-pack-waker-report.md` for the full site-by-site census.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -442,6 +522,49 @@ mod tests {
         let clone = token.clone();
         clone.cancel();
         assert!(token.is_cancelled(), "cancelling a clone must be visible through the original");
+    }
+
+    /// 🧪️ Wraps a future and counts how many times it is actually polled — used below to prove
+    /// `CancelWatch` is driven by real waker wakeups rather than a hot poll loop.
+    struct CountingPoll<F> {
+        inner: F,
+        polls: Arc<AtomicUsize>,
+    }
+
+    impl<F: Future + Unpin> Future for CountingPoll<F> {
+        type Output = F::Output;
+
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            self.polls.fetch_add(1, Ordering::SeqCst);
+            Pin::new(&mut self.inner).poll(cx)
+        }
+    }
+
+    /// 🧪️ Regression test for the poll-sleep defect this packet fixes: `CancelWatch` must stay
+    /// `Pending` until a genuinely separate OS thread transitions `CancellationToken`'s state
+    /// (calls `cancel()`), then resolve — driven purely by `Waker::wake`, never by sleeping or
+    /// busy-repolling. A busy-poll implementation (the original 200µs-sleep version) would rack
+    /// up roughly `20ms / 200µs` ≈ 100 polls waiting out the delay below; a correct waker-based
+    /// implementation polls a small constant number of times (park, wake, resolve) regardless of
+    /// how long the other thread takes.
+    #[test]
+    fn cancel_watch_resolves_from_another_thread_via_waker_without_spinning_or_sleeping() {
+        let token = CancellationToken::new();
+        let canceller_token = token.clone();
+        let polls = Arc::new(AtomicUsize::new(0));
+
+        let canceller = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            canceller_token.cancel();
+        });
+
+        let counted = CountingPoll { inner: CancelWatch { token: &token }, polls: polls.clone() };
+        let result = futures_lite::future::block_on(counted);
+
+        canceller.join().unwrap();
+        assert!(result.is_err(), "CancelWatch must resolve once the other thread cancels");
+        let observed = polls.load(Ordering::SeqCst);
+        assert!(observed <= 4, "CancelWatch::poll must be driven by Waker::wake, not busy-spinning; observed {observed} polls waiting out a 20ms cancellation");
     }
     //#endregion 🔖️AsyncSource
 

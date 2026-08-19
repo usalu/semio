@@ -595,6 +595,11 @@ impl std::task::Wake for ThreadWaker {
 /// @emoji 🛑️ Drives `future` to completion on the calling thread — the "blocking" half of this
 /// crate's dual blocking/async futures, in the `pack_async` spirit but hand-rolled (no
 /// `futures-lite` dependency: `db_actor`'s only dependency is `db_core`, per the contract).
+///
+/// 🚫️async: E5 executor bridge — the ONE such bridge in this crate (R2: "at most one per crate").
+/// Every other `db_*` module's thread-owning layer (`db_artifact::ArtifactEngine`,
+/// `db_engine::Database`, `db_cli::main_impl`) and this crate's own `*_blocking` convenience
+/// methods call THIS function rather than hand-rolling a second poll loop.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn block_on<F: Future>(future: F) -> F::Output {
     let waker = Waker::from(Arc::new(ThreadWaker(std::thread::current())));

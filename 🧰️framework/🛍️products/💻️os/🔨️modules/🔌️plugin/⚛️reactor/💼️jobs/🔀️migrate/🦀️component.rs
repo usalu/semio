@@ -28,7 +28,7 @@ struct MigrateInput {
     pack: Vec<u8>,
 }
 
-pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+pub(super) async fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
@@ -36,7 +36,7 @@ pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>
     })
 }
 
-fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {
+async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {
     let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
     let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
     Ok((from, to))
@@ -44,13 +44,13 @@ fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::A
 
 /// 🔎️ Validates `input` decodes as `{from, to, pack}` with two parseable dialect coordinates, and
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
-fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed)?;
     Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
 }
 
-fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed)?;
     store::migrate_document(&from, &to, &parsed.pack).map_err(|error| super::fault("job.migrate", format!("{error:?}")))
@@ -60,13 +60,13 @@ fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 mod tests {
     use super::super::*;
 
-    fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    async fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
         let mut out = bytes.to_vec();
         out.push(0xAB);
         Ok(out)
     }
 
-    fn register_job_test_migration() -> (String, String) {
+    async fn register_job_test_migration() -> (String, String) {
         let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "2".to_string(), subset: "*".to_string() };
         let migration = store::DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_job_test_marker };
@@ -78,7 +78,7 @@ mod tests {
         (from.to_coordinate(), to.to_coordinate())
     }
 
-    fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
+    async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
         serde_json::to_vec(&serde_json::json!({ "from": from, "to": to, "pack": pack })).expect("test input encodes")
     }
 
@@ -86,7 +86,7 @@ mod tests {
     /// two real `step_job` slices to `Done`, proving `job_migrate` really reaches
     /// `store::migrate_document` and runs the registered re-encode, not just `job.unknown-kind`.
     #[test]
-    fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
+    async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
         let (from, to) = register_job_test_migration();
         let input = input_bytes(&from, &to, vec![1, 2, 3]);
         start_job(400, JOB_KIND_MIGRATE, &input);
@@ -114,7 +114,7 @@ mod tests {
     /// 📸️ Interrupts after slice 1 (decode only), checkpoints, cancels, restores, and confirms the
     /// resumed run reaches the SAME `Done` output as an uninterrupted run.
     #[test]
-    fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
+    async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let (from, to) = register_job_test_migration();
         let input = input_bytes(&from, &to, vec![9, 9]);
 
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
+    async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
         let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
         let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
         let input = input_bytes(&from, &to, vec![1]);
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
+    async fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(404, JOB_KIND_MIGRATE, b"not json");
         match step_job(404, JobBudget::default()) {
             JobStep::Failed(bytes) => {

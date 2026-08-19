@@ -5,11 +5,11 @@ use crate::wgpu::input::{KeyAction, PointerCallbacks, PointerModifiers};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, NamedKey};
 
-pub fn pointer_coords(_window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
+pub async fn pointer_coords(_window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
     (position.x as f32, position.y as f32)
 }
 
-pub fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
+pub async fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
     PointerModifiers { shift: modifiers.shift_key(), ctrl: modifiers.control_key(), alt: modifiers.alt_key(), meta: modifiers.super_key() }
 }
 
@@ -22,7 +22,7 @@ pub struct WindowInputState {
     pub modifiers: PointerModifiers,
 }
 
-pub fn dispatch_window_event(window: &winit::window::Window, event: &WindowEvent, input: &mut WindowInputState, callbacks: &PointerCallbacks) -> bool {
+pub async fn dispatch_window_event(window: &winit::window::Window, event: &WindowEvent, input: &mut WindowInputState, callbacks: &PointerCallbacks) -> bool {
     match event {
         WindowEvent::ModifiersChanged(modifiers) => {
             input.modifiers = modifiers_from_winit(modifiers.state());
@@ -73,7 +73,7 @@ pub fn dispatch_window_event(window: &winit::window::Window, event: &WindowEvent
     }
 }
 
-fn mouse_button_to_i16(button: MouseButton) -> i16 {
+async fn mouse_button_to_i16(button: MouseButton) -> i16 {
     match button {
         MouseButton::Left => 0,
         MouseButton::Right => 2,
@@ -84,7 +84,7 @@ fn mouse_button_to_i16(button: MouseButton) -> i16 {
     }
 }
 
-fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
+async fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
     match &event.logical_key {
         Key::Named(NamedKey::Backspace) => Some(KeyAction::Backspace),
         Key::Named(NamedKey::Delete) => Some(KeyAction::Delete),
@@ -114,14 +114,14 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
  * not awaiting it just means this fn doesn't itself learn whether the write ultimately succeeded —
  * exactly like a browser's own Ctrl+C, which never blocks the UI thread on the OS clipboard settling. */
 #[cfg(not(target_arch = "wasm32"))]
-pub fn clipboard_write_text(text: &str) {
+pub async fn clipboard_write_text(text: &str) {
     if let Ok(mut clipboard) = arboard::Clipboard::new() {
         let _ = clipboard.set_text(text.to_string());
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn clipboard_write_text(text: &str) {
+pub async fn clipboard_write_text(text: &str) {
     if let Some(window) = web_sys::window() {
         let _ = window.navigator().clipboard().write_text(text);
     }
@@ -133,7 +133,7 @@ pub fn clipboard_write_text(text: &str) {
  * within the very same call. `None` on any failure (no clipboard backend, or the clipboard doesn't
  * currently hold text) — a caller treats that identically to "user pasted nothing". */
 #[cfg(not(target_arch = "wasm32"))]
-pub fn clipboard_read_text() -> Option<String> {
+pub async fn clipboard_read_text() -> Option<String> {
     arboard::Clipboard::new().ok()?.get_text().ok()
 }
 

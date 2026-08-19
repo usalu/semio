@@ -77,17 +77,17 @@ pub mod component {
 
     export!(ComponentGuest);
 
-    pub fn component_export_anchor() {}
+    pub async fn component_export_anchor() {}
 
-    pub fn log(level: &str, message: &str) {
+    pub async fn log(level: &str, message: &str) {
         semio::framework::pure::log(level, message);
     }
 
-    pub fn now_ms() -> i64 {
+    pub async fn now_ms() -> i64 {
         semio::framework::pure::now_ms()
     }
 
-    pub fn trace_span(name: &str) {
+    pub async fn trace_span(name: &str) {
         semio::framework::pure::trace_span(name);
     }
 }
@@ -96,7 +96,7 @@ pub mod component {
 pub use component::component_export_anchor;
 
 #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-pub fn component_export_anchor() {}
+pub async fn component_export_anchor() {}
 
 #[path = "🏗️builder/🦀️component.rs"]
 mod builder;
@@ -154,14 +154,14 @@ pub mod app {
         UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, FRAMEWORK_HISTORY_BODY_KEY,
     };
 
-    fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
+    async fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
 
     //#region 🔖️InteractionArgs
     /// 🕹️ Reads the required `domainId` text arg every interaction verb except `clearSelection`/
     /// `selectAll` carries (see `interaction_action_definitions`'s arg declarations).
-    fn interaction_domain_id_arg(args: Option<&Value>, action: &str) -> Result<String, Fault> {
+    async fn interaction_domain_id_arg(args: Option<&Value>, action: &str) -> Result<String, Fault> {
         args.and_then(|value| value.get("domainId")).and_then(Value::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
     }
 
@@ -169,14 +169,14 @@ pub mod app {
     /// `ActionArgDef::text` declaration `interaction_action_definitions` gives both `interactionSelect`
     /// and `interactionHover` (a renderer JSON-serializes its gathered pick/marquee/hover batch into
     /// this one string arg, the same convention other JSON-blob action args in this codebase already use).
-    fn parse_interaction_targets(args: Option<&Value>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
+    async fn parse_interaction_targets(args: Option<&Value>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
         let raw = args.and_then(|value| value.get("targets")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
         serde_json::from_str(raw).map_err(|error| plugin_sdk_fault(format!("{action}: malformed targets ({error})")))
     }
 
     /// 🕹️ Decodes `interactionSelect`'s `merge` select-arg — defaults to `Replace` (a plain pick) when
     /// absent, matching the un-modified-click case every renderer's modifier→merge policy falls back to.
-    fn parse_merge_mode(args: Option<&Value>) -> Result<protocol::MergeMode, Fault> {
+    async fn parse_merge_mode(args: Option<&Value>) -> Result<protocol::MergeMode, Fault> {
         let raw = args.and_then(|value| value.get("merge")).and_then(Value::as_str).unwrap_or("replace");
         match raw {
             "replace" => Ok(protocol::MergeMode::Replace),
@@ -189,7 +189,7 @@ pub mod app {
     }
 
     /// 🕹️ Decodes `setSelectionMode`'s `mode` select-arg.
-    fn parse_selection_mode(raw: &str) -> Result<protocol::SelectionMode, Fault> {
+    async fn parse_selection_mode(raw: &str) -> Result<protocol::SelectionMode, Fault> {
         match raw {
             "single" => Ok(protocol::SelectionMode::Single),
             "multiple" => Ok(protocol::SelectionMode::Multiple),
@@ -202,7 +202,7 @@ pub mod app {
     /// split on `delimiter`, becomes one `TopologyNode` (`granularity` from `def.granularities[depth]`,
     /// clamped to the last declared granularity for a deeper id than declared granularities), parented
     /// to the next-shallower prefix. Dedup'd (and stably ordered) by id via the `BTreeMap` key.
-    fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
+    async fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
         let mut nodes: BTreeMap<String, protocol::TopologyNode> = BTreeMap::new();
         for id in known_ids {
             let segments: Vec<&str> = id.split(delimiter).collect();
@@ -229,8 +229,8 @@ pub mod app {
     /// inventory — writer's AST, note's blocks, …) that a `UiTree`-bound domain's rendered tree is
     /// single-granularity; a domain needing per-row granularity declares `HierarchyProvider::Topology`
     /// and supplies its own `interaction_topology` instead.
-    fn ui_tree_domain_topology(sections: &[UiTreeSectionNode], granularity: &str) -> protocol::DomainTopology {
-        fn visit(items: &[UiTreeItemNode], parent: Option<&str>, granularity: &str, out: &mut Vec<protocol::TopologyNode>) {
+    async fn ui_tree_domain_topology(sections: &[UiTreeSectionNode], granularity: &str) -> protocol::DomainTopology {
+        async fn visit(items: &[UiTreeItemNode], parent: Option<&str>, granularity: &str, out: &mut Vec<protocol::TopologyNode>) {
             for item in items {
                 out.push(protocol::TopologyNode { id: item.id.clone(), granularity: granularity.to_string(), parent: parent.map(str::to_string) });
                 if let Some(children) = &item.items {
@@ -288,24 +288,24 @@ pub mod app {
 
     impl PanelTabSpec {
         /// 🍃️ An app-declared leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
-        pub fn leaf(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
+        pub async fn leaf(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
             Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
         }
 
         /// 🌳️ An app-declared branch tab; its `children` render as the tab row below it when active.
-        pub fn group(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
+        pub async fn group(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
             Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: None, children }
         }
 
         /// 🏛️ A framework-predefined tab — only the framework shell itself should ever pass a
         /// non-`App` `PanelTabKind` here; plugins must go through `leaf`/`group`.
-        pub fn framework(kind: PanelTabKind, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
+        pub async fn framework(kind: PanelTabKind, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
             Self { kind, label: label.into(), group, body_key, children }
         }
     }
 
     /// 🌳️ Asserts every tab in the tree has a non-empty, unique id and sets exactly one of `body_key`/`children`.
-    fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
+    async fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
         let id = tab.kind.id_str();
         assert!(!id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
         assert!(seen_ids.insert(id.to_string()), "app {} duplicate panel tab id {}", app_id, id);
@@ -319,21 +319,21 @@ pub mod app {
     }
 
     /// 🌳️ Converts one plugin-declared `PanelTabSpec` (recursively) into a `PanelTabDefinition`.
-    fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
+    async fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
         PanelTabDefinition { kind: tab.kind, label: tab.label, group: tab.group, body_key: tab.body_key, children: tab.children.into_iter().map(panel_tab_spec_to_definition).collect() }
     }
 
     /// 🔁️ Inverse of `ModeSpec` -> `ModeDefinition` in `build_definition` — lets `.mode_def()` accept an
     /// already-built `ModeDefinition` (e.g. from a taxonomy `🎭️modes/<mode>/🦀️component.rs` file) and
     /// store it through the same `ModeSpec` pipeline as the scalar `.mode(...)` args. Fields line up 1:1.
-    fn mode_definition_to_spec(def: ModeDefinition) -> ModeSpec {
+    async fn mode_definition_to_spec(def: ModeDefinition) -> ModeSpec {
         ModeSpec { id: def.id, label: def.label, icon_id: def.icon_id, tools: def.tools, layout_id: def.layout_id, commands: def.commands }
     }
 
     /// 🔁️ Inverse of `WindowKindSpec` -> `WindowKindDefinition` in `build_definition` — unpacks
     /// `WindowOptions` back into `measures`/`engagement` so a full `WindowKindDefinition` can be pushed
     /// through the same `WindowKindSpec` pipeline as `.window_kind()`/`.window_kind_with_engagement()`.
-    fn window_kind_definition_to_spec(def: WindowKindDefinition) -> WindowKindSpec {
+    async fn window_kind_definition_to_spec(def: WindowKindDefinition) -> WindowKindSpec {
         WindowKindSpec {
             id: def.id,
             label: def.label,
@@ -357,14 +357,14 @@ pub mod app {
     /// 🔁️ Inverse of `panel_tab_spec_to_definition` — lets `.panel_tab_def()` accept an already-built
     /// (possibly nested) `PanelTabDefinition` and store it through the same `PanelTabSpec` pipeline as
     /// `.panel_tab()`/`.panel_tab_tree()`.
-    fn panel_tab_definition_to_spec(def: PanelTabDefinition) -> PanelTabSpec {
+    async fn panel_tab_definition_to_spec(def: PanelTabDefinition) -> PanelTabSpec {
         PanelTabSpec { kind: def.kind, label: def.label, group: def.group, body_key: def.body_key, children: def.children.into_iter().map(panel_tab_definition_to_spec).collect() }
     }
 
     /// 📝️ Asserts every `ActionArgDef` in `args` (belonging to `owner`, e.g. an action or dialog id) has
     /// a non-empty, unique id and that any `Select` control declares at least one option — shared by
     /// per-action arg validation and dialog arg validation so both stay in lockstep.
-    fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
+    async fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
         let mut arg_ids = HashSet::new();
         for arg in args {
             assert!(arg_ids.insert(arg.id.clone()), "app {} {} declares duplicate arg id {}", app_id, owner, arg.id);
@@ -380,7 +380,7 @@ pub mod app {
     /// kind ids are camelCased at the stamp site, never compared raw). Anything else grammar-valid is an
     /// escape hatch — an app may legitimately reference a plugin- or framework-owned element it doesn't
     /// declare.
-    fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &HashSet<String>, panel_tab_ids: &HashSet<String>, window_kind_ids: &HashSet<String>) {
+    async fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &HashSet<String>, panel_tab_ids: &HashSet<String>, window_kind_ids: &HashSet<String>) {
         assert!(is_element_id(id), "app {} {} {} element id {} does not match the UI element id grammar", app_id, owner, role, id);
         if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
             return;
@@ -400,7 +400,7 @@ pub mod app {
     /// 👻️ Every `IntroductionPoint` a gesture references (one for click/scroll kinds, two for drag/orbit) —
     /// shared by tutorial gesture-cue validation; only `Element` points are grammar-checked (the other
     /// addressing schemes name windows/entities/curves, not the `ui.*` element-id vocabulary).
-    fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
+    async fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
         use semio_framework::IntroductionGesture;
         match gesture {
             IntroductionGesture::LeftClick { at } | IntroductionGesture::RightClick { at } | IntroductionGesture::DoubleClick { at } | IntroductionGesture::Scroll { at, .. } => {
@@ -465,7 +465,7 @@ pub mod app {
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — every
         /// existing leaf's `serialize` never truly awaits, so its future resolves the moment it
         /// is first polled (see `resolve_ready` in the framework io module).
-        fn serialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
+        async fn serialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
     }
 
     /// 🧩️ Directed snapshot conversion from a foreign dialect into this dialect. One unit struct
@@ -477,7 +477,7 @@ pub mod app {
         const INTO: Dialect;
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
         /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
-        fn deserialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
+        async fn deserialize(from: &Self::From) -> impl Future<Output = Result<Self::Into, store::PackError>> + Send;
     }
 
     /// 🎹️ Subset-level composer: analyze foreign/native sources, build one snapshot in `WRITES`.
@@ -486,21 +486,21 @@ pub mod app {
     pub trait ArtifactComposer: Sized {
         type Snapshot;
         const WRITES: Dialect;
-        fn reads() -> &'static [Dialect];
+        async fn reads() -> &'static [Dialect];
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
         /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
-        fn compose(sources: &[ComposeSource<'_>]) -> impl Future<Output = Result<Composition<Self::Snapshot>, ComposeError>> + Send;
+        async fn compose(sources: &[ComposeSource<'_>]) -> impl Future<Output = Result<Composition<Self::Snapshot>, ComposeError>> + Send;
     }
 
     /// 🎹️ Erases a typed `ArtifactComposer` into a `ComposerEntry` row for `register_composer_entries`.
     /// Lives here (not in `semio_framework_io`) because it needs the `ArtifactComposer` trait, which
     /// the lower-layer io module can't see. Erasure round-trips the snapshot through the same
     /// `store::ArtifactPack` binary codec `ArtifactBuilder::from_binary` already uses.
-    pub fn composer_entry_of<C: ArtifactComposer>() -> ComposerEntry
+    pub async fn composer_entry_of<C: ArtifactComposer>() -> ComposerEntry
     where
         C::Snapshot: ArtifactPack,
     {
-        fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
+        async fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             C::Snapshot: ArtifactPack,
         {
@@ -531,12 +531,12 @@ pub mod app {
     /// re-packed as `D::Into` the same way `composer_entry_of` re-packs its `Composition::snapshot`.
     /// Registered through a subset composer's `register()` into the same `IoKey → ComposerEntry`
     /// registry composer entries already use.
-    pub fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
+    pub async fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
     where
         D::From: ArtifactPack + Send,
         D::Into: ArtifactPack,
     {
-        fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
+        async fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             D::From: ArtifactPack + Send,
             D::Into: ArtifactPack,
@@ -567,12 +567,12 @@ pub mod app {
     /// 🧵️ Erases a typed `ArtifactSerializer` into a `ComposerEntry` row — mirror image of
     /// `deserializer_entry_of`: writes `S::INTO`, reads exactly `[S::FROM]`, decodes the single
     /// source as `S::From`, runs `S::serialize`, re-packs the result as `S::Into`.
-    pub fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
+    pub async fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
     where
         S::From: ArtifactPack + Send,
         S::Into: ArtifactPack,
     {
-        fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
+        async fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             S::From: ArtifactPack + Send,
             S::Into: ArtifactPack,
@@ -610,13 +610,13 @@ pub mod app {
         type Snapshot;
         type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
         type Diff;
-        fn empty() -> Self;
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self;
-        fn from_text(text: &str) -> Result<Self, store::TextError>;
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError>;
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>);
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self>;
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>>;
+        async fn empty() -> Self;
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self;
+        async fn from_text(text: &str) -> Result<Self, store::TextError>;
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError>;
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>);
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self>;
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>>;
     }
 
     /// 🎚 Soft confidence for partial decomposition success.
@@ -646,7 +646,7 @@ pub mod app {
     pub trait ArtifactDecomposer: Sized {
         type Snapshot;
         type Parts;
-        fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
+        async fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
     }
 
     /// 🧐️ Standards/subsets successor to `ArtifactDecomposer` (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO
@@ -658,8 +658,8 @@ pub mod app {
         type Parts;
         const DIALECT: Dialect;
         /// 👃️ Cheap recognizability probe -- no allocation, no full parse.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
     }
 
     //#region 🧬️DerivedArtifactFacets
@@ -669,9 +669,9 @@ pub mod app {
 
         const DIALECT: Dialect;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
     }
 
     /// 🎹️ IO-owned composition hook used by the derived composer.
@@ -680,9 +680,9 @@ pub mod app {
 
         const WRITES: Dialect;
 
-        fn reads() -> &'static [Dialect];
+        async fn reads() -> &'static [Dialect];
 
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
     }
 
     /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5): schema-owned child-composition hook —
@@ -697,16 +697,16 @@ pub mod app {
         type Snapshot;
         /// 🪆️ This artifact's declared child slots — `&[]` for a leaf with no `#[child(...)]`
         /// fields (see `NoChildren`).
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec];
+        async fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec];
         /// 🏗️ Assembles `Self::Snapshot` from resolver-supplied child packs, one `(dialect, pack
         /// bytes)` pair per slot instance (`many` slots contribute more than one pair for the SAME
         /// `ChildSlotSpec.kind`) — the composition-side counterpart to `decompose_to_children`.
-        fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError>;
+        async fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError>;
         /// 📤️ Inverse of `compose_from_children`: the child packs `Self::Snapshot` currently owns,
         /// keyed by their own dialect — the seam `ArtifactChildren`'s own decompose side of the
         /// contract needs so a child's pack can be re-derived/re-exported without re-deriving the
         /// whole parent.
-        fn decompose_to_children(snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)>;
+        async fn decompose_to_children(snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)>;
     }
 
     /// 🍃️ `DerivedArtifactSpec::Children` default for a leaf artifact with zero composition slots —
@@ -718,15 +718,15 @@ pub mod app {
     impl<S> ArtifactChildren for NoChildren<S> {
         type Snapshot = S;
 
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+        async fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
             &[]
         }
 
-        fn compose_from_children(_parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
+        async fn compose_from_children(_parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
             Err(ComposeError { message: "this artifact declares no #[child(...)] slots — NoChildren::compose_from_children is unreachable via the derived composer".into(), diagnostics: Vec::new() })
         }
 
-        fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
+        async fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
             Vec::new()
         }
     }
@@ -788,32 +788,32 @@ pub mod app {
         type Mutation = Spec::Mutation;
         type Diff = Spec::Diff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self { construction: Spec::Construction::empty() }
         }
 
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { construction: Spec::Construction::from_snapshot(snapshot) }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self { construction: Spec::Construction::from_text(text)? })
         }
 
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self { construction: Spec::Construction::from_binary(bytes)? })
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (construction, outcome) = self.construction.mutate(mutation);
             (Self { construction }, outcome)
         }
 
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.construction.absorb(diff).map(|construction| Self { construction })
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             self.construction.build()
         }
     }
@@ -839,11 +839,11 @@ pub mod app {
         type Parts = <Spec::Analysis as ArtifactAnalysis>::Parts;
         const DIALECT: Dialect = <Spec::Analysis as ArtifactAnalysis>::DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             <Spec::Analysis as ArtifactAnalysis>::sniff(source)
         }
 
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             <Spec::Analysis as ArtifactAnalysis>::analyze(sources)
         }
     }
@@ -880,7 +880,7 @@ pub mod app {
         ///
         /// A leaf `Spec::Children = NoChildren<_>` (`slots()` = `&[]`) still degrades to exactly
         /// `Spec::Composition::reads()`.
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             static UNIONS: std::sync::OnceLock<std::sync::Mutex<HashMap<std::any::TypeId, &'static [Dialect]>>> = std::sync::OnceLock::new();
             let unions = UNIONS.get_or_init(|| std::sync::Mutex::new(HashMap::new()));
             let key = std::any::TypeId::of::<Spec>();
@@ -937,13 +937,13 @@ pub mod app {
         type Snapshot;
         type Inference: protocol::Inference<Self::Snapshot>;
 
-        fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+        async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
             protocol::Inference::infer(snapshot)
         }
 
         /// 🧠️ Cache-aware variant; the default passthrough ignores `cache`/`session` and just calls
         /// `infer` — override once the standard registers real `InferredField`s.
-        fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+        async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
             let _ = (cache, session);
             Self::infer(snapshot)
         }
@@ -974,7 +974,7 @@ pub mod app {
     }
 
     impl ArtifactInferenceExecutionError {
-        pub fn new(code: &'static str, message: impl Into<String>) -> Self {
+        pub async fn new(code: &'static str, message: impl Into<String>) -> Self {
             Self { code, message: message.into() }
         }
     }
@@ -1034,15 +1034,15 @@ pub mod app {
         }
 
         /// 🧷️ Returns the capability identity of this service's actual request-aware executable.
-        pub fn executable_identity(&self) -> ArtifactExecutableIdentity {
+        pub async fn executable_identity(&self) -> ArtifactExecutableIdentity {
             ArtifactExecutableIdentity(self.infer as usize)
         }
 
-        pub fn infer(&self, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        pub async fn infer(&self, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             (self.infer)(request)
         }
 
-        fn identical_to(&self, other: &Self) -> bool {
+        async fn identical_to(&self, other: &Self) -> bool {
             self.metadata == other.metadata && std::ptr::fn_addr_eq(self.infer, other.infer)
         }
     }
@@ -1086,11 +1086,11 @@ pub mod app {
     }
 
     impl ArtifactInferenceServiceRegistry {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self::default()
         }
 
-        pub fn register(&mut self, service: ArtifactInferenceService) -> Result<(), ArtifactInferenceRegistrationError> {
+        pub async fn register(&mut self, service: ArtifactInferenceService) -> Result<(), ArtifactInferenceRegistrationError> {
             let key = ArtifactInferenceServiceKey::from(service.metadata);
             if let Some(existing) = self.by_key.get(&key) {
                 if existing.identical_to(&service) {
@@ -1102,15 +1102,15 @@ pub mod app {
             Ok(())
         }
 
-        pub fn get(&self, artifact_kind: &str, inference_schema: &str) -> Option<&ArtifactInferenceService> {
+        pub async fn get(&self, artifact_kind: &str, inference_schema: &str) -> Option<&ArtifactInferenceService> {
             self.by_key.iter().find_map(|(key, service)| (key.artifact_kind == artifact_kind && key.inference_schema == inference_schema).then_some(service))
         }
 
-        pub fn metadata(&self) -> Vec<ArtifactInferenceServiceMetadata> {
+        pub async fn metadata(&self) -> Vec<ArtifactInferenceServiceMetadata> {
             self.by_key.values().map(ArtifactInferenceService::metadata).collect()
         }
 
-        pub fn infer(&self, artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        pub async fn infer(&self, artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             let service = self.get(artifact_kind, inference_schema).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
             service.infer(request)
         }
@@ -1118,17 +1118,17 @@ pub mod app {
 
     static ARTIFACT_INFERENCE_SERVICE_REGISTRY: std::sync::OnceLock<std::sync::RwLock<ArtifactInferenceServiceRegistry>> = std::sync::OnceLock::new();
 
-    fn artifact_inference_service_registry() -> &'static std::sync::RwLock<ArtifactInferenceServiceRegistry> {
+    async fn artifact_inference_service_registry() -> &'static std::sync::RwLock<ArtifactInferenceServiceRegistry> {
         ARTIFACT_INFERENCE_SERVICE_REGISTRY.get_or_init(|| std::sync::RwLock::new(ArtifactInferenceServiceRegistry::new()))
     }
 
-    pub fn register_artifact_inference_service(service: ArtifactInferenceService) -> Result<(), ArtifactInferenceRegistrationError> {
+    pub async fn register_artifact_inference_service(service: ArtifactInferenceService) -> Result<(), ArtifactInferenceRegistrationError> {
         artifact_inference_service_registry().write().map_err(|_| ArtifactInferenceRegistrationError::Unavailable)?.register(service)
     }
 
     /// 🔬️ Verifies native inference services against the established registry without mutation.
     #[must_use]
-    pub fn preflight_artifact_inference_services(services: &[ArtifactInferenceService]) -> Result<(), ArtifactInferenceRegistrationError> {
+    pub async fn preflight_artifact_inference_services(services: &[ArtifactInferenceService]) -> Result<(), ArtifactInferenceRegistrationError> {
         let mut proposed = ArtifactInferenceServiceRegistry::new();
         for service in services {
             proposed.register(*service)?;
@@ -1147,7 +1147,7 @@ pub mod app {
 
     /// 📌️ Registers native inference services only after the whole candidate set is conflict-free.
     #[must_use]
-    pub fn register_artifact_inference_services(services: Vec<ArtifactInferenceService>) -> Result<(), ArtifactInferenceRegistrationError> {
+    pub async fn register_artifact_inference_services(services: Vec<ArtifactInferenceService>) -> Result<(), ArtifactInferenceRegistrationError> {
         preflight_artifact_inference_services(&services)?;
         let mut registry = artifact_inference_service_registry().write().map_err(|_| ArtifactInferenceRegistrationError::Unavailable)?;
         for service in services {
@@ -1156,16 +1156,16 @@ pub mod app {
         Ok(())
     }
 
-    pub fn artifact_inference_service(artifact_kind: &str, inference_schema: &str) -> Result<Option<ArtifactInferenceService>, ArtifactInferenceExecutionError> {
+    pub async fn artifact_inference_service(artifact_kind: &str, inference_schema: &str) -> Result<Option<ArtifactInferenceService>, ArtifactInferenceExecutionError> {
         Ok(artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?.get(artifact_kind, inference_schema).copied())
     }
 
-    pub fn list_artifact_inference_services() -> Result<Vec<ArtifactInferenceServiceMetadata>, ArtifactInferenceExecutionError> {
+    pub async fn list_artifact_inference_services() -> Result<Vec<ArtifactInferenceServiceMetadata>, ArtifactInferenceExecutionError> {
         Ok(artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?.metadata())
     }
 
     /// 💡️ Runs one bounded native inference through its immutable request contract.
-    pub fn infer_artifact(artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+    pub async fn infer_artifact(artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
         let service =
             artifact_inference_service(artifact_kind, inference_schema)?.ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
         service.infer(request)
@@ -1175,7 +1175,7 @@ pub mod app {
     mod artifact_inference_service_tests {
         use super::*;
 
-        fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        async fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             Ok(ArtifactInferenceExecution {
                 canonical_payload: request.canonical_payload.to_vec(),
                 diagnostics: Vec::new(),
@@ -1186,11 +1186,11 @@ pub mod app {
             })
         }
 
-        fn reject(_request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        async fn reject(_request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             Err(ArtifactInferenceExecutionError::new("test.rejected", "rejected"))
         }
 
-        fn metadata(artifact_kind: &'static str, inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
+        async fn metadata(artifact_kind: &'static str, inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
             ArtifactInferenceServiceMetadata {
                 owner: "test",
                 artifact_kind,
@@ -1206,7 +1206,7 @@ pub mod app {
         }
 
         #[test]
-        fn artifact_inference_registry_is_order_independent_and_idempotent() {
+        async fn artifact_inference_registry_is_order_independent_and_idempotent() {
             let alpha = ArtifactInferenceService::new(metadata("s.test.alpha", "s.test.alpha.inference"), echo);
             let beta = ArtifactInferenceService::new(metadata("s.test.beta", "s.test.beta.inference"), echo);
             let mut forward = ArtifactInferenceServiceRegistry::new();
@@ -1223,7 +1223,7 @@ pub mod app {
         }
 
         #[test]
-        fn artifact_inference_registry_rejects_any_conflicting_duplicate() {
+        async fn artifact_inference_registry_rejects_any_conflicting_duplicate() {
             let identity = metadata("s.test.conflict", "s.test.conflict.inference");
             let first = ArtifactInferenceService::new(identity, echo);
             assert_eq!(first.executable_identity(), ArtifactInferenceService::new(identity, echo).executable_identity());
@@ -1382,11 +1382,11 @@ pub mod app {
     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
 
-    fn active_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+    async fn active_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
     }
 
-    fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+    async fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
     }
 
@@ -1404,7 +1404,7 @@ pub mod app {
     }
 
     /// 🛑️ Cancels one active bounded inference by its caller-provided identity.
-    pub fn cancel_artifact_inference(cancellation_id: &str) -> Result<(), ArtifactInferenceExecutionError> {
+    pub async fn cancel_artifact_inference(cancellation_id: &str) -> Result<(), ArtifactInferenceExecutionError> {
         let active = active_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "active inference registry is poisoned"))?;
         if !active.contains(cancellation_id) {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancellation", format!("no active inference has cancellation id {cancellation_id:?}")));
@@ -1413,7 +1413,7 @@ pub mod app {
         Ok(())
     }
 
-    fn begin_artifact_inference(cancellation_id: &str) -> Result<ArtifactInferenceCancellationGuard, ArtifactInferenceExecutionError> {
+    async fn begin_artifact_inference(cancellation_id: &str) -> Result<ArtifactInferenceCancellationGuard, ArtifactInferenceExecutionError> {
         let mut active = active_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "active inference registry is poisoned"))?;
         if !active.insert(cancellation_id.to_owned()) {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.in-flight", format!("inference {cancellation_id:?} is already active")));
@@ -1421,15 +1421,15 @@ pub mod app {
         Ok(ArtifactInferenceCancellationGuard(cancellation_id.to_owned()))
     }
 
-    fn inference_cancelled(cancellation_id: &str) -> Result<bool, ArtifactInferenceExecutionError> {
+    async fn inference_cancelled(cancellation_id: &str) -> Result<bool, ArtifactInferenceExecutionError> {
         cancelled_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned")).map(|cancelled| cancelled.contains(cancellation_id))
     }
 
-    fn bounded_len(value: u64, field: &str) -> Result<usize, ArtifactInferenceExecutionError> {
+    async fn bounded_len(value: u64, field: &str) -> Result<usize, ArtifactInferenceExecutionError> {
         usize::try_from(value).map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.budget", format!("{field} exceeds this runtime's address space")))
     }
 
-    fn validate_wire_request_resources(request: &WireArtifactInferenceRequest) -> Result<(), ArtifactInferenceExecutionError> {
+    async fn validate_wire_request_resources(request: &WireArtifactInferenceRequest) -> Result<(), ArtifactInferenceExecutionError> {
         if request.source_dialect.trim().is_empty() {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.source-dialect", "source dialect is required"));
         }
@@ -1472,7 +1472,7 @@ pub mod app {
         Ok(())
     }
 
-    fn validate_inference_execution(request: &WireArtifactInferenceRequest, execution: &ArtifactInferenceExecution) -> Result<(), ArtifactInferenceExecutionError> {
+    async fn validate_inference_execution(request: &WireArtifactInferenceRequest, execution: &ArtifactInferenceExecution) -> Result<(), ArtifactInferenceExecutionError> {
         if execution.validity.trim().is_empty() || execution.quality.trim().is_empty() {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.result", "inference execution must report validity and quality"));
         }
@@ -1494,22 +1494,22 @@ pub mod app {
         Ok(())
     }
 
-    pub fn wire_list_artifact_inference_services() -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    pub async fn wire_list_artifact_inference_services() -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
         wire_list_artifact_inference_services_from(&registry)
     }
 
-    fn wire_list_artifact_inference_services_from(registry: &ArtifactInferenceServiceRegistry) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    async fn wire_list_artifact_inference_services_from(registry: &ArtifactInferenceServiceRegistry) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         let metadata: Vec<WireArtifactInferenceMetadata> = registry.metadata().into_iter().map(Into::into).collect();
         serde_json::to_vec(&metadata).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
     }
 
-    pub fn wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    pub async fn wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
         wire_artifact_infer_from(&registry, request)
     }
 
-    fn wire_artifact_infer_from(registry: &ArtifactInferenceServiceRegistry, request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    async fn wire_artifact_infer_from(registry: &ArtifactInferenceServiceRegistry, request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         let request: WireArtifactInferenceRequest = serde_json::from_slice(request).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
         if request.wire_version != ARTIFACT_INFERENCE_WIRE_VERSION {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.wire-version", format!("expected {}, got {}", ARTIFACT_INFERENCE_WIRE_VERSION, request.wire_version)));
@@ -1521,7 +1521,7 @@ pub mod app {
         wire_artifact_infer_with_service(request, service)
     }
 
-    fn wire_artifact_infer_with_service(request: WireArtifactInferenceRequest, service: ArtifactInferenceService) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    async fn wire_artifact_infer_with_service(request: WireArtifactInferenceRequest, service: ArtifactInferenceService) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         let expected = WireArtifactInferenceMetadata::from(service.metadata());
         validate_wire_request_metadata(&request, &expected)?;
         validate_wire_request_resources(&request)?;
@@ -1582,7 +1582,7 @@ pub mod app {
         serde_json::to_vec(&result).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
     }
 
-    fn validate_wire_request_metadata(request: &WireArtifactInferenceRequest, expected: &WireArtifactInferenceMetadata) -> Result<(), ArtifactInferenceExecutionError> {
+    async fn validate_wire_request_metadata(request: &WireArtifactInferenceRequest, expected: &WireArtifactInferenceMetadata) -> Result<(), ArtifactInferenceExecutionError> {
         let actual = WireArtifactInferenceMetadata {
             owner: request.owner.clone(),
             artifact_kind: request.artifact_kind.clone(),
@@ -1605,7 +1605,7 @@ pub mod app {
     mod artifact_inference_wire_tests {
         use super::*;
 
-        fn metadata(inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
+        async fn metadata(inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
             ArtifactInferenceServiceMetadata {
                 owner: "s.test",
                 artifact_kind: "s.test",
@@ -1620,7 +1620,7 @@ pub mod app {
             }
         }
 
-        fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        async fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             Ok(ArtifactInferenceExecution {
                 canonical_payload: request.canonical_payload.to_vec(),
                 diagnostics: Vec::new(),
@@ -1631,12 +1631,12 @@ pub mod app {
             })
         }
 
-        fn cancel(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+        async fn cancel(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
             cancel_artifact_inference(request.cancellation_id)?;
             echo(request)
         }
 
-        fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
+        async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
             WireArtifactInferenceRequest {
                 wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
                 owner: "s.test".into(),
@@ -1663,7 +1663,7 @@ pub mod app {
         }
 
         #[test]
-        fn request_rejects_unknown_wire_version_before_registry_lookup() {
+        async fn request_rejects_unknown_wire_version_before_registry_lookup() {
             let request = WireArtifactInferenceRequest {
                 wire_version: 1,
                 owner: "test".into(),
@@ -1692,7 +1692,7 @@ pub mod app {
         }
 
         #[test]
-        fn wire_execution_preserves_every_echoed_request_fact() {
+        async fn wire_execution_preserves_every_echoed_request_fact() {
             let mut registry = ArtifactInferenceServiceRegistry::new();
             registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo"), echo)).unwrap();
             let request = request("s.test.inference.echo");
@@ -1707,7 +1707,7 @@ pub mod app {
         }
 
         #[test]
-        fn wire_execution_observes_midflight_cancellation() {
+        async fn wire_execution_observes_midflight_cancellation() {
             let mut registry = ArtifactInferenceServiceRegistry::new();
             registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel"), cancel)).unwrap();
             let request = request("s.test.inference.cancel");
@@ -1727,17 +1727,17 @@ pub mod app {
 
     impl ArtifactDefinitionError {
         /// 🧾️ Creates a validation error at an artifact-definition boundary.
-        pub fn new(code: &'static str, message: impl Into<String>) -> Self {
+        pub async fn new(code: &'static str, message: impl Into<String>) -> Self {
             Self { code, message: message.into() }
         }
 
         /// 🏷️ Stable machine-readable failure identity.
-        pub fn code(&self) -> &'static str {
+        pub async fn code(&self) -> &'static str {
             self.code
         }
 
         /// 📝 Human-readable failure detail.
-        pub fn message(&self) -> &str {
+        pub async fn message(&self) -> &str {
             &self.message
         }
     }
@@ -1759,11 +1759,11 @@ pub mod app {
 
     impl PluginAssemblyError {
         /// 🏗️ Creates a codebase-owned assembly failure.
-        pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+        pub async fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
             Self { code: code.into(), message: message.into() }
         }
 
-        pub fn definition(error: ArtifactDefinitionError) -> Self {
+        pub async fn definition(error: ArtifactDefinitionError) -> Self {
             Self::new(error.code(), error.message().to_owned())
         }
     }
@@ -1786,7 +1786,7 @@ pub mod app {
     impl ArtifactIdentity {
         /// 🏗️ Parses a canonical identity whose segments contain only lower-case ASCII letters,
         /// digits, `_`, or `-`.
-        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let value = value.into();
             if value.is_empty() || value.starts_with('.') || value.ends_with('.') {
                 return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("identity {value:?} must contain non-empty dot-delimited segments")));
@@ -1799,76 +1799,76 @@ pub mod app {
         }
 
         /// 🧭️ Creates the exact canonical root identity for one stdio artifact.
-        pub fn stdio_artifact(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn stdio_artifact(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let artifact = artifact.as_ref();
             Self::validate_segment(artifact, "artifact")?;
             Self::parse(format!("s.stdio.{artifact}"))
         }
 
         /// 🏅️ Creates a canonical standard identity below this stdio artifact root.
-        pub fn standard(&self, revision: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn standard(&self, revision: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             self.stdio_artifact_child("standard", revision.as_ref())
         }
 
         /// 🪆️ Creates a canonical profile identity below a stdio standard.
-        pub fn profile(&self, profile: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn profile(&self, profile: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             self.stdio_standard_child("profile", profile.as_ref())
         }
 
         /// 🚪️ Creates a canonical source-dialect identity below a stdio standard.
-        pub fn source_dialect(&self, dialect: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn source_dialect(&self, dialect: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             self.stdio_standard_child("dialect", dialect.as_ref())
         }
 
         /// 🎭️ Creates a canonical representation identity below a stdio standard.
-        pub fn representation(&self, representation: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn representation(&self, representation: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             self.stdio_standard_child("representation", representation.as_ref())
         }
 
         /// 🗜️ Creates a canonical codec identity below a stdio standard.
-        pub fn codec(&self, codec: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn codec(&self, codec: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let codec = codec.as_ref();
             let version = version.as_ref();
             self.stdio_standard_child("codec", codec)?.child(Self::version(version)?)
         }
 
         /// 💡️ Creates a canonical inference identity below this stdio artifact root.
-        pub fn inference(&self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn inference(&self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let semantic_slug = semantic_slug.as_ref();
             let version = version.as_ref();
             self.stdio_artifact_child("inference", semantic_slug)?.child(Self::version(version)?)
         }
 
         /// 🧬️ Creates a canonical mutation identity below this stdio artifact root.
-        pub fn mutation(&self, semantic_command: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn mutation(&self, semantic_command: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let semantic_command = semantic_command.as_ref();
             let version = version.as_ref();
             self.stdio_artifact_child("mutation", semantic_command)?.child(Self::version(version)?)
         }
 
         /// 🧭️ Returns the canonical, stable serialized identity.
-        pub fn as_str(&self) -> &str {
+        pub async fn as_str(&self) -> &str {
             &self.value
         }
 
         /// 🌿️ Returns the validated path segments in hierarchical order.
-        pub fn segments(&self) -> &[String] {
+        pub async fn segments(&self) -> &[String] {
             &self.segments
         }
 
         /// 🌿️ Returns this identity extended by one validated segment.
-        pub fn child(&self, segment: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn child(&self, segment: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             let segment = segment.as_ref();
             Self::validate_segment(segment, "identity")?;
             Self::parse(format!("{}.{}", self.value, segment))
         }
 
         /// 🌳️ Whether `self` is the same identity as, or a descendant of, `ancestor`.
-        pub fn is_within(&self, ancestor: &Self) -> bool {
+        pub async fn is_within(&self, ancestor: &Self) -> bool {
             self.segments.len() >= ancestor.segments.len() && self.segments[..ancestor.segments.len()] == ancestor.segments[..]
         }
 
-        fn stdio_artifact_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
+        async fn stdio_artifact_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
             if !self.is_stdio_artifact() {
                 return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio artifact identity", self)));
             }
@@ -1876,7 +1876,7 @@ pub mod app {
             self.child(namespace)?.child(value)
         }
 
-        fn stdio_standard_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
+        async fn stdio_standard_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
             if !self.is_stdio_standard() {
                 return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio standard identity", self)));
             }
@@ -1884,22 +1884,22 @@ pub mod app {
             self.child(namespace)?.child(value)
         }
 
-        fn is_stdio_artifact(&self) -> bool {
+        async fn is_stdio_artifact(&self) -> bool {
             self.segments.len() == 3 && self.segments[0] == "s" && self.segments[1] == "stdio"
         }
 
-        fn is_stdio_standard(&self) -> bool {
+        async fn is_stdio_standard(&self) -> bool {
             self.segments.len() == 5 && self.segments[0] == "s" && self.segments[1] == "stdio" && self.segments[3] == "standard"
         }
 
-        fn validate_segment(value: &str, label: &str) -> Result<(), ArtifactDefinitionError> {
+        async fn validate_segment(value: &str, label: &str) -> Result<(), ArtifactDefinitionError> {
             if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')) {
                 return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("{label} segment {value:?} is not canonical")));
             }
             Ok(())
         }
 
-        fn version(value: &str) -> Result<&str, ArtifactDefinitionError> {
+        async fn version(value: &str) -> Result<&str, ArtifactDefinitionError> {
             if value.len() < 2 || !value.starts_with('v') || !value[1..].bytes().all(|byte| byte.is_ascii_digit()) {
                 return Err(ArtifactDefinitionError::new("artifact-definition.version", format!("version {value:?} must use the canonical vN form")));
             }
@@ -1919,88 +1919,88 @@ pub mod app {
 
     impl ArtifactCapabilityKind {
         /// 🏗️ Creates a canonical category identity.
-        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let identity = ArtifactIdentity::parse(value)?;
             Ok(Self(identity.value))
         }
 
         /// 🧬️ Schema capability category.
-        pub fn schema() -> Self {
+        pub async fn schema() -> Self {
             Self("schema".into())
         }
 
         /// 🏅️ Standard capability category.
-        pub fn standard() -> Self {
+        pub async fn standard() -> Self {
             Self("standard".into())
         }
 
         /// 🪆️ Profile capability category.
-        pub fn profile() -> Self {
+        pub async fn profile() -> Self {
             Self("profile".into())
         }
 
         /// 🚪️ Source-dialect capability category.
-        pub fn source_dialect() -> Self {
+        pub async fn source_dialect() -> Self {
             Self("source-dialect".into())
         }
 
         /// 🎭️ Representation capability category.
-        pub fn representation() -> Self {
+        pub async fn representation() -> Self {
             Self("representation".into())
         }
 
         /// 🗜️ Codec capability category.
-        pub fn codec() -> Self {
+        pub async fn codec() -> Self {
             Self("codec".into())
         }
 
         /// 🧬️ Mutation capability category.
-        pub fn mutation() -> Self {
+        pub async fn mutation() -> Self {
             Self("mutation".into())
         }
 
         /// 🧠️ Inference capability category.
-        pub fn inference() -> Self {
+        pub async fn inference() -> Self {
             Self("inference".into())
         }
 
         /// 📦️ Resource capability category.
-        pub fn resource() -> Self {
+        pub async fn resource() -> Self {
             Self("resource".into())
         }
 
         /// 🗺️ Localization capability category.
-        pub fn localization() -> Self {
+        pub async fn localization() -> Self {
             Self("localization".into())
         }
 
         /// ✅️ Conformance-suite capability category.
-        pub fn conformance_suite() -> Self {
+        pub async fn conformance_suite() -> Self {
             Self("conformance-suite".into())
         }
 
         /// 🧩️ Extension capability category.
-        pub fn extension() -> Self {
+        pub async fn extension() -> Self {
             Self("extension".into())
         }
 
         /// 📖️ Grammar capability category.
-        pub fn grammar() -> Self {
+        pub async fn grammar() -> Self {
             Self("grammar".into())
         }
 
         /// 🎹️ Composer capability category.
-        pub fn composer() -> Self {
+        pub async fn composer() -> Self {
             Self("composer".into())
         }
 
         /// 🧾️ Subset-validator capability category.
-        pub fn subset_validator() -> Self {
+        pub async fn subset_validator() -> Self {
             Self("subset-validator".into())
         }
 
         /// 🧭️ Returns the category's canonical identity.
-        pub fn as_str(&self) -> &str {
+        pub async fn as_str(&self) -> &str {
             &self.0
         }
     }
@@ -2011,52 +2011,52 @@ pub mod app {
 
     impl ArtifactIdentityNamespace {
         /// 🏗️ Creates a canonical namespace identity.
-        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             Ok(Self(ArtifactIdentity::parse(value)?.value))
         }
 
         /// 🗿️ Artifact identity namespace.
-        pub fn artifact() -> Self {
+        pub async fn artifact() -> Self {
             Self("artifact".into())
         }
 
         /// 🧬️ Schema identity namespace.
-        pub fn schema() -> Self {
+        pub async fn schema() -> Self {
             Self("schema".into())
         }
 
         /// 🚪️ Dialect identity namespace.
-        pub fn dialect() -> Self {
+        pub async fn dialect() -> Self {
             Self("dialect".into())
         }
 
         /// 🗜️ Codec identity namespace.
-        pub fn codec() -> Self {
+        pub async fn codec() -> Self {
             Self("codec".into())
         }
 
         /// 📮️ MIME identity namespace.
-        pub fn mime() -> Self {
+        pub async fn mime() -> Self {
             Self("mime".into())
         }
 
         /// 🗂️ File-extension identity namespace.
-        pub fn extension() -> Self {
+        pub async fn extension() -> Self {
             Self("extension".into())
         }
 
         /// 🧩️ Extension implementation identity namespace.
-        pub fn extension_implementation() -> Self {
+        pub async fn extension_implementation() -> Self {
             Self("extension-implementation".into())
         }
 
         /// 📖️ Grammar identity namespace.
-        pub fn grammar() -> Self {
+        pub async fn grammar() -> Self {
             Self("grammar".into())
         }
 
         /// 🧭️ Returns the namespace's canonical identity.
-        pub fn as_str(&self) -> &str {
+        pub async fn as_str(&self) -> &str {
             &self.0
         }
     }
@@ -2070,7 +2070,7 @@ pub mod app {
 
     impl ArtifactIdentityClaim {
         /// 🏗️ Creates a non-empty claim; caller-selectable namespaces keep this contract open.
-        pub fn new(namespace: ArtifactIdentityNamespace, value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn new(namespace: ArtifactIdentityNamespace, value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let value = value.into();
             if value.trim().is_empty() {
                 return Err(ArtifactDefinitionError::new("artifact-definition.claim", "identity claim values must be non-empty"));
@@ -2079,12 +2079,12 @@ pub mod app {
         }
 
         /// 🏷️ Returns the claim namespace.
-        pub fn namespace(&self) -> &ArtifactIdentityNamespace {
+        pub async fn namespace(&self) -> &ArtifactIdentityNamespace {
             &self.namespace
         }
 
         /// 🧭️ Returns the exact identity value; MIME and extension values are deliberately not rewritten.
-        pub fn value(&self) -> &str {
+        pub async fn value(&self) -> &str {
             &self.value
         }
     }
@@ -2095,7 +2095,7 @@ pub mod app {
 
     impl ArtifactLocale {
         /// 🏗️ Parses a lower-case BCP-47-like locale tag.
-        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let value = value.into();
             if value.is_empty() || value.starts_with('-') || value.ends_with('-') || value.contains("--") || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
                 return Err(ArtifactDefinitionError::new("artifact-definition.locale", format!("locale {value:?} must be an explicit lower-case BCP-47-like tag")));
@@ -2104,7 +2104,7 @@ pub mod app {
         }
 
         /// 🧭️ Returns the explicit locale tag.
-        pub fn as_str(&self) -> &str {
+        pub async fn as_str(&self) -> &str {
             &self.0
         }
     }
@@ -2118,7 +2118,7 @@ pub mod app {
 
     impl ArtifactLocalization {
         /// 🏗️ Creates localized text. Locale is mandatory and text must be non-empty.
-        pub fn new(locale: ArtifactLocale, text: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn new(locale: ArtifactLocale, text: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let text = text.into();
             if text.trim().is_empty() {
                 return Err(ArtifactDefinitionError::new("artifact-definition.localization", "localized text must be non-empty"));
@@ -2127,12 +2127,12 @@ pub mod app {
         }
 
         /// 🌐️ Returns the explicitly declared locale.
-        pub fn locale(&self) -> &ArtifactLocale {
+        pub async fn locale(&self) -> &ArtifactLocale {
             &self.locale
         }
 
         /// 📝 Returns localized text.
-        pub fn text(&self) -> &str {
+        pub async fn text(&self) -> &str {
             &self.text
         }
     }
@@ -2154,24 +2154,24 @@ pub mod app {
 
     impl ArtifactExecutableIdentity {
         /// 🧷️ Captures executable identity without exposing a runtime dependency type.
-        pub fn from_function(function: fn()) -> Self {
+        pub async fn from_function(function: fn()) -> Self {
             Self(function as usize)
         }
 
         /// 🧬️ Captures an actual typed function pointer erased to its process-local code address.
-        pub fn from_function_pointer(function: *const ()) -> Self {
+        pub async fn from_function_pointer(function: *const ()) -> Self {
             Self(function as usize)
         }
     }
 
     impl ArtifactCapability {
         /// 🏗️ Constructs a capability at a full hierarchical identity.
-        pub fn new(identity: ArtifactIdentity, kind: ArtifactCapabilityKind) -> Self {
+        pub async fn new(identity: ArtifactIdentity, kind: ArtifactCapabilityKind) -> Self {
             Self { identity, kind, descriptor: Vec::new(), executable_identity: None, claims: Vec::new(), localizations: Vec::new() }
         }
 
         /// 🧾️ Attaches the canonical byte descriptor whose exact bytes participate in idempotence.
-        pub fn descriptor(mut self, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn descriptor(mut self, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let descriptor = descriptor.into();
             if descriptor.is_empty() {
                 return Err(ArtifactDefinitionError::new("artifact-definition.descriptor", format!("capability {} has an empty descriptor", self.identity)));
@@ -2181,13 +2181,13 @@ pub mod app {
         }
 
         /// ⚙️ Attaches the non-capturing executable identity whose exact value participates in idempotence.
-        pub fn executable(mut self, identity: ArtifactExecutableIdentity) -> Self {
+        pub async fn executable(mut self, identity: ArtifactExecutableIdentity) -> Self {
             self.executable_identity = Some(identity);
             self
         }
 
         /// 📌️ Adds an exclusive external identity claim.
-        pub fn claim(mut self, claim: ArtifactIdentityClaim) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn claim(mut self, claim: ArtifactIdentityClaim) -> Result<Self, ArtifactDefinitionError> {
             if self.claims.contains(&claim) {
                 return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("capability {} repeats {}:{}", self.identity, claim.namespace.as_str(), claim.value)));
             }
@@ -2197,7 +2197,7 @@ pub mod app {
         }
 
         /// 🗺️ Adds localized text. An explicit locale can occur at most once per capability.
-        pub fn localization(mut self, localization: ArtifactLocalization) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn localization(mut self, localization: ArtifactLocalization) -> Result<Self, ArtifactDefinitionError> {
             if self.localizations.iter().any(|existing| existing.locale == localization.locale) {
                 return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-locale", format!("capability {} repeats locale {}", self.identity, localization.locale.as_str())));
             }
@@ -2207,32 +2207,32 @@ pub mod app {
         }
 
         /// 🪪️ Returns the hierarchical capability identity.
-        pub fn identity(&self) -> &ArtifactIdentity {
+        pub async fn identity(&self) -> &ArtifactIdentity {
             &self.identity
         }
 
         /// 🏷️ Returns the open-ended capability category.
-        pub fn kind(&self) -> &ArtifactCapabilityKind {
+        pub async fn kind(&self) -> &ArtifactCapabilityKind {
             &self.kind
         }
 
         /// 🧾️ Returns the exact canonical descriptor bytes.
-        pub fn descriptor_bytes(&self) -> &[u8] {
+        pub async fn descriptor_bytes(&self) -> &[u8] {
             &self.descriptor
         }
 
         /// ⚙️ Returns the optional executable identity.
-        pub fn executable_identity(&self) -> Option<ArtifactExecutableIdentity> {
+        pub async fn executable_identity(&self) -> Option<ArtifactExecutableIdentity> {
             self.executable_identity
         }
 
         /// 📌️ Returns deterministically ordered external identity claims.
-        pub fn claims(&self) -> &[ArtifactIdentityClaim] {
+        pub async fn claims(&self) -> &[ArtifactIdentityClaim] {
             &self.claims
         }
 
         /// 🗺️ Returns deterministically ordered localized descriptor text.
-        pub fn localizations(&self) -> &[ArtifactLocalization] {
+        pub async fn localizations(&self) -> &[ArtifactLocalization] {
             &self.localizations
         }
     }
@@ -2246,22 +2246,22 @@ pub mod app {
 
     impl ArtifactDefinition {
         /// 🧾️ Starts the one authoritative definition for a canonical stdio artifact.
-        pub fn stdio(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn stdio(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
             Ok(Self::new(ArtifactIdentity::stdio_artifact(artifact)?))
         }
 
         /// 🏗️ Starts an empty definition and claims its artifact identity.
-        pub fn new(identity: ArtifactIdentity) -> Self {
+        pub async fn new(identity: ArtifactIdentity) -> Self {
             Self { identity, capabilities: BTreeMap::new() }
         }
 
         /// 🪪️ Returns the definition's hierarchical artifact identity.
-        pub fn identity(&self) -> &ArtifactIdentity {
+        pub async fn identity(&self) -> &ArtifactIdentity {
             &self.identity
         }
 
         /// 🧩️ Adds one capability. Its identity must live below this definition's identity.
-        pub fn capability(mut self, capability: ArtifactCapability) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn capability(mut self, capability: ArtifactCapability) -> Result<Self, ArtifactDefinitionError> {
             if !capability.identity.is_within(&self.identity) || capability.identity == self.identity {
                 return Err(ArtifactDefinitionError::new("artifact-definition.capability-owner", format!("capability {} is not a descendant of artifact {}", capability.identity, self.identity)));
             }
@@ -2272,25 +2272,25 @@ pub mod app {
         }
 
         /// 🏅️ Declares a standard leaf in this artifact's plural definition.
-        pub fn standard(self, revision: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn standard(self, revision: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::standard(), descriptor)
         }
 
         /// 🪆️ Declares a profile leaf in this artifact's plural definition.
-        pub fn profile(self, revision: impl AsRef<str>, profile: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn profile(self, revision: impl AsRef<str>, profile: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.profile(profile)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::profile(), descriptor)
         }
 
         /// 🚪️ Declares a source-dialect leaf in this artifact's plural definition.
-        pub fn source_dialect(self, revision: impl AsRef<str>, dialect: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn source_dialect(self, revision: impl AsRef<str>, dialect: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.source_dialect(dialect)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::source_dialect(), descriptor)
         }
 
         /// 🎭️ Declares a representation leaf, optionally claiming its MIME identity.
-        pub fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.representation(representation)?;
             let capability = mime
                 .map(|mime| ArtifactCapability::new(identity.clone(), ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?))
@@ -2301,48 +2301,48 @@ pub mod app {
         }
 
         /// 🗜️ Declares a codec leaf in this artifact's plural definition.
-        pub fn codec(self, revision: impl AsRef<str>, codec: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn codec(self, revision: impl AsRef<str>, codec: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.standard(revision)?.codec(codec, version)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::codec(), descriptor)
         }
 
         /// 🧬️ Declares a semantic mutation leaf in this artifact's plural definition.
-        pub fn mutation(self, command: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn mutation(self, command: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.mutation(command, version)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::mutation(), descriptor)
         }
 
         /// 💡️ Declares an atomic inference leaf in this artifact's plural definition.
-        pub fn inference(self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn inference(self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.inference(semantic_slug, version)?;
             self.stdio_capability(identity, ArtifactCapabilityKind::inference(), descriptor)
         }
 
         /// 📦️ Declares an open resource-policy leaf in this artifact's plural definition.
-        pub fn resource(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn resource(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.child("resource")?.child(name.as_ref())?;
             self.stdio_capability(identity, ArtifactCapabilityKind::resource(), descriptor)
         }
 
         /// 🗺️ Declares an explicit locale leaf in this artifact's plural definition.
-        pub fn localization(self, locale: ArtifactLocale, text: impl Into<String>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn localization(self, locale: ArtifactLocale, text: impl Into<String>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let capability = ArtifactCapability::new(self.identity.child("localization")?.child(locale.as_str())?, ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(locale, text)?)?.descriptor(descriptor)?;
             self.capability(capability)
         }
 
         /// ✅️ Declares a conformance-suite leaf in this artifact's plural definition.
-        pub fn conformance_suite(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn conformance_suite(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             let identity = self.identity.child("conformance-suite")?.child(name.as_ref())?;
             self.stdio_capability(identity, ArtifactCapabilityKind::conformance_suite(), descriptor)
         }
 
         /// 📚️ Returns capabilities in stable hierarchical order.
-        pub fn capabilities(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn capabilities(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities.values()
         }
 
         /// 🔐️ Requires one exact immutable capability before runtime registration.
-        pub fn require_declared_capability(&self, kind: &ArtifactCapabilityKind, id: &ArtifactIdentity, claims: &[ArtifactIdentityClaim], descriptor: Option<&[u8]>) -> Result<&ArtifactCapability, ArtifactDefinitionError> {
+        pub async fn require_declared_capability(&self, kind: &ArtifactCapabilityKind, id: &ArtifactIdentity, claims: &[ArtifactIdentityClaim], descriptor: Option<&[u8]>) -> Result<&ArtifactCapability, ArtifactDefinitionError> {
             let capability = self.capabilities.get(id).ok_or_else(|| ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("runtime registration names undeclared capability {id}")))?;
             if capability.kind != *kind {
                 return Err(ArtifactDefinitionError::new("artifact-definition.runtime-category", format!("runtime registration for {id} requires {}, declared {}", kind.as_str(), capability.kind.as_str())));
@@ -2361,62 +2361,62 @@ pub mod app {
         }
 
         /// 🧩️ Returns capabilities belonging to one open-ended category in stable identity order.
-        pub fn capabilities_of<'a>(&'a self, kind: &'a ArtifactCapabilityKind) -> impl Iterator<Item = &'a ArtifactCapability> {
+        pub async fn capabilities_of<'a>(&'a self, kind: &'a ArtifactCapabilityKind) -> impl Iterator<Item = &'a ArtifactCapability> {
             self.capabilities().filter(move |capability| capability.kind() == kind)
         }
 
         /// 🏅️ Returns every standard leaf in stable identity order.
-        pub fn standards(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn standards(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "standard")
         }
 
         /// 🪆️ Returns every profile leaf in stable identity order.
-        pub fn profiles(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn profiles(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "profile")
         }
 
         /// 🚪️ Returns every source-dialect leaf in stable identity order.
-        pub fn source_dialects(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn source_dialects(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "source-dialect")
         }
 
         /// 🎭️ Returns every representation leaf in stable identity order.
-        pub fn representations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn representations(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "representation")
         }
 
         /// 🗜️ Returns every codec leaf in stable identity order.
-        pub fn codecs(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn codecs(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "codec")
         }
 
         /// 🧬️ Returns every mutation leaf in stable identity order.
-        pub fn mutations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn mutations(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "mutation")
         }
 
         /// 💡️ Returns every inference leaf in stable identity order.
-        pub fn inferences(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn inferences(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "inference")
         }
 
         /// 📦️ Returns every resource-policy leaf in stable identity order.
-        pub fn resources(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn resources(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "resource")
         }
 
         /// 🗺️ Returns every localization leaf in stable identity order.
-        pub fn localizations(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn localizations(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "localization")
         }
 
         /// ✅️ Returns every conformance-suite leaf in stable identity order.
-        pub fn conformance_suites(&self) -> impl Iterator<Item = &ArtifactCapability> {
+        pub async fn conformance_suites(&self) -> impl Iterator<Item = &ArtifactCapability> {
             self.capabilities().filter(|capability| capability.kind().as_str() == "conformance-suite")
         }
 
         /// 🛡️ Validates identity ownership and all claims before registration mutates a registry.
-        pub fn validate(&self) -> Result<(), ArtifactDefinitionError> {
+        pub async fn validate(&self) -> Result<(), ArtifactDefinitionError> {
             let mut claims = BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
             for capability in self.capabilities() {
                 if !capability.identity.is_within(&self.identity) || capability.identity == self.identity {
@@ -2435,7 +2435,7 @@ pub mod app {
             Ok(())
         }
 
-        fn validate_capability_identity(&self, capability: &ArtifactCapability) -> Result<(), ArtifactDefinitionError> {
+        async fn validate_capability_identity(&self, capability: &ArtifactCapability) -> Result<(), ArtifactDefinitionError> {
             if !self.identity.is_stdio_artifact() {
                 return Ok(());
             }
@@ -2466,11 +2466,11 @@ pub mod app {
             }
         }
 
-        fn stdio_capability(self, identity: ArtifactIdentity, kind: ArtifactCapabilityKind, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
+        async fn stdio_capability(self, identity: ArtifactIdentity, kind: ArtifactCapabilityKind, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
             self.capability(ArtifactCapability::new(identity, kind).descriptor(descriptor)?)
         }
 
-        fn identical_to(&self, other: &Self) -> bool {
+        async fn identical_to(&self, other: &Self) -> bool {
             self.identity == other.identity && self.capabilities == other.capabilities
         }
     }
@@ -2481,7 +2481,7 @@ pub mod app {
 
     impl ArtifactMime {
         /// 🏗️ Parses a lower-case ASCII `type/subtype` MIME identity.
-        pub fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
+        pub async fn parse(value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let value = value.into();
             let mut segments = value.split('/');
             let Some(kind) = segments.next() else {
@@ -2498,7 +2498,7 @@ pub mod app {
         }
 
         /// 🧭️ Returns the exact MIME identity.
-        pub fn as_str(&self) -> &str {
+        pub async fn as_str(&self) -> &str {
             &self.0
         }
     }
@@ -2517,12 +2517,12 @@ pub mod app {
 
     impl ArtifactDefinitionRegistry {
         /// 🏗️ Creates an empty artifact-definition registry.
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { definitions: BTreeMap::new(), claims: BTreeMap::new() }
         }
 
         /// 🛡️ Registers exactly one new definition or rejects it without partial mutation.
-        pub fn register(&mut self, definition: ArtifactDefinition) -> Result<(), ArtifactDefinitionError> {
+        pub async fn register(&mut self, definition: ArtifactDefinition) -> Result<(), ArtifactDefinitionError> {
             definition.validate()?;
             if let Some(existing) = self.definitions.get(definition.identity()) {
                 if existing.identical_to(&definition) {
@@ -2554,28 +2554,28 @@ pub mod app {
         }
 
         /// 🔎️ Resolves a definition by its artifact identity.
-        pub fn get(&self, identity: &ArtifactIdentity) -> Option<&ArtifactDefinition> {
+        pub async fn get(&self, identity: &ArtifactIdentity) -> Option<&ArtifactDefinition> {
             self.definitions.get(identity)
         }
 
         /// 🔢 Returns the number of registered artifact definitions.
-        pub fn len(&self) -> usize {
+        pub async fn len(&self) -> usize {
             self.definitions.len()
         }
 
         /// 📭️ Whether no definitions are registered.
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.definitions.is_empty()
         }
 
         /// 🚶️ Walks definitions in deterministic hierarchical identity order.
-        pub fn definitions(&self) -> impl Iterator<Item = &ArtifactDefinition> {
+        pub async fn definitions(&self) -> impl Iterator<Item = &ArtifactDefinition> {
             self.definitions.values()
         }
     }
 
     /// 🔐️ Locates the one immutable typed capability whose complete claim set authorizes a runtime facet.
-    fn require_declared_capability_or_record(definition: &ArtifactDefinition, definition_error: &mut Option<ArtifactDefinitionError>, kind: ArtifactCapabilityKind, claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>) {
+    async fn require_declared_capability_or_record(definition: &ArtifactDefinition, definition_error: &mut Option<ArtifactDefinitionError>, kind: ArtifactCapabilityKind, claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>) {
         if definition_error.is_some() {
             return;
         }
@@ -2640,18 +2640,18 @@ pub mod app {
     }
 
     impl ArtifactRuntimeCapabilityRequirement {
-        fn new(kind: ArtifactCapabilityKind, mut claims: Vec<ArtifactIdentityClaim>) -> Self {
+        async fn new(kind: ArtifactCapabilityKind, mut claims: Vec<ArtifactIdentityClaim>) -> Self {
             claims.sort();
             Self { kind, claims }
         }
 
         /// 🏷️ Returns the strict runtime capability category.
-        pub fn kind(&self) -> &ArtifactCapabilityKind {
+        pub async fn kind(&self) -> &ArtifactCapabilityKind {
             &self.kind
         }
 
         /// 🧷️ Returns the complete canonical claim set; partial matches are never valid.
-        pub fn claims(&self) -> &[ArtifactIdentityClaim] {
+        pub async fn claims(&self) -> &[ArtifactIdentityClaim] {
             &self.claims
         }
     }
@@ -2684,7 +2684,7 @@ pub mod app {
 
     impl ArtifactDeclaration {
         /// 🪪️ Starts a declaration from its one authoritative artifact definition.
-        pub fn builder(definition: ArtifactDefinition) -> ArtifactDeclarationBuilder<NeedsSchema> {
+        pub async fn builder(definition: ArtifactDefinition) -> ArtifactDeclarationBuilder<NeedsSchema> {
             let kind = definition.identity().as_str().to_string();
             ArtifactDeclarationBuilder {
                 kind,
@@ -2710,7 +2710,7 @@ pub mod app {
     impl ArtifactDeclarationBuilder<NeedsSchema> {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
-        pub fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+        pub async fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
             require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).map(|claim| vec![claim]));
             ArtifactDeclarationBuilder {
                 kind: self.kind,
@@ -2735,12 +2735,12 @@ pub mod app {
 
     impl ArtifactDeclarationBuilder<DeclarationReady> {
         /// 🧾️ Lists exact runtime capability rows without attempting plugin assembly.
-        pub fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
+        pub async fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
             runtime_capability_requirements(&self.schemas, &self.inferences, &self.inference_services, &self.composers, &self.formats, &self.subset_validators, &self.languages, &self.document_codecs)
         }
 
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
-        pub fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+        pub async fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.schemas.push(item);
@@ -2749,7 +2749,7 @@ pub mod app {
         }
 
         /// 💡️ Appends inference descriptors for transactional registration. Repeatable.
-        pub fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+        pub async fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::inference(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.inferences.push(item);
@@ -2759,7 +2759,7 @@ pub mod app {
 
         /// 🧠️ Appends executable native inference services. Each service is ownership- and
         /// schema-checked against this declaration before deterministic registry insertion.
-        pub fn inference_services(mut self, items: impl IntoIterator<Item = ArtifactInferenceService>) -> Self {
+        pub async fn inference_services(mut self, items: impl IntoIterator<Item = ArtifactInferenceService>) -> Self {
             for service in items {
                 let metadata = service.metadata();
                 require_declared_capability_or_record(
@@ -2774,7 +2774,7 @@ pub mod app {
         }
 
         /// 🎹️ Appends this artifact's composer table for transactional registration.
-        pub fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
+        pub async fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -2788,7 +2788,7 @@ pub mod app {
         }
 
         /// 🗂️ Appends format rows (`register_format_descriptors`).
-        pub fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+        pub async fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
             for row in rows {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -2806,7 +2806,7 @@ pub mod app {
         }
 
         /// 🧾️ Appends this artifact's subset-validator table (`register_subset_validator`, one call per entry).
-        pub fn subset_validators(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
+        pub async fn subset_validators(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -2820,7 +2820,7 @@ pub mod app {
         }
 
         /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
-        pub fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
+        pub async fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
             for spec in specs {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::grammar(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id).map(|claim| vec![claim]));
             }
@@ -2831,7 +2831,7 @@ pub mod app {
         /// 🗂️ Declares the document codec for one document-owning `ArtifactApp`
         /// (`register_document_codec_for_app::<A>`, keyed by `A::DOCUMENT_SCHEMA`). Repeatable:
         /// every schema-owned codec is retained and conflict-checked before runtime registration.
-        pub fn document_codec<A: ArtifactApp>(mut self) -> Self {
+        pub async fn document_codec<A: ArtifactApp>(mut self) -> Self {
             let codec = DocumentCodecSpec::of::<A>();
             require_declared_capability_or_record(
                 &self.definition,
@@ -2850,7 +2850,7 @@ pub mod app {
         /// headless library plugin (energy's `EnergyModelSnapshot`/`EnergyModelMutation` is the
         /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`; it appends
         /// to the same plural codec capability set as `.document_codec::<A>()`.
-        pub fn document_codec_bare<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
+        pub async fn document_codec_bare<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
         where
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
@@ -2867,7 +2867,7 @@ pub mod app {
         }
 
         /// 🧭️ Appends dialect migrations for transactional registration.
-        pub fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
+        pub async fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
             self.migrations.extend(items);
             self
         }
@@ -2876,7 +2876,7 @@ pub mod app {
         /// ONLY way to set them (UCAS review, 2026-08-12: a hand-written list could silently disagree
         /// with the `#[derive(ArtifactSchema)]`-emitted impl the composition runtime actually reads,
         /// so there is deliberately no other setter).
-        pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
+        pub async fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
             self.child_slots = Snapshot::child_slots();
             self.link_slots = Snapshot::link_slots();
             self
@@ -2885,7 +2885,7 @@ pub mod app {
         /// 🔒️ Declares a capability requirement owned by this artifact (unioned into
         /// `PluginManifest.capabilities` at assembly time) — IO is artifact-owned, so an artifact
         /// that reads assets declares this on itself, not on the plugin.
-        pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
+        pub async fn capability(mut self, capability: CapabilityRequirement) -> Self {
             if !self.capabilities.contains(&capability) {
                 self.capabilities.push(capability);
             }
@@ -2893,7 +2893,7 @@ pub mod app {
         }
 
         /// ✅️ Validates the declaration-local contract before assembly.
-        pub fn try_build(self) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
+        pub async fn try_build(self) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
             if let Some(error) = self.definition_error {
                 return Err(error);
             }
@@ -2934,15 +2934,15 @@ pub mod app {
     }
 
     impl DocumentCodecSpec {
-        fn of<A: ArtifactApp>() -> Self {
-            fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
+        async fn of<A: ArtifactApp>() -> Self {
+            async fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
                 store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
             }
             DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }
         }
 
-        pub(crate) fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self {
-            fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
+        pub(crate) async fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self {
+            async fn codec<A: ArtifactApp>(schema: String) -> store::ArtifactCodec {
                 store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
             }
             DocumentCodecSpec { schema: schema.into(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }
@@ -2951,12 +2951,12 @@ pub mod app {
         /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
         /// exists. Registers straight against `store::register_document_codec`, bypassing
         /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
-        fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
+        async fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
         where
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec
+            async fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec
             where
                 Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
                 Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
@@ -2966,11 +2966,11 @@ pub mod app {
             DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: "", foreign: false }
         }
 
-        fn codec(&self) -> store::ArtifactCodec {
+        async fn codec(&self) -> store::ArtifactCodec {
             (self.codec)(self.schema.clone())
         }
 
-        pub(crate) fn preflight_foreign(&self, document_app_ids: &BTreeSet<&'static str>) -> Result<(), PluginAssemblyError> {
+        pub(crate) async fn preflight_foreign(&self, document_app_ids: &BTreeSet<&'static str>) -> Result<(), PluginAssemblyError> {
             if !self.foreign {
                 return Ok(());
             }
@@ -2984,7 +2984,7 @@ pub mod app {
         }
     }
 
-    fn runtime_capability_requirements(
+    async fn runtime_capability_requirements(
         schemas: &[::semio_framework_schema::ArtifactSchemaDescriptor],
         inferences: &[::semio_framework_schema::ArtifactInferenceDescriptor],
         inference_services: &[ArtifactInferenceService],
@@ -3036,19 +3036,19 @@ pub mod app {
 
     impl ArtifactDeclaration {
         /// 📚️ Returns this declaration's one authoritative artifact definition.
-        pub fn definition(&self) -> &ArtifactDefinition {
+        pub async fn definition(&self) -> &ArtifactDefinition {
             &self.definition
         }
 
         /// 🧾️ Lists every exact runtime capability required by this immutable declaration.
-        pub fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
+        pub async fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
             runtime_capability_requirements(&self.schemas, &self.inferences, &self.inference_services, &self.composers, &self.formats, &self.subset_validators, &self.languages, &self.document_codecs)
         }
 
         /// 🛡️ Inserts every attached definition into a caller-owned plugin registry. The caller
         /// owns the transaction boundary so independently declared artifacts are checked together
         /// before any runtime registration can mutate its legacy registry.
-        pub(crate) fn register_definitions(&self, registry: &mut ArtifactDefinitionRegistry) -> Result<(), ArtifactDefinitionError> {
+        pub(crate) async fn register_definitions(&self, registry: &mut ArtifactDefinitionRegistry) -> Result<(), ArtifactDefinitionError> {
             if let Some(error) = &self.definition_error {
                 return Err(error.clone());
             }
@@ -3057,7 +3057,7 @@ pub mod app {
         }
 
         /// 🛡️ Validates this declaration into one plugin-owned registry without side effects.
-        pub(crate) fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
+        pub(crate) async fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
             self.register_definitions(definitions).map_err(PluginAssemblyError::definition)?;
             if let Ok(canonical) = ArtifactKindId::parse(&self.kind) {
                 if canonical.plugin() != plugin_id {
@@ -3095,7 +3095,7 @@ pub mod app {
         }
 
         /// 🏗️ Adds this declaration's manifest capabilities after registration-plan commit.
-        pub(crate) fn apply_to(self, plugin: Plugin) -> Plugin {
+        pub(crate) async fn apply_to(self, plugin: Plugin) -> Plugin {
             self.capabilities.into_iter().fold(plugin, |plugin, capability| plugin.capability(capability))
         }
     }
@@ -3115,7 +3115,7 @@ pub mod app {
     }
 
     impl HostMediaHandlerKind {
-        fn as_str(self) -> &'static str {
+        async fn as_str(self) -> &'static str {
             match self {
                 Self::MeshDwgBridge => "mesh-dwg-bridge",
                 Self::TwoDSvgExport => "2d-svg-export",
@@ -3161,7 +3161,7 @@ pub mod app {
 
     impl HostMediaHandlerDeclaration {
         /// 🏗️ Describes one mesh-DWG bridge without invoking its converter during assembly.
-        pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+        pub async fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::MeshDwgBridge,
@@ -3175,7 +3175,7 @@ pub mod app {
         }
 
         /// 🏗️ Describes one 2D SVG renderer without invoking it during assembly.
-        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+        pub async fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::TwoDSvgExport,
@@ -3189,19 +3189,19 @@ pub mod app {
         }
 
         /// 🪪️ Returns the stable contribution id.
-        pub fn id(&self) -> &str {
+        pub async fn id(&self) -> &str {
             self.id.as_str()
         }
 
         /// ⚙️ Returns the complete executable identity used for idempotence and conflict rejection.
-        pub fn executable_identity(&self) -> HostMediaExecutableIdentity {
+        pub async fn executable_identity(&self) -> HostMediaExecutableIdentity {
             match self.executable {
                 HostMediaExecutable::MeshDwgBridge(importer) => HostMediaExecutableIdentity::MeshDwgBridge(importer as usize),
                 HostMediaExecutable::TwoDSvgExport(renderer) => HostMediaExecutableIdentity::TwoDSvgExport(renderer as usize),
             }
         }
 
-        fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
+        async fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
             if self.artifact_kind.id.trim().is_empty() || self.artifact_kind.schema.trim().is_empty() || self.document_schema.trim().is_empty() {
                 return Err(PluginAssemblyError::new("plugin-assembly.host-media-shape", "host-media contributions require non-empty artifact kind and document schema"));
             }
@@ -3217,7 +3217,7 @@ pub mod app {
             Ok(())
         }
 
-        pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+        pub(crate) async fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
             ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
             self.validate_shape()?;
             let declared = declared_media_kinds
@@ -3229,7 +3229,7 @@ pub mod app {
             Ok(())
         }
 
-        fn descriptor(&self, owner: &str) -> HostMediaHandlerDescriptor {
+        async fn descriptor(&self, owner: &str) -> HostMediaHandlerDescriptor {
             HostMediaHandlerDescriptor {
                 id: self.id.as_str().to_string(),
                 owner: owner.to_string(),
@@ -3299,7 +3299,7 @@ pub mod app {
 
     impl FlowExtensionExecutableIdentity {
         /// 🏗️ Names a native executable entry without accepting an installer callback.
-        pub fn native(package_id: impl Into<String>, module_id: impl Into<String>, entrypoint: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+        pub async fn native(package_id: impl Into<String>, module_id: impl Into<String>, entrypoint: impl Into<String>) -> Result<Self, PluginAssemblyError> {
             let identity = Self { package_id: package_id.into(), module_id: module_id.into(), entrypoint: entrypoint.into(), abi: "semio.flow.extension.native.v1".into() };
             for value in [&identity.package_id, &identity.module_id, &identity.entrypoint, &identity.abi] {
                 ArtifactIdentity::parse(value.clone()).map_err(PluginAssemblyError::definition)?;
@@ -3327,7 +3327,7 @@ pub mod app {
 
     impl FlowExtensionContribution {
         /// 🏗️ Creates one non-empty typed flow-extension contribution identity.
-        pub fn new(kind: FlowExtensionContributionKind, id: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+        pub async fn new(kind: FlowExtensionContributionKind, id: impl Into<String>) -> Result<Self, PluginAssemblyError> {
             let id = id.into();
             ArtifactIdentity::parse(id.clone()).map_err(PluginAssemblyError::definition)?;
             Ok(Self { kind, id })
@@ -3346,14 +3346,14 @@ pub mod app {
 
     impl FlowExtensionManifest {
         /// 🏗️ Creates a typed flow-extension manifest with an explicit startup activation.
-        pub fn new(id: impl Into<String>, name: impl Into<String>, version: impl Into<String>) -> Result<Self, PluginAssemblyError> {
+        pub async fn new(id: impl Into<String>, name: impl Into<String>, version: impl Into<String>) -> Result<Self, PluginAssemblyError> {
             let manifest = Self { id: id.into(), name: name.into(), version: version.into(), activation_events: vec!["onStartup".into()], contributions: Vec::new() };
             manifest.validate()?;
             Ok(manifest)
         }
 
         /// 🧩️ Adds one typed contribution to this immutable descriptor.
-        pub fn contribution(mut self, contribution: FlowExtensionContribution) -> Result<Self, PluginAssemblyError> {
+        pub async fn contribution(mut self, contribution: FlowExtensionContribution) -> Result<Self, PluginAssemblyError> {
             if self.contributions.iter().any(|candidate| candidate.kind == contribution.kind && candidate.id == contribution.id) {
                 return Ok(self);
             }
@@ -3361,7 +3361,7 @@ pub mod app {
             Ok(self)
         }
 
-        fn validate(&self) -> Result<(), PluginAssemblyError> {
+        async fn validate(&self) -> Result<(), PluginAssemblyError> {
             ArtifactIdentity::parse(self.id.clone()).map_err(PluginAssemblyError::definition)?;
             if self.name.trim().is_empty() || self.version.trim().is_empty() || self.activation_events.iter().any(|event| event.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("plugin-assembly.flow-extension-manifest", "flow extension manifests require non-empty name, version, and activation events"));
@@ -3400,27 +3400,27 @@ pub mod app {
 
     impl FlowExtensionDeclaration {
         /// 🏗️ Declares a `flow.extension` manifest and its immutable native executable identity.
-        pub fn new(id: impl Into<String>, manifest: FlowExtensionManifest, executable_identity: FlowExtensionExecutableIdentity) -> Result<Self, PluginAssemblyError> {
+        pub async fn new(id: impl Into<String>, manifest: FlowExtensionManifest, executable_identity: FlowExtensionExecutableIdentity) -> Result<Self, PluginAssemblyError> {
             let declaration = Self { id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, extension_id: ArtifactIdentity::parse(manifest.id.clone()).map_err(PluginAssemblyError::definition)?, manifest, executable_identity };
             declaration.validate_shape()?;
             Ok(declaration)
         }
 
         /// 🪪️ Returns the stable contribution id.
-        pub fn id(&self) -> &str {
+        pub async fn id(&self) -> &str {
             self.id.as_str()
         }
 
-        fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
+        async fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
             self.manifest.validate()
         }
 
-        pub(crate) fn preflight(&self, owner: &str) -> Result<(), PluginAssemblyError> {
+        pub(crate) async fn preflight(&self, owner: &str) -> Result<(), PluginAssemblyError> {
             ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
             self.validate_shape()
         }
 
-        fn descriptor(&self, owner: &str) -> FlowExtensionDescriptor {
+        async fn descriptor(&self, owner: &str) -> FlowExtensionDescriptor {
             FlowExtensionDescriptor {
                 id: self.id.as_str().to_string(),
                 owner: owner.to_string(),
@@ -3439,7 +3439,7 @@ pub mod app {
     }
 
     impl RegisteredHostMediaHandler {
-        fn identical_to(&self, other: &Self) -> bool {
+        async fn identical_to(&self, other: &Self) -> bool {
             self.descriptor == other.descriptor
                 && match (self.executable, other.executable) {
                     (HostMediaExecutable::MeshDwgBridge(left), HostMediaExecutable::MeshDwgBridge(right)) => std::ptr::fn_addr_eq(left, right),
@@ -3455,11 +3455,11 @@ pub mod app {
     }
 
     impl HostMediaHandlerRegistry {
-        fn new() -> Self {
+        async fn new() -> Self {
             Self { by_id: BTreeMap::new(), by_target: BTreeMap::new() }
         }
 
-        fn from_declarations(owner: &str, declarations: &[HostMediaHandlerDeclaration]) -> Result<Self, PluginAssemblyError> {
+        async fn from_declarations(owner: &str, declarations: &[HostMediaHandlerDeclaration]) -> Result<Self, PluginAssemblyError> {
             let mut registry = Self::new();
             for declaration in declarations {
                 registry.register(owner, declaration)?;
@@ -3467,7 +3467,7 @@ pub mod app {
             Ok(registry)
         }
 
-        fn register(&mut self, owner: &str, declaration: &HostMediaHandlerDeclaration) -> Result<(), PluginAssemblyError> {
+        async fn register(&mut self, owner: &str, declaration: &HostMediaHandlerDeclaration) -> Result<(), PluginAssemblyError> {
             let descriptor = declaration.descriptor(owner);
             let entry = RegisteredHostMediaHandler { descriptor: descriptor.clone(), executable: declaration.executable };
             if let Some(existing) = self.by_id.get(&descriptor.id) {
@@ -3485,11 +3485,11 @@ pub mod app {
             Ok(())
         }
 
-        fn descriptors(&self) -> Vec<HostMediaHandlerDescriptor> {
+        async fn descriptors(&self) -> Vec<HostMediaHandlerDescriptor> {
             self.by_id.values().map(|entry| entry.descriptor.clone()).collect()
         }
 
-        fn mesh_dwg_bridge(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
+        async fn mesh_dwg_bridge(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
             let entry = self.lookup(HostMediaHandlerKind::MeshDwgBridge, &request.artifact_kind, &request.document_schema)?;
             let HostMediaExecutable::MeshDwgBridge(importer) = entry.executable else {
                 return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no mesh-DWG executable", request.artifact_kind) });
@@ -3497,7 +3497,7 @@ pub mod app {
             importer(&request.mesh).map(|document| MeshDwgBridgeResult { document }).map_err(|message| HostMediaRuntimeError { code: "host-media.mesh-dwg".into(), message })
         }
 
-        fn two_d_svg_export(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
+        async fn two_d_svg_export(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
             let entry = self.lookup(HostMediaHandlerKind::TwoDSvgExport, &request.artifact_kind, &request.document_schema)?;
             let HostMediaExecutable::TwoDSvgExport(renderer) = entry.executable else {
                 return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no 2D SVG executable", request.artifact_kind) });
@@ -3506,7 +3506,7 @@ pub mod app {
             Ok(TwoDSvgExportResult { file_stem: entry.descriptor.file_stem.clone().expect("2D SVG declaration requires a file stem"), svg, width, height })
         }
 
-        fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
+        async fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
             let id =
                 self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind.as_str(), artifact_kind) })?;
             let entry = self.by_id.get(id).expect("host-media target index always points to an entry");
@@ -3526,11 +3526,11 @@ pub mod app {
     }
 
     impl FlowExtensionRegistry {
-        fn new() -> Self {
+        async fn new() -> Self {
             Self { by_id: BTreeMap::new(), by_extension_id: BTreeMap::new() }
         }
 
-        fn from_declarations(owner: &str, declarations: &[FlowExtensionDeclaration]) -> Result<Self, PluginAssemblyError> {
+        async fn from_declarations(owner: &str, declarations: &[FlowExtensionDeclaration]) -> Result<Self, PluginAssemblyError> {
             let mut registry = Self::new();
             for declaration in declarations {
                 registry.register(owner, declaration)?;
@@ -3538,7 +3538,7 @@ pub mod app {
             Ok(registry)
         }
 
-        fn register(&mut self, owner: &str, declaration: &FlowExtensionDeclaration) -> Result<(), PluginAssemblyError> {
+        async fn register(&mut self, owner: &str, declaration: &FlowExtensionDeclaration) -> Result<(), PluginAssemblyError> {
             let descriptor = declaration.descriptor(owner);
             if let Some(existing) = self.by_id.get(&descriptor.id) {
                 if existing == &descriptor {
@@ -3554,7 +3554,7 @@ pub mod app {
             Ok(())
         }
 
-        fn descriptors(&self) -> Vec<FlowExtensionDescriptor> {
+        async fn descriptors(&self) -> Vec<FlowExtensionDescriptor> {
             self.by_id.values().cloned().collect()
         }
     }
@@ -3578,7 +3578,7 @@ pub mod app {
     }
 
     impl ArtifactRegistrationPlan {
-        pub(crate) fn from_declarations(
+        pub(crate) async fn from_declarations(
             declarations: &[ArtifactDeclaration],
             app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
             foreign_document_codecs: Vec<DocumentCodecSpec>,
@@ -3617,7 +3617,7 @@ pub mod app {
         }
 
         /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
-        pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
+        pub(crate) async fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
             let Self { schemas, inferences, inference_services: declared_inference_services, formats, subset_validators, composers, languages, document_codecs, migrations, app_schemas, owner, host_media_handlers, flow_extensions } = self;
             let mut inference_services = ArtifactInferenceServiceRegistry::new();
             for service in &declared_inference_services {
@@ -3660,7 +3660,7 @@ pub mod app {
     }
 
     impl PluginRuntimeRegistry {
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self {
                 definitions: ArtifactDefinitionRegistry::new(),
                 schemas: Vec::new(),
@@ -3675,16 +3675,16 @@ pub mod app {
             }
         }
 
-        fn inference_services(&self) -> &ArtifactInferenceServiceRegistry {
+        async fn inference_services(&self) -> &ArtifactInferenceServiceRegistry {
             &self.inference_services
         }
 
         /// 🧾️ Reads the immutable definitions published by this plugin assembly.
-        pub fn definitions(&self) -> &ArtifactDefinitionRegistry {
+        pub async fn definitions(&self) -> &ArtifactDefinitionRegistry {
             &self.definitions
         }
 
-        pub(crate) fn extend_contributions(
+        pub(crate) async fn extend_contributions(
             &mut self,
             inference_services: Vec<ArtifactInferenceService>,
             owner_rosters: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])],
@@ -3718,14 +3718,14 @@ pub mod app {
             Ok(())
         }
 
-        fn mutation_roster_entries(&self) -> Vec<WireMutationRosterEntry> {
+        async fn mutation_roster_entries(&self) -> Vec<WireMutationRosterEntry> {
             let mut entries: Vec<_> = self.owner_mutations.values().cloned().collect();
             entries.extend(self.contributed_mutations.values().map(|entry| entry.roster.clone()));
             entries.sort_by(|left, right| left.mutation_id.cmp(&right.mutation_id));
             entries
         }
 
-        fn contributed_mutation_plan(&self, mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
+        async fn contributed_mutation_plan(&self, mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
             let entry = self.contributed_mutations.get(mutation_id).ok_or_else(|| ContributedMutationExecutionError::new("artifact-mutation.not-registered", format!("no contributed mutation service for {mutation_id:?}")))?;
             if entry.roster.artifact_kind.as_deref() != Some(artifact_kind) {
                 return Err(ContributedMutationExecutionError::new("artifact-mutation.artifact-kind-mismatch", format!("mutation {mutation_id:?} targets {:?}, request claims {artifact_kind:?}", entry.roster.artifact_kind)));
@@ -3735,7 +3735,7 @@ pub mod app {
     }
 
     /// 📌️ Atomically commits all external IO/store registry rows after the local runtime is frozen.
-    pub(crate) fn commit_artifact_registration_plan(assembly: &store::ArtifactAssemblyTransaction, plan: semio_framework::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
+    pub(crate) async fn commit_artifact_registration_plan(assembly: &store::ArtifactAssemblyTransaction, plan: semio_framework::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
         semio_framework::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
     }
     //#endregion 🔖️ArtifactDeclaration
@@ -3768,7 +3768,7 @@ pub mod app {
 
     impl ArtifactContribution {
         /// 🪪️ Starts a contribution targeting one artifact kind owned by a plugin dependency.
-        pub fn builder(artifact_kind: impl Into<String>) -> Self {
+        pub async fn builder(artifact_kind: impl Into<String>) -> Self {
             Self { artifact_kind: artifact_kind.into(), mutations: Vec::new(), inference_services: Vec::new(), inference_depends_on: BTreeMap::new() }
         }
 
@@ -3782,13 +3782,13 @@ pub mod app {
         /// compile-time document-schema constant of its own). The frozen id
         /// `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` is only fully assembled at
         /// `.resolve()`, once the contributor's own plugin id is known.
-        pub fn mutation<Snapshot, Op, K>(mut self, target_document_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
+        pub async fn mutation<Snapshot, Op, K>(mut self, target_document_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
         where
             Snapshot: Clone + ArtifactPack + 'static,
             Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary + 'static,
             K: ::protocol::CompositeMutationKind<Snapshot, Op> + 'static,
         {
-            fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
+            async fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
             where
                 Snapshot: Clone + ArtifactPack,
                 Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary,
@@ -3822,21 +3822,21 @@ pub mod app {
         /// `ArtifactInferenceService` shape a declaration's own `.inference_services(...)` takes; only
         /// the manifest-level gate (`register_contributions`) distinguishes "owned" from "contributed"
         /// (owner==self&&artifact_kind==self vs owner==contributor&&artifact_kind==target).
-        pub fn inference_service(mut self, service: ArtifactInferenceService) -> Self {
+        pub async fn inference_service(mut self, service: ArtifactInferenceService) -> Self {
             self.inference_services.push(service);
             self
         }
 
         /// 🔗️ Declares `inference_schema`'s contributed-inference dependency ordering — folded into
         /// `ContributedInferenceMetadata.depends_on` at `.resolve()`.
-        pub fn inference_depends_on(mut self, inference_schema: impl Into<String>, depends_on: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        pub async fn inference_depends_on(mut self, inference_schema: impl Into<String>, depends_on: impl IntoIterator<Item = impl Into<String>>) -> Self {
             self.inference_depends_on.entry(inference_schema.into()).or_default().extend(depends_on.into_iter().map(Into::into));
             self
         }
 
         /// ✅️ Finalizes the contribution — infallible (every frozen gate needs the contributor's own
         /// plugin id, only known once a builder's `.contributes()` calls `.resolve()`).
-        pub fn build(self) -> Self {
+        pub async fn build(self) -> Self {
             self
         }
 
@@ -3845,7 +3845,7 @@ pub mod app {
         /// `commit_contributed_mutation_services`) now that `plugin_id` (the contributor) is known.
         /// Pure — no registry side effects; the caller runs `register_contributions` on the result
         /// before committing anything.
-        pub(crate) fn resolve(self, plugin_id: &str) -> (semio_framework::ArtifactContributionDescriptor, Vec<ArtifactInferenceService>, Vec<(String, ContributedMutationRuntimeEntry)>) {
+        pub(crate) async fn resolve(self, plugin_id: &str) -> (semio_framework::ArtifactContributionDescriptor, Vec<ArtifactInferenceService>, Vec<(String, ContributedMutationRuntimeEntry)>) {
             let mut mutation_metadata = Vec::with_capacity(self.mutations.len());
             let mut mutation_runtime = Vec::with_capacity(self.mutations.len());
             for spec in self.mutations {
@@ -3908,7 +3908,7 @@ pub mod app {
     /// `artifact_kind` must equal the contribution's own target. Called by both
     /// `PluginBuilder::try_build` and `ExtensionBundle::contributes` — see those call sites for how the
     /// pure `&[ArtifactContributionDescriptor]` this validates is assembled first.
-    pub(crate) fn register_contributions(plugin_id: &str, dependencies: &[semio_framework::PluginDependency], contributions: &[semio_framework::ArtifactContributionDescriptor]) -> Result<(), ContributionRegistrationError> {
+    pub(crate) async fn register_contributions(plugin_id: &str, dependencies: &[semio_framework::PluginDependency], contributions: &[semio_framework::ArtifactContributionDescriptor]) -> Result<(), ContributionRegistrationError> {
         for descriptor in contributions {
             let target = ArtifactKindId::parse(&descriptor.artifact_kind).map_err(|_| ContributionRegistrationError::InvalidArtifactKind(descriptor.artifact_kind.clone()))?;
             let owner = target.plugin();
@@ -3963,7 +3963,7 @@ pub mod app {
     }
 
     impl WireMutationRosterEntry {
-        fn owner(document_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
+        async fn owner(document_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
             Self {
                 mutation_id: format!("{document_schema}#{}", descriptor.kind),
                 verb: descriptor.verb.to_string(),
@@ -3975,7 +3975,7 @@ pub mod app {
             }
         }
 
-        fn contributed(plugin_id: &str, artifact_kind: &str, mutation_id: String, semantics: &semio_framework::ContributedMutationSemantics) -> Self {
+        async fn contributed(plugin_id: &str, artifact_kind: &str, mutation_id: String, semantics: &semio_framework::ContributedMutationSemantics) -> Self {
             Self { mutation_id, verb: semantics.verb.clone(), entity: semantics.entity.clone(), kind: semantics.kind.clone(), record: semantics.record.clone(), contributor: Some(plugin_id.to_string()), artifact_kind: Some(artifact_kind.to_string()) }
         }
     }
@@ -3999,7 +3999,7 @@ pub mod app {
     }
 
     impl ContributedMutationExecutionError {
-        pub fn new(code: &'static str, message: impl Into<String>) -> Self {
+        pub async fn new(code: &'static str, message: impl Into<String>) -> Self {
             Self { code, message: message.into() }
         }
     }
@@ -4054,11 +4054,11 @@ pub mod app {
     }
 
     #[cfg(test)]
-    pub(crate) fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
+    pub(crate) async fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
         store::pack_rt::encode_wire_value(&to_dsl_value(value).unwrap_or(DslValue::Null))
     }
 
-    fn decode_contributed_wire<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
+    async fn decode_contributed_wire<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
         dsl::from_dsl_value(value)
     }
@@ -4066,11 +4066,11 @@ pub mod app {
     static OWNER_MUTATION_ROSTER_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, WireMutationRosterEntry>>> = std::sync::OnceLock::new();
     static CONTRIBUTED_MUTATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, ContributedMutationRuntimeEntry>>> = std::sync::OnceLock::new();
 
-    fn owner_mutation_roster_registry() -> &'static std::sync::RwLock<BTreeMap<String, WireMutationRosterEntry>> {
+    async fn owner_mutation_roster_registry() -> &'static std::sync::RwLock<BTreeMap<String, WireMutationRosterEntry>> {
         OWNER_MUTATION_ROSTER_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
     }
 
-    fn contributed_mutation_registry() -> &'static std::sync::RwLock<BTreeMap<String, ContributedMutationRuntimeEntry>> {
+    async fn contributed_mutation_registry() -> &'static std::sync::RwLock<BTreeMap<String, ContributedMutationRuntimeEntry>> {
         CONTRIBUTED_MUTATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
     }
 
@@ -4078,7 +4078,7 @@ pub mod app {
     /// captured `(document_schema, kinds)` providers) — idempotent for byte-identical re-registration
     /// (mirrors `ArtifactInferenceServiceRegistry::register`), a typed conflict otherwise.
     #[cfg(test)]
-    pub(crate) fn commit_owner_mutation_roster(providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])]) -> Result<(), PluginAssemblyError> {
+    pub(crate) async fn commit_owner_mutation_roster(providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])]) -> Result<(), PluginAssemblyError> {
         let mut registry = owner_mutation_roster_registry().write().map_err(|_| PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", "owner mutation roster registry is poisoned"))?;
         for provider in providers {
             let (document_schema, kinds) = provider();
@@ -4098,7 +4098,7 @@ pub mod app {
 
     /// 📌️ Commits every resolved contribution's `(mutation_id, runtime entry)` pair — same
     /// idempotent-or-typed-conflict discipline as `commit_owner_mutation_roster`.
-    pub(crate) fn commit_contributed_mutation_services(entries: Vec<(String, ContributedMutationRuntimeEntry)>) -> Result<(), PluginAssemblyError> {
+    pub(crate) async fn commit_contributed_mutation_services(entries: Vec<(String, ContributedMutationRuntimeEntry)>) -> Result<(), PluginAssemblyError> {
         let mut registry = contributed_mutation_registry().write().map_err(|_| PluginAssemblyError::new("plugin-assembly.contribution-mutation-registry", "contributed mutation registry is poisoned"))?;
         for (mutation_id, entry) in entries {
             if let Some(existing) = registry.get(&mutation_id) {
@@ -4114,7 +4114,7 @@ pub mod app {
 
     /// 📖️ This process's deterministic mutation roster (owner + contributed rows, sorted by
     /// `mutation_id`) — `plugin_runtime::wire_list_artifact_mutations`'s data source.
-    pub(crate) fn mutation_roster_entries() -> Vec<WireMutationRosterEntry> {
+    pub(crate) async fn mutation_roster_entries() -> Vec<WireMutationRosterEntry> {
         let mut entries: Vec<WireMutationRosterEntry> = owner_mutation_roster_registry().read().map(|registry| registry.values().cloned().collect()).unwrap_or_default();
         entries.extend(contributed_mutation_registry().read().map(|registry| registry.values().map(|entry| entry.roster.clone()).collect::<Vec<_>>()).unwrap_or_default());
         entries.sort_by(|a, b| a.mutation_id.cmp(&b.mutation_id));
@@ -4124,7 +4124,7 @@ pub mod app {
     /// 🎯️ Runs a registered contributed mutation's plan against `snapshot_pack`/`payload`, first
     /// verifying `artifact_kind` echoes the mutation's own registered target — mirrors
     /// `wire_artifact_infer`'s `validate_wire_request_metadata` discipline for the mutation-plan seam.
-    pub(crate) fn contributed_mutation_plan(mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
+    pub(crate) async fn contributed_mutation_plan(mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
         let registry = contributed_mutation_registry().read().map_err(|_| ContributedMutationExecutionError::new("artifact-mutation.unavailable", "contributed mutation registry is poisoned"))?;
         let entry = registry.get(mutation_id).ok_or_else(|| ContributedMutationExecutionError::new("artifact-mutation.not-registered", format!("no contributed mutation service for {mutation_id:?}")))?;
         if entry.roster.artifact_kind.as_deref() != Some(artifact_kind) {
@@ -4137,11 +4137,11 @@ pub mod app {
     mod artifact_contribution_tests {
         use super::*;
 
-        fn semantics(kind: &str) -> semio_framework::ContributedMutationSemantics {
+        async fn semantics(kind: &str) -> semio_framework::ContributedMutationSemantics {
             semio_framework::ContributedMutationSemantics { verb: "add".into(), entity: "thing".into(), kind: kind.into(), record: "AddedThing".into() }
         }
 
-        fn descriptor_with_mutation(artifact_kind: &str, mutation_id: &str, kind: &str) -> semio_framework::ArtifactContributionDescriptor {
+        async fn descriptor_with_mutation(artifact_kind: &str, mutation_id: &str, kind: &str) -> semio_framework::ArtifactContributionDescriptor {
             semio_framework::ArtifactContributionDescriptor {
                 artifact_kind: artifact_kind.into(),
                 mutations: vec![semio_framework::ContributedMutationMetadata { mutation_id: mutation_id.into(), semantics: semantics(kind), schema_version: 1, algorithm_version: 1 }],
@@ -4150,7 +4150,7 @@ pub mod app {
         }
 
         #[test]
-        fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
+        async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
             let descriptor = descriptor_with_mutation("s.dep.target", "dep.document#contributor:add-thing", "add-thing");
             let error = register_contributions("contributor", &[], std::slice::from_ref(&descriptor)).expect_err("missing dependency must be rejected");
             assert!(matches!(error, ContributionRegistrationError::DependencyNotDeclared { owner, .. } if owner == "dep"));
@@ -4159,7 +4159,7 @@ pub mod app {
         }
 
         #[test]
-        fn id_namespacing_rejects_a_collision_with_an_owner_kind() {
+        async fn id_namespacing_rejects_a_collision_with_an_owner_kind() {
             let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::VersionReq::Any)];
             let bare = descriptor_with_mutation("s.dep.target", "dep.document#add-thing", "add-thing");
             let error = register_contributions("contributor", &dependencies, std::slice::from_ref(&bare)).expect_err("bare owner-shaped id must be rejected");
@@ -4168,14 +4168,14 @@ pub mod app {
             register_contributions("contributor", &dependencies, std::slice::from_ref(&well_formed)).expect("well-formed contributed id must be accepted");
         }
 
-        fn owner_roster_provider() -> (&'static str, &'static [::protocol::SemanticDescriptor]) {
+        async fn owner_roster_provider() -> (&'static str, &'static [::protocol::SemanticDescriptor]) {
             const KINDS: &[::protocol::SemanticDescriptor] =
                 &[::protocol::SemanticDescriptor { verb: "add", entity: "widget", kind: "add-widget", record: "AddedWidget" }, ::protocol::SemanticDescriptor { verb: "remove", entity: "widget", kind: "remove-widget", record: "RemovedWidget" }];
             ("roster-determinism-test.document", KINDS)
         }
 
         #[test]
-        fn mutation_roster_entries_are_deterministic_across_repeated_calls() {
+        async fn mutation_roster_entries_are_deterministic_across_repeated_calls() {
             let providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])] = &[owner_roster_provider];
             commit_owner_mutation_roster(providers).expect("commit owner roster");
             let first = mutation_roster_entries();
@@ -4193,16 +4193,16 @@ pub mod app {
     mod artifact_definition_contract_tests {
         use super::*;
 
-        fn identity(value: &str) -> ArtifactIdentity {
+        async fn identity(value: &str) -> ArtifactIdentity {
             ArtifactIdentity::parse(value).unwrap()
         }
 
-        fn capability(owner: &ArtifactIdentity, segment: &str, kind: ArtifactCapabilityKind) -> ArtifactCapability {
+        async fn capability(owner: &ArtifactIdentity, segment: &str, kind: ArtifactCapabilityKind) -> ArtifactCapability {
             ArtifactCapability::new(owner.child(segment).unwrap(), kind).descriptor(b"test".to_vec()).unwrap()
         }
 
         #[test]
-        fn plural_definition_carries_every_artifact_capability_without_a_dispatch_edit() {
+        async fn plural_definition_carries_every_artifact_capability_without_a_dispatch_edit() {
             let owner = identity("s.stdio.ifc");
             let schema = capability(&owner, "schema", ArtifactCapabilityKind::schema()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.stdio.ifc.v4").unwrap()).unwrap();
             let standard = capability(&owner, "standard", ArtifactCapabilityKind::standard());
@@ -4230,7 +4230,7 @@ pub mod app {
         }
 
         #[test]
-        fn registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically() {
+        async fn registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically() {
             let owner_a = identity("s.stdio.ifc");
             let owner_b = identity("s.stdio.json");
             let namespaces = [ArtifactIdentityNamespace::schema(), ArtifactIdentityNamespace::dialect(), ArtifactIdentityNamespace::codec(), ArtifactIdentityNamespace::mime(), ArtifactIdentityNamespace::extension()];
@@ -4249,7 +4249,7 @@ pub mod app {
         }
 
         #[test]
-        fn identities_and_locales_are_explicit_and_conflicts_do_not_overwrite() {
+        async fn identities_and_locales_are_explicit_and_conflicts_do_not_overwrite() {
             assert!(ArtifactIdentity::parse("s.stdio..ifc").is_err());
             assert!(ArtifactLocale::parse("EN").is_err());
             let owner = identity("s.stdio.ifc");
@@ -4297,7 +4297,7 @@ pub mod app {
     }
 
     impl AppBuilder {
-        pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
             let id = id.into();
             Self {
                 controller_id: id.clone(),
@@ -4332,32 +4332,32 @@ pub mod app {
         }
 
         /// 🗂️ Declares one resource kind this app produces/consumes (see `ArtifactKindSpec`). Repeatable.
-        pub fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
+        pub async fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
             self.artifact_kinds.push(spec);
             self
         }
 
         /// 🧮️ Declares this app's typed configuration record (see `crate::ConfigSpec`).
-        pub fn config(mut self, spec: ConfigSpec) -> Self {
+        pub async fn config(mut self, spec: ConfigSpec) -> Self {
             self.config = spec;
             self
         }
 
         /// 🔌️ Declares this app's typed media I/O surface (see `crate::AppIo`).
-        pub fn io(mut self, io: AppIo) -> Self {
+        pub async fn io(mut self, io: AppIo) -> Self {
             self.io = io;
             self
         }
 
         /// 🎛️ Declares this app's typed binary command grammar (see `crate::CommandGrammar`).
-        pub fn command_grammar(mut self, grammar: CommandGrammar) -> Self {
+        pub async fn command_grammar(mut self, grammar: CommandGrammar) -> Self {
             self.command_grammar = grammar;
             self
         }
 
         /// 🔌️ Declares one workflow input port this app accepts (see `MediaPortSpec`). Repeatable;
         /// validated in `build_definition` (non-empty/unique id, `direction` must be `In`).
-        pub fn media_input(mut self, spec: MediaPortSpec) -> Self {
+        pub async fn media_input(mut self, spec: MediaPortSpec) -> Self {
             self.media_inputs.push(spec);
             self
         }
@@ -4365,20 +4365,20 @@ pub mod app {
         /// 🔌️ Declares one workflow output port this app produces (see `MediaPortSpec`). Repeatable;
         /// validated in `build_definition` (non-empty/unique id, `direction` must be `Out`, `MediaForm::Any`
         /// is rejected — `Any` is only ever legal on the accepting/input side, see `media_types_compatible`).
-        pub fn media_output(mut self, spec: MediaPortSpec) -> Self {
+        pub async fn media_output(mut self, spec: MediaPortSpec) -> Self {
             self.media_outputs.push(spec);
             self
         }
 
         /// 🗣️ Declares an alternative terminology id this app supports beyond the implicit "native" default.
-        pub fn terminology(mut self, id: impl Into<String>) -> Self {
+        pub async fn terminology(mut self, id: impl Into<String>) -> Self {
             self.terminologies.push(id.into());
             self
         }
 
         /// 🗺️ Replaces the full document path (product + app segments) while terminology `id` is active;
         /// `id` must also be declared via `terminology` — validated in `build_definition`.
-        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
             self.terminology_breadcrumbs.insert(id.into(), document.into_iter().map(Into::into).collect());
             self
         }
@@ -4386,7 +4386,7 @@ pub mod app {
         /// @emoji 🎓️ Declares this app's first-run introduction walkthrough. Step anchors/advance
         /// conditions are validated against declared window kinds/utilities/actions/panel tabs in
         /// `build_definition`; declaring one auto-injects the `startIntroduction` action.
-        pub fn introduction(mut self, introduction: IntroductionDefinition) -> Self {
+        pub async fn introduction(mut self, introduction: IntroductionDefinition) -> Self {
             self.introduction = Some(introduction);
             self
         }
@@ -4395,24 +4395,24 @@ pub mod app {
         /// track is validated in `build_definition` (`validate_tutorial` plus referenced action/command/
         /// utility/tool/element ids); declaring at least one auto-injects the `startTutorial` action. The
         /// `recordTutorial` action is injected unconditionally (see `record_tutorial_action_definition`).
-        pub fn tutorial(mut self, tutorial: TutorialDefinition) -> Self {
+        pub async fn tutorial(mut self, tutorial: TutorialDefinition) -> Self {
             self.tutorials.push(tutorial);
             self
         }
 
         /// @emoji 🗨️ Declares a modal form dialog (repeatable). `submit_action`/`cancel_action` and its
         /// `args` are validated in `build_definition`; opened only via `Effect::OpenDialog`.
-        pub fn dialog(mut self, dialog: DialogDefinition) -> Self {
+        pub async fn dialog(mut self, dialog: DialogDefinition) -> Self {
             self.dialogs.push(dialog);
             self
         }
 
-        pub fn icon_id(mut self, icon_id: impl Into<IconName>) -> Self {
+        pub async fn icon_id(mut self, icon_id: impl Into<IconName>) -> Self {
             self.icon_id = Some(icon_id.into());
             self
         }
 
-        pub fn document<I, S>(mut self, document: I) -> Self
+        pub async fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
@@ -4421,13 +4421,13 @@ pub mod app {
             self
         }
 
-        pub fn mode(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+        pub async fn mode(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
             self.modes.push(ModeSpec { id: id.into(), label: label.into(), icon_id: icon_id.into(), tools: Vec::new(), layout_id: None, commands: Vec::new() });
             self
         }
 
         /// 🎛️ Replaces the commands structurally owned by one mode.
-        pub fn mode_commands(mut self, mode_id: impl AsRef<str>, commands: Vec<CommandDefinition>) -> Self {
+        pub async fn mode_commands(mut self, mode_id: impl AsRef<str>, commands: Vec<CommandDefinition>) -> Self {
             let mode_id = mode_id.as_ref();
             if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
                 mode.commands = commands;
@@ -4436,7 +4436,7 @@ pub mod app {
         }
 
         /// 🎛️ Adds one command definition to the mode that owns it.
-        pub fn mode_command(mut self, mode_id: impl AsRef<str>, command: CommandDefinition) -> Self {
+        pub async fn mode_command(mut self, mode_id: impl AsRef<str>, command: CommandDefinition) -> Self {
             let mode_id = mode_id.as_ref();
             if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
                 mode.commands.push(command);
@@ -4444,7 +4444,7 @@ pub mod app {
             self
         }
 
-        pub fn mode_layout(mut self, mode_id: impl AsRef<str>, layout_id: impl Into<String>) -> Self {
+        pub async fn mode_layout(mut self, mode_id: impl AsRef<str>, layout_id: impl Into<String>) -> Self {
             let mode_id = mode_id.as_ref();
             if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
                 mode.layout_id = Some(layout_id.into());
@@ -4454,7 +4454,7 @@ pub mod app {
 
         /// 🛠️ Scopes tools to a mode — references ids declared via `.tool()`/`.tool_simple()`. A tool is a
         /// mode-level activatable capability (e.g. puzzle3d fill); distinct from a window-scoped utility.
-        pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
+        pub async fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
             let mode_id = mode_id.as_ref();
             if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
                 mode.tools = tool_ids;
@@ -4462,12 +4462,12 @@ pub mod app {
             self
         }
 
-        pub fn default_mode_id(mut self, id: impl Into<String>) -> Self {
+        pub async fn default_mode_id(mut self, id: impl Into<String>) -> Self {
             self.default_mode_id = Some(id.into());
             self
         }
 
-        pub fn window_kind(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, icon_id: impl Into<IconName>) -> Self {
+        pub async fn window_kind(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, icon_id: impl Into<IconName>) -> Self {
             self.window_kinds.push(WindowKindSpec {
                 id: id.into(),
                 label: label.into(),
@@ -4489,7 +4489,7 @@ pub mod app {
             self
         }
 
-        pub fn window_kind_with_engagement(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, engagement: WindowEngagement, icon_id: impl Into<IconName>) -> Self {
+        pub async fn window_kind_with_engagement(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, engagement: WindowEngagement, icon_id: impl Into<IconName>) -> Self {
             self.window_kinds.push(WindowKindSpec {
                 id: id.into(),
                 label: label.into(),
@@ -4515,7 +4515,7 @@ pub mod app {
         /// `🎭️modes/<mode>/🦀️component.rs` component file instead of the scalar `.mode(...)` args. Stored
         /// through the same `ModeSpec` pipeline as `.mode()`, so `.mode_commands()`/`.mode_tools()`/
         /// `.mode_layout()` still apply post-hoc and `build_definition`'s validation runs unchanged.
-        pub fn mode_def(mut self, def: ModeDefinition) -> Self {
+        pub async fn mode_def(mut self, def: ModeDefinition) -> Self {
             self.modes.push(mode_definition_to_spec(def));
             self
         }
@@ -4524,20 +4524,20 @@ pub mod app {
         /// `.mode_def()`. `.window_kind_measures()`/`.window_kind_actions()`/`.window_kind_utilities()`/
         /// `.window_kind_interactions()`
         /// still apply post-hoc.
-        pub fn window_kind_def(mut self, def: WindowKindDefinition) -> Self {
+        pub async fn window_kind_def(mut self, def: WindowKindDefinition) -> Self {
             self.window_kinds.push(window_kind_definition_to_spec(def));
             self
         }
 
         /// @emoji 🧱️ Declares a (possibly nested) panel tab tree from an already-built `PanelTabDefinition`
         /// — mirrors `.panel_tab_tree()`, converting recursively through the same `PanelTabSpec` pipeline.
-        pub fn panel_tab_def(mut self, def: PanelTabDefinition) -> Self {
+        pub async fn panel_tab_def(mut self, def: PanelTabDefinition) -> Self {
             self.panel_tabs.push(panel_tab_definition_to_spec(def));
             self
         }
 
         /// 🎛️ Attaches measure controls (sliders/selects/toggles/groups) to an already-declared window kind.
-        pub fn window_kind_measures(mut self, window_kind_id: impl AsRef<str>, measures: Vec<WindowMeasure>) -> Self {
+        pub async fn window_kind_measures(mut self, window_kind_id: impl AsRef<str>, measures: Vec<WindowMeasure>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.measures = measures;
@@ -4546,7 +4546,7 @@ pub mod app {
         }
 
         /// 📇️ Replaces the action definitions structurally owned by one window kind.
-        pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, actions: Vec<ActionDefinition>) -> Self {
+        pub async fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, actions: Vec<ActionDefinition>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.actions = actions;
@@ -4555,7 +4555,7 @@ pub mod app {
         }
 
         /// 📇️ Assigns centrally declared builder actions to one structural window owner.
-        pub fn window_kind_action_refs(mut self, window_kind_id: impl AsRef<str>, action_refs: Vec<ActionRef>) -> Self {
+        pub async fn window_kind_action_refs(mut self, window_kind_id: impl AsRef<str>, action_refs: Vec<ActionRef>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.action_refs = action_refs;
@@ -4565,7 +4565,7 @@ pub mod app {
 
         /// 🧰️ Scopes utilities to a window kind — references ids declared via `.utility()`/`.utility_simple()`. Mirrors
         /// `window_kind_actions`: the referenced utility ids are validated to resolve in `build_definition`.
-        pub fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
+        pub async fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.utilities = utility_ids;
@@ -4574,7 +4574,7 @@ pub mod app {
         }
 
         /// 🕹️ Scopes declarative interaction domains to a window kind.
-        pub fn window_kind_interactions(mut self, window_kind_id: impl AsRef<str>, interaction_ids: Vec<InteractionRef>) -> Self {
+        pub async fn window_kind_interactions(mut self, window_kind_id: impl AsRef<str>, interaction_ids: Vec<InteractionRef>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.interactions = interaction_ids;
@@ -4582,56 +4582,56 @@ pub mod app {
             self
         }
 
-        pub fn named_layout(mut self, layout: NamedLayout) -> Self {
+        pub async fn named_layout(mut self, layout: NamedLayout) -> Self {
             self.named_layouts.push(layout);
             self
         }
 
-        pub fn default_layout(mut self, layout: WindowLayout) -> Self {
+        pub async fn default_layout(mut self, layout: WindowLayout) -> Self {
             self.default_layout = Some(layout);
             self
         }
 
-        pub fn panel_tab(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
+        pub async fn panel_tab(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
             self.panel_tabs.push(PanelTabSpec::leaf(id, label, group, body_key));
             self
         }
 
         /// 🌳️ Declares a root panel tab that may itself be a nested tree — build `tab` via `PanelTabSpec::leaf`/`PanelTabSpec::group`.
-        pub fn panel_tab_tree(mut self, tab: PanelTabSpec) -> Self {
+        pub async fn panel_tab_tree(mut self, tab: PanelTabSpec) -> Self {
             self.panel_tabs.push(tab);
             self
         }
 
         /// 🏛️ Declares a framework-predefined panel tab (workbench/display/details/settings category or
         /// leaf) — only the framework shell itself should call this; plugins must use `.panel_tab()`/`.panel_tab_tree()`.
-        pub fn panel_tab_framework(mut self, tab: PanelTabSpec) -> Self {
+        pub async fn panel_tab_framework(mut self, tab: PanelTabSpec) -> Self {
             self.panel_tabs.push(tab);
             self
         }
 
-        pub fn keybinding(mut self, keys: impl Into<String>, action: impl Into<String>) -> Self {
+        pub async fn keybinding(mut self, keys: impl Into<String>, action: impl Into<String>) -> Self {
             self.keybindings.push(KeybindingSpec { keys: keys.into(), controller_id: self.controller_id.clone(), action: action.into() });
             self
         }
 
         /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
-        pub fn mutation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        pub async fn mutation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
             self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Mutation))
         }
 
         /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
-        pub fn view_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        pub async fn view_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
             self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::View))
         }
 
         /// @emoji 🐚️ Declares a shell-only effect action (navigate, export, spawn) — no document mutation.
-        pub fn shell_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        pub async fn shell_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
             self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Shell))
         }
 
         /// @emoji 📇️ Declares a fully specified action (icon, args, keybinding, palette visibility, category).
-        pub fn action_with(mut self, action: ActionDefinition) -> Self {
+        pub async fn action_with(mut self, action: ActionDefinition) -> Self {
             self.actions.push(action);
             self
         }
@@ -4639,7 +4639,7 @@ pub mod app {
         /// @emoji 📝️ Attaches typed argument declarations to an already-declared action (post-hoc, mirroring
         /// `window_kind_actions`). If the id isn't declared yet at call time the args are dropped; the
         /// mismatch surfaces in `build_definition`, which asserts every declared action's args are consistent.
-        pub fn action_args(mut self, action_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
+        pub async fn action_args(mut self, action_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
             let action_id = action_id.as_ref();
             if let Some(action) = self.actions.iter_mut().find(|entry| entry.id == action_id) {
                 action.args = args;
@@ -4648,19 +4648,19 @@ pub mod app {
         }
 
         /// @emoji 🎛️ Declares a fully specified app-owned command.
-        pub fn command(mut self, command: CommandDefinition) -> Self {
+        pub async fn command(mut self, command: CommandDefinition) -> Self {
             self.commands.push(command);
             self
         }
 
         /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
-        pub fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+        pub async fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
             self.command(CommandDefinition::new_catalog(id, label, category, kind))
         }
 
         /// @emoji 📝️ Attaches typed argument declarations to an already-declared command (post-hoc,
         /// mirroring `action_args`).
-        pub fn command_args(mut self, command_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
+        pub async fn command_args(mut self, command_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
             let command_id = command_id.as_ref();
             if let Some(command) = self.commands.iter_mut().find(|entry| entry.id == command_id) {
                 command.args = args;
@@ -4669,39 +4669,39 @@ pub mod app {
         }
 
         /// @emoji 🧰️ Declares an interactive utility this app exposes (referenced by `window_kind_utilities`).
-        pub fn utility(mut self, utility: UtilityDefinition) -> Self {
+        pub async fn utility(mut self, utility: UtilityDefinition) -> Self {
             self.utilities.push(utility);
             self
         }
 
         /// 🕹️ Declares a framework-managed hover and selection domain.
-        pub fn interaction(mut self, interaction: InteractionDefinition) -> Self {
+        pub async fn interaction(mut self, interaction: InteractionDefinition) -> Self {
             self.interactions.push(interaction);
             self
         }
 
         /// @emoji 🧰️ Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
-        pub fn utility_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+        pub async fn utility_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
             self.utility(UtilityDefinition::new(id, label, icon_id))
         }
 
         /// @emoji 🛠️ Declares a mode-level tool this app exposes (referenced by `.mode_tools()`). Distinct
         /// from `.utility()`: a tool is scoped to a whole mode, not a window kind, and its live options are
         /// supplied dynamically via `ArtifactApp::tool_measures`/`PluginApp::tool_measures`.
-        pub fn tool(mut self, tool: ToolDefinition) -> Self {
+        pub async fn tool(mut self, tool: ToolDefinition) -> Self {
             self.tools.push(tool);
             self
         }
 
         /// @emoji 🛠️ Declares a tool with default settings (no keybinding).
-        pub fn tool_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+        pub async fn tool_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
             self.tool(ToolDefinition::new(id, label, icon_id))
         }
 
         /// @emoji 🧷️ Keybinding-vs-action-registry consistency is only enforced for apps that declare
         /// actions via `.mutation()`/`.view_action()`/`.shell_action()` — apps with an empty action
         /// registry keybind directly against controller actions instead, so there is nothing to check.
-        pub fn try_build_definition(mut self) -> Result<AppDefinition, PluginAssemblyError> {
+        pub async fn try_build_definition(mut self) -> Result<AppDefinition, PluginAssemblyError> {
             if !(!self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} document must contain non-empty segments", self.id)));
             }
@@ -5193,7 +5193,7 @@ pub mod app {
         /// Plugin `plugin()` entry points that assemble an `AppDefinition` from anything that could
         /// legitimately fail at runtime should call `try_build_definition` directly and propagate the
         /// `PluginAssemblyError` via `?` instead — see `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs`.
-        pub fn build_definition(self) -> AppDefinition {
+        pub async fn build_definition(self) -> AppDefinition {
             self.try_build_definition().unwrap_or_else(|error| panic!("{error}"))
         }
     }
@@ -5204,17 +5204,17 @@ pub mod app {
     // ~15 plugin crates (flow, procedural, layout, gis, puzzle, sequence, trinity, dag, …) into the SDK.
 
     /// 🌳️ A bare tree item — thin wrapper over `UiTreeItemNode::base`.
-    pub fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
+    pub async fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
         UiTreeItemNode::base(id, label)
     }
 
     /// 🌳️ A tree item with a description line.
-    pub fn tree_item_desc(id: impl Into<String>, label: impl Into<Label>, description: Option<String>) -> UiTreeItemNode {
+    pub async fn tree_item_desc(id: impl Into<String>, label: impl Into<Label>, description: Option<String>) -> UiTreeItemNode {
         UiTreeItemNode { description, menu: None, ..UiTreeItemNode::base(id, label) }
     }
 
     /// 🌳️ A tree item that dispatches `action` on click.
-    pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
+    pub async fn tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
         UiTreeItemNode { description, action: Some(action), menu: None, ..UiTreeItemNode::base(id, label) }
     }
 
@@ -5223,7 +5223,7 @@ pub mod app {
     /// serialized), e.g. `json!({ "application/x-my-widget": descriptor.to_string() })`. Generalizes the
     /// single-hardcoded-MIME-key pattern duplicated per app (each app previously baked its own MIME
     /// constant into this function) — the caller now supplies the key(s) explicitly.
-    pub fn tree_item_with_action_draggable(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: ActionDescriptor, drag_data: &Value) -> UiTreeItemNode {
+    pub async fn tree_item_with_action_draggable(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: ActionDescriptor, drag_data: &Value) -> UiTreeItemNode {
         let mut item = tree_item_with_action(id, label, description, action);
         item.draggable = Some(true);
         item.drag_data = drag_data.as_object().map(|entries| entries.iter().map(|(key, value)| (key.clone(), value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string()))).collect());
@@ -5234,7 +5234,7 @@ pub mod app {
     /// majority of duplicate copies (`layout`, `gis`, `presentation`, …). A handful of apps additionally
     /// fall back to a singular `id`/`nodeId`/`nodeIds` key (`puzzle`, `sequence`, `trinity`, `procedural`,
     /// `mindmap`); those apps keep their own fallback wrapper around this shared core for now.
-    pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
+    pub async fn selection_ids(args: Option<&Value>) -> Vec<String> {
         args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
     }
 
@@ -5254,53 +5254,53 @@ pub mod app {
 
     impl PanelTreeBuilder {
         /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
-        pub fn new(namespace: impl Into<String>) -> Self {
+        pub async fn new(namespace: impl Into<String>) -> Self {
             Self { namespace: namespace.into(), sections: Vec::new(), selected_ids: None, highlighted_ids: None, interaction_domain: None, drop_action: None }
         }
 
         /// 🌳️ Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
-        pub fn item_id(&self, kind: &str, id: &str) -> String {
+        pub async fn item_id(&self, kind: &str, id: &str) -> String {
             format!("{}.{kind}.{id}", self.namespace)
         }
 
         /// 🌳️ Adds a section verbatim.
-        pub fn section(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
+        pub async fn section(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
             self.sections.push(UiTreeSectionNode { id: id.into(), label, default_open: Some(default_open), presence: UiPresence::default(), items });
             self
         }
 
         /// 🌳️ Adds a section, substituting a single "(none)"-style placeholder item when `items` is empty —
         /// the empty-state pattern duplicated in `build_document_tree`/`build_catalogue_tree` across apps.
-        pub fn section_or_placeholder(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<UiTreeItemNode>, placeholder_label: impl Into<Label>) -> Self {
+        pub async fn section_or_placeholder(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<UiTreeItemNode>, placeholder_label: impl Into<Label>) -> Self {
             let id = id.into();
             let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
             self.sections.push(UiTreeSectionNode { id, label, default_open: Some(default_open), presence: UiPresence::default(), items });
             self
         }
 
-        pub fn selected(mut self, ids: Vec<String>) -> Self {
+        pub async fn selected(mut self, ids: Vec<String>) -> Self {
             self.selected_ids = Some(ids);
             self
         }
 
-        pub fn highlighted(mut self, ids: Vec<String>) -> Self {
+        pub async fn highlighted(mut self, ids: Vec<String>) -> Self {
             self.highlighted_ids = Some(ids);
             self
         }
 
         /// 🕹️ Binds the built tree to an app-declared `InteractionDefinition` domain id — the framework
         /// then owns this domain's selection/hover, replacing the deleted per-app `selection_change` action.
-        pub fn interaction_domain(mut self, id: impl Into<String>) -> Self {
+        pub async fn interaction_domain(mut self, id: impl Into<String>) -> Self {
             self.interaction_domain = Some(id.into());
             self
         }
 
-        pub fn drop_action(mut self, action: ActionDescriptor) -> Self {
+        pub async fn drop_action(mut self, action: ActionDescriptor) -> Self {
             self.drop_action = Some(action);
             self
         }
 
-        pub fn build(mut self) -> UiNode {
+        pub async fn build(mut self) -> UiNode {
             let selected = self.selected_ids.iter().flatten().cloned().collect::<HashSet<_>>();
             let highlighted = self.highlighted_ids.iter().flatten().cloned().collect::<HashSet<_>>();
             // 👥️ No roster/own-color context at this app-facing builder layer — `color`/`peers` stay
@@ -5317,7 +5317,7 @@ pub mod app {
         use ui_wgpu::wgpu::Label;
 
         #[test]
-        fn tree_item_builds_a_bare_item() {
+        async fn tree_item_builds_a_bare_item() {
             let item = tree_item("ns.kind.a", Label::data("A"));
             assert_eq!(item.id, "ns.kind.a");
             assert_eq!(item.label.as_str(), "A");
@@ -5326,7 +5326,7 @@ pub mod app {
         }
 
         #[test]
-        fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
+        async fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
             let action = ActionDescriptor { controller_id: "app".into(), action: "addWidget".into(), args: None };
             let item = tree_item_with_action_draggable("ns.kind.a", Label::data("A"), None, action, &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" }));
             assert_eq!(item.draggable, Some(true));
@@ -5334,14 +5334,14 @@ pub mod app {
         }
 
         #[test]
-        fn selection_ids_reads_the_ids_array_arg() {
+        async fn selection_ids_reads_the_ids_array_arg() {
             let args = serde_json::json!({ "ids": ["a", "b"] });
             assert_eq!(selection_ids(Some(&args)), vec!["a".to_string(), "b".to_string()]);
             assert!(selection_ids(None).is_empty());
         }
 
         #[test]
-        fn panel_tree_builder_produces_a_namespaced_tree_with_placeholder() {
+        async fn panel_tree_builder_produces_a_namespaced_tree_with_placeholder() {
             let builder = PanelTreeBuilder::new("ns-play-document");
             let item_id = builder.item_id("widget", "w1");
             assert_eq!(item_id, "ns-play-document.widget.w1");
@@ -5377,17 +5377,17 @@ pub mod app {
 
     impl FormPanelBuilder {
         /// 📋️ `namespace` prefixes every field id built via `.field_id()`/`.field()`/`.from_dictionary()`.
-        pub fn new(namespace: impl Into<String>) -> Self {
+        pub async fn new(namespace: impl Into<String>) -> Self {
             Self { namespace: namespace.into(), fields: Vec::new(), submit: None }
         }
 
         /// 📋️ Builds a namespaced field id: `"{namespace}.field.{id}"` — mirrors `PanelTreeBuilder::item_id`.
-        pub fn field_id(&self, id: &str) -> String {
+        pub async fn field_id(&self, id: &str) -> String {
             format!("{}.field.{id}", self.namespace)
         }
 
         /// 📋️ Adds one labeled field row: `control` wraps into a `UiFieldNode` via `ui_control_to_node`.
-        pub fn field(mut self, id: &str, label: impl Into<Label>, description: Option<String>, control: UiControlNode) -> Self {
+        pub async fn field(mut self, id: &str, label: impl Into<Label>, description: Option<String>, control: UiControlNode) -> Self {
             let field_id = self.field_id(id);
             self.fields.push(UiNode::Field(UiFieldNode { id: field_id, label: label.into(), description, required: None, error: None, child: Box::new(ui_control_to_node(control)), presence: UiPresence::default(), menu: None }));
             self
@@ -5399,7 +5399,7 @@ pub mod app {
         /// `dictionary_json` array — `{ "id", "label"?, "description"?, "value"? }` — becomes one field
         /// dispatching the shared `on_change` action (its `args` are left to the caller; the emitted input's
         /// own id already carries which field changed).
-        pub fn from_dictionary(mut self, dictionary_json: &Value, on_change: ActionDescriptor) -> Self {
+        pub async fn from_dictionary(mut self, dictionary_json: &Value, on_change: ActionDescriptor) -> Self {
             let Some(entries) = dictionary_json.as_array() else { return self };
             for entry in entries {
                 let Some(id) = entry.get("id").and_then(Value::as_str) else { continue };
@@ -5428,13 +5428,13 @@ pub mod app {
         }
 
         /// 📋️ Sets the trailing submit `Button` row.
-        pub fn submit(mut self, label: impl Into<Label>, action: ActionDescriptor) -> Self {
+        pub async fn submit(mut self, label: impl Into<Label>, action: ActionDescriptor) -> Self {
             self.submit = Some(UiButtonNode { id: Some(self.field_id("submit")), icon_id: IconName::CircleDot, label: label.into(), action, style: None, presence: UiPresence::default(), menu: None });
             self
         }
 
         /// 📋️ Builds `Section > Fields > Button` — the section id is the builder's namespace.
-        pub fn build(self) -> UiNode {
+        pub async fn build(self) -> UiNode {
             let mut children = self.fields;
             if let Some(submit) = self.submit {
                 children.push(UiNode::Button(submit));
@@ -5446,7 +5446,7 @@ pub mod app {
     /// 📋️ A read-only entity-detail panel: `title`/`subtitle` header text, a `KeyValue` summary block built
     /// from `entries` (reusing `ui_wgpu`'s existing `UiKeyValueEntry` rather than a duplicate local type),
     /// and trailing action buttons.
-    pub fn entity_detail(title: impl Into<Label>, subtitle: Option<Label>, entries: Vec<UiKeyValueEntry>, actions: Vec<UiButtonNode>) -> UiNode {
+    pub async fn entity_detail(title: impl Into<Label>, subtitle: Option<Label>, entries: Vec<UiKeyValueEntry>, actions: Vec<UiButtonNode>) -> UiNode {
         let mut children = vec![ui_text(title)];
         if let Some(subtitle) = subtitle {
             children.push(ui_text(subtitle));
@@ -5462,7 +5462,7 @@ pub mod app {
         use ui_wgpu::wgpu::Label;
 
         #[test]
-        fn form_panel_builder_wraps_a_field_control_and_submit_button() {
+        async fn form_panel_builder_wraps_a_field_control_and_submit_button() {
             let on_change = ActionDescriptor { controller_id: "app".into(), action: "setValue".into(), args: None };
             let submit_action = ActionDescriptor { controller_id: "app".into(), action: "submit".into(), args: None };
             let node = FormPanelBuilder::new("ns-play-form")
@@ -5498,7 +5498,7 @@ pub mod app {
         }
 
         #[test]
-        fn form_panel_builder_from_dictionary_routes_entries_into_field_rows() {
+        async fn form_panel_builder_from_dictionary_routes_entries_into_field_rows() {
             let on_change = ActionDescriptor { controller_id: "app".into(), action: "setValue".into(), args: None };
             let dictionary = serde_json::json!([
                 { "id": "email", "label": "Email", "description": "Contact email", "value": "a@b.com" },
@@ -5515,7 +5515,7 @@ pub mod app {
         }
 
         #[test]
-        fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
+        async fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
             let action = ActionDescriptor { controller_id: "app".into(), action: "edit".into(), args: None };
             let node = entity_detail(
                 Label::data("Widget"),
@@ -5550,24 +5550,24 @@ pub mod app {
     /// replaces) — `terminology()` defaults to `Native`, matching every one of those apps' behavior
     /// (none of them threaded a terminology axis themselves).
     pub trait LabelAxes {
-        fn locale(&self) -> Locale;
-        fn terminology(&self) -> Terminology {
+        async fn locale(&self) -> Locale;
+        async fn terminology(&self) -> Terminology {
             Terminology::Native
         }
     }
 
     impl LabelAxes for ViewModel {
-        fn locale(&self) -> Locale {
+        async fn locale(&self) -> Locale {
             self.locale
         }
-        fn terminology(&self) -> Terminology {
+        async fn terminology(&self) -> Terminology {
             self.terminology
         }
     }
 
     /// 🗣️ Region-tolerant `"de"`/`"de-DE"` → `Locale::De` parse, `_` → `Locale::En` — the shared body
     /// of every hand-rolled per-app `is_de_locale`/`fn locale(cfg) -> Locale` this replaces.
-    pub fn locale_from_str(locale: &str) -> Locale {
+    pub async fn locale_from_str(locale: &str) -> Locale {
         if locale.starts_with("de") {
             Locale::De
         } else {
@@ -5576,7 +5576,7 @@ pub mod app {
     }
 
     /// 🗣️ Resolves the active label set for the shell-provided locale/terminology axes.
-    pub fn resolve_labels<L: AppLabels>(axes: &impl LabelAxes) -> &'static L {
+    pub async fn resolve_labels<L: AppLabels>(axes: &impl LabelAxes) -> &'static L {
         L::labels(axes.locale(), axes.terminology())
     }
 
@@ -5584,7 +5584,7 @@ pub mod app {
     /// outside their `_ui` crate (the orphan rule blocks `impl LabelAxes for` a foreign `Config` from
     /// `_ui`) — call as `resolve_labels_for_locale::<XLabels>(&cfg.locale)`. Always resolves
     /// `Terminology::Native`, matching every one of those apps' pre-existing behavior.
-    pub fn resolve_labels_for_locale<L: AppLabels>(locale: &str) -> &'static L {
+    pub async fn resolve_labels_for_locale<L: AppLabels>(locale: &str) -> &'static L {
         L::labels(locale_from_str(locale), Terminology::Native)
     }
 
@@ -5630,7 +5630,7 @@ pub mod app {
         }
 
         impl $crate::AppLabels for $Name {
-            fn labels(locale: $crate::Locale, terminology: $crate::Terminology) -> &'static Self {
+            async fn labels(locale: $crate::Locale, terminology: $crate::Terminology) -> &'static Self {
                 match (terminology, locale) {
                     ($crate::Terminology::Native, $crate::Locale::En) => &Self::NATIVE_EN,
                     ($crate::Terminology::Native, $crate::Locale::De) => &Self::NATIVE_DE,
@@ -5653,7 +5653,7 @@ pub mod app {
         }
 
         #[test]
-        fn resolve_labels_is_exhaustive_over_all_four_cells() {
+        async fn resolve_labels_is_exhaustive_over_all_four_cells() {
             let native_en = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::default() };
             let native_de = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
             let reuse_en = ViewModel { locale: Locale::En, terminology: Terminology::Reuse, ..ViewModel::default() };
@@ -5682,7 +5682,7 @@ pub mod app {
             Self { controller_id }
         }
 
-        pub fn action(&self, action: &str, args: Option<Value>) -> ActionDescriptor {
+        pub async fn action(&self, action: &str, args: Option<Value>) -> ActionDescriptor {
             ActionDescriptor { controller_id: self.controller_id.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
         }
     }
@@ -5702,7 +5702,7 @@ pub mod app {
         use store::{Backbone, BackboneMessage, MemoryBackbone};
 
         /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
-        pub fn meta(actor: &str) -> ActionMeta {
+        pub async fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }
         }
 
@@ -5720,20 +5720,20 @@ pub mod app {
 
         /// 🧬️ A registry-less wrapper (`VcsArtifactApp::new`) — contract enforcement (required args, kind
         /// discipline) is skipped, matching most apps' plain unit tests.
-        pub fn new_app<A: ArtifactApp + Default>() -> VcsArtifactApp<A> {
+        pub async fn new_app<A: ArtifactApp + Default>() -> VcsArtifactApp<A> {
             VcsArtifactApp::new(A::default())
         }
 
         /// 🧬️ A registry-backed wrapper carrying `manifest`'s real `AppActionRegistry` — needed whenever a
         /// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
-        pub fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App) -> VcsArtifactApp<A> {
+        pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App) -> VcsArtifactApp<A> {
             let definition = manifest().definition;
             VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition))
         }
 
         /// 🔗️ Two registry-less instances joined by an in-memory backbone on `channel` — the standard fixture
         /// for convergence tests.
-        pub fn paired_apps<A: ArtifactApp + Default>(channel: &str) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
+        pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
             let mut a = new_app::<A>();
             let mut b = new_app::<A>();
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel);
@@ -5746,7 +5746,7 @@ pub mod app {
         /// the framework-reserved `"undo"` action) and asserts `before`, redoes and asserts `after` again — the
         /// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_typed`) —
         /// `ArtifactApp::handle_action`'s stringly-typed dispatch no longer exists.
-        pub fn assert_undo_redo_round_trip<A, P>(app: &mut VcsArtifactApp<A>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, before: P, after: P)
+        pub async fn assert_undo_redo_round_trip<A, P>(app: &mut VcsArtifactApp<A>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, before: P, after: P)
         where
             A: ArtifactApp,
             P: PartialEq + std::fmt::Debug,
@@ -5760,7 +5760,7 @@ pub mod app {
         }
 
         /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
-        pub fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
+        pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
             use semio_framework::{effective_action_args, DslValue};
             use store::pack_rt::dsl_value_to_json;
             let definition = manifest().definition;
@@ -5805,7 +5805,7 @@ pub mod app {
         /// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
         /// two-instance-convergence test body (see `playbook-plugin`'s
         /// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
-        pub fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
+        pub async fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
             P: PartialEq + std::fmt::Debug,
@@ -5830,7 +5830,7 @@ pub mod app {
         /// 🧪️ Applies `command` on a sender attached to a backbone, replays the resulting envelopes onto a
         /// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same operation
         /// twice must not double-apply.
-        pub fn assert_ingest_idempotent<A, P>(command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
+        pub async fn assert_ingest_idempotent<A, P>(command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
             P: PartialEq + std::fmt::Debug,
@@ -5859,7 +5859,7 @@ pub mod app {
         /// 🔀️ Dispatches `command` and asserts it produced a `TransactionProposalDraft` instead of
         /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
         /// Returns the draft so a test can inspect `local_ops`/`foreign`/`description`/`coalesce_key`.
-        pub fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command) -> super::TransactionProposalDraft {
+        pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command) -> super::TransactionProposalDraft {
             let generation_before = app.store.generation();
             let edits_before = app.store.envelope().vcs.edits.len();
             app.dispatch_typed(command, &meta("local")).expect("dispatch a command whose mutations carry foreign steps");
@@ -5872,7 +5872,7 @@ pub mod app {
         /// host: prepares `ops` under `txn_id`/`label`/`origin`, asserts the prepare was accepted,
         /// commits, and asserts exactly one resulting `Edit` whose `group_id` is `txn_id` and whose
         /// every `MutationMeta.origin` is `origin`. Returns the committed edit id.
-        pub fn assert_transaction_commits_as_one_edit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, label: &str, origin: protocol::MutationOrigin) -> String {
+        pub async fn assert_transaction_commits_as_one_edit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, label: &str, origin: protocol::MutationOrigin) -> String {
             let edits_before = app.store.envelope().vcs.edits.len();
             let prepared_ops: Vec<Vec<u8>> = ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).expect("encode prepared op")).collect();
             let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(origin.clone()));
@@ -5892,7 +5892,7 @@ pub mod app {
         /// 🔀️ Prepares then rolls back a transaction, asserting the store's generation and edit
         /// count are completely untouched (contract §5.5: rollback discards pending state without
         /// ever having applied anything).
-        pub fn assert_transaction_rollback_leaves_state_untouched<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, label: &str) {
+        pub async fn assert_transaction_rollback_leaves_state_untouched<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, label: &str) {
             let generation_before = app.store.generation();
             let edits_before = app.store.envelope().vcs.edits.len();
             let prepared_ops: Vec<Vec<u8>> = ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).expect("encode prepared op")).collect();
@@ -5927,22 +5927,22 @@ pub mod app {
             /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
             impl store::ArtifactDsl for DummySnapshot {
                 const EXTENSION: &'static str = "testkit-dummy";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                     if text.trim().is_empty() {
                         return Ok(Self::default());
                     }
                     serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
                 }
-                fn print_dsl(&self) -> String {
+                async fn print_dsl(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
                 }
             }
 
             impl store::ArtifactPack for DummySnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                     serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
                 }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                     if bytes.is_empty() {
                         return Ok(Self::default());
                     }
@@ -5956,11 +5956,11 @@ pub mod app {
             }
 
             impl MutationDiff<DummySnapshot> for DummyDiff {
-                fn apply(&self, snapshot: &DummySnapshot) -> protocol::MutationApplyResult<DummySnapshot> {
+                async fn apply(&self, snapshot: &DummySnapshot) -> protocol::MutationApplyResult<DummySnapshot> {
                     Ok(DummySnapshot { count: self.count.unwrap_or(snapshot.count) })
                 }
 
-                fn absorb(&mut self, other: Self) {
+                async fn absorb(&mut self, other: Self) {
                     if other.count.is_some() {
                         self.count = other.count;
                     }
@@ -5977,19 +5977,19 @@ pub mod app {
             impl Mutation<DummySnapshot> for DummyMutation {
                 type Diff = DummyDiff;
 
-                fn diff(&self, _snapshot: &DummySnapshot) -> ::protocol::MutationOutcome<DummyDiff> {
+                async fn diff(&self, _snapshot: &DummySnapshot) -> ::protocol::MutationOutcome<DummyDiff> {
                     ::protocol::MutationOutcome::new(match self {
                         DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
                     })
                 }
 
-                fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
+                async fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
                     vec![DummyMutation::SetCount { value: snapshot.count }]
                 }
             }
 
             impl ::protocol::OpText for DummyMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6001,7 +6001,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6015,10 +6015,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for DummyMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6030,7 +6030,7 @@ pub mod app {
             }
 
             impl ::protocol::OpText for DummyCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6042,7 +6042,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6056,10 +6056,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for DummyCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6082,11 +6082,11 @@ pub mod app {
                 type TransientMutation = crate::app::NoTransientMutation;
                 type Command = DummyCommand;
 
-                fn initial_snapshot() -> DummySnapshot {
+                async fn initial_snapshot() -> DummySnapshot {
                     DummySnapshot::default()
                 }
 
-                fn handle(
+                async fn handle(
                     command: &DummyCommand,
                     doc: &ArtifactView<'_, DummySnapshot>,
                     _cfg: &ConfigView<'_, NoConfig>,
@@ -6099,38 +6099,38 @@ pub mod app {
                     }
                 }
 
-                fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                     ui_text(Label::data(format!("count={}", doc.snapshot.count)))
                 }
             }
 
             #[test]
-            fn meta_carries_actor_and_local_instance_id() {
+            async fn meta_carries_actor_and_local_instance_id() {
                 let m = meta("actor-x");
                 assert_eq!(m.actor, "actor-x");
                 assert_eq!(m.instance_id, 1);
             }
 
             #[test]
-            fn new_app_constructs_a_registry_less_wrapper() {
+            async fn new_app_constructs_a_registry_less_wrapper() {
                 let mut app = new_app::<DummyApp>();
                 app.dispatch_typed(DummyCommand::Increment, &meta("local")).expect("increment");
                 assert_eq!(app.snapshot().unwrap().count, 1);
             }
 
             #[test]
-            fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
+            async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
                 let mut app = new_app::<DummyApp>();
                 assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1);
             }
 
             #[test]
-            fn assert_two_instances_converge_on_disjoint_edits() {
+            async fn assert_two_instances_converge_on_disjoint_edits() {
                 assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count);
             }
 
             #[test]
-            fn assert_ingest_idempotent_does_not_double_apply() {
+            async fn assert_ingest_idempotent_does_not_double_apply() {
                 assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.snapshot().unwrap().count);
             }
         }
@@ -6162,22 +6162,22 @@ pub mod app {
 
             impl store::ArtifactDsl for TxnSnapshot {
                 const EXTENSION: &'static str = "testkit-txn";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                     if text.trim().is_empty() {
                         return Ok(Self::default());
                     }
                     serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
                 }
-                fn print_dsl(&self) -> String {
+                async fn print_dsl(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
                 }
             }
 
             impl store::ArtifactPack for TxnSnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                     serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
                 }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                     if bytes.is_empty() {
                         return Ok(Self::default());
                     }
@@ -6191,10 +6191,10 @@ pub mod app {
             }
 
             impl MutationDiff<TxnSnapshot> for TxnDiff {
-                fn apply(&self, snapshot: &TxnSnapshot) -> protocol::MutationApplyResult<TxnSnapshot> {
+                async fn apply(&self, snapshot: &TxnSnapshot) -> protocol::MutationApplyResult<TxnSnapshot> {
                     Ok(TxnSnapshot { count: self.count.unwrap_or(snapshot.count) })
                 }
-                fn absorb(&mut self, other: Self) {
+                async fn absorb(&mut self, other: Self) {
                     if other.count.is_some() {
                         self.count = other.count;
                     }
@@ -6215,18 +6215,18 @@ pub mod app {
             impl Mutation<TxnSnapshot> for TxnMutation {
                 type Diff = TxnDiff;
 
-                fn diff(&self, _snapshot: &TxnSnapshot) -> ::protocol::MutationOutcome<TxnDiff> {
+                async fn diff(&self, _snapshot: &TxnSnapshot) -> ::protocol::MutationOutcome<TxnDiff> {
                     ::protocol::MutationOutcome::new(match self {
                         TxnMutation::SetCount { value } => TxnDiff { count: Some(*value) },
                         TxnMutation::SetCountAndNotify { value } => TxnDiff { count: Some(*value) },
                     })
                 }
 
-                fn inverse(&self, snapshot: &TxnSnapshot) -> Vec<Self> {
+                async fn inverse(&self, snapshot: &TxnSnapshot) -> Vec<Self> {
                     vec![TxnMutation::SetCount { value: snapshot.count }]
                 }
 
-                fn foreign_steps(&self, _snapshot: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
+                async fn foreign_steps(&self, _snapshot: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
                     match self {
                         TxnMutation::SetCountAndNotify { .. } => vec![protocol::ForeignStep {
                             target: protocol::ForeignTarget { artifact_id: "peer-doc".to_string(), artifact_kind: "s.testkit.txn".to_string(), dialect: None },
@@ -6240,7 +6240,7 @@ pub mod app {
             }
 
             impl ::protocol::OpText for TxnMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6252,7 +6252,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6266,10 +6266,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for TxnMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6283,7 +6283,7 @@ pub mod app {
             }
 
             impl ::protocol::OpText for TxnCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6295,7 +6295,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6309,10 +6309,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for TxnCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6335,11 +6335,11 @@ pub mod app {
                 type TransientMutation = crate::app::NoTransientMutation;
                 type Command = TxnCommand;
 
-                fn initial_snapshot() -> TxnSnapshot {
+                async fn initial_snapshot() -> TxnSnapshot {
                     TxnSnapshot::default()
                 }
 
-                fn handle(
+                async fn handle(
                     command: &TxnCommand,
                     doc: &ArtifactView<'_, TxnSnapshot>,
                     _cfg: &ConfigView<'_, NoConfig>,
@@ -6353,13 +6353,13 @@ pub mod app {
                     }
                 }
 
-                fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                     ui_text(Label::data(format!("count={}", doc.snapshot.count)))
                 }
             }
 
             #[test]
-            fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
+            async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
                 let mut app = new_app::<TxnApp>();
                 let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify);
                 assert_eq!(draft.local_ops.len(), 1, "the local op must still be encoded for the proposal");
@@ -6368,7 +6368,7 @@ pub mod app {
             }
 
             #[test]
-            fn plain_command_still_applies_normally() {
+            async fn plain_command_still_applies_normally() {
                 let mut app = new_app::<TxnApp>();
                 app.dispatch_typed(TxnCommand::Increment, &meta("local")).expect("increment");
                 assert_eq!(app.snapshot().unwrap().count, 1);
@@ -6376,7 +6376,7 @@ pub mod app {
             }
 
             #[test]
-            fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
+            async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
                 let mut app = new_app::<TxnApp>();
                 let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
                 let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![TxnMutation::SetCount { value: 7 }], "peer-write", origin);
@@ -6386,7 +6386,7 @@ pub mod app {
             }
 
             #[test]
-            fn rollback_leaves_state_untouched() {
+            async fn rollback_leaves_state_untouched() {
                 let mut app = new_app::<TxnApp>();
                 app.dispatch_typed(TxnCommand::Increment, &meta("local")).expect("increment");
                 assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![TxnMutation::SetCount { value: 99 }], "peer-write");
@@ -6401,7 +6401,7 @@ pub mod app {
             /// precisely the race §5.8's check exists to catch. Driving this through `dispatch_typed`
             /// instead only proves §5.10 a second time (it rejects with `transaction.instance-busy`).
             #[test]
-            fn generation_mismatch_is_rejected_with_the_frozen_code() {
+            async fn generation_mismatch_is_rejected_with_the_frozen_code() {
                 let mut sender = new_app::<TxnApp>();
                 let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn");
                 sender.attach_backbone(Box::new(near)).expect("attach");
@@ -6424,7 +6424,7 @@ pub mod app {
             }
 
             #[test]
-            fn second_prepare_while_pending_is_rejected_instance_busy() {
+            async fn second_prepare_while_pending_is_rejected_instance_busy() {
                 let mut app = new_app::<TxnApp>();
                 let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 1 }).expect("encode")], "first", Some(protocol::MutationOrigin::Owner));
                 assert!(first.rejection.is_none());
@@ -6434,7 +6434,7 @@ pub mod app {
             }
 
             #[test]
-            fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
+            async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
                 let mut app = new_app::<TxnApp>();
                 let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 1 }).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner));
                 assert!(prepared.rejection.is_none());
@@ -6448,7 +6448,7 @@ pub mod app {
             }
 
             #[test]
-            fn undo_and_redo_by_group() {
+            async fn undo_and_redo_by_group() {
                 let mut app = new_app::<TxnApp>();
                 assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![TxnMutation::SetCount { value: 42 }], "peer-write", protocol::MutationOrigin::Owner);
                 assert_eq!(app.snapshot().unwrap().count, 42);
@@ -6474,7 +6474,7 @@ pub mod app {
         /// representative command with no caller-supplied value — `ArtifactViewer` itself declares
         /// none, since a viewer's command grammar is author-defined; a no-op-only command (the norm
         /// for a first-pass viewer, contract §2.2) derives `Default` for free.
-        pub fn assert_viewer_never_mutates<V: ArtifactViewer>()
+        pub async fn assert_viewer_never_mutates<V: ArtifactViewer>()
         where
             V::Command: Default,
         {
@@ -6493,14 +6493,14 @@ pub mod app {
         /// ✏️👁️ Contract §2.5 helper 2/3 — an editor and its viewer over the same subset must resolve
         /// to one `Dialect` coordinate, or `surface_app_id` would mint two different canonical ids
         /// (`…#editor` / `…#viewer`) for what the contract treats as one subset's two surfaces.
-        pub fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
+        pub async fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
             assert_eq!(E::DIALECT, V::DIALECT, "an editor and its viewer over the same subset must share one Dialect coordinate");
         }
 
         /// 👁️ Contract §2.5 helper 3/3 — the viewer twin of `new_app::<A: ArtifactApp>()`. `ViewerApp<V>`
         /// already satisfies the runtime `ArtifactApp` bound (the SDK adapter, contract §2.1), so this
         /// is a thin rename over the existing generic harness rather than new machinery.
-        pub fn new_viewer<V: ArtifactViewer>() -> VcsArtifactApp<ViewerApp<V>> {
+        pub async fn new_viewer<V: ArtifactViewer>() -> VcsArtifactApp<ViewerApp<V>> {
             new_app::<ViewerApp<V>>()
         }
 
@@ -6530,22 +6530,22 @@ pub mod app {
 
             impl store::ArtifactDsl for SurfaceSnapshot {
                 const EXTENSION: &'static str = "testkit-surface";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                     if text.trim().is_empty() {
                         return Ok(Self::default());
                     }
                     serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
                 }
-                fn print_dsl(&self) -> String {
+                async fn print_dsl(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
                 }
             }
 
             impl store::ArtifactPack for SurfaceSnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                     serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
                 }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                     if bytes.is_empty() {
                         return Ok(Self::default());
                     }
@@ -6559,10 +6559,10 @@ pub mod app {
             }
 
             impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
-                fn apply(&self, snapshot: &SurfaceSnapshot) -> protocol::MutationApplyResult<SurfaceSnapshot> {
+                async fn apply(&self, snapshot: &SurfaceSnapshot) -> protocol::MutationApplyResult<SurfaceSnapshot> {
                     Ok(SurfaceSnapshot { count: self.count.unwrap_or(snapshot.count) })
                 }
-                fn absorb(&mut self, other: Self) {
+                async fn absorb(&mut self, other: Self) {
                     if other.count.is_some() {
                         self.count = other.count;
                     }
@@ -6578,18 +6578,18 @@ pub mod app {
 
             impl Mutation<SurfaceSnapshot> for SurfaceMutation {
                 type Diff = SurfaceDiff;
-                fn diff(&self, _snapshot: &SurfaceSnapshot) -> ::protocol::MutationOutcome<SurfaceDiff> {
+                async fn diff(&self, _snapshot: &SurfaceSnapshot) -> ::protocol::MutationOutcome<SurfaceDiff> {
                     match self {
                         SurfaceMutation::SetCount { value } => ::protocol::MutationOutcome::new(SurfaceDiff { count: Some(*value) }),
                     }
                 }
-                fn inverse(&self, snapshot: &SurfaceSnapshot) -> Vec<Self> {
+                async fn inverse(&self, snapshot: &SurfaceSnapshot) -> Vec<Self> {
                     vec![SurfaceMutation::SetCount { value: snapshot.count }]
                 }
             }
 
             impl ::protocol::OpText for SurfaceMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6601,7 +6601,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6615,10 +6615,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for SurfaceMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6630,7 +6630,7 @@ pub mod app {
             }
 
             impl ::protocol::OpText for SurfaceEditorCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+                async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     for (keyword, spec_fn) in &variants {
                         let probe = format!("{keyword} ");
@@ -6642,7 +6642,7 @@ pub mod app {
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
-                fn print_op(&self) -> String {
+                async fn print_op(&self) -> String {
                     let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -6656,10 +6656,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for SurfaceEditorCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::encode_op(self)
                 }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     ::dsl::variants_binary::decode_op(bytes)
                 }
             }
@@ -6671,10 +6671,10 @@ pub mod app {
             }
 
             impl ::protocol::OpBinary for SurfaceViewerCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                     Ok(Vec::new())
                 }
-                fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                async fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                     Ok(SurfaceViewerCommand::Noop)
                 }
             }
@@ -6697,11 +6697,11 @@ pub mod app {
                 type TransientMutation = crate::app::NoTransientMutation;
                 type Command = SurfaceEditorCommand;
 
-                fn initial_snapshot() -> SurfaceSnapshot {
+                async fn initial_snapshot() -> SurfaceSnapshot {
                     SurfaceSnapshot::default()
                 }
 
-                fn handle(
+                async fn handle(
                     command: &SurfaceEditorCommand,
                     doc: &ArtifactView<'_, SurfaceSnapshot>,
                     _cfg: &ConfigView<'_, NoConfig>,
@@ -6714,7 +6714,7 @@ pub mod app {
                     }
                 }
 
-                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                     ui_text(Label::data(format!("count={}", doc.snapshot.count)))
                 }
             }
@@ -6735,11 +6735,11 @@ pub mod app {
                 type TransientMutation = crate::app::NoTransientMutation;
                 type Command = SurfaceViewerCommand;
 
-                fn initial_snapshot() -> SurfaceSnapshot {
+                async fn initial_snapshot() -> SurfaceSnapshot {
                     SurfaceSnapshot::default()
                 }
 
-                fn handle(
+                async fn handle(
                     _command: &SurfaceViewerCommand,
                     _doc: &ArtifactView<'_, SurfaceSnapshot>,
                     _cfg: &ConfigView<'_, NoConfig>,
@@ -6749,29 +6749,29 @@ pub mod app {
                     Ok(ViewEmit::default())
                 }
 
-                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                     ui_text(Label::data(format!("count={}", doc.snapshot.count)))
                 }
             }
 
             #[test]
-            fn viewer_never_mutates_the_document_or_draft_store() {
+            async fn viewer_never_mutates_the_document_or_draft_store() {
                 assert_viewer_never_mutates::<SurfaceViewerFixture>();
             }
 
             #[test]
-            fn editor_and_viewer_share_one_dialect() {
+            async fn editor_and_viewer_share_one_dialect() {
                 assert_editor_and_viewer_share_dialect::<SurfaceEditorFixture, SurfaceViewerFixture>();
             }
 
             #[test]
-            fn new_viewer_constructs_a_registry_less_wrapper() {
+            async fn new_viewer_constructs_a_registry_less_wrapper() {
                 let app = new_viewer::<SurfaceViewerFixture>();
                 assert_eq!(app.snapshot().unwrap().count, 0);
             }
 
             #[test]
-            fn editor_fixture_still_mutates_normally() {
+            async fn editor_fixture_still_mutates_normally() {
                 let mut app = new_app::<EditorApp<SurfaceEditorFixture>>();
                 app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).expect("increment");
                 assert_eq!(app.snapshot().unwrap().count, 1);
@@ -6788,7 +6788,7 @@ pub mod app {
             /// very next check (`registry.has_mode`) must fail instead — proving the rejection was
             /// specifically the ownership line, not a coincidence of an otherwise-valid dispatch.
             #[test]
-            fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
+            async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
                 use semio_framework::manifest::{ActionAddress, ActionInvocation};
                 let mut app = new_app::<EditorApp<SurfaceEditorFixture>>();
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
@@ -6805,7 +6805,7 @@ pub mod app {
             /// 🪪️ Verifies `EditorApp` initializes its document, config, draft, and interaction
             /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
             #[test]
-            fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
+            async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
                 let app = new_app::<EditorApp<SurfaceEditorFixture>>();
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
                 assert_eq!(app.store.envelope().id, real_id);
@@ -6817,7 +6817,7 @@ pub mod app {
             /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
             /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
             #[test]
-            fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
+            async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
                 let app = new_viewer::<SurfaceViewerFixture>();
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
                 assert_eq!(app.store.envelope().id, real_id);
@@ -6831,7 +6831,7 @@ pub mod app {
             /// seven string actions, `import_media` for the eighth) and asserts every one comes back
             /// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
             #[test]
-            fn viewer_rejects_every_contract_mutating_verb() {
+            async fn viewer_rejects_every_contract_mutating_verb() {
                 let mut app = new_viewer::<SurfaceViewerFixture>();
                 for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"] {
                     let error = app.handle_action(verb, None, &meta("local")).err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
@@ -6857,7 +6857,7 @@ pub mod app {
         /// 🌳️ Builds a plugin from `declaration` and asserts every subset ends up registered in the
         /// schema registry, the io registry (when it declares any `IoEntry` rows), and the app router
         /// (manifest apps) — "nothing is silently dropped" (Task 4, law 1/3).
-        pub fn assert_declaration_tree_registers_all(plugin_id: &str, declaration: declarations::ArtifactDeclaration) {
+        pub async fn assert_declaration_tree_registers_all(plugin_id: &str, declaration: declarations::ArtifactDeclaration) {
             let expected_schema_ids: Vec<&'static str> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter().map(|subset| subset.schema.descriptor.id)).collect();
             let expected_io_pairs: Vec<(String, String)> = declaration
                 .standards
@@ -6895,7 +6895,7 @@ pub mod app {
         /// descriptors share an id with different content) — asserts the schema AND io registries are
         /// byte-for-byte unchanged after the rejection: a preflight-failing declaration leaves ZERO
         /// rows behind (Task 4, law 2/3).
-        pub fn assert_declaration_registration_is_atomic(plugin_id: &str, invalid: declarations::ArtifactDeclaration) {
+        pub async fn assert_declaration_registration_is_atomic(plugin_id: &str, invalid: declarations::ArtifactDeclaration) {
             let schema_count_before = ::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len());
             let io_count_before = semio_framework::io::io_mechanism::io_entries().len();
             let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").declare_artifact(invalid).try_build();
@@ -6906,7 +6906,7 @@ pub mod app {
 
         /// 🌳️ Every subset's editor/viewer surface id must equal `surface_app_id(&dialect, role)` —
         /// pure, no registration (Task 4, law 3/3).
-        pub fn assert_subset_declaration_ids_are_derived(declaration: &declarations::ArtifactDeclaration) {
+        pub async fn assert_subset_declaration_ids_are_derived(declaration: &declarations::ArtifactDeclaration) {
             for standard in &declaration.standards {
                 for subset in &standard.subsets {
                     let dialect: semio_framework::ArtifactDialect = subset.dialect.into();
@@ -6927,7 +6927,7 @@ pub mod app {
 
         /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
         /// not a hand-written pre-migration string. One shared helper rather than one dialect per test.
-        fn canonical_test_app_id(slug: &str) -> String {
+        async fn canonical_test_app_id(slug: &str) -> String {
             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
         }
 
@@ -6941,7 +6941,7 @@ pub mod app {
         /// validating it. The defensive asserts in `validate_arg_defs` are kept as a tripwire in
         /// case `control()` ever widens again.
 #[test]
-        fn build_definition_rejects_layout_with_unknown_window_kind() {
+        async fn build_definition_rejects_layout_with_unknown_window_kind() {
             let result = std::panic::catch_unwind(|| {
                 App::builder("bad-app", LocalizedLabel::data("Bad"))
                     .document(["semio", "bad"])
@@ -6955,7 +6955,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_accepts_valid_manifest() {
+        async fn build_definition_accepts_valid_manifest() {
             let definition = App::builder(canonical_test_app_id("good-app"), LocalizedLabel::data("Good"))
                 .document(["semio", "good"])
                 .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -6972,7 +6972,7 @@ pub mod app {
         }
 
         #[test]
-        fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
+        async fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
             for mode in ["edit", "paint", "generate", "explore", "builder", "review", "report"] {
                 let icon = semio_framework::catalog_mode_icon_id(mode);
                 assert_eq!(IconName::from_str(icon.as_str()), Some(icon), "mode {mode} -> {}", icon.as_str());
@@ -6991,7 +6991,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
+        async fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
             let result = std::panic::catch_unwind(|| {
                 App::builder("bad-terminology-app", LocalizedLabel::data("Bad"))
                     .document(["semio", "bad"])
@@ -7006,7 +7006,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_accepts_declared_terminology_document() {
+        async fn build_definition_accepts_declared_terminology_document() {
             let definition = App::builder(canonical_test_app_id("good-terminology-app"), LocalizedLabel::data("Good"))
                 .document(["semio", "good"])
                 .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -7019,12 +7019,12 @@ pub mod app {
             assert_eq!(definition.terminology_breadcrumbs.get("reuse").map(Vec::as_slice), Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice()));
         }
 
-        fn minimal_app(slug: &str) -> AppBuilder {
+        async fn minimal_app(slug: &str) -> AppBuilder {
             App::builder(canonical_test_app_id(slug), LocalizedLabel::data("App")).document(["semio", slug]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
         }
 
         #[test]
-        fn build_definition_auto_injects_history_actions_and_keybindings() {
+        async fn build_definition_auto_injects_history_actions_and_keybindings() {
             let definition = minimal_app("history-app").build_definition();
             let history_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(history_ids.contains("undo"));
@@ -7039,13 +7039,13 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
+        async fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
             let definition = minimal_app("manual-undo-app").keybinding("mod+z", "undo").build_definition();
             assert_eq!(definition.keybindings.iter().filter(|b| b.keys == "mod+z").count(), 1);
         }
 
         #[test]
-        fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
+        async fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
             let definition = minimal_app("clipboard-app").build_definition();
             let clipboard_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(clipboard_ids.contains("copy"));
@@ -7063,7 +7063,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
+        async fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
             let definition = minimal_app("history-panel-app").build_definition();
             assert!(definition.panel_tabs.iter().any(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
             let action_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|a| a.id.as_str()).collect();
@@ -7078,7 +7078,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
+        async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
             let definition = minimal_app("manual-history-app").panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").build_definition();
             assert_eq!(definition.panel_tabs.iter().filter(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
             let tab = definition.panel_tabs.iter().find(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
@@ -7086,7 +7086,7 @@ pub mod app {
         }
 
         #[test]
-        fn operation_view_and_shell_actions_are_declared_with_their_kind() {
+        async fn operation_view_and_shell_actions_are_declared_with_their_kind() {
             let definition =
                 minimal_app("typed-actions-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).view_action("setCamera", LocalizedLabel::data("Set Camera")).shell_action("exportPng", LocalizedLabel::data("Export PNG")).build_definition();
             let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
@@ -7096,19 +7096,19 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_action_ids() {
+        async fn build_definition_rejects_duplicate_action_ids() {
             let result = std::panic::catch_unwind(|| minimal_app("dupe-action-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).mutation("addLayer", LocalizedLabel::data("Add Layer Again")).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
+        async fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
             let result = std::panic::catch_unwind(|| minimal_app("undeclared-keybinding-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).keybinding("mod+l", "removeLayer").build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
+        async fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
             use semio_framework::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
             let definition = minimal_app("utility-app")
                 .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush) })
@@ -7123,14 +7123,14 @@ pub mod app {
         }
 
         #[test]
-        fn no_utilities_means_no_set_active_utility_action() {
+        async fn no_utilities_means_no_set_active_utility_action() {
             use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
             let definition = minimal_app("no-utility-app").build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
         }
 
         #[test]
-        fn build_definition_accepts_and_resolves_mode_tools() {
+        async fn build_definition_accepts_and_resolves_mode_tools() {
             use semio_framework::ToolRef;
             let definition = minimal_app("tool-app").tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).mode_tools("edit", vec![ToolRef::new("fill")]).build_definition();
             assert_eq!(definition.tools.len(), 1);
@@ -7138,20 +7138,20 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_mode_tool_ref_to_undeclared_tool() {
+        async fn build_definition_rejects_mode_tool_ref_to_undeclared_tool() {
             use semio_framework::ToolRef;
             let result = std::panic::catch_unwind(|| minimal_app("undeclared-mode-tool-app").mode_tools("edit", vec![ToolRef::new("missing")]).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_tool_referenced_by_no_mode() {
+        async fn build_definition_rejects_tool_referenced_by_no_mode() {
             let result = std::panic::catch_unwind(|| minimal_app("orphan-tool-app").tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).build_definition());
             assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
         }
 
         #[test]
-        fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
+        async fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
             use semio_framework::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
             let definition =
                 minimal_app("tool-keybinding-app").tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket) }).mode_tools("edit", vec![ToolRef::new("fill")]).build_definition();
@@ -7164,14 +7164,14 @@ pub mod app {
         }
 
         #[test]
-        fn no_tools_means_no_set_active_tool_action() {
+        async fn no_tools_means_no_set_active_tool_action() {
             use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
             let definition = minimal_app("no-tool-app").build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
         }
 
         #[test]
-        fn action_args_attaches_declared_arguments() {
+        async fn action_args_attaches_declared_arguments() {
             let definition = minimal_app("args-app").mutation("resize", LocalizedLabel::data("Resize")).action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).build_definition();
             let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
             assert_eq!(resize.args.len(), 1);
@@ -7180,19 +7180,19 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
+        async fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
             let result = std::panic::catch_unwind(|| minimal_app("bad-utility-ref-app").utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).window_kind_utilities("main", vec!["missing".into()]).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
+        async fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
             let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_action_refs("main", vec!["removeLayer".into()]).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_carries_window_interactions_and_injects_framework_actions() {
+        async fn build_definition_carries_window_interactions_and_injects_framework_actions() {
             use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_HOVER_ACTION_ID};
             let definition = minimal_app("interaction-app")
                 .interaction(InteractionDefinition {
@@ -7213,7 +7213,7 @@ pub mod app {
 
         
         #[test]
-        fn declaring_introduction_injects_start_introduction_action() {
+        async fn declaring_introduction_injects_start_introduction_action() {
             use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("intro-app")
@@ -7225,21 +7225,21 @@ pub mod app {
         }
 
         #[test]
-        fn no_introduction_means_no_start_introduction_action() {
+        async fn no_introduction_means_no_start_introduction_action() {
             use semio_framework::START_INTRODUCTION_ACTION_ID;
             let definition = minimal_app("no-intro-app").build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
         }
 
         #[test]
-        fn build_definition_rejects_introduction_with_no_steps() {
+        async fn build_definition_rejects_introduction_with_no_steps() {
             use semio_framework::IntroductionDefinition;
             let result = std::panic::catch_unwind(|| minimal_app("empty-intro-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![] }).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_introduction_step_ids() {
+        async fn build_definition_rejects_duplicate_introduction_step_ids() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7254,7 +7254,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
+        async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7266,7 +7266,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
+        async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
             use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7290,7 +7290,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
+        async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7308,7 +7308,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
+        async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("good-escape-hatch-app")
@@ -7319,7 +7319,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
+        async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7334,7 +7334,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
+        async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let result = std::panic::catch_unwind(|| {
@@ -7349,7 +7349,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
+        async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("good-intro-app")
@@ -7372,7 +7372,7 @@ pub mod app {
             assert_eq!(introduction.steps.len(), 5);
         }
 
-        fn minimal_tutorial(id: &str) -> TutorialDefinition {
+        async fn minimal_tutorial(id: &str) -> TutorialDefinition {
             use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
             TutorialDefinition {
                 id: id.into(),
@@ -7387,7 +7387,7 @@ pub mod app {
         }
 
         #[test]
-        fn declaring_tutorial_injects_start_tutorial_action() {
+        async fn declaring_tutorial_injects_start_tutorial_action() {
             use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("tutorial-app").tutorial(minimal_tutorial("welcome-tour")).build_definition();
             let start_tutorial = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
@@ -7396,7 +7396,7 @@ pub mod app {
         }
 
         #[test]
-        fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
+        async fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
             use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("no-tutorial-app").build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_TUTORIAL_ACTION_ID));
@@ -7404,7 +7404,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_tutorial_failing_structural_validation() {
+        async fn build_definition_rejects_tutorial_failing_structural_validation() {
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("out-of-range-tour");
                 tutorial.duration_ms = 100;
@@ -7415,13 +7415,13 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_tutorial_ids() {
+        async fn build_definition_rejects_duplicate_tutorial_ids() {
             let result = std::panic::catch_unwind(|| minimal_app("dupe-tutorial-app").tutorial(minimal_tutorial("tour")).tutorial(minimal_tutorial("tour")).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
+        async fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
             use semio_framework::{TutorialEvent, TutorialEventKind};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-event-tour");
@@ -7432,7 +7432,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
+        async fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
             use semio_framework::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-ui-change-tour");
@@ -7443,7 +7443,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
+        async fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
             use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
             let result = std::panic::catch_unwind(|| {
                 let mut tutorial = minimal_tutorial("bad-gesture-tour");
@@ -7454,7 +7454,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
+        async fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
             use semio_framework::{window_element_id, IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
             let mut tutorial = minimal_tutorial("good-tour");
             tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
@@ -7466,7 +7466,7 @@ pub mod app {
         }
 
         #[test]
-        fn declaring_dialog_appends_to_definition() {
+        async fn declaring_dialog_appends_to_definition() {
             use semio_framework::{ActionRef, DialogDefinition};
             let definition = minimal_app("dialog-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).build_definition();
             assert_eq!(definition.dialogs.len(), 1);
@@ -7475,7 +7475,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_dialog_ids() {
+        async fn build_definition_rejects_duplicate_dialog_ids() {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-app")
@@ -7488,14 +7488,14 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
+        async fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| minimal_app("bad-dialog-submit-app").dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("missing"))).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
+        async fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("bad-dialog-cancel-app")
@@ -7507,14 +7507,14 @@ pub mod app {
         }
 
         #[test]
-        fn dialog_submit_action_may_reference_an_injected_history_action() {
+        async fn dialog_submit_action_may_reference_an_injected_history_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let definition = minimal_app("dialog-injected-action-app").dialog(DialogDefinition::new("confirmUndo", LocalizedLabel::data("Undo?"), ActionRef::new("undo"))).build_definition();
             assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
         }
 
         #[test]
-        fn build_definition_rejects_dialog_duplicate_arg_ids() {
+        async fn build_definition_rejects_dialog_duplicate_arg_ids() {
             use semio_framework::{ActionArgDef, ActionRef, DialogDefinition};
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-dialog-arg-app")
@@ -7530,7 +7530,7 @@ pub mod app {
 
         
         #[test]
-        fn build_definition_accepts_app_and_mode_scope_commands() {
+        async fn build_definition_accepts_app_and_mode_scope_commands() {
             use semio_framework::CommandDefinition;
             let definition = minimal_app("command-app")
                 .app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
@@ -7541,7 +7541,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_command_ids() {
+        async fn build_definition_rejects_duplicate_command_ids() {
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell).app_command("app.export", LocalizedLabel::data("Export Again"), "document", ActionKind::Shell).build_definition()
             });
@@ -7549,7 +7549,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_duplicate_mode_command_ids() {
+        async fn build_definition_rejects_duplicate_mode_command_ids() {
             use semio_framework::CommandDefinition;
             let result = std::panic::catch_unwind(|| {
                 minimal_app("dupe-mode-command-app")
@@ -7561,7 +7561,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_derives_command_owner_from_structural_containment() {
+        async fn build_definition_derives_command_owner_from_structural_containment() {
             use semio_framework::CommandDefinition;
             let definition = minimal_app("structural-command-app")
                 .app_command("focus", LocalizedLabel::data("App Focus"), "app", ActionKind::View)
@@ -7572,7 +7572,7 @@ pub mod app {
         }
 
         #[test]
-        fn build_definition_rejects_empty_mode_command_id() {
+        async fn build_definition_rejects_empty_mode_command_id() {
             use semio_framework::CommandDefinition;
             let result = std::panic::catch_unwind(|| minimal_app("empty-mode-command-app").mode_command("edit", CommandDefinition::new_catalog("", LocalizedLabel::data("Focus"), "view", ActionKind::View)).build_definition());
             assert!(result.is_err());
@@ -7593,42 +7593,42 @@ pub mod app {
 
     impl ExampleSource {
         /// 🧱 Builds an example source from id, label, document payload, and icon.
-        pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+        pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
             Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), document_json: document_json.into() }
         }
 
         /// 🏷️ Stable example id (navbar picker / `setActiveExample`).
-        pub fn id(&self) -> &str {
+        pub async fn id(&self) -> &str {
             &self.id
         }
 
         /// 🗣️ Localized label sourced from the definition leaf.
-        pub fn label(&self) -> &LocalizedLabel {
+        pub async fn label(&self) -> &LocalizedLabel {
             &self.label
         }
 
         /// 🖼️ Icon id sourced from the definition leaf.
-        pub fn icon_id(&self) -> IconName {
+        pub async fn icon_id(&self) -> IconName {
             self.icon_id
         }
 
         /// 📄️ Document JSON payload registered on the manifest.
-        pub fn document_json(&self) -> &str {
+        pub async fn document_json(&self) -> &str {
             &self.document_json
         }
 
         /// 📄️ Alias of [`Self::document_json`] for leaf call sites that speak in document terms.
-        pub fn document(&self) -> &str {
+        pub async fn document(&self) -> &str {
             &self.document_json
         }
 
         /// 📒️ Alias of [`Self::document_json`] for leaf call sites that speak in payload terms.
-        pub fn payload(&self) -> &str {
+        pub async fn payload(&self) -> &str {
             &self.document_json
         }
 
         /// 🧬️ Converts into a manifest [`ExampleDefinition`] (`app_id` filled at plugin registration).
-        pub fn into_example_definition(self) -> ExampleDefinition {
+        pub async fn into_example_definition(self) -> ExampleDefinition {
             ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json: self.document_json, app_id: String::new() }
         }
     }
@@ -7657,12 +7657,12 @@ pub mod app {
 
         /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
         /// not a hand-written pre-migration string like the retired `"puzzle2d-play"`/`"demo-play"`.
-        fn canonical_test_app_id(slug: &str) -> String {
+        async fn canonical_test_app_id(slug: &str) -> String {
             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
         }
 
         #[test]
-        fn example_source_converts_into_example_definition_and_registers_on_app() {
+        async fn example_source_converts_into_example_definition_and_registers_on_app() {
             let source = ExampleSource::new("nakagin", LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), "{\"kind\":\"demo\"}", "building");
             assert_eq!(source.id(), "nakagin");
             assert_eq!(source.document(), "{\"kind\":\"demo\"}");
@@ -7685,7 +7685,7 @@ pub mod app {
         }
 
         #[test]
-        fn example_delegates_to_example_source() {
+        async fn example_delegates_to_example_source() {
             let app = App::from_builder(App::builder(canonical_test_app_id("demo-play"), LocalizedLabel::data("Demo")).document(["semio", "demo"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind(
                 "main",
                 LocalizedLabel::data("Main"),
@@ -7706,24 +7706,24 @@ pub mod app {
     }
 
     impl App {
-        pub fn builder(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> AppBuilder {
+        pub async fn builder(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> AppBuilder {
             AppBuilder::new(id, label)
         }
 
         /// 🗂️ Resource kinds declared via `.artifact_kind(...)` — see `AppDefinition.artifact_kinds`
         /// (round-trips through the plugin manifest; `semio_framework_os`'s artifact catalog registry
         /// consumes it from there at plugin registration time).
-        pub fn from_builder(builder: AppBuilder) -> Self {
+        pub async fn from_builder(builder: AppBuilder) -> Self {
             Self { definition: builder.build_definition(), examples: Vec::new() }
         }
 
         /// 🧷️ Fallible twin of `from_builder` — see `AppBuilder::try_build_definition`.
-        pub fn try_from_builder(builder: AppBuilder) -> Result<Self, PluginAssemblyError> {
+        pub async fn try_from_builder(builder: AppBuilder) -> Result<Self, PluginAssemblyError> {
             Ok(Self { definition: builder.try_build_definition()?, examples: Vec::new() })
         }
 
         /// 📚️ Registers an example from a definition-leaf [`ExampleSource`] (canonical path).
-        pub fn example_source(mut self, source: impl Into<ExampleSource>) -> Self {
+        pub async fn example_source(mut self, source: impl Into<ExampleSource>) -> Self {
             self.examples.push(ExampleDefinition::from(source.into()));
             self
         }
@@ -7731,7 +7731,7 @@ pub mod app {
         /// 📚️ Registers an example by restating id/label/payload/icon.
         /// Prefer [`Self::example_source`] once the definition leaf owns those fields; kept so
         /// existing `create_*_app()` call sites keep compiling during the example-shape migration.
-        pub fn example(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+        pub async fn example(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
             self.example_source(ExampleSource::new(id, label, document_json, icon_id))
         }
 
@@ -7740,7 +7740,7 @@ pub mod app {
         /// `workflow_palette()` in Wave 1 (`AppIo`-driven, not this free-text `yields`). Kept as a no-op
         /// so the ~50 existing `.workflow(...)` call sites across every app manifest keep compiling
         /// unchanged until their own wave touches them.
-        pub fn workflow(self, _workflow_step_id: impl Into<String>, _label: impl Into<String>, _yields: impl Into<String>) -> Self {
+        pub async fn workflow(self, _workflow_step_id: impl Into<String>, _label: impl Into<String>, _yields: impl Into<String>) -> Self {
             self
         }
     }
@@ -7761,12 +7761,12 @@ pub mod app {
         /// 🏗️ A view over a document with no composed children — the overwhelming majority, and the
         /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
         /// over time, and a constructor absorbs that growth without touching every call site.
-        pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
+        pub async fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
             Self { snapshot, history, children: ChildContentView::EMPTY }
         }
 
         /// 🏗️ A view over a composing document, wired to its live child stores.
-        pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView<'a>) -> Self {
+        pub async fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView<'a>) -> Self {
             Self { snapshot, history, children }
         }
     }
@@ -7793,35 +7793,35 @@ pub mod app {
         pub const EMPTY: Self = Self { children: None };
 
         /// 🏗️ Wraps a live child-store map (built by {@link VcsArtifactApp} before each dispatch).
-        pub fn new(children: &'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+        pub async fn new(children: &'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
             Self { children: Some(children) }
         }
 
         /// 📦️ The child's CURRENT content, pack-encoded — reads through the live store, so it always
         /// reflects the child's present state including any undo/redo/checkout it has undergone.
-        pub fn pack(&self, slot: &str, child_id: &str) -> Result<Vec<u8>, Fault> {
+        pub async fn pack(&self, slot: &str, child_id: &str) -> Result<Vec<u8>, Fault> {
             let member = self.children.and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?;
             member.1.document_pack_bytes().map_err(|error| plugin_sdk_fault(error.to_string()))
         }
 
         /// 🧩️ {@link Self::pack} decoded as the child's snapshot type — what a composing app's
         /// `handle`/`render` actually calls.
-        pub fn typed<S: ArtifactPack>(&self, slot: &str, child_id: &str) -> Result<S, Fault> {
+        pub async fn typed<S: ArtifactPack>(&self, slot: &str, child_id: &str) -> Result<S, Fault> {
             S::decode_pack(&self.pack(slot, child_id)?).map_err(|error| plugin_sdk_fault(error.to_string()))
         }
 
         /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
-        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
+        pub async fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
             self.children.and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(dialect, _)| dialect.clone())
         }
 
         /// 📋️ Every `(slot, child_id)` currently live under this document.
-        pub fn slots(&self) -> Vec<(String, String)> {
+        pub async fn slots(&self) -> Vec<(String, String)> {
             self.children.map(|children| children.keys().cloned().collect()).unwrap_or_default()
         }
 
         /// 🈳️ Whether this document has any live children at all.
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.children.map(HashMap::is_empty).unwrap_or(true)
         }
     }
@@ -7878,12 +7878,12 @@ pub mod app {
     /// never-touched domain — one static pair shared across every instance, so the accessor methods
     /// below can return a plain `&DomainSelection`/`&DomainHover` (no `Option`, no per-call allocation)
     /// exactly like the ticket's specified signature.
-    fn empty_domain_selection() -> &'static protocol::DomainSelection {
+    async fn empty_domain_selection() -> &'static protocol::DomainSelection {
         static EMPTY: std::sync::OnceLock<protocol::DomainSelection> = std::sync::OnceLock::new();
         EMPTY.get_or_init(protocol::DomainSelection::default)
     }
 
-    fn empty_domain_hover() -> &'static protocol::DomainHover {
+    async fn empty_domain_hover() -> &'static protocol::DomainHover {
         static EMPTY: std::sync::OnceLock<protocol::DomainHover> = std::sync::OnceLock::new();
         EMPTY.get_or_init(protocol::DomainHover::default)
     }
@@ -7908,7 +7908,7 @@ pub mod app {
     impl<'a> InteractionView<'a> {
         /// 🖱️ `domain`'s current selection — an empty `DomainSelection` (not `None`) for an undeclared
         /// or never-selected domain, so call sites never have to unwrap.
-        pub fn selection(&self, domain: &str) -> &protocol::DomainSelection {
+        pub async fn selection(&self, domain: &str) -> &protocol::DomainSelection {
             self.state.selection.get(domain).unwrap_or_else(|| empty_domain_selection())
         }
 
@@ -7916,7 +7916,7 @@ pub mod app {
         /// right now. `InteractionState.hover` holds exactly one live channel per domain at a time (the
         /// most recently hovered — see `next_hover`'s doc), so a `channel` mismatch also reads empty
         /// rather than returning a stale different-channel hover.
-        pub fn hover(&self, domain: &str, channel: &str) -> &protocol::DomainHover {
+        pub async fn hover(&self, domain: &str, channel: &str) -> &protocol::DomainHover {
             match self.hover.get(domain) {
                 Some(hover) if hover.channel == channel => hover,
                 _ => empty_domain_hover(),
@@ -7925,19 +7925,19 @@ pub mod app {
 
         /// 🪜️ `domain`'s active granularity id, `None` for an undeclared domain (never dispatched
         /// through `validate_state` yet — e.g. a registry-less test construction).
-        pub fn active_granularity(&self, domain: &str) -> Option<&str> {
+        pub async fn active_granularity(&self, domain: &str) -> Option<&str> {
             self.state.active_granularity.get(domain).map(String::as_str)
         }
 
         /// 🔀️ `domain`'s active `SelectionMode`, `None` for an undeclared domain.
-        pub fn active_mode(&self, domain: &str) -> Option<protocol::SelectionMode> {
+        pub async fn active_mode(&self, domain: &str) -> Option<protocol::SelectionMode> {
             self.state.active_mode.get(domain).copied()
         }
 
         /// 👥️ Every OTHER peer currently selecting `id` within `domain`, sorted by actor
         /// (contract-freeze §C7.6) — `[]` for a peer with no adopted interaction, an interaction with
         /// no matching domain, or a domain where `id` is not in `selected`.
-        pub fn peers_selecting(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
+        pub async fn peers_selecting(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
             self.peers
                 .iter()
                 .filter_map(|(actor, presence)| {
@@ -7950,7 +7950,7 @@ pub mod app {
 
         /// 👥️ `peers_selecting`'s hover twin — every OTHER peer currently hovering `id` within
         /// `domain`, sorted by actor.
-        pub fn peers_hovering(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
+        pub async fn peers_hovering(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
             self.peers
                 .iter()
                 .filter_map(|(actor, presence)| {
@@ -7971,22 +7971,22 @@ pub mod app {
 
     impl store::ArtifactDsl for NoConfig {
         const EXTENSION: &'static str = "nocfg";
-        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no config", store::TextSpan::at(1, 1)))
         }
-        fn print_dsl(&self) -> String {
+        async fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoConfig {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
@@ -7994,10 +7994,10 @@ pub mod app {
     impl store::ConfigRecord for NoConfig {}
 
     impl ::protocol::MutationDiff<NoConfig> for NoConfig {
-        fn apply(&self, base: &NoConfig) -> protocol::MutationApplyResult<NoConfig> {
+        async fn apply(&self, base: &NoConfig) -> protocol::MutationApplyResult<NoConfig> {
             Ok(base.clone())
         }
-        fn absorb(&mut self, _other: Self) {}
+        async fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8009,17 +8009,17 @@ pub mod app {
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         type Diff = NoConfig;
 
-        fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
+        async fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
             ::protocol::MutationOutcome::new(NoConfig::default())
         }
 
-        fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
+        async fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
             vec![NoConfigMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoConfigMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8031,7 +8031,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8045,10 +8045,10 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoConfigMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             ::dsl::variants_binary::encode_op(self)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             ::dsl::variants_binary::decode_op(bytes)
         }
     }
@@ -8069,31 +8069,31 @@ pub mod app {
 
     impl store::ArtifactDsl for NoPresence {
         const EXTENSION: &'static str = "nopres";
-        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no presence", store::TextSpan::at(1, 1)))
         }
-        fn print_dsl(&self) -> String {
+        async fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoPresence {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
 
     impl ::protocol::MutationDiff<NoPresence> for NoPresence {
-        fn apply(&self, base: &NoPresence) -> protocol::MutationApplyResult<NoPresence> {
+        async fn apply(&self, base: &NoPresence) -> protocol::MutationApplyResult<NoPresence> {
             Ok(base.clone())
         }
-        fn absorb(&mut self, _other: Self) {}
+        async fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8105,17 +8105,17 @@ pub mod app {
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
         type Diff = NoPresence;
 
-        fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
+        async fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
             ::protocol::MutationOutcome::new(NoPresence::default())
         }
 
-        fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
+        async fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
             vec![NoPresenceMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoPresenceMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8127,7 +8127,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8141,10 +8141,10 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoPresenceMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             ::dsl::variants_binary::encode_op(self)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             ::dsl::variants_binary::decode_op(bytes)
         }
     }
@@ -8170,31 +8170,31 @@ pub mod app {
 
     impl store::ArtifactDsl for NoTransient {
         const EXTENSION: &'static str = "notrans";
-        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no transient", store::TextSpan::at(1, 1)))
         }
-        fn print_dsl(&self) -> String {
+        async fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoTransient {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
 
     impl ::protocol::MutationDiff<NoTransient> for NoTransient {
-        fn apply(&self, base: &NoTransient) -> protocol::MutationApplyResult<NoTransient> {
+        async fn apply(&self, base: &NoTransient) -> protocol::MutationApplyResult<NoTransient> {
             Ok(base.clone())
         }
-        fn absorb(&mut self, _other: Self) {}
+        async fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8206,17 +8206,17 @@ pub mod app {
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
         type Diff = NoTransient;
 
-        fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
+        async fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
             ::protocol::MutationOutcome::new(NoTransient::default())
         }
 
-        fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
+        async fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
             vec![NoTransientMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoTransientMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8228,7 +8228,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8242,10 +8242,10 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoTransientMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             ::dsl::variants_binary::encode_op(self)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             ::dsl::variants_binary::decode_op(bytes)
         }
     }
@@ -8283,11 +8283,11 @@ pub mod app {
     }
 
     impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
-        fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
+        async fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
             let InteractionConfigMutation::SetState(state) = self;
             Ok(state.clone())
         }
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             *self = other;
         }
     }
@@ -8295,21 +8295,21 @@ pub mod app {
     impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
         type Diff = InteractionConfigMutation;
 
-        fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
+        async fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
             ::protocol::MutationOutcome::new(self.clone())
         }
 
-        fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
+        async fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
             vec![InteractionConfigMutation::SetState(base.clone())]
         }
     }
 
     impl ::protocol::OpText for InteractionConfigMutation {
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let InteractionConfigMutation::SetState(state) = self;
             format!("set-interaction-state {}", serde_json::to_string(state).expect("InteractionState always serializes"))
         }
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let body = line.strip_prefix("set-interaction-state ").ok_or_else(|| ::store::TextError::new(format!("unknown interaction config op '{line}'"), ::store::TextSpan::at(1, 1)))?;
             let state: protocol::InteractionState = serde_json::from_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
             Ok(InteractionConfigMutation::SetState(state))
@@ -8317,11 +8317,11 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for InteractionConfigMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             let InteractionConfigMutation::SetState(state) = self;
             serde_json::to_vec(state).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             let state: protocol::InteractionState = serde_json::from_slice(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
             Ok(InteractionConfigMutation::SetState(state))
         }
@@ -8437,7 +8437,7 @@ pub mod app {
 
     impl HistoryView {
         /// @emoji 🕳️ An empty view for hand-built test/fixture `ArtifactView`s that don't exercise history.
-        pub fn empty() -> Self {
+        pub async fn empty() -> Self {
             Self { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: Vec::new(), command_filter: HistoryCommandFilter::default() }
         }
     }
@@ -8448,7 +8448,7 @@ pub mod app {
     /// is capped, matching the "no silent caps" convention (never truncates data, only the view).
     const HISTORY_PANEL_ROW_LIMIT: usize = 300;
 
-    fn history_panel_icon_id(kind: ActionKind) -> IconName {
+    async fn history_panel_icon_id(kind: ActionKind) -> IconName {
         match kind {
             ActionKind::Mutation => IconName::Pencil,
             ActionKind::History => IconName::Undo,
@@ -8470,7 +8470,7 @@ pub mod app {
     /// per-command "Backwards" revert action is omitted entirely, regardless of `can_undo`/`can_redo`
     /// or `entry.revertible` — the filter control and Commands list themselves stay fully live, since
     /// browsing history is not a mutation.
-    pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiNode {
+    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiNode {
         let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
         let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
             let label = Label::data(if is_de { label_de } else { label_en });
@@ -8656,7 +8656,7 @@ pub mod app {
         /// 🌱️ Builds a task from an async closure. `run` is called once, at the moment
         /// `dispatch_emit` actually spawns this task (never eagerly at `Emit` construction time),
         /// with the `TaskCtx` it should await against.
-        pub fn new<F>(label: impl Into<String>, run: impl FnOnce(TaskCtx) -> F + 'static) -> Self
+        pub async fn new<F>(label: impl Into<String>, run: impl FnOnce(TaskCtx) -> F + 'static) -> Self
         where
             F: Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>> + 'static,
         {
@@ -8664,13 +8664,13 @@ pub mod app {
         }
 
         /// 🔑️ See the `key` field's own doc.
-        pub fn keyed(mut self, key: impl Into<String>) -> Self {
+        pub async fn keyed(mut self, key: impl Into<String>) -> Self {
             self.key = Some(key.into());
             self
         }
 
         /// 🔁️ See the `restart` field's own doc.
-        pub fn restartable(mut self, command: Vec<u8>) -> Self {
+        pub async fn restartable(mut self, command: Vec<u8>) -> Self {
             self.restart = Some(command);
             self
         }
@@ -8678,7 +8678,7 @@ pub mod app {
         /// 🧵️ `⚛️reactor::spawn_task`'s sole consumer — decomposes the task into its plain-data
         /// bookkeeping fields plus the boxed closure, so the reactor (which has no reason to know
         /// about `AsyncTask` as a named type beyond spawning it) never has to reconstruct one.
-        pub(crate) fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>>>) {
+        pub(crate) async fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>>>) {
             (self.label, self.key, self.restart, self.run)
         }
     }
@@ -8743,17 +8743,17 @@ pub mod app {
 
     impl<A: ArtifactApp + ?Sized> EphemeralEmit<A> {
         /// 👥️ Presence-only emission — the common case (a moved cursor, a changed selection).
-        pub fn presence(presence: Vec<A::PresenceMutation>) -> Self {
+        pub async fn presence(presence: Vec<A::PresenceMutation>) -> Self {
             Self { presence, transient: Vec::new() }
         }
 
         /// 🫧️ Transient-only emission — the common case (a hover, an in-flight gesture).
-        pub fn transient(transient: Vec<A::TransientMutation>) -> Self {
+        pub async fn transient(transient: Vec<A::TransientMutation>) -> Self {
             Self { presence: Vec::new(), transient }
         }
 
         /// 🈳️ Whether this emission touches neither ephemeral lane.
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.presence.is_empty() && self.transient.is_empty()
         }
     }
@@ -8787,7 +8787,7 @@ pub mod app {
         /// `ChildDispatch.op_schema` through as forward-compat metadata without interpreting it (see
         /// `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`), so
         /// there is no schema REGISTRY this must resolve against yet.
-        pub fn of<S, M>(slot: impl Into<String>, child_id: impl Into<String>, ops: Vec<M>) -> ChildEmit
+        pub async fn of<S, M>(slot: impl Into<String>, child_id: impl Into<String>, ops: Vec<M>) -> ChildEmit
         where
             M: protocol::SemanticMutation<S> + ::protocol::OpBinary,
         {
@@ -8806,60 +8806,60 @@ pub mod app {
 
     impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
         /// @emoji ✏️ A document-operation emission carrying `artifact_mutations` and nothing else.
-        pub fn mutations(artifact_mutations: Vec<Mutation>) -> Self {
+        pub async fn mutations(artifact_mutations: Vec<Mutation>) -> Self {
             Self { artifact_mutations, ..Default::default() }
         }
 
         /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
         /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
         /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
-        pub fn amend(artifact_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
+        pub async fn amend(artifact_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
             Self { artifact_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
         /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
         /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
-        pub fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
+        pub async fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
             Self { artifact_mutations, description: Some(description.into()), ..Default::default() }
         }
 
         /// @emoji 🧮️ A config-operation emission carrying `config_mutations` and nothing else — the
         /// replacement for a former "View"-kind `ActionEmit::view_with_inverse`: selection/camera/hover/…
         /// changes now flow through the config store, which computes their real `inverse` itself.
-        pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
+        pub async fn config(config_mutations: Vec<ConfigMutation>) -> Self {
             Self { config_mutations, ..Default::default() }
         }
 
         /// @emoji 📝️ A draft-operation emission carrying `draft_mutations` and nothing else.
-        pub fn draft(draft_mutations: Vec<DraftMutation>) -> Self {
+        pub async fn draft(draft_mutations: Vec<DraftMutation>) -> Self {
             Self { draft_mutations, ..Default::default() }
         }
 
         /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
         /// amendable config edit (e.g. a live camera drag).
-        pub fn amend_config(config_mutations: Vec<ConfigMutation>, coalesce_key: impl Into<String>) -> Self {
+        pub async fn amend_config(config_mutations: Vec<ConfigMutation>, coalesce_key: impl Into<String>) -> Self {
             Self { config_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ `commit`'s CONFIG-targeted twin — a described, non-coalesced config edit.
-        pub fn commit_config(config_mutations: Vec<ConfigMutation>, description: impl Into<String>) -> Self {
+        pub async fn commit_config(config_mutations: Vec<ConfigMutation>, description: impl Into<String>) -> Self {
             Self { config_mutations, description: Some(description.into()), ..Default::default() }
         }
 
         /// @emoji 🐚️ A single host effect and no operations (a shell action).
-        pub fn effect(effect: Effect) -> Self {
+        pub async fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
 
         /// @emoji 📣️ A single app event and no operations.
-        pub fn event(event: AppEvent) -> Self {
+        pub async fn event(event: AppEvent) -> Self {
             Self { events: vec![event], ..Default::default() }
         }
 
         /// @emoji 🧵️ A single spawned `AsyncTask` and no operations — the common case for "this
         /// command's only job is to kick off host work" (e.g. a search-as-you-type debounce).
-        pub fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
+        pub async fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
             Self { tasks: vec![task], ..Default::default() }
         }
     }
@@ -8879,7 +8879,7 @@ pub mod app {
     /// implementer at once); adopt it per app by matching on the parsed variant instead of the raw string
     /// inside `handle_action`, e.g. `let action = MyAppAction::from_action_id(action)?; match action { ... }`.
     pub trait AppAction: Sized {
-        fn from_action_id(id: &str) -> Result<Self, String>;
+        async fn from_action_id(id: &str) -> Result<Self, String>;
     }
 
     /// @emoji 🏭️ Generates a closed per-app action enum plus its `AppAction` impl from a list of
@@ -8895,7 +8895,7 @@ pub mod app {
         }
 
         impl $crate::app::AppAction for $Name {
-            fn from_action_id(id: &str) -> Result<Self, String> {
+            async fn from_action_id(id: &str) -> Result<Self, String> {
                 match id {
                     $($id => Ok(Self::$Variant),)*
                     other => Err(Fault::from(format!("unknown action id {other}"))),
@@ -8988,7 +8988,7 @@ pub mod app {
 
         impl $Name {
             /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
-            pub fn command_id(&self) -> &'static str {
+            pub async fn command_id(&self) -> &'static str {
                 match self {
                     $(Self::$Payload(_) => $id,)*
                 }
@@ -8996,7 +8996,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg, ctx)` — see
             /// `🔖️KeyedAndContextualForms` for why `ctx` exists.
-            pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub async fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg, ctx),)*
                 }
@@ -9004,7 +9004,7 @@ pub mod app {
         }
 
         impl ::protocol::OpText for $Name {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -9020,7 +9020,7 @@ pub mod app {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -9034,10 +9034,10 @@ pub mod app {
         }
 
         impl ::protocol::OpBinary for $Name {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -9055,14 +9055,14 @@ pub mod app {
 
         impl $Name {
             /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
-            pub fn command_id(&self) -> &'static str {
+            pub async fn command_id(&self) -> &'static str {
                 match self {
                     $(Self::$Payload(_) => $id,)*
                 }
             }
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)`.
-            pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub async fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -9070,7 +9070,7 @@ pub mod app {
         }
 
         impl ::protocol::OpText for $Name {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -9086,7 +9086,7 @@ pub mod app {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -9100,10 +9100,10 @@ pub mod app {
         }
 
         impl ::protocol::OpBinary for $Name {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -9121,7 +9121,7 @@ pub mod app {
 
         impl $Name {
             /// 🏷️ Each row's `$id` — mirrors `ArtifactApp::command_id`'s per-command labeling need.
-            pub fn command_id(&self) -> &'static str {
+            pub async fn command_id(&self) -> &'static str {
                 match self {
                     $(Self::$Payload(_) => $id,)*
                 }
@@ -9129,7 +9129,7 @@ pub mod app {
 
             /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)` — see `🔖️DispatchDesignChoice`
             /// above for why this is concrete (not generic) in the app's own associated types.
-            pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
+            pub async fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
                 match self {
                     $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
                 }
@@ -9137,7 +9137,7 @@ pub mod app {
         }
 
         impl ::protocol::OpText for $Name {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -9153,7 +9153,7 @@ pub mod app {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -9167,10 +9167,10 @@ pub mod app {
         }
 
         impl ::protocol::OpBinary for $Name {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -9196,7 +9196,7 @@ pub mod app {
 
             /// 🎯️ Mirrors the shape a real `🎮️commands/add_widget/🦀️component.rs::handle` will have —
             /// `(payload, doc, cfg) -> Result<Emit<Mutation, ConfigMutation>, Fault>`.
-            pub fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+            pub async fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
                 Ok(crate::Emit::mutations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
             }
         }
@@ -9207,7 +9207,7 @@ pub mod app {
                 pub id: String,
             }
 
-            pub fn handle(payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+            pub async fn handle(payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
                 Ok(crate::Emit::mutations(vec![format!("delete:{}", payload.id)]))
             }
         }
@@ -9220,13 +9220,13 @@ pub mod app {
         }
 
         #[test]
-        fn command_id_matches_declared_row() {
+        async fn command_id_matches_declared_row() {
             assert_eq!(TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).command_id(), "addWidget");
             assert_eq!(TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).command_id(), "deleteSelection");
         }
 
         #[test]
-        fn dispatch_forwards_to_the_payload_modules_own_handle() {
+        async fn dispatch_forwards_to_the_payload_modules_own_handle() {
             let snapshot = 0u32;
             let config = ();
             let history = HistoryView::empty();
@@ -9241,7 +9241,7 @@ pub mod app {
         }
 
         #[test]
-        fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
+        async fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
             store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
         }
@@ -9252,7 +9252,7 @@ pub mod app {
                 pub kind: String,
             }
 
-            pub fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+            pub async fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
                 *ctx += 1;
                 Ok(crate::Emit::mutations(vec![format!("add:{}:{ctx}", payload.kind)]))
             }
@@ -9262,7 +9262,7 @@ pub mod app {
             #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
             pub struct DeleteSelection {}
 
-            pub fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
+            pub async fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
                 Ok(crate::Emit::mutations(vec!["delete".to_string()]))
             }
         }
@@ -9277,7 +9277,7 @@ pub mod app {
         /// 🧪️ The keyed arm must keep `command_id()` (manifest action id) and the `dsl` wire keyword
         /// independent — the exact split every hand-written `*_protocol` Command enum already has.
         #[test]
-        fn keyed_rows_separate_the_command_id_from_the_wire_keyword() {
+        async fn keyed_rows_separate_the_command_id_from_the_wire_keyword() {
             let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
             assert_eq!(command.command_id(), "addWidget");
             assert!(protocol::OpText::print_op(&command).starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
@@ -9287,7 +9287,7 @@ pub mod app {
         /// 🧪️ A fieldless payload struct must print/encode exactly like the unit variant it replaces —
         /// the migration-safety property for every `DeleteSelection`-style bare variant.
         #[test]
-        fn fieldless_payload_matches_a_unit_variants_wire_form() {
+        async fn fieldless_payload_matches_a_unit_variants_wire_form() {
             let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
             assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
             assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode"), vec![1u8, 1, 0, 0]);
@@ -9295,7 +9295,7 @@ pub mod app {
         }
 
         #[test]
-        fn ctx_is_threaded_through_dispatch_into_every_handler() {
+        async fn ctx_is_threaded_through_dispatch_into_every_handler() {
             let snapshot = 0u32;
             let config = ();
             let history = HistoryView::empty();
@@ -9344,7 +9344,7 @@ pub mod app {
         /// 🪪️ The real, runtime-resolved app id an ownership check must compare against. Defaults to
         /// `Self::APP_ID` (correct for every hand-written impl, where the const already IS the real
         /// id); `EditorApp<E>`/`ViewerApp<V>` override it to return their derived `surface_app_id`.
-        fn instance_id(&self) -> &str {
+        async fn instance_id(&self) -> &str {
             Self::APP_ID
         }
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
@@ -9388,7 +9388,7 @@ pub mod app {
         ///
         /// Defaults to emitting nothing, so an app with no shareable or UI-local state writes no
         /// code. Called on every dispatched command, right before `handle`.
-        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+        async fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             EphemeralEmit::default()
         }
         /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
@@ -9399,21 +9399,21 @@ pub mod app {
         /// (see `VcsArtifactApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
         type Command: ::protocol::OpBinary + Send;
 
-        fn config_schema() -> &'static str {
+        async fn config_schema() -> &'static str {
             "config.empty"
         }
-        fn initial_snapshot() -> Self::Snapshot;
-        fn initial_config() -> Self::Config {
+        async fn initial_snapshot() -> Self::Snapshot;
+        async fn initial_config() -> Self::Config {
             Self::Config::default()
         }
-        fn initial_draft() -> Self::Draft {
+        async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
         }
         /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
         /// `(command, document, config, draft, engines)` to an {@link Emit}. No `&mut self`.
         /// `engines` is the host-owned {@link EngineHandles} bag (empty until WIT engine-derive/read
         /// is threaded through exchange).
-        fn handle(
+        async fn handle(
             command: &Self::Command,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
@@ -9427,14 +9427,14 @@ pub mod app {
         /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
         /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
         /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
-        fn command_id(_command: &Self::Command) -> &'static str {
+        async fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
         /// @emoji 🎯️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
         /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
         /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
         /// that the shells drive must override this so chrome actions reach `handle`.
-        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -9442,30 +9442,30 @@ pub mod app {
             ))
         }
         /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
-        fn config_spec() -> ConfigSpec {
+        async fn config_spec() -> ConfigSpec {
             ConfigSpec::empty()
         }
         /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
         /// default) means this app doesn't participate in the clipboard mechanism, and `VcsArtifactApp`'s
         /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
         /// `cut_operations`/`paste_operations`.
-        fn clipboard_media_type() -> Option<MediaType> {
+        async fn clipboard_media_type() -> Option<MediaType> {
             None
         }
         /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
         /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
         /// accepting a block kind-definition fragment as a catalog merge).
-        fn clipboard_accepts() -> Vec<MediaType> {
+        async fn clipboard_accepts() -> Vec<MediaType> {
             Self::clipboard_media_type().into_iter().collect()
         }
         /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsArtifactApp`'s
         /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
         /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
         /// interception only calls this when a media type is declared).
-        fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+        async fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+        async fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
             Vec::new()
         }
         /// 🕹️ This app's `InteractionTopology` for the CURRENT document/config — one `DomainTopology`
@@ -9475,31 +9475,31 @@ pub mod app {
         /// any `HierarchyProvider::Topology` domain MUST override this or that domain's transitive
         /// hover/select and range-selection degrade to single-target (an empty topology contains no
         /// node, so `DomainTopology::descendant_closure`/`index_of` find nothing).
-        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        async fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+        async fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
         /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
         /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
-        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
-        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
         /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
         /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
         /// `Group.active_utility_id` tag is simply unused for tool measures.
-        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
@@ -9511,7 +9511,7 @@ pub mod app {
         /// `AppActionRegistry` (the same one `VcsArtifactApp` enforces the actions contract with) —
         /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
         /// instead of hand-building rows.
-        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🌱️ Initial mutations applied through normal dispatch right after the store is constructed —
@@ -9521,7 +9521,7 @@ pub mod app {
         /// every user edit takes removes that exception). Default: no mutations — only apps whose
         /// fixture is itself a rich history (e.g. a history-UI demo/exerciser) need this — every
         /// program driven purely by user actions leaves it untouched.
-        fn genesis() -> Vec<Self::Mutation> {
+        async fn genesis() -> Vec<Self::Mutation> {
             Vec::new()
         }
 
@@ -9531,21 +9531,21 @@ pub mod app {
         /// builder call that already names `Self` is the correct place to register it, not a plugin-root
         /// side callback). `None` (the default) means this app has no schema of its own — a plugin
         /// library with zero document apps, or a document app whose config truly has no dedicated facet.
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             None
         }
 
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
         /// a real `AppIo` (e.g. `shooting_engine::shooting_io()`) to declare extra workflow ports.
-        fn io() -> Option<AppIo> {
+        async fn io() -> Option<AppIo> {
             None
         }
         /// 🎞️ Declares this app's workflow ports — delegates to `Self::io().all_ports()` (implicit
         /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
         /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is
         /// no document media type to synthesize the implicit pair from.
-        fn media_ports() -> Vec<MediaPortSpec> {
+        async fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
         /// 🎞️ Pure export of the current document onto one declared output port — must not mutate
@@ -9569,14 +9569,14 @@ pub mod app {
         /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
         /// whole snapshot" operation); an app whose `Mutation` enum has such a variant (e.g.
         /// `SetFixture`/`SetArtifact`) overrides this one-liner to unlock the default `import_media`.
-        fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        async fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             None
         }
         /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
         /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
         /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
         /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
-        fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+        async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
             }
@@ -9688,36 +9688,36 @@ pub mod app {
     /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
     /// operations are dispatched with real inverses; operations flow to/from the backbone as the wire format.
     pub trait PluginApp: Send {
-        fn app_id(&self) -> &str;
-        fn document_schema(&self) -> &str;
+        async fn app_id(&self) -> &str;
+        async fn document_schema(&self) -> &str;
         /// 📨️ Starts one command-scoped report at the app's live merge policy.
-        fn begin_dispatch_report(&mut self);
+        async fn begin_dispatch_report(&mut self);
         /// 📨️ Returns the current command's authoritative merge-policy report.
-        fn dispatch_report(&self) -> &protocol::DispatchReport;
+        async fn dispatch_report(&self) -> &protocol::DispatchReport;
         /// ⚖️ Sets this instance's local merge policy without creating shared document history.
-        fn set_merge_policy(&mut self, policy: protocol::MergePolicy);
+        async fn set_merge_policy(&mut self, policy: protocol::MergePolicy);
         /// ⚔️ Resolves one current open conflict through the authoritative document store.
-        fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault>;
+        async fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault>;
         /// ⚔️ Returns the authoritative projection of currently open document conflicts.
-        fn open_conflicts(&self) -> Vec<protocol::Conflict>;
+        async fn open_conflicts(&self) -> Vec<protocol::Conflict>;
         /// @emoji 🕰️ FRAMEWORK-reserved action dispatch only (undo/redo/checkpoint/alternative/clipboard/
         /// revert-to-command/history-filter/noteShellCommand) — B1 deleted the generic app-declared-action
         /// fallback this used to carry (`ArtifactApp::handle_action` no longer exists; an app's own
         /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
         /// An unrecognized `action` id is a hard error pointing at the typed channel.
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 📍️ Validates and dispatches a window-instance-owned action invocation.
-        fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 🎯️ Dispatches the manifest protocol's structurally addressed app- or mode-owned
         /// command. This is deliberately `ManifestCommandInvocation`, not the kernel execution envelope
         /// re-exported under the same unqualified name; the active mode is mandatory for mode ownership.
-        fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🎯️ The single dispatch point `plugin_runtime::plugin_exchange` calls for every
         /// `AppCommand::Command` frame: recognizes a framework-reserved `{kind,name,args}` wire-value
         /// action envelope (routed through `handle_action` above) and otherwise decodes
         /// `command_bytes` directly as the app's typed `ArtifactApp::Command` via `OpBinary::decode_op`
         /// and calls the pure `ArtifactApp::handle`.
-        fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
         /// whose future resolved with `TaskResolution::Emit` — `artifact_ops`/`config_ops`/
         /// `draft_ops` are the SAME `protocol::encode_ops_vec`/`OpBinary::encode_op`-wire triple
@@ -9726,13 +9726,13 @@ pub mod app {
         /// into `ArtifactApp::handle` (see `TaskResolution::Emit`'s own doc for why this is
         /// deliberately narrower than a `TaskResolution::Command` resume, which goes through
         /// `handle_command_frame` above instead).
-        fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
-        fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
+        async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
         /// 🔀️ Drains the pending `TransactionProposalDraft` `dispatch_emit` stashed instead of
         /// applying, if any (contract §5.1) — consumed once by `plugin_exchange` to frame
         /// `AppFrame::TransactionProposal` instead of the ordinary `Invocation`/`Done` frame.
-        fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft>;
+        async fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft>;
         /// 🔀️ Handles a `TransactionPrepare` wire command (contract §5.3/§5.9), EITHER form (flat
         /// fields — `prepared_ops` empty selects the owner-mutation form, decoding `payload` as one
         /// `OpBinary`-encoded op of this app's own `Mutation` type; non-empty selects the
@@ -9740,7 +9740,7 @@ pub mod app {
         /// `origin`). Never fails structurally — a rejection is reported through the returned
         /// `TransactionPrepareOutcome::rejection`, not `Err`, so a caller can always frame a
         /// `TransactionPrepared` reply.
-        fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome;
+        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome;
         /// 🔀️ Handles a `TransactionCommit` wire command (contract §5.6/§5.8): applies this
         /// member's prepared ops as exactly ONE `Edit` (`group_id = txn_id`, every
         /// `MutationMeta.origin` stamped to the prepared origin), clearing the pending transaction,
@@ -9749,29 +9749,29 @@ pub mod app {
         /// `transaction_prepare`) or a plumbing fault for an unknown/mismatched `txn_id` — the
         /// caller never applies anything on `Err`. `meta` supplies the local actor id the fresh
         /// `Edit` is attributed to, matching every other `dispatch_emit`-driven apply.
-        fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta) -> Result<String, Fault>;
+        async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta) -> Result<String, Fault>;
         /// 🔀️ Handles a `TransactionRollback` wire command (contract §5.5/§5.6): discards the
         /// pending transaction without applying anything — `transaction_prepare` never applies, so
         /// this is pure bookkeeping.
-        fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault>;
+        async fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault>;
         /// 🔀️ Handles a `TransactionUndo{group_id}` fan-out (contract §5.7): undoes this member's
         /// tail edit if (and only if) it carries `MutationMeta.group_id == group_id`, mirroring
         /// `store::CompositionCoordinator::undo_group`'s own tail-based membership test for a
         /// single member reached over the wire instead of in-process.
-        fn transaction_undo(&mut self, group_id: &str) -> Result<(), Fault>;
+        async fn transaction_undo(&mut self, group_id: &str) -> Result<(), Fault>;
         /// 🔀️ `transaction_undo`'s redo-direction twin, testing the top of the redo stack instead
         /// of the applied tail.
-        fn transaction_redo(&mut self, group_id: &str) -> Result<(), Fault>;
+        async fn transaction_redo(&mut self, group_id: &str) -> Result<(), Fault>;
         /// 📥 Hydrate document lane from host pack bytes (PureCommand / host authority).
-        fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        async fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 📥 Hydrate config lane from host pack bytes.
-        fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        async fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 📥 Hydrate draft lane from host pack bytes.
-        fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        async fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 👥️ Packs the typed local presence snapshot, exposes both ephemeral generations, and
         /// assembles the zero-app-code declared-broadcast interaction slice — see
         /// {@link EphemeralSnapshot}'s own doc comment.
-        fn ephemeral_snapshot(&self) -> EphemeralSnapshot;
+        async fn ephemeral_snapshot(&self) -> EphemeralSnapshot;
         /// 👥️ Adopts the document-wide presence roster pushed by `AppCommand::Presence` (contract-freeze
         /// §C7.6) — the ONLY plugin ingress for peers. `own_color` is this actor's own hub-assigned
         /// palette index; `peers` is the whole roster (the wire wrapper has already dropped this
@@ -9780,33 +9780,33 @@ pub mod app {
         /// `interaction` upserts the generic `peer_presence` map `InteractionView::peers_selecting`/
         /// `peers_hovering` and the UI-tree stamping pass read from. An actor absent from `peers` is
         /// dropped from both maps — this call is the roster's single source of truth, not a diff.
-        fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault>;
+        async fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault>;
         /// 🧾️ Returns a complete ordered history projection for initial connection or cursor resync.
-        fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
+        async fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
             Ok(HistoryPatch::default())
         }
         /// 🧮️ Object-safe counterpart to `ArtifactApp::Config`'s binary-pack encoding — the config-store
         /// twin of `document_pack` below.
-        fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
+        async fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
         /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
-        fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
+        async fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
         /// 🧸️ Adopts one owned child's persisted envelope into a live child store — the
         /// `AppCommand::LoadChildren` handler. A composing document restores its children through
         /// this, one call per child, after its own `load_document_pack`.
-        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
+        async fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
         /// 🧸️ Every live owned child's current envelope, for persistence — the `ReadChildren`
         /// handler and the child-side twin of `document_pack`.
-        fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault>;
+        async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault>;
         /// 🧮️ Dispatches one binary-encoded `store::ArtifactCommand<Self::ConfigMutation>` against the
         /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
-        fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`)
         /// into the causal DAG (idempotent — duplicate mutation ids are dropped), one
         /// `crate::protocol::MergeReport` per envelope — `plugin_exchange`'s `ApplyEnvelopes` handler
         /// frames each as an unsolicited `AppFrame::MergeReport` (§C9: "pushed unsolicited after every
         /// ingest, next to `DocumentChanged`").
-        fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault>;
+        async fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault>;
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
         /// `Self::Mutation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
         /// the JSON path (which ingests already-caused remote `MutationEnvelope`s into the causal DAG
@@ -9814,61 +9814,61 @@ pub mod app {
         /// through the normal `ArtifactCommand::Apply` path (a fresh id/timestamp, a real computed
         /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
         /// no envelope metadata of its own.
-        fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault>;
+        async fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault>;
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::document_pack}: the whole document as
         /// {@link store::ArtifactTextFiles} (the `dsl` initial-snapshot text plus the full `ops` op-log
         /// text) via `store::print_document_text` — returned as the established two-file struct rather than
         /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
         /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
         /// `parse_document_text`).
-        fn document_text(&self) -> Result<store::ArtifactTextFiles, Fault>;
+        async fn document_text(&self) -> Result<store::ArtifactTextFiles, Fault>;
         /// @emoji 📜️ Text-DSL counterpart to {@link Self::load_document_pack}.
-        fn load_document_text(&mut self, files: &store::ArtifactTextFiles) -> Result<(), Fault>;
+        async fn load_document_text(&mut self, files: &store::ArtifactTextFiles) -> Result<(), Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::document_text}: the whole document as
         /// {@link store::ArtifactPackFiles} (pack-encoded initial snapshot plus the same `ops` op-log
         /// text — the op grammar is format-invariant) via `store::print_document_pack`.
-        fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
+        async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
-        fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
-        fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), Fault>;
-        fn detach_backbone(&mut self);
+        async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
+        async fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), Fault>;
+        async fn detach_backbone(&mut self);
         /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
         /// history panel body's locale — see `VcsArtifactApp::render`); it is never forwarded into
         /// `ArtifactApp::render`, which dropped `ViewModel` entirely in B1.
-        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
-        fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
+        async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
+        async fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Object-safe counterpart to `ArtifactApp::tool_measures` — keyed by tool id.
-        fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
-        fn pending_effects(&mut self) -> Vec<Effect> {
+        async fn pending_effects(&mut self) -> Vec<Effect> {
             Vec::new()
         }
         /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
         /// dispatch target.
-        fn context_menu(&mut self, _request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(&mut self, _request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🎞️ Object-safe counterpart to `ArtifactApp::export_media` — the seam a headless workflow
         /// runner calls without knowing the app's concrete `Snapshot`/`Mutation` types. Manually
         /// boxed (`io-async-signatures`) rather than a bare `async fn`: this trait is `dyn`-used
         /// pervasively (`Box<dyn PluginApp>`), which native `async fn`-in-trait cannot support.
-        fn export_media<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, Media> {
+        async fn export_media<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, Media> {
             Box::pin(async move { Err(MediaError::NotImplemented) })
         }
         /// 🎞️ Object-safe counterpart to `ArtifactApp::import_media` — dispatches through the same
         /// `ArtifactStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
-        fn import_media(&mut self, _port: &str, _media: &Media, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn import_media(&mut self, _port: &str, _media: &Media, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()))
         }
         /// 🌀️ `io-async-signatures`: boxed-future signature — see `export_media` above.
-        fn media_fingerprint<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
+        async fn media_fingerprint<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
             Box::pin(async move { Err(MediaError::NotImplemented) })
         }
         /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜️world.wit`'s `produce-media`).
@@ -9878,7 +9878,7 @@ pub mod app {
         /// simply their raw document (computed/derived outputs) override this directly; `port` is accepted
         /// for parity with `export_media` and ignored by the default (there is exactly one document to hand
         /// back).
-        fn produce_media(&mut self, port: &str) -> Result<MediaArtifact, MediaArtifactError> {
+        async fn produce_media(&mut self, port: &str) -> Result<MediaArtifact, MediaArtifactError> {
             let files = self.document_pack().map_err(|fault| MediaArtifactError::Payload(fault.message))?;
             Ok(MediaArtifact {
                 descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port.to_string()), kind_id: None, media_type: None, wire: MediaWireFormat::Document { schema: self.document_schema().to_string() }, blob_hash: None },
@@ -9891,7 +9891,7 @@ pub mod app {
         /// `load-app-document-pack` already round-trip. Anything else (a foreign document schema, or a
         /// `Binary{format}` wire) has no SDK-level importer registry yet, so the default rejects it; apps
         /// that need one override this method directly.
-        fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<(), MediaArtifactError> {
+        async fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<(), MediaArtifactError> {
             match artifact.descriptor.wire {
                 MediaWireFormat::Document { schema } if schema == self.document_schema() => {
                     let (pack, spr) = store::decode_document_pack_bytes(&artifact.data).map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
@@ -9927,7 +9927,7 @@ pub mod app {
     impl AppActionRegistry {
         /// @emoji 📇️ Indexes an app definition's declared actions and commands (including
         /// framework-injected ones) by id.
-        pub fn from_definition(definition: &AppDefinition) -> Self {
+        pub async fn from_definition(definition: &AppDefinition) -> Self {
             let app_commands = definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect();
             let mode_commands = definition.modes.iter().map(|mode| (mode.id.clone(), mode.commands.iter().map(|command| (command.id.clone(), command.clone())).collect())).collect();
             let window_actions: HashMap<String, HashMap<String, ActionDefinition>> = definition.window_kinds.iter().map(|window| (window.id.clone(), window.actions.iter().map(|action| (action.id.clone(), action.clone())).collect())).collect();
@@ -9935,38 +9935,38 @@ pub mod app {
             Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect() }
         }
 
-        fn get(&self, id: &str) -> Option<&ActionDefinition> {
+        async fn get(&self, id: &str) -> Option<&ActionDefinition> {
             self.actions.get(id)
         }
 
-        fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
+        async fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
             self.window_actions.get(window_kind_id)?.get(action_id)
         }
 
-        fn has_mode(&self, mode_id: &str) -> bool {
+        async fn has_mode(&self, mode_id: &str) -> bool {
             self.mode_commands.contains_key(mode_id)
         }
 
-        fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
+        async fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
             self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
         }
 
-        fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
+        async fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
             self.app_commands.get(id)
         }
 
-        fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
+        async fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
             self.mode_commands.get(mode_id)?.get(id)
         }
 
         /// 🕹️ `domain_id`'s declared `InteractionDefinition`, `None` when undeclared.
-        pub(crate) fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
+        pub(crate) async fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
             self.interactions.get(domain_id)
         }
 
         /// 🕹️ Every declared interaction domain, in no particular order — `clearSelection`/`selectAll`
         /// (which carry no `domainId` arg, applying to every declared domain at once) iterate this.
-        pub(crate) fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
+        pub(crate) async fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
             self.interactions.values()
         }
 
@@ -9974,7 +9974,7 @@ pub mod app {
         /// action id — the `organize_context_menu` `category_of` lookup at the `VcsArtifactApp::context_menu`
         /// funnel. `None` for a command id (`CommandDefinition.category` is an unrelated footer-tab
         /// grouping, not this taxonomy) and for any action that never called `.with_category(...)`.
-        pub fn category_of(&self, id: &str) -> Option<String> {
+        pub async fn category_of(&self, id: &str) -> Option<String> {
             self.actions.get(id).and_then(|action| action.category.clone())
         }
     }
@@ -10002,7 +10002,7 @@ pub mod app {
     }
 
     impl<'a> Menu<'a> {
-        pub fn of(registry: &'a AppActionRegistry) -> Self {
+        pub async fn of(registry: &'a AppActionRegistry) -> Self {
             Self { registry, items: Vec::new() }
         }
 
@@ -10010,15 +10010,15 @@ pub mod app {
         /// `ActionDefinition`. An unresolvable id is dropped with a debug-mode panic (a construction-time
         /// typo, the same enforcement style as `AppBuilder::build_definition`'s ref validation) — in
         /// release builds it is silently skipped so a stale reference never hard-crashes production.
-        pub fn action(self, action_id: impl Into<String>) -> Self {
+        pub async fn action(self, action_id: impl Into<String>) -> Self {
             self.action_with_args(action_id, None)
         }
 
-        pub fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
+        pub async fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
             self.action_with_args(action_id, Some(to_dsl_value(&args).expect("menu action args must convert to DslValue")))
         }
 
-        fn action_with_args(mut self, action_id: impl Into<String>, args: Option<DslValue>) -> Self {
+        async fn action_with_args(mut self, action_id: impl Into<String>, args: Option<DslValue>) -> Self {
             let action_id = action_id.into();
             match self.registry.get(&action_id) {
                 Some(definition) => {
@@ -10042,7 +10042,7 @@ pub mod app {
 
         /// 🎛️ Appends a row for a declared command id (os/plugin/app/mode-scoped) — same resolution
         /// discipline as `action`, against `AppActionRegistry::get_command`.
-        pub fn command(mut self, command_id: impl Into<String>) -> Self {
+        pub async fn command(mut self, command_id: impl Into<String>) -> Self {
             let command_id = command_id.into();
             match self.registry.get_command(&command_id) {
                 Some(definition) => {
@@ -10062,7 +10062,7 @@ pub mod app {
         }
 
         /// 🎯️ Same as `action`, with `checked` set — for a toggleable verb (e.g. "Show grid").
-        pub fn checked(mut self, action_id: impl Into<String>, checked: bool) -> Self {
+        pub async fn checked(mut self, action_id: impl Into<String>, checked: bool) -> Self {
             self = self.action(action_id);
             if let Some(last) = self.items.last_mut() {
                 last.checked = Some(checked);
@@ -10072,7 +10072,7 @@ pub mod app {
 
         /// 🎯️ Same as `action`, with `destructive` set — sorts visually distinct and last in
         /// `ContextMenuController`'s rendering.
-        pub fn destructive(mut self, action_id: impl Into<String>) -> Self {
+        pub async fn destructive(mut self, action_id: impl Into<String>) -> Self {
             self = self.action(action_id);
             if let Some(last) = self.items.last_mut() {
                 last.destructive = Some(true);
@@ -10082,7 +10082,7 @@ pub mod app {
 
         /// 🎯️ Same as `action`, with `disabled` set — keeps a verb visible-but-inert (discoverability)
         /// rather than omitting it outright.
-        pub fn disabled(mut self, action_id: impl Into<String>, disabled: bool) -> Self {
+        pub async fn disabled(mut self, action_id: impl Into<String>, disabled: bool) -> Self {
             self = self.action(action_id);
             if let Some(last) = self.items.last_mut() {
                 last.disabled = Some(disabled);
@@ -10092,18 +10092,18 @@ pub mod app {
 
         /// 🧩️ Appends a fully custom row (dynamic label/hover actions/data-driven lists — the escape
         /// hatch for rows that don't map onto one declared action, e.g. a per-candidate suggestion row).
-        pub fn item(mut self, item: ContextMenuItemSpec) -> Self {
+        pub async fn item(mut self, item: ContextMenuItemSpec) -> Self {
             self.items.push(item);
             self
         }
 
-        pub fn separator(mut self) -> Self {
+        pub async fn separator(mut self) -> Self {
             self.items.push(ContextMenuItemSpec { id: format!("separator-{}", self.items.len()), separator: Some(true), ..Default::default() });
             self
         }
 
         /// 🌿️ Appends a nested submenu, its rows built by a fresh `Menu` sharing this app's registry.
-        pub fn submenu(mut self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
+        pub async fn submenu(mut self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
             let children = build(Menu::of(self.registry)).build();
             self.items.push(ContextMenuItemSpec { id: id.into(), label: Some(label.into()), icon: Some(icon_id.into().as_str().to_string()), children: (!children.is_empty()).then_some(children), ..Default::default() });
             self
@@ -10116,7 +10116,7 @@ pub mod app {
         /// whole level, dedupes their children by id, and orders groups by the canonical
         /// `RIBBON_PARENT_CATEGORIES` taxonomy — see D3/the canonical migration pattern in the
         /// grouped-context-menu mechanism design.
-        pub fn group(mut self, category: impl Into<String>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
+        pub async fn group(mut self, category: impl Into<String>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
             let children = build(Menu::of(self.registry)).build();
             self.items.push(ContextMenuItemSpec { id: format!("menu.group.{}", category.into()), label: None, children: (!children.is_empty()).then_some(children), ..Default::default() });
             self
@@ -10124,7 +10124,7 @@ pub mod app {
 
         /// 🔀️ Conditionally applies `build` to the menu so far — the idiomatic way to gate a section on
         /// a guard (selection kind, hover target, ...) without breaking the fluent chain.
-        pub fn when(self, condition: bool, build: impl FnOnce(Self) -> Self) -> Self {
+        pub async fn when(self, condition: bool, build: impl FnOnce(Self) -> Self) -> Self {
             if condition {
                 build(self)
             } else {
@@ -10132,13 +10132,13 @@ pub mod app {
             }
         }
 
-        pub fn build(self) -> Vec<ContextMenuItemSpec> {
+        pub async fn build(self) -> Vec<ContextMenuItemSpec> {
             self.items
         }
     }
 
     /// 🗣️ Localized conjunction phrase for selection-scoped menu labels — `(count, singular, plural)` per domain.
-    pub fn selection_count_phrase(is_de: bool, counts: &[(usize, &str, &str)]) -> String {
+    pub async fn selection_count_phrase(is_de: bool, counts: &[(usize, &str, &str)]) -> String {
         let parts: Vec<String> = counts.iter().filter(|(count, _, _)| *count > 0).map(|(count, singular, plural)| if *count == 1 { format!("1 {singular}") } else { format!("{count} {plural}") }).collect();
         match parts.len() {
             0 => String::new(),
@@ -10165,7 +10165,7 @@ pub mod app {
     //#endregion 🖱️MenuBuilder
 
     /// 🎯️ Node and edge ids from a context-menu surface snapshot, falling back to runtime selection.
-    pub fn selection_domains_from_surface(surface: Option<&ContextMenuSurfaceTarget>, fallback_nodes: &[String], fallback_edges: &[String]) -> (Vec<String>, Vec<String>) {
+    pub async fn selection_domains_from_surface(surface: Option<&ContextMenuSurfaceTarget>, fallback_nodes: &[String], fallback_edges: &[String]) -> (Vec<String>, Vec<String>) {
         let groups = surface.map(|target| target.selection.as_slice()).unwrap_or(&[]);
         let mut nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
         let mut edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
@@ -10185,7 +10185,7 @@ pub mod app {
     }
 
     /// 🗑️ Delete-selection row with a localized count phrase — omitted when the selection is empty.
-    pub fn node_graph_delete_selection_spec(delete_label: &str, is_de: bool, node_count: usize, edge_count: usize, dispatch: NodeGraphDeleteDispatch) -> Option<ContextMenuItemSpec> {
+    pub async fn node_graph_delete_selection_spec(delete_label: &str, is_de: bool, node_count: usize, edge_count: usize, dispatch: NodeGraphDeleteDispatch) -> Option<ContextMenuItemSpec> {
         if node_count == 0 && edge_count == 0 {
             return None;
         }
@@ -10342,7 +10342,7 @@ pub mod app {
     /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
     /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
     /// byte-identical value the SAME child id must always map to.
-    pub(crate) fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+    pub(crate) async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
         const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
         const PRIME: u64 = 0x0000_0100_0000_01b3;
         let mut lane0 = OFFSET;
@@ -10376,7 +10376,7 @@ pub mod app {
     /// `artifact_mutations` backstop (the latter is unreachable through `ViewerApp`'s structurally
     /// closed `ViewEmit`, contract §2.2 — this exists so a hand-written runtime `ArtifactApp` impl
     /// that ignores `ViewEmit` is safe too, not "redundant").
-    fn viewer_read_only_fault(verb: &str) -> Fault {
+    async fn viewer_read_only_fault(verb: &str) -> Fault {
         Fault::new(FaultOrigin::Framework, FaultCode::new("viewer.read-only"), format!("'{verb}' is not permitted on a viewer instance (contract §2.3)"))
     }
     //#endregion 🔖️ViewerGuard
@@ -10384,13 +10384,13 @@ pub mod app {
     impl<A: ArtifactApp> VcsArtifactApp<A> {
         /// @emoji 🧬️ Constructs a wrapper with an empty registry — contract enforcement is skipped. Used by
         /// tests and any registry-less construction path.
-        pub fn new(app: A) -> Self {
+        pub async fn new(app: A) -> Self {
             Self::with_registry(app, AppActionRegistry::default())
         }
 
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
-        pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
+        pub async fn with_registry(app: A, registry: AppActionRegistry) -> Self {
             let app_id = app.instance_id();
             let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, app_id, A::initial_snapshot(), None);
             let config_id = format!("{}-config", app_id);
@@ -10449,7 +10449,7 @@ pub mod app {
         /// (`CompositionGraph::owner_of`) is fail-closed — a child dispatched against before being
         /// registered here (or absorbed from a genesis `GroupReceipt`, see `dispatch_emit_group`) is
         /// rejected as an `OwnershipViolation`, not silently accepted.
-        pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+        pub async fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
             let slot = slot.into();
             let child_id = child_id.into();
             let kind = ArtifactKindId::parse(&dialect.artifact_kind).map_err(plugin_sdk_fault)?;
@@ -10469,7 +10469,7 @@ pub mod app {
 
         /// 🔎️ The live child store for `(slot, child_id)`, if adopted/created — the read half of
         /// `open_child`/`register_child`.
-        pub fn child_store(&self, slot: &str, child_id: &str) -> Option<&dyn SpaceMember> {
+        pub async fn child_store(&self, slot: &str, child_id: &str) -> Option<&dyn SpaceMember> {
             self.children.get(&(slot.to_string(), child_id.to_string())).map(|(_, member)| member.as_ref())
         }
 
@@ -10484,7 +10484,7 @@ pub mod app {
         /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
         /// time anything dispatches against it. Registering in one place and validating from the other
         /// is precisely the inconsistency this seeds away.
-        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
+        pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
             let slot = slot.into();
             let child_id = child_id.into();
             let parent_id = self.store.envelope().id.clone();
@@ -10502,7 +10502,7 @@ pub mod app {
         /// A child with no checkpoint at all after committing contributes no pin rather than
         /// aborting the parent's checkpoint: a pin that named nothing would be worse than an absent
         /// one, and the parent's history is still perfectly valid without it.
-        fn commit_children_for_checkpoint(&mut self, message: Option<String>, authors: Vec<vcs::Author>) -> Result<Vec<vcs::CompositionPin>, Fault> {
+        async fn commit_children_for_checkpoint(&mut self, message: Option<String>, authors: Vec<vcs::Author>) -> Result<Vec<vcs::CompositionPin>, Fault> {
             let message = message.unwrap_or_else(|| "checkpoint".to_string());
             let mut pins = Vec::new();
             for ((_, child_id), (dialect, member)) in self.children.iter_mut() {
@@ -10521,7 +10521,7 @@ pub mod app {
         /// that dispatch because the checkpoint does not exist until then, and `composition_pins`
         /// participates in `content_addressed_checkpoint_id`, so the pins must be present on the
         /// envelope that gets persisted.
-        fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) -> Result<(), Fault> {
+        async fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) -> Result<(), Fault> {
             if pins.is_empty() {
                 return Ok(());
             }
@@ -10535,7 +10535,7 @@ pub mod app {
         /// parent's now-current checkpoint pinned it at. A pin naming a child that is not currently
         /// open is QUEUED (`pending_child_pins`) rather than dropped, so a child adopted later still
         /// lands on its pinned state instead of silently staying at head — see `open_child`.
-        fn cascade_checkout_to_children(&mut self) {
+        async fn cascade_checkout_to_children(&mut self) {
             let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) else { return };
             let Some(pins) = self.store.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return };
             self.pending_child_pins.clear();
@@ -10552,40 +10552,40 @@ pub mod app {
         //#endregion 🔖️CheckpointCascade
 
         #[cfg(test)]
-        pub(crate) fn test_snapshot(&self) -> A::Snapshot {
+        pub(crate) async fn test_snapshot(&self) -> A::Snapshot {
             self.store.snapshot().expect("materialize snapshot")
         }
 
         /// @emoji 🧪️ The document store itself — needed to assert on checkpoint metadata
         /// (`composition_pins`), which no snapshot-level accessor exposes.
         #[cfg(test)]
-        pub(crate) fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
+        pub(crate) async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
             &self.store
         }
 
         /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
         #[cfg(test)]
-        pub(crate) fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
+        pub(crate) async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
             &mut self.store
         }
 
         /// @emoji 🧪️ The config-store twin of `test_snapshot`.
         #[cfg(test)]
-        pub(crate) fn test_config(&self) -> A::Config {
+        pub(crate) async fn test_config(&self) -> A::Config {
             self.config_store.snapshot().expect("materialize config snapshot")
         }
 
         /// @emoji 🧪️ Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
         /// `TestApp::received_actions`) that a framework-owned interception must never populate.
         #[cfg(test)]
-        pub(crate) fn test_app(&self) -> &A {
+        pub(crate) async fn test_app(&self) -> &A {
             &self.app
         }
 
         /// @emoji 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
         /// the merged command+operation timeline test harness accessor.
         #[cfg(test)]
-        pub(crate) fn test_history(&mut self) -> HistoryView {
+        pub(crate) async fn test_history(&mut self) -> HistoryView {
             self.refresh_cache().expect("refresh cache");
             self.build_history_view()
         }
@@ -10593,19 +10593,19 @@ pub mod app {
         /// @emoji 📸️ Materializes and returns the current snapshot — the typed counterpart to
         /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
         /// need direct structural access to document state instead of a rendered node.
-        pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
+        pub async fn snapshot(&self) -> Result<A::Snapshot, Fault> {
             self.store.snapshot().map_err(|error| error.into_fault())
         }
 
         /// @emoji 🔗️ The store's current backbone descriptor, `None` when unattached (the default).
-        pub fn backbone_ref(&self) -> Option<&store::ArtifactBackboneRef> {
+        pub async fn backbone_ref(&self) -> Option<&store::ArtifactBackboneRef> {
             self.store.backbone_ref()
         }
 
         /// @emoji 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
         /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
         /// fresh row (`count: 1`) — folding consecutive `View`/`Shell` dispatches is `record_command`'s job.
-        fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, config_edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
+        async fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, config_edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
             self.next_command_seq += 1;
             self.command_log.push(CommandLogEntry {
                 seq: self.next_command_seq,
@@ -10631,7 +10631,7 @@ pub mod app {
         /// `inverse` (computed from state BEFORE this dispatch) is only stored on a FRESH row — a folded
         /// row keeps its original inverse, since inverse on a folded "×N" row must undo the whole run,
         /// not just the last dispatch that folded into it.
-        fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
+        async fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
             // 🚧️ Same locale-context gap as `Menu::action_with_args` — history log entries are recorded
             // without a `ViewModel`, so a fallback label resolves native/English pending a protocol change.
             let label = label
@@ -10650,7 +10650,7 @@ pub mod app {
         /// Invariant: after this runs, every `envelope.vcs.edits` entry is referenced by exactly one
         /// `CommandLogEntry`. Idempotent — re-running finds nothing missing. Always `push_log_entry`
         /// (never `record_command`) — a backfilled edit is always its own distinct row, never folded.
-        fn backfill_command_log(&mut self) {
+        async fn backfill_command_log(&mut self) {
             let logged: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
             let missing: Vec<(String, String, String)> = self
                 .store
@@ -10687,7 +10687,7 @@ pub mod app {
             }
         }
 
-        fn build_history_view(&self) -> HistoryView {
+        async fn build_history_view(&self) -> HistoryView {
             let applied_ids: HashSet<&str> = self.store.applied_edit_ids().iter().map(String::as_str).collect();
             let local_actor = self.store.local_actor_id();
             let config_applied_ids: HashSet<&str> = self.config_store.applied_edit_ids().iter().map(String::as_str).collect();
@@ -10742,7 +10742,7 @@ pub mod app {
 
         /// 🧾️ Converts the authoritative command log into a typed host projection patch. Rows are
         /// never folded or capped here; the host controls its own visible window.
-        fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
+        async fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
             self.refresh_cache()?;
             let history = self.cache.as_ref().expect("history cache refreshed").3.clone();
             let dirty = std::mem::take(&mut self.history_dirty_sequences);
@@ -10790,7 +10790,7 @@ pub mod app {
         /// the history filter changed since the last materialization. The key is recomputed a SECOND time
         /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),
         /// so keying only on the pre-backfill snapshot would store a stale key and thrash on every call.
-        fn refresh_cache(&mut self) -> Result<(), Fault> {
+        async fn refresh_cache(&mut self) -> Result<(), Fault> {
             let key = (self.store.generation(), self.config_store.generation(), self.log_generation, self.history_filter);
             if self.cache.as_ref().map(|(cached_key, _, _, _)| *cached_key) == Some(key) {
                 return Ok(());
@@ -10817,12 +10817,12 @@ pub mod app {
         /// @emoji 🖋️ Decodes `args.authors` (`[{id, name, avatar?}]`, both shells' wire shape for a
         /// checkpoint dispatch) into `vcs::Author`s — empty when absent or malformed, never a hard
         /// error: an authorless checkpoint stays valid, it just can't say who checked in.
-        fn history_command_authors(args: Option<&Value>) -> Vec<vcs::Author> {
+        async fn history_command_authors(args: Option<&Value>) -> Vec<vcs::Author> {
             args.and_then(|value| value.get("authors")).and_then(|value| serde_json::from_value::<Vec<vcs::Author>>(value.clone()).ok()).unwrap_or_default()
         }
 
         /// @emoji 🕰️ Maps one of the six injected history action ids to its `ArtifactCommand`.
-        fn history_command(action: &str, args: Option<&Value>) -> Option<ArtifactCommand<A::Mutation>> {
+        async fn history_command(action: &str, args: Option<&Value>) -> Option<ArtifactCommand<A::Mutation>> {
             let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
             match action {
                 "undo" => Some(ArtifactCommand::Undo),
@@ -10835,32 +10835,32 @@ pub mod app {
             }
         }
 
-        fn reset_dispatch_report(&mut self) {
+        async fn reset_dispatch_report(&mut self) {
             self.dispatch_report = protocol::DispatchReport { policy: self.store.merge_policy(), worst: None, messages: Vec::new() };
         }
 
-        fn record_dispatch_receipt(&mut self, receipt: store::CommandReceipt) {
+        async fn record_dispatch_receipt(&mut self, receipt: store::CommandReceipt) {
             self.dispatch_report = protocol::DispatchReport { policy: self.store.merge_policy(), worst: receipt.worst, messages: receipt.messages.into_iter().flat_map(|entry| entry.messages).collect() };
         }
 
-        fn record_rejected_dispatch(&mut self, policy: protocol::MergePolicy, messages: Vec<protocol::MutationMessage>) -> Fault {
+        async fn record_rejected_dispatch(&mut self, policy: protocol::MergePolicy, messages: Vec<protocol::MutationMessage>) -> Fault {
             self.dispatch_report = protocol::DispatchReport { policy, worst: protocol::worst_level(&messages), messages };
             Fault::new(FaultOrigin::App, FaultCode::new("mutation.rejected"), "mutation rejected by the active merge policy")
         }
 
-        fn apply_merge_policy(&mut self, policy: protocol::MergePolicy) {
+        async fn apply_merge_policy(&mut self, policy: protocol::MergePolicy) {
             self.store.set_merge_policy(policy);
             self.reset_dispatch_report();
         }
 
-        fn resolve_store_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
+        async fn resolve_store_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
             let report = self.store.resolve_conflict(conflict_id, resolution).map_err(|error| error.into_fault())?;
             self.dispatch_report = protocol::DispatchReport { policy: report.policy, worst: report.worst, messages: report.replayed.iter().flat_map(|entry| entry.messages.iter().cloned()).collect() };
             self.cache = None;
             Ok(report)
         }
 
-        fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {
+        async fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {
             self.store.open_conflicts().cloned().collect()
         }
 
@@ -10870,7 +10870,7 @@ pub mod app {
         /// `DispatchReport`. This is the single predicate a host/UI consults to grey out an action or
         /// context-menu item BEFORE a real dispatch is even attempted, so the "alone ⇒ illegal actions
         /// are prevented up front" half of the ticket holds without a round trip through `dispatch_emit`.
-        pub fn preview(&self, ops: &[A::Mutation]) -> protocol::DispatchReport {
+        pub async fn preview(&self, ops: &[A::Mutation]) -> protocol::DispatchReport {
             let op_bytes: Vec<Vec<u8>> = ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
             let messages = SpaceMember::preview_wire(&self.store, &op_bytes);
             protocol::DispatchReport { policy: self.store.merge_policy(), worst: protocol::worst_level(&messages), messages }
@@ -10878,7 +10878,7 @@ pub mod app {
 
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
         /// no-operation commands, and history notifications produce no `KernelMutation`s).
-        fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
+        async fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
             let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
             InvocationResult {
                 output: DslValue::Null,
@@ -10898,7 +10898,7 @@ pub mod app {
         /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
         /// serialize every `KernelMutation` since the gesture started (O(edit-size) per dispatch, O(edit-
         /// size²) over the whole gesture) purely to report operations the caller already knows about.
-        fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
+        async fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
             let schema = A::DOCUMENT_SCHEMA.to_string();
             let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
             let document = ArtifactHandle(meta.instance_id as u128);
@@ -10985,11 +10985,11 @@ pub mod app {
         /// (contract-freeze.md §5's "Rejection taxonomy") — shared by `dispatch_emit`'s freeze check
         /// and every `transaction_prepare`/`transaction_commit`/`transaction_rollback`/
         /// `transaction_undo`/`transaction_redo` rejection path below.
-        fn transaction_fault(origin: FaultOrigin, code: &'static str, message: impl Into<String>) -> Fault {
+        async fn transaction_fault(origin: FaultOrigin, code: &'static str, message: impl Into<String>) -> Fault {
             Fault::new(origin, FaultCode::new(code), message)
         }
 
-        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits, tasks } = emit;
 
             // 🔒️ Contract §2.3 clause 2 — hard backstop, unreachable through `ViewerApp` (its `handle`
@@ -11147,7 +11147,7 @@ pub mod app {
         /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
         /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
         /// wire path (which never emits a `ChildGenesis` itself today).
-        pub(crate) fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, Box<dyn SpaceMember>)>) {
+        pub(crate) async fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, Box<dyn SpaceMember>)>) {
             for (target, member) in created_children {
                 let slot = self.composition.graph().slot_of(&target.artifact_id).unwrap_or_default().to_string();
                 self.children.insert((slot, target.artifact_id.clone()), (target.dialect.clone(), member));
@@ -11173,7 +11173,7 @@ pub mod app {
         /// `undo()` directly on the live child store (driven by `inverse_group.member_edits`, not by
         /// replaying these bytes).
         #[allow(clippy::too_many_arguments)]
-        fn dispatch_emit_group(
+        async fn dispatch_emit_group(
             &mut self,
             verb: &str,
             artifact_mutations: Vec<A::Mutation>,
@@ -11355,7 +11355,7 @@ pub mod app {
         /// synced. A composed artifact's own app calls this explicitly wherever its `handle` might
         /// have changed a `#[child(...)]`/`#[link_slot(...)]` field — see B2's own
         /// `📓️wave1-reports/b2-store-composition-report.md` sharedFileRequest #6.
-        pub fn sync_composition_graph(&mut self) -> Result<(), Fault>
+        pub async fn sync_composition_graph(&mut self) -> Result<(), Fault>
         where
             A::Snapshot: store::ArtifactRefs,
         {
@@ -11376,7 +11376,7 @@ pub mod app {
         /// `dispatch_group`'s own fixed apply order (children → parent): undo reverses it
         /// (parent → children), redo re-establishes it (children → parent) — `undo_group`/`redo_group`
         /// themselves treat every member independently regardless of list order.
-        fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let parent_id = self.store.envelope().id.clone();
             let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
@@ -11437,7 +11437,7 @@ pub mod app {
         /// heartbeat reads for THIS app instance before calling `assemble_presence_interaction`
         /// (`🏪️store/🔄️sync/🦀️component.rs`, wave 2a) with it plus this app's declared hover/selection
         /// specs (from `AppDefinition.interactions`, already available wherever a heartbeat is built).
-        pub fn interaction_state(&self) -> protocol::InteractionState {
+        pub async fn interaction_state(&self) -> protocol::InteractionState {
             let mut state = self.interaction_store.snapshot().unwrap_or_default();
             state.hover = self.interaction_hover.clone();
             state
@@ -11455,7 +11455,7 @@ pub mod app {
         /// since the wrapper has no document access of its own for an arbitrary id space); an app needing
         /// a real full-universe topology for a delimited id scheme declares `HierarchyProvider::Topology`
         /// and implements `interaction_topology` instead.
-        fn resolve_domain_topology(&mut self, def: &InteractionDefinition, known_ids: impl Iterator<Item = String>) -> Result<protocol::DomainTopology, Fault> {
+        async fn resolve_domain_topology(&mut self, def: &InteractionDefinition, known_ids: impl Iterator<Item = String>) -> Result<protocol::DomainTopology, Fault> {
             match &def.hierarchy {
                 protocol::HierarchyProvider::Flat => Ok(protocol::DomainTopology::default()),
                 protocol::HierarchyProvider::Topology => {
@@ -11479,7 +11479,7 @@ pub mod app {
         /// dispatch — `Flat` genuinely has no structure to check staleness against, by declaration; an app
         /// wanting deleted-node pruning for a nominally-flat domain declares `HierarchyProvider::Topology`
         /// with one root `TopologyNode` per valid id instead.
-        fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState) -> Result<protocol::InteractionTopology, Fault> {
+        async fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState) -> Result<protocol::InteractionTopology, Fault> {
             let defs: Vec<InteractionDefinition> = self.registry.interactions().cloned().collect();
             let mut domains = BTreeMap::new();
             for def in &defs {
@@ -11499,7 +11499,7 @@ pub mod app {
         /// `ApplyInLane{lane: HistoryLane::Interaction}` — but ONLY when the persisted half actually
         /// changed, so a no-op revalidation (the common case for `revalidate_interaction_state_after_document_change`,
         /// called after every artifact dispatch even when nothing was selected) never mints an empty edit.
-        fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta) -> Result<(), Fault> {
+        async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta) -> Result<(), Fault> {
             let outlines: Vec<protocol::InteractionOutline> = self.registry.interactions().map(InteractionDefinition::outline).collect();
             let topology = self.build_full_interaction_topology(&combined)?;
             let validated = protocol::validate_state(&outlines, &topology, &combined);
@@ -11517,7 +11517,7 @@ pub mod app {
         /// document drops out of selection/hover automatically. Skips the topology/validate work
         /// entirely when the app declares no interaction domains at all (the overwhelming majority of
         /// dispatches, for an app mid-migration or with no interactions yet).
-        fn revalidate_interaction_state_after_document_change(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
+        async fn revalidate_interaction_state_after_document_change(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
             if self.registry.interactions().next().is_none() {
                 return Ok(());
             }
@@ -11533,7 +11533,7 @@ pub mod app {
         /// change can affect the interacted tree/viewport plus every peer's presence overlay across
         /// multiple window kinds — narrower scoping would need per-window interaction-domain bookkeeping
         /// this wave doesn't build).
-        fn dispatch_interaction_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
             let mut state = self.interaction_store.snapshot().unwrap_or_default();
             match action {
@@ -11619,7 +11619,7 @@ pub mod app {
         /// stamped through `PanelTreeBuilder::selected()`/`.highlighted()`, since a domain-bound tree's
         /// selection is now framework-owned. Recurses through every `UiNode` variant that can nest
         /// another (`Stack`/`Section`/`Group`/`Field`); every other variant is a leaf.
-        pub(crate) fn stamp_and_cache_interaction_ui(&mut self, node: &mut UiNode, state: &protocol::InteractionState) {
+        pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, node: &mut UiNode, state: &protocol::InteractionState) {
             match node {
                 UiNode::Tree(tree) => {
                     if let Some(domain_id) = tree.interaction_domain.clone() {
@@ -11674,7 +11674,7 @@ pub mod app {
         /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
         /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard/interaction) —
         /// an app's own behavior is dispatched exclusively through `dispatch_typed_command` now.
-        pub(crate) fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             // 🔒️ Contract §2.3 clause 1 — checked before every other branch below, including
             // `INTERACTION_ACTION_IDS`, since none of those six ever appear in `VIEWER_REJECTED_ACTION_IDS`.
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
@@ -11891,7 +11891,7 @@ pub mod app {
 
         /// @emoji 🎯️ Validates manifest structural app/mode ownership, converts the addressed
         /// invocation arguments once into the app's typed command, and enters the typed dispatch channel.
-        fn dispatch_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let command_id = invocation.address.command_id.as_str();
             let owner_app_id = self.app.instance_id().to_string();
             let kind = match &invocation.address.owner {
@@ -11921,7 +11921,7 @@ pub mod app {
         /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
         /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
         /// routed through `dispatch_action` — now FRAMEWORK-reserved verbs only.
-        fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if command_bytes.first().copied() == Some(1) {
                 return self.dispatch_typed_command(command_bytes, meta);
             }
@@ -11930,14 +11930,14 @@ pub mod app {
 
         /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
         /// and calls the pure `ArtifactApp::handle` — the sole surface for an app's own behavior now.
-        fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.into_fault())?;
             self.dispatch_typed_command_inner(command, meta)
         }
 
         /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
         /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
-        fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
             let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;
             // 🕹️ Same "materialize owned before the field-wise destructure" reasoning as the clipboard
@@ -11986,14 +11986,14 @@ pub mod app {
         /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
         /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
         /// already holds a concrete `A::Command` value.
-        pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        pub async fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_typed_command_inner(command, meta)?;
             Ok(self.finish_recorded(log_generation_before, "typed-command", result))
         }
 
         /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
-        fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             // 🔒️ Contract §2.3 clause 1 — `import` is not a string action (see `VIEWER_REJECTED_ACTION_IDS`'s
             // own doc), so it is guarded here instead of `dispatch_action`.
             if A::ROLE == AppRole::Viewer {
@@ -12013,7 +12013,7 @@ pub mod app {
         /// @emoji 🧮️ B1: dispatches a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` against
         /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
-        fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.config_store.set_local_actor_id(Some(meta.actor.clone()));
             self.config_store.dispatch_binary(command_bytes).map_err(|error| error.into_fault())?;
             self.cache = None;
@@ -12024,7 +12024,7 @@ pub mod app {
 
         /// 🧾️ Attaches the command-log delta directly to the accepted invocation response. History is
         /// no longer a plugin-rendered panel body, so this deliberately leaves `ui_scope` untouched.
-        fn finish_recorded(&mut self, log_generation_before: u64, _verb: &str, mut result: InvocationResult) -> InvocationResult {
+        async fn finish_recorded(&mut self, log_generation_before: u64, _verb: &str, mut result: InvocationResult) -> InvocationResult {
             if self.log_generation != log_generation_before {
                 result.history_patch = self.history_patch(false).ok();
             }
@@ -12034,46 +12034,46 @@ pub mod app {
 
     /// @emoji 📣️ Signals the shell that the document's checkpoint/alternative history changed (after an
     /// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
-    fn history_changed_event() -> AppEvent {
+    async fn history_changed_event() -> AppEvent {
         AppEvent { kind: "history-changed".into(), payload: DslValue::Null }
     }
 
     impl<A: ArtifactApp> PluginApp for VcsArtifactApp<A> {
-        fn app_id(&self) -> &str {
+        async fn app_id(&self) -> &str {
             self.app.instance_id()
         }
 
-        fn document_schema(&self) -> &str {
+        async fn document_schema(&self) -> &str {
             A::DOCUMENT_SCHEMA
         }
 
-        fn begin_dispatch_report(&mut self) {
+        async fn begin_dispatch_report(&mut self) {
             self.reset_dispatch_report();
         }
 
-        fn dispatch_report(&self) -> &protocol::DispatchReport {
+        async fn dispatch_report(&self) -> &protocol::DispatchReport {
             &self.dispatch_report
         }
 
-        fn set_merge_policy(&mut self, policy: protocol::MergePolicy) {
+        async fn set_merge_policy(&mut self, policy: protocol::MergePolicy) {
             self.apply_merge_policy(policy);
         }
 
-        fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
+        async fn resolve_conflict(&mut self, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
             self.resolve_store_conflict(conflict_id, resolution)
         }
 
-        fn open_conflicts(&self) -> Vec<protocol::Conflict> {
+        async fn open_conflicts(&self) -> Vec<protocol::Conflict> {
             self.current_open_conflicts()
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_action(action, args, meta)?;
             Ok(self.finish_recorded(log_generation_before, action, result))
         }
 
-        fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let address = &invocation.address;
             let owner_app_id = self.app.instance_id();
             if address.app_id != owner_app_id {
@@ -12104,13 +12104,13 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, &address.action_id, result))
         }
 
-        fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_command(invocation, active_mode_id, meta)?;
             Ok(self.finish_recorded(log_generation_before, &invocation.address.command_id, result))
         }
 
-        fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_command_frame(command_bytes, meta)?;
             Ok(self.finish_recorded(log_generation_before, "typed-command", result))
@@ -12120,8 +12120,8 @@ pub mod app {
         /// app's concrete `A::Mutation`/`A::ConfigMutation`/`A::DraftMutation` via `OpBinary::
         /// decode_op` (the SAME decode idiom `dispatch_typed_command` uses for `A::Command`) and
         /// dispatches them directly — see the trait method's own doc for why this skips `handle`.
-        fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
+        async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            async fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
                 protocol::decode_ops_vec(bytes)
                     .map_err(|error| error.into_fault())?
                     .iter()
@@ -12136,15 +12136,15 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "task-resume-emit", result))
         }
 
-        fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+        async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
             self.last_emit_wire.take()
         }
 
-        fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
+        async fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
             self.pending_transaction_proposal.take()
         }
 
-        fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
+        async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
             if self.pending_transaction.is_some() {
                 return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", "a transaction is already pending on this instance")) };
             }
@@ -12208,7 +12208,7 @@ pub mod app {
             TransactionPrepareOutcome { foreign, rejection: None }
         }
 
-        fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta) -> Result<String, Fault> {
+        async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta) -> Result<String, Fault> {
             let pending = match self.pending_transaction.take() {
                 Some(pending) if pending.txn_id == txn_id => pending,
                 Some(other) => {
@@ -12241,7 +12241,7 @@ pub mod app {
             Ok(edit_id)
         }
 
-        fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault> {
+        async fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault> {
             match &self.pending_transaction {
                 Some(pending) if pending.txn_id == txn_id => {
                     self.pending_transaction = None;
@@ -12251,7 +12251,7 @@ pub mod app {
             }
         }
 
-        fn transaction_undo(&mut self, group_id: &str) -> Result<(), Fault> {
+        async fn transaction_undo(&mut self, group_id: &str) -> Result<(), Fault> {
             if self.store.tail_group_id().as_deref() != Some(group_id) {
                 return Err(plugin_sdk_fault(format!("transaction_undo: this instance's tail edit does not belong to group {group_id:?}")));
             }
@@ -12260,7 +12260,7 @@ pub mod app {
             Ok(())
         }
 
-        fn transaction_redo(&mut self, group_id: &str) -> Result<(), Fault> {
+        async fn transaction_redo(&mut self, group_id: &str) -> Result<(), Fault> {
             match self.store.redo_tail() {
                 Some((_, Some(tail_group))) if tail_group == group_id => {
                     self.store.redo().map_err(|error| plugin_sdk_fault(format!("{error:?}")))?;
@@ -12271,25 +12271,25 @@ pub mod app {
             }
         }
 
-        fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
+        async fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
             self.history_patch(true)
         }
 
-        fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+        async fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
             if pack.is_empty() && spr.is_empty() {
                 return Ok(());
             }
             self.load_document_pack(&store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() })
         }
 
-        fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+        async fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
             if pack.is_empty() && spr.is_empty() {
                 return Ok(());
             }
             self.load_config_pack(&store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() })
         }
 
-        fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+        async fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
             if pack.is_empty() && spr.is_empty() {
                 return Ok(());
             }
@@ -12302,7 +12302,7 @@ pub mod app {
             Ok(())
         }
 
-        fn ephemeral_snapshot(&self) -> EphemeralSnapshot {
+        async fn ephemeral_snapshot(&self) -> EphemeralSnapshot {
             let hover_specs: BTreeMap<String, protocol::HoverSpec> = self.registry.interactions().map(|def| (def.id.clone(), def.hover.clone())).collect();
             let selection_specs: BTreeMap<String, protocol::SelectionSpec> = self.registry.interactions().map(|def| (def.id.clone(), def.selection.clone())).collect();
             let interaction_state = self.interaction_state();
@@ -12331,7 +12331,7 @@ pub mod app {
         /// when present, and unconditionally upserts `color`/`surface`/`interaction` into
         /// `peer_presence`. An actor absent from `peers` is dropped from BOTH maps — this call is the
         /// roster's single source of truth, never a diff.
-        fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault> {
+        async fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault> {
             self.own_color = own_color;
             let mut seen: BTreeSet<String> = BTreeSet::new();
             for peer in peers {
@@ -12350,17 +12350,17 @@ pub mod app {
             Ok(())
         }
 
-        fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
+        async fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
             store::print_document_pack(self.config_store.envelope()).map_err(|error| error.into_fault())
         }
 
-        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+        async fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
             self.open_child(slot, child_id, dialect, envelope_pack)?;
             self.cache = None;
             Ok(())
         }
 
-        fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> {
+        async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> {
             // 🔢️ Sorted by `(slot, child_id)`: the map's iteration order is not stable, and a
             // persisted child list that reshuffles between reads would make every save look like a
             // change to anything diffing it.
@@ -12375,7 +12375,7 @@ pub mod app {
             Ok(entries)
         }
 
-        fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
+        async fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Config, A::ConfigMutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             let (applied, redo) = match &parsed.envelope.cursor {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
@@ -12386,13 +12386,13 @@ pub mod app {
             Ok(())
         }
 
-        fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_config_command_inner(command_bytes, meta)?;
             Ok(self.finish_recorded(log_generation_before, "configCommand", result))
         }
 
-        fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
+        async fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
             let envelopes = protocol::decode_envelopes(mutations).map_err(|error| error.into_fault())?;
             let mut reports = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
@@ -12402,7 +12402,7 @@ pub mod app {
             Ok(reports)
         }
 
-        fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault> {
+        async fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault> {
             let mutations: Vec<A::Mutation> = operations_text.lines().map(str::trim).filter(|line| !line.is_empty()).map(|line| A::Mutation::parse_op(line).map_err(|error| error.into_fault())).collect::<Result<Vec<_>, _>>()?;
             if mutations.is_empty() {
                 return Ok(());
@@ -12412,11 +12412,11 @@ pub mod app {
             Ok(())
         }
 
-        fn document_text(&self) -> Result<store::ArtifactTextFiles, Fault> {
+        async fn document_text(&self) -> Result<store::ArtifactTextFiles, Fault> {
             store::print_document_text(self.store.envelope()).map_err(|error| error.into_fault())
         }
 
-        fn load_document_text(&mut self, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
+        async fn load_document_text(&mut self, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
             let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             self.store.reset(parsed.envelope, applied, Vec::new()).map_err(|error| error.into_fault())?;
@@ -12424,11 +12424,11 @@ pub mod app {
             Ok(())
         }
 
-        fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
+        async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
             store::print_document_pack(self.store.envelope()).map_err(|error| error.into_fault())
         }
 
-        fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
+        async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             // 🎯️ W4: honor a persisted cursor (undo/redo position) when present — falling back to
             // "every edit applied" for a pack predating this field, matching `ArtifactStore::new`'s
@@ -12442,18 +12442,18 @@ pub mod app {
             Ok(())
         }
 
-        fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), Fault> {
+        async fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), Fault> {
             self.store.attach_backbone(backbone).map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
 
-        fn detach_backbone(&mut self) {
+        async fn detach_backbone(&mut self) {
             self.store.detach_backbone();
             self.cache = None;
         }
 
-        fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
+        async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
             self.refresh_cache()?;
             if body_key == FRAMEWORK_HISTORY_BODY_KEY {
                 // 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
@@ -12493,7 +12493,7 @@ pub mod app {
             Ok(node)
         }
 
-        fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
@@ -12503,7 +12503,7 @@ pub mod app {
             A::window_engagements(&doc, &cfg)
         }
 
-        fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
@@ -12513,7 +12513,7 @@ pub mod app {
             A::window_measures(&doc, &cfg)
         }
 
-        fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
@@ -12524,7 +12524,7 @@ pub mod app {
             A::tool_measures(&doc, &cfg)
         }
 
-        fn pending_effects(&mut self) -> Vec<Effect> {
+        async fn pending_effects(&mut self) -> Vec<Effect> {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
@@ -12538,7 +12538,7 @@ pub mod app {
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
         /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
         /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
-        fn context_menu(&mut self, request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(&mut self, request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
@@ -12550,7 +12550,7 @@ pub mod app {
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
-        fn export_media<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, Media> {
+        async fn export_media<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, Media> {
             Box::pin(async move {
                 self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
                 let VcsArtifactApp { app: _, cache, children, .. } = self;
@@ -12561,13 +12561,13 @@ pub mod app {
             })
         }
 
-        fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_import_media(port, media, meta)?;
             Ok(self.finish_recorded(log_generation_before, &format!("import-media:{port}"), result))
         }
 
-        fn media_fingerprint<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
+        async fn media_fingerprint<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
             Box::pin(async move {
                 self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
                 let VcsArtifactApp { app: _, cache, children, .. } = self;
@@ -12591,9 +12591,9 @@ pub mod app {
     pub type PluginCommandHandler = Box<dyn Fn(&ManifestCommandInvocation, &ActionMeta) -> Result<InvocationResult, Fault> + Send>;
 
     pub trait PluginProgram: Send {
-        fn manifest(&self) -> PluginManifest;
-        fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>>;
-        fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn manifest(&self) -> PluginManifest;
+        async fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>>;
+        async fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
     }
 
     pub struct Plugin {
@@ -12604,7 +12604,7 @@ pub mod app {
     }
 
     impl Plugin {
-        pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
+        pub async fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
                 manifest: PluginManifest {
                     plugin_id: plugin_id.into(),
@@ -12626,49 +12626,49 @@ pub mod app {
         }
 
         /// 🧬️ Installs the fully preflighted declaration authority before external rows commit.
-        pub(crate) fn with_runtime_registry(mut self, runtime: PluginRuntimeRegistry) -> Self {
+        pub(crate) async fn with_runtime_registry(mut self, runtime: PluginRuntimeRegistry) -> Self {
             self.runtime = runtime;
             self
         }
 
         /// 🧾️ Reads this plugin's immutable artifact-definition authority.
-        pub fn artifact_definitions(&self) -> &ArtifactDefinitionRegistry {
+        pub async fn artifact_definitions(&self) -> &ArtifactDefinitionRegistry {
             self.runtime.definitions()
         }
 
         /// 🧭️ Lists frozen host-media declarations in stable contribution-id order.
-        pub fn host_media_handlers(&self) -> Vec<HostMediaHandlerDescriptor> {
+        pub async fn host_media_handlers(&self) -> Vec<HostMediaHandlerDescriptor> {
             self.runtime.host_media_handlers.descriptors()
         }
 
         /// 🌊️ Lists frozen flow-extension descriptors in stable contribution-id order.
-        pub fn flow_extensions(&self) -> Vec<FlowExtensionDescriptor> {
+        pub async fn flow_extensions(&self) -> Vec<FlowExtensionDescriptor> {
             self.runtime.flow_extensions.descriptors()
         }
 
         /// 📥️ Executes only the declared typed mesh-DWG bridge selected by the request.
-        pub fn import_mesh_dwg(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
+        pub async fn import_mesh_dwg(&self, request: MeshDwgBridgeRequest) -> Result<MeshDwgBridgeResult, HostMediaRuntimeError> {
             self.runtime.host_media_handlers.mesh_dwg_bridge(request)
         }
 
         /// 📤️ Executes only the declared typed 2D SVG renderer selected by the request.
-        pub fn export_two_d_svg(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
+        pub async fn export_two_d_svg(&self, request: TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
             self.runtime.host_media_handlers.two_d_svg_export(request)
         }
 
-        pub(crate) fn wire_list_artifact_inference_services(&self) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+        pub(crate) async fn wire_list_artifact_inference_services(&self) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
             wire_list_artifact_inference_services_from(self.runtime.inference_services())
         }
 
-        pub(crate) fn wire_artifact_infer(&self, request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+        pub(crate) async fn wire_artifact_infer(&self, request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
             wire_artifact_infer_from(self.runtime.inference_services(), request)
         }
 
-        pub(crate) fn wire_list_artifact_mutations(&self) -> Vec<u8> {
+        pub(crate) async fn wire_list_artifact_mutations(&self) -> Vec<u8> {
             store::pack_rt::encode_wire_value(&to_dsl_value(&self.runtime.mutation_roster_entries()).unwrap_or(DslValue::Null))
         }
 
-        pub(crate) fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
+        pub(crate) async fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
             let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
             if request.mutation_id.trim().is_empty() {
                 return Err(plugin_sdk_fault("artifact-mutation-plan requires a non-empty mutation_id"));
@@ -12687,7 +12687,7 @@ pub mod app {
         }
 
         /// @emoji 🎛️ Declares a plugin-owned command and its program-level handler.
-        pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
+        pub async fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
             assert!(!command.id.trim().is_empty(), "plugin {} command id must be non-empty", self.manifest.plugin_id);
             assert!(!self.command_handlers.contains_key(&command.id), "plugin {} duplicate command id {}", self.manifest.plugin_id, command.id);
             let mut arg_ids = HashSet::new();
@@ -12704,7 +12704,7 @@ pub mod app {
         }
 
         /// 🔌️ Dispatches only commands structurally owned by this plugin.
-        pub fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        pub async fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let ManifestCommandOwnerAddress::Plugin { plugin_id } = &invocation.address.owner else {
                 return Err(Fault::from("plugin command handler received a non-plugin owner"));
             };
@@ -12720,7 +12720,7 @@ pub mod app {
             Ok(result)
         }
 
-        pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
+        pub async fn capability(mut self, capability: CapabilityRequirement) -> Self {
             if !self.manifest.capabilities.contains(&capability) {
                 self.manifest.capabilities.push(capability);
             }
@@ -12728,17 +12728,17 @@ pub mod app {
         }
 
         /// 🗂️ Declares one plugin-level artifact kind (library plugins use this; repeatable).
-        pub fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
+        pub async fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
             self.manifest.artifact_kinds.push(spec);
             self
         }
 
-        pub fn local_backbone_storage(self) -> Self {
+        pub async fn local_backbone_storage(self) -> Self {
             self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
         }
 
         /// 🧬️ Registers an already-wrapped app factory after typed assembly has completed.
-        pub fn register_app_factory(mut self, app: App, factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static) -> Self {
+        pub async fn register_app_factory(mut self, app: App, factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static) -> Self {
             let app_id = app.definition.id.clone();
             self.manifest.apps.push(app.definition);
             for mut example in app.examples {
@@ -12749,21 +12749,21 @@ pub mod app {
             self
         }
 
-        pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
+        pub async fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
             self.apps.get(app_id).map(|factory| factory())
         }
     }
 
     impl PluginProgram for Plugin {
-        fn manifest(&self) -> PluginManifest {
+        async fn manifest(&self) -> PluginManifest {
             self.manifest.clone()
         }
 
-        fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
+        async fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
             Plugin::create_app(self, app_id)
         }
 
-        fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Plugin::handle_plugin_command(self, invocation, meta)
         }
     }
@@ -12778,7 +12778,7 @@ pub mod app {
     // than each app hand-rolling a text/table/tree/image/mesh/document/media window from scratch.
 
     /// 🏗️ Shared `WindowKindDefinition` scaffold — every kit differs only in id/label/surface/icon/actions.
-    fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, actions: Vec<ActionDefinition>) -> WindowKindDefinition {
+    async fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, actions: Vec<ActionDefinition>) -> WindowKindDefinition {
         WindowKindDefinition {
             id: id.into(),
             label: LocalizedLabel::native(en, de),
@@ -12803,9 +12803,9 @@ pub mod app {
     pub trait WindowKit {
         type ViewModel;
         const KIND_ID: &'static str;
-        fn window_kind() -> WindowKindDefinition;
-        fn editable_window_kind() -> WindowKindDefinition;
-        fn render(view: &Self::ViewModel) -> UiNode;
+        async fn window_kind() -> WindowKindDefinition;
+        async fn editable_window_kind() -> WindowKindDefinition;
+        async fn render(view: &Self::ViewModel) -> UiNode;
     }
 
     //#region 🔖️TextWindowKit
@@ -12824,15 +12824,15 @@ pub mod app {
         type ViewModel = TextView;
         const KIND_ID: &'static str = "framework.window.text";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TextView) -> UiNode {
+        async fn render(view: &TextView) -> UiNode {
             ui_wgpu::wgpu::build_text_editor_scene(
                 Self::KIND_ID,
                 Self::KIND_ID,
@@ -12874,15 +12874,15 @@ pub mod app {
         type ViewModel = TableView;
         const KIND_ID: &'static str = "framework.window.table";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TableView) -> UiNode {
+        async fn render(view: &TableView) -> UiNode {
             let columns_json = serde_json::to_string(&view.columns).unwrap_or_else(|_| "[]".into());
             let rows_json = serde_json::to_string(&view.rows).unwrap_or_else(|_| "[]".into());
             ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, ui_wgpu::wgpu::TableScene::base(columns_json, rows_json))
@@ -12936,7 +12936,7 @@ pub mod app {
         /// `render`'s flat positional-string grid, which carries neither. The actions column is only
         /// appended when at least one row has an action, so plain identified tables (no row buttons yet)
         /// don't grow a dead column.
-        pub fn render_rows(view: &TableRowsView) -> UiNode {
+        pub async fn render_rows(view: &TableRowsView) -> UiNode {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
             let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
             if has_actions {
@@ -12982,16 +12982,16 @@ pub mod app {
         type ViewModel = TreeView;
         const KIND_ID: &'static str = "framework.window.tree";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TreeView) -> UiNode {
-            fn to_item(node: &TreeNodeView) -> UiTreeItemNode {
+        async fn render(view: &TreeView) -> UiNode {
+            async fn to_item(node: &TreeNodeView) -> UiTreeItemNode {
                 let mut item = UiTreeItemNode::base(node.id.clone(), Label::data(node.label.clone()));
                 if !node.children.is_empty() {
                     item.items = Some(node.children.iter().map(to_item).collect());
@@ -13026,15 +13026,15 @@ pub mod app {
         type ViewModel = ImageView;
         const KIND_ID: &'static str = "framework.window.image";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &ImageView) -> UiNode {
+        async fn render(view: &ImageView) -> UiNode {
             let src = format!("data:{};base64,{}", view.mime, view.base64);
             ui_wgpu::wgpu::ui_image(Self::KIND_ID, src, Some(Label::data(format!("{}x{}", view.width, view.height))))
         }
@@ -13058,15 +13058,15 @@ pub mod app {
         type ViewModel = MeshView;
         const KIND_ID: &'static str = "framework.window.mesh";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &MeshView) -> UiNode {
+        async fn render(view: &MeshView) -> UiNode {
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &crate::world3d_host::WorldSunConfig::default());
             ui_wgpu::wgpu::build_world_3d_scene(Self::KIND_ID, Self::KIND_ID, scene)
         }
@@ -13091,15 +13091,15 @@ pub mod app {
         type ViewModel = DocumentView;
         const KIND_ID: &'static str = "framework.window.document";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &DocumentView) -> UiNode {
+        async fn render(view: &DocumentView) -> UiNode {
             let children = view.pages.iter().map(|page| ui_text(Label::data(page.text.clone()))).collect();
             ui_stack_vertical(children)
         }
@@ -13127,15 +13127,15 @@ pub mod app {
         type ViewModel = MediaView;
         const KIND_ID: &'static str = "framework.window.media";
 
-        fn window_kind() -> WindowKindDefinition {
+        async fn window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", Vec::new())
         }
 
-        fn editable_window_kind() -> WindowKindDefinition {
+        async fn editable_window_kind() -> WindowKindDefinition {
             window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &MediaView) -> UiNode {
+        async fn render(view: &MediaView) -> UiNode {
             let kind_label = match view.kind {
                 MediaKind::Audio => "audio",
                 MediaKind::Video => "video",
@@ -13158,12 +13158,12 @@ pub mod app {
     mod window_kits_tests {
         use super::*;
 
-        fn label_en_de(label: &LocalizedLabel) -> (String, String) {
+        async fn label_en_de(label: &LocalizedLabel) -> (String, String) {
             (label.resolve(Terminology::default(), Locale::En).to_string(), label.resolve(Terminology::default(), Locale::De).to_string())
         }
 
         #[test]
-        fn kind_ids_match_the_frozen_table() {
+        async fn kind_ids_match_the_frozen_table() {
             assert_eq!(TextWindowKit::KIND_ID, "framework.window.text");
             assert_eq!(TableWindowKit::KIND_ID, "framework.window.table");
             assert_eq!(TreeWindowKit::KIND_ID, "framework.window.tree");
@@ -13174,7 +13174,7 @@ pub mod app {
         }
 
         #[test]
-        fn window_kind_ids_and_labels_are_non_empty_and_id_matches_definition() {
+        async fn window_kind_ids_and_labels_are_non_empty_and_id_matches_definition() {
             for (kind_id, def) in [
                 (TextWindowKit::KIND_ID, TextWindowKit::window_kind()),
                 (TableWindowKit::KIND_ID, TableWindowKit::window_kind()),
@@ -13192,7 +13192,7 @@ pub mod app {
         }
 
         #[test]
-        fn en_de_labels_differ_except_text() {
+        async fn en_de_labels_differ_except_text() {
             let (text_en, text_de) = label_en_de(&TextWindowKit::window_kind().label);
             assert_eq!(text_en, "Text");
             assert_eq!(text_de, "Text");
@@ -13229,7 +13229,7 @@ pub mod app {
         }
 
         #[test]
-        fn editable_variants_declare_exactly_their_frozen_command_id() {
+        async fn editable_variants_declare_exactly_their_frozen_command_id() {
             let cases: [(&str, WindowKindDefinition); 7] = [
                 ("replace-text", TextWindowKit::editable_window_kind()),
                 ("set-cell", TableWindowKit::editable_window_kind()),
@@ -13247,7 +13247,7 @@ pub mod app {
         }
 
         #[test]
-        fn text_kit_renders_buffer_into_component_scene() {
+        async fn text_kit_renders_buffer_into_component_scene() {
             let view = TextView { text: "hello world".into(), language: Some("en".into()), read_only: false };
             let UiNode::ComponentScene(node) = TextWindowKit::render(&view) else { panic!("expected ComponentScene") };
             let scene = node.text_editor.expect("text_editor scene");
@@ -13257,7 +13257,7 @@ pub mod app {
         }
 
         #[test]
-        fn text_kit_read_only_stamps_settings_json() {
+        async fn text_kit_read_only_stamps_settings_json() {
             let view = TextView { text: "x".into(), language: None, read_only: true };
             let UiNode::ComponentScene(node) = TextWindowKit::render(&view) else { panic!("expected ComponentScene") };
             let scene = node.text_editor.expect("text_editor scene");
@@ -13265,7 +13265,7 @@ pub mod app {
         }
 
         #[test]
-        fn table_kit_renders_columns_and_rows_json() {
+        async fn table_kit_renders_columns_and_rows_json() {
             let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
             let UiNode::ComponentScene(node) = TableWindowKit::render(&view) else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
@@ -13274,7 +13274,7 @@ pub mod app {
         }
 
         #[test]
-        fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
+        async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
             let view = TableRowsView { columns: vec!["Name".into()], rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: Vec::new() }], actions_label: "Actions".into() };
             let UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view) else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
@@ -13286,7 +13286,7 @@ pub mod app {
         }
 
         #[test]
-        fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
+        async fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
             let action = ActionDescriptor { controller_id: "s.space.home".into(), action: "delete-space".into(), args: None };
             let view = TableRowsView {
                 columns: vec!["Name".into()],
@@ -13306,7 +13306,7 @@ pub mod app {
         }
 
         #[test]
-        fn tree_kit_renders_nested_items() {
+        async fn tree_kit_renders_nested_items() {
             let view = TreeView { roots: vec![TreeNodeView { id: "root".into(), label: "Root".into(), children: vec![TreeNodeView { id: "child".into(), label: "Child".into(), children: Vec::new() }] }] };
             let UiNode::Tree(tree) = TreeWindowKit::render(&view) else { panic!("expected Tree") };
             assert_eq!(tree.sections.len(), 1);
@@ -13317,14 +13317,14 @@ pub mod app {
         }
 
         #[test]
-        fn image_kit_renders_data_uri_from_base64() {
+        async fn image_kit_renders_data_uri_from_base64() {
             let view = ImageView { width: 4, height: 2, mime: "image/png".into(), base64: "QUJD".into() };
             let UiNode::Image(image) = ImageWindowKit::render(&view) else { panic!("expected Image") };
             assert_eq!(image.src, "data:image/png;base64,QUJD");
         }
 
         #[test]
-        fn mesh_kit_renders_world3d_component_scene() {
+        async fn mesh_kit_renders_world3d_component_scene() {
             let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };
             let UiNode::ComponentScene(node) = MeshWindowKit::render(&view) else { panic!("expected ComponentScene") };
             let scene = node.world_3d.expect("world_3d scene");
@@ -13332,14 +13332,14 @@ pub mod app {
         }
 
         #[test]
-        fn document_kit_renders_one_child_per_page() {
+        async fn document_kit_renders_one_child_per_page() {
             let view = DocumentView { pages: vec![DocumentPage { text: "p1".into() }, DocumentPage { text: "p2".into() }] };
             let UiNode::Stack(stack) = DocumentWindowKit::render(&view) else { panic!("expected Stack") };
             assert_eq!(stack.children.len(), 2);
         }
 
         #[test]
-        fn media_kit_renders_duration_and_position() {
+        async fn media_kit_renders_duration_and_position() {
             let view = MediaView { duration_ms: 60_000, position_ms: 1_500, kind: MediaKind::Video };
             let UiNode::KeyValue(key_value) = MediaWindowKit::render(&view) else { panic!("expected KeyValue") };
             assert_eq!(key_value.entries.len(), 3);
@@ -13387,7 +13387,7 @@ pub mod app {
         /// `EphemeralEmit<Self>` — that struct is bound to the RUNTIME `ArtifactApp` trait, which
         /// `Self` here does not implement; `EditorApp<E>::ephemeral` wraps this tuple into a real
         /// `EphemeralEmit` at the adapter boundary, where the bound is satisfied.
-        fn ephemeral(
+        async fn ephemeral(
             _command: &Self::Command,
             _doc: &ArtifactView<'_, Self::Snapshot>,
             _cfg: &ConfigView<'_, Self::Config>,
@@ -13396,18 +13396,18 @@ pub mod app {
         ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
             (Vec::new(), Vec::new())
         }
-        fn config_schema() -> &'static str {
+        async fn config_schema() -> &'static str {
             "config.empty"
         }
-        fn initial_snapshot() -> Self::Snapshot;
-        fn initial_config() -> Self::Config {
+        async fn initial_snapshot() -> Self::Snapshot;
+        async fn initial_config() -> Self::Config {
             Self::Config::default()
         }
-        fn initial_draft() -> Self::Draft {
+        async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
         }
         /// @emoji 🧩️ The pure heart of an editor — identical shape to `ArtifactApp::handle`.
-        fn handle(
+        async fn handle(
             command: &Self::Command,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
@@ -13415,63 +13415,63 @@ pub mod app {
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
-        fn command_id(_command: &Self::Command) -> &'static str {
+        async fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
                 format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
             ))
         }
-        fn config_spec() -> ConfigSpec {
+        async fn config_spec() -> ConfigSpec {
             ConfigSpec::empty()
         }
-        fn clipboard_media_type() -> Option<MediaType> {
+        async fn clipboard_media_type() -> Option<MediaType> {
             None
         }
-        fn clipboard_accepts() -> Vec<MediaType> {
+        async fn clipboard_accepts() -> Vec<MediaType> {
             Self::clipboard_media_type().into_iter().collect()
         }
-        fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+        async fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+        async fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
             Vec::new()
         }
-        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        async fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+        async fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
-        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
-        fn genesis() -> Vec<Self::Mutation> {
+        async fn genesis() -> Vec<Self::Mutation> {
             Vec::new()
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             None
         }
-        fn io() -> Option<AppIo> {
+        async fn io() -> Option<AppIo> {
             None
         }
-        fn media_ports() -> Vec<MediaPortSpec> {
+        async fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
@@ -13483,10 +13483,10 @@ pub mod app {
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
-        fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        async fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             None
         }
-        fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+        async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
             }
@@ -13530,7 +13530,7 @@ pub mod app {
         type Command: ::protocol::OpBinary + Send;
 
         /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
-        fn ephemeral(
+        async fn ephemeral(
             _command: &Self::Command,
             _doc: &ArtifactView<'_, Self::Snapshot>,
             _cfg: &ConfigView<'_, Self::Config>,
@@ -13539,53 +13539,53 @@ pub mod app {
         ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
             (Vec::new(), Vec::new())
         }
-        fn config_schema() -> &'static str {
+        async fn config_schema() -> &'static str {
             "config.empty"
         }
-        fn initial_snapshot() -> Self::Snapshot;
-        fn initial_config() -> Self::Config {
+        async fn initial_snapshot() -> Self::Snapshot;
+        async fn initial_config() -> Self::Config {
             Self::Config::default()
         }
         /// 👁️ The pure heart of a viewer — same shape as `ArtifactEditor::handle` minus `draft` (a
         /// viewer never has a draft lane), returning `ViewEmit` instead of `Emit`: structurally
         /// incapable of an artifact or draft mutation (contract §2.2).
-        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
-        fn command_id(_command: &Self::Command) -> &'static str {
+        async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
+        async fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
                 format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
             ))
         }
-        fn config_spec() -> ConfigSpec {
+        async fn config_spec() -> ConfigSpec {
             ConfigSpec::empty()
         }
-        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        async fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
-        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             None
         }
-        fn io() -> Option<AppIo> {
+        async fn io() -> Option<AppIo> {
             None
         }
-        fn media_ports() -> Vec<MediaPortSpec> {
+        async fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
@@ -13620,19 +13620,19 @@ pub mod app {
     }
 
     impl<ConfigMutation> ViewEmit<ConfigMutation> {
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self::default()
         }
         /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else.
-        pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
+        pub async fn config(config_mutations: Vec<ConfigMutation>) -> Self {
             Self { config_mutations, ..Default::default() }
         }
         /// 🐚️ A single host effect and no config operations.
-        pub fn effect(effect: Effect) -> Self {
+        pub async fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
         /// 🐢️ Narrows which rendered UI sections this emission invalidates.
-        pub fn dirty(ui_dirty: semio_framework::kernel::UiDirtyScope) -> Self {
+        pub async fn dirty(ui_dirty: semio_framework::kernel::UiDirtyScope) -> Self {
             Self { ui_dirty, ..Default::default() }
         }
     }
@@ -13661,7 +13661,7 @@ pub mod app {
 
     impl<E: ArtifactEditor> EditorApp<E> {
         /// 🪪️ The real derived surface id — see struct doc.
-        pub fn surface_id(&self) -> &str {
+        pub async fn surface_id(&self) -> &str {
             &self.id
         }
     }
@@ -13673,7 +13673,7 @@ pub mod app {
 
         /// 🪪️ Overrides the `APP_ID` placeholder default — every ownership check must see the real
         /// derived surface id (`self.id`, see struct doc), matching what `ShellHost` addresses.
-        fn instance_id(&self) -> &str {
+        async fn instance_id(&self) -> &str {
             self.surface_id()
         }
         type Snapshot = E::Snapshot;
@@ -13688,23 +13688,23 @@ pub mod app {
         type TransientMutation = E::TransientMutation;
         type Command = E::Command;
 
-        fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+        async fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             let (presence_mutations, transient_mutations) = E::ephemeral(command, doc, cfg, presence, transient);
             EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
         }
-        fn config_schema() -> &'static str {
+        async fn config_schema() -> &'static str {
             E::config_schema()
         }
-        fn initial_snapshot() -> Self::Snapshot {
+        async fn initial_snapshot() -> Self::Snapshot {
             E::initial_snapshot()
         }
-        fn initial_config() -> Self::Config {
+        async fn initial_config() -> Self::Config {
             E::initial_config()
         }
-        fn initial_draft() -> Self::Draft {
+        async fn initial_draft() -> Self::Draft {
             E::initial_draft()
         }
-        fn handle(
+        async fn handle(
             command: &Self::Command,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
@@ -13714,70 +13714,70 @@ pub mod app {
         ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
             E::handle(command, doc, cfg, interaction, draft, engines)
         }
-        fn command_id(command: &Self::Command) -> &'static str {
+        async fn command_id(command: &Self::Command) -> &'static str {
             E::command_id(command)
         }
-        fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
             E::command_from_action(action, args)
         }
-        fn config_spec() -> ConfigSpec {
+        async fn config_spec() -> ConfigSpec {
             E::config_spec()
         }
-        fn clipboard_media_type() -> Option<MediaType> {
+        async fn clipboard_media_type() -> Option<MediaType> {
             E::clipboard_media_type()
         }
-        fn clipboard_accepts() -> Vec<MediaType> {
+        async fn clipboard_accepts() -> Vec<MediaType> {
             E::clipboard_accepts()
         }
-        fn copy_fragment(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+        async fn copy_fragment(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
             E::copy_fragment(doc, cfg, interaction)
         }
-        fn cut_operations(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+        async fn cut_operations(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
             E::cut_operations(doc, cfg, interaction)
         }
-        fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        async fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             E::interaction_topology(doc, cfg)
         }
-        fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
+        async fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             E::paste_operations(doc, fragment, placement)
         }
-        fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             E::pending_effects(doc, cfg)
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
             E::render(body_key, doc, cfg)
         }
-        fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             E::window_engagements(doc, cfg)
         }
-        fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             E::window_measures(doc, cfg)
         }
-        fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             E::tool_measures(doc, cfg)
         }
-        fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             E::context_menu(request, doc, cfg, registry)
         }
-        fn genesis() -> Vec<Self::Mutation> {
+        async fn genesis() -> Vec<Self::Mutation> {
             E::genesis()
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             E::app_schema()
         }
-        fn io() -> Option<AppIo> {
+        async fn io() -> Option<AppIo> {
             E::io()
         }
-        fn media_ports() -> Vec<MediaPortSpec> {
+        async fn media_ports() -> Vec<MediaPortSpec> {
             E::media_ports()
         }
         async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             E::export_media(port, doc).await
         }
-        fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        async fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             E::whole_document_operation(snapshot)
         }
-        fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
+        async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             E::import_media(port, media, doc)
         }
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
@@ -13808,7 +13808,7 @@ pub mod app {
 
     impl<V: ArtifactViewer> ViewerApp<V> {
         /// 🪪️ The real derived surface id — see `EditorApp::surface_id`.
-        pub fn surface_id(&self) -> &str {
+        pub async fn surface_id(&self) -> &str {
             &self.id
         }
     }
@@ -13819,7 +13819,7 @@ pub mod app {
         const DOCUMENT_SCHEMA: &'static str = V::DOCUMENT_SCHEMA;
 
         /// 🪪️ See `EditorApp::instance_id` — same placeholder-override reasoning applies here.
-        fn instance_id(&self) -> &str {
+        async fn instance_id(&self) -> &str {
             self.surface_id()
         }
         type Snapshot = V::Snapshot;
@@ -13834,20 +13834,20 @@ pub mod app {
         type TransientMutation = V::TransientMutation;
         type Command = V::Command;
 
-        fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+        async fn ephemeral(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, presence: &PresenceView<'_, Self::Presence>, transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             let (presence_mutations, transient_mutations) = V::ephemeral(command, doc, cfg, presence, transient);
             EphemeralEmit { presence: presence_mutations, transient: transient_mutations }
         }
-        fn config_schema() -> &'static str {
+        async fn config_schema() -> &'static str {
             V::config_schema()
         }
-        fn initial_snapshot() -> Self::Snapshot {
+        async fn initial_snapshot() -> Self::Snapshot {
             V::initial_snapshot()
         }
-        fn initial_config() -> Self::Config {
+        async fn initial_config() -> Self::Config {
             V::initial_config()
         }
-        fn handle(
+        async fn handle(
             command: &Self::Command,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
@@ -13858,40 +13858,40 @@ pub mod app {
             let view_emit = V::handle(command, doc, cfg, interaction, engines)?;
             Ok(Emit { config_mutations: view_emit.config_mutations, effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() })
         }
-        fn command_id(command: &Self::Command) -> &'static str {
+        async fn command_id(command: &Self::Command) -> &'static str {
             V::command_id(command)
         }
-        fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
             V::command_from_action(action, args)
         }
-        fn config_spec() -> ConfigSpec {
+        async fn config_spec() -> ConfigSpec {
             V::config_spec()
         }
-        fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        async fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             V::interaction_topology(doc, cfg)
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
             V::render(body_key, doc, cfg)
         }
-        fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg)
         }
-        fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             V::window_measures(doc, cfg)
         }
-        fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             V::tool_measures(doc, cfg)
         }
-        fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             V::context_menu(request, doc, cfg, registry)
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
         }
-        fn io() -> Option<AppIo> {
+        async fn io() -> Option<AppIo> {
             V::io()
         }
-        fn media_ports() -> Vec<MediaPortSpec> {
+        async fn media_ports() -> Vec<MediaPortSpec> {
             V::media_ports()
         }
         async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
@@ -13912,7 +13912,7 @@ pub mod app {
     pub struct Editor;
 
     impl Viewer {
-        pub fn builder(dialect: Dialect) -> ViewerBuilder {
+        pub async fn builder(dialect: Dialect) -> ViewerBuilder {
             let dialect: ArtifactDialect = dialect.into();
             let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Viewer), LocalizedLabel::native("Viewer", "Betrachter"));
             ViewerBuilder { inner, dialect }
@@ -13920,7 +13920,7 @@ pub mod app {
     }
 
     impl Editor {
-        pub fn builder(dialect: Dialect) -> EditorBuilder {
+        pub async fn builder(dialect: Dialect) -> EditorBuilder {
             let dialect: ArtifactDialect = dialect.into();
             let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Editor), LocalizedLabel::native("Editor", "Editor"));
             EditorBuilder { inner, dialect }
@@ -13943,7 +13943,7 @@ pub mod app {
     }
 
     impl ViewerBuilder {
-        pub fn document<I, S>(mut self, document: I) -> Self
+        pub async fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
@@ -13951,11 +13951,11 @@ pub mod app {
             self.inner = self.inner.document(document);
             self
         }
-        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
             self.inner = self.inner.terminology_document(id, document);
             self
         }
-        pub fn build_definition(self) -> AppDefinition {
+        pub async fn build_definition(self) -> AppDefinition {
             let mut definition = self.inner.build_definition();
             definition.role = AppRole::Viewer;
             definition.dialect = self.dialect;
@@ -13964,7 +13964,7 @@ pub mod app {
     }
 
     impl EditorBuilder {
-        pub fn document<I, S>(mut self, document: I) -> Self
+        pub async fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
@@ -13972,16 +13972,16 @@ pub mod app {
             self.inner = self.inner.document(document);
             self
         }
-        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
             self.inner = self.inner.terminology_document(id, document);
             self
         }
         /// @emoji ✏️ Declares a document-mutating action — the one method `ViewerBuilder` doesn't have.
-        pub fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        pub async fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
             self.inner = self.inner.mutation(id, label);
             self
         }
-        pub fn build_definition(self) -> AppDefinition {
+        pub async fn build_definition(self) -> AppDefinition {
             let mut definition = self.inner.build_definition();
             definition.role = AppRole::Editor;
             definition.dialect = self.dialect;
@@ -14172,11 +14172,11 @@ pub mod app {
         /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
         /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
         /// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`.
-        pub fn editor_surface<E: ArtifactEditor>(def: AppDefinition) -> SurfaceDeclaration {
-            fn factory<E: ArtifactEditor>(def: &AppDefinition) -> Box<dyn PluginApp> {
+        pub async fn editor_surface<E: ArtifactEditor>(def: AppDefinition) -> SurfaceDeclaration {
+            async fn factory<E: ArtifactEditor>(def: &AppDefinition) -> Box<dyn PluginApp> {
                 Box::new(VcsArtifactApp::with_registry(EditorApp::<E>::default(), AppActionRegistry::from_definition(def)))
             }
-            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            async fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
                 E::app_schema()
             }
             SurfaceDeclaration { definition: def, factory: factory::<E>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
@@ -14184,11 +14184,11 @@ pub mod app {
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
         /// §2.3 clause 4: a viewer's document store attaches Read only, never Write).
-        pub fn viewer_surface<V: ArtifactViewer>(def: AppDefinition) -> SurfaceDeclaration {
-            fn factory<V: ArtifactViewer>(def: &AppDefinition) -> Box<dyn PluginApp> {
+        pub async fn viewer_surface<V: ArtifactViewer>(def: AppDefinition) -> SurfaceDeclaration {
+            async fn factory<V: ArtifactViewer>(def: &AppDefinition) -> Box<dyn PluginApp> {
                 Box::new(VcsArtifactApp::with_registry(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def)))
             }
-            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            async fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
                 V::app_schema()
             }
             SurfaceDeclaration { definition: def, factory: factory::<V>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
@@ -14253,7 +14253,7 @@ pub mod app {
             pub capabilities: Vec<CapabilityRequirement>,
         }
 
-        fn format_descriptor_of(artifact: &ArtifactDeclaration, standard: &StandardDeclaration) -> semio_framework::FormatDescriptor {
+        async fn format_descriptor_of(artifact: &ArtifactDeclaration, standard: &StandardDeclaration) -> semio_framework::FormatDescriptor {
             let kind_id = format!("{}@{}", artifact.kind.as_str(), standard.id.0);
             semio_framework::FormatDescriptor {
                 kind_id: kind_id.clone(),
@@ -14271,7 +14271,7 @@ pub mod app {
 
         /// ➕️ Baseline Read, plus Write when `surface.rights == Rights::Write` — see `editor_surface`/
         /// `viewer_surface` doc for why `rights` alone drives this instead of a `Vec<Rights>` field.
-        fn capability_rows_for(surface: &SurfaceDeclaration) -> Vec<CapabilityRequirement> {
+        async fn capability_rows_for(surface: &SurfaceDeclaration) -> Vec<CapabilityRequirement> {
             let mut rows = vec![CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }];
             if surface.rights == Rights::Write {
                 rows.push(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App });
@@ -14279,7 +14279,7 @@ pub mod app {
             rows
         }
 
-        fn check_surface_id(subset: &SubsetDeclaration, surface: &SurfaceDeclaration, role: AppRole) -> Result<(), PluginAssemblyError> {
+        async fn check_surface_id(subset: &SubsetDeclaration, surface: &SurfaceDeclaration, role: AppRole) -> Result<(), PluginAssemblyError> {
             let expected = surface_app_id(&subset.dialect.into(), role);
             if surface.definition.id != expected {
                 return Err(PluginAssemblyError::new(
@@ -14299,7 +14299,7 @@ pub mod app {
         /// preflights+commits in one call — see the W1-C report's "atomicity" section for why holding
         /// an outer guard across THAT call would deadlock the process-wide assembly mutex, and why this
         /// function therefore never holds one while any io call could happen).
-        pub(crate) fn preflight_artifact_declarations(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
+        pub(crate) async fn preflight_artifact_declarations(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
             let mut schemas = Vec::new();
             let mut inferences = Vec::new();
             let mut inference_services = Vec::new();
@@ -14335,7 +14335,7 @@ pub mod app {
             preflight_io_entries(declarations)
         }
 
-        fn preflight_io_entries(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
+        async fn preflight_io_entries(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
             let mut proposed: BTreeMap<(String, String), semio_framework::io_schema::IoFidelity> = BTreeMap::new();
             for artifact in declarations {
                 for standard in &artifact.standards {
@@ -14370,7 +14370,7 @@ pub mod app {
         /// guard (dropped before the next step), then one `io_register` call per subset (each
         /// independently atomic — see `preflight_artifact_declarations`'s doc for why these cannot
         /// share a guard with each other or with the codec/format step).
-        pub(crate) fn commit_artifact_declarations(declarations: Vec<ArtifactDeclaration>) -> Result<DeclaredRegistration, PluginAssemblyError> {
+        pub(crate) async fn commit_artifact_declarations(declarations: Vec<ArtifactDeclaration>) -> Result<DeclaredRegistration, PluginAssemblyError> {
             preflight_artifact_declarations(&declarations)?;
 
             let mut schemas = Vec::new();
@@ -14470,21 +14470,21 @@ pub mod app {
                     }
                     impl store::ArtifactDsl for $snapshot {
                         const EXTENSION: &'static str = $schema;
-                        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                             if text.trim().is_empty() {
                                 return Ok(Self::default());
                             }
                             serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
                         }
-                        fn print_dsl(&self) -> String {
+                        async fn print_dsl(&self) -> String {
                             serde_json::to_string(self).unwrap_or_default()
                         }
                     }
                     impl ArtifactPack for $snapshot {
-                        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                             serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
                         }
-                        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                             if bytes.is_empty() {
                                 return Ok(Self::default());
                             }
@@ -14497,10 +14497,10 @@ pub mod app {
                         pub value: Option<i32>,
                     }
                     impl MutationDiff<$snapshot> for $diff {
-                        fn apply(&self, base: &$snapshot) -> protocol::MutationApplyResult<$snapshot> {
+                        async fn apply(&self, base: &$snapshot) -> protocol::MutationApplyResult<$snapshot> {
                             Ok($snapshot { value: self.value.unwrap_or(base.value) })
                         }
-                        fn absorb(&mut self, other: Self) {
+                        async fn absorb(&mut self, other: Self) {
                             if other.value.is_some() {
                                 self.value = other.value;
                             }
@@ -14513,27 +14513,27 @@ pub mod app {
                     }
                     impl Mutation<$snapshot> for $mutation {
                         type Diff = $diff;
-                        fn diff(&self, _base: &$snapshot) -> protocol::MutationOutcome<$diff> {
+                        async fn diff(&self, _base: &$snapshot) -> protocol::MutationOutcome<$diff> {
                             let $mutation::SetValue { value } = self;
                             protocol::MutationOutcome::new($diff { value: Some(*value) })
                         }
-                        fn inverse(&self, base: &$snapshot) -> Vec<Self> {
+                        async fn inverse(&self, base: &$snapshot) -> Vec<Self> {
                             vec![$mutation::SetValue { value: base.value }]
                         }
                     }
                     impl protocol::OpText for $mutation {
-                        fn parse_op(line: &str) -> Result<Self, store::TextError> {
+                        async fn parse_op(line: &str) -> Result<Self, store::TextError> {
                             serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
                         }
-                        fn print_op(&self) -> String {
+                        async fn print_op(&self) -> String {
                             serde_json::to_string(self).unwrap_or_default()
                         }
                     }
                     impl protocol::OpBinary for $mutation {
-                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
                             serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()).into())
                         }
-                        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
                             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
                         }
                     }
@@ -14544,10 +14544,10 @@ pub mod app {
                         Noop,
                     }
                     impl protocol::OpBinary for $command {
-                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
                             Ok(Vec::new())
                         }
-                        fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                        async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
                             Ok($command::Noop)
                         }
                     }
@@ -14568,13 +14568,13 @@ pub mod app {
                         type Transient = crate::app::NoTransient;
                         type TransientMutation = crate::app::NoTransientMutation;
                         type Command = $command;
-                        fn initial_snapshot() -> $snapshot {
+                        async fn initial_snapshot() -> $snapshot {
                             $snapshot::default()
                         }
-                        fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<$mutation>, Fault> {
+                        async fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<$mutation>, Fault> {
                             Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
                         }
-                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                             ui_text(Label::data(format!("value={}", doc.snapshot.value)))
                         }
                     }
@@ -14593,13 +14593,13 @@ pub mod app {
                         type Transient = crate::app::NoTransient;
                         type TransientMutation = crate::app::NoTransientMutation;
                         type Command = $command;
-                        fn initial_snapshot() -> $snapshot {
+                        async fn initial_snapshot() -> $snapshot {
                             $snapshot::default()
                         }
-                        fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+                        async fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
                             Ok(ViewEmit::default())
                         }
-                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                             ui_text(Label::data(format!("value={}", doc.snapshot.value)))
                         }
                     }
@@ -14623,7 +14623,7 @@ pub mod app {
                 const FROM: Dialect = STD1_ANY_DIALECT;
                 const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
                 const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<dsl::Diagnostic>> = Some(check_non_negative);
-                fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
+                async fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
                     let semio_framework::io_schema::IoPayload::Binary(bytes) = payload else {
                         return Err(semio_framework::io_schema::IoError { message: "StrictFromAny: expected a binary payload".to_string(), diagnostics: Vec::new() });
                     };
@@ -14632,7 +14632,7 @@ pub mod app {
                 }
             }
 
-            fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<dsl::Diagnostic> {
+            async fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<dsl::Diagnostic> {
                 if snapshot.value < 0 {
                     vec![dsl::Diagnostic::error("s.testkit.w1c-fixture.negative-value", dsl::TextSpan::at(0, 0), "conformance profile requires a non-negative value")]
                 } else {
@@ -14644,12 +14644,12 @@ pub mod app {
             impl semio_framework::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
                 const INTO: Dialect = STD1_ANY_DIALECT;
                 const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
-                fn serialize(from: &Std1StrictSnapshot) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+                async fn serialize(from: &Std1StrictSnapshot) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
                     Ok(semio_framework::io_schema::IoOutcome { value: semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: from.value }.encode_pack()), diagnostics: Vec::new() })
                 }
             }
 
-            fn std1_strict_entries() -> &'static [semio_framework::io::io_mechanism::IoEntry] {
+            async fn std1_strict_entries() -> &'static [semio_framework::io::io_mechanism::IoEntry] {
                 static ENTRIES: std::sync::OnceLock<Vec<semio_framework::io::io_mechanism::IoEntry>> = std::sync::OnceLock::new();
                 ENTRIES.get_or_init(|| {
                     vec![
@@ -14661,12 +14661,12 @@ pub mod app {
             //#endregion 🔖️ProfileHop
 
             //#region 🔖️Builders
-            fn schema_descriptor(id: &'static str) -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+            async fn schema_descriptor(id: &'static str) -> ::semio_framework_schema::ArtifactSchemaDescriptor {
                 let leaves = ::semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
                 ::semio_framework_schema::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
             }
 
-            fn native_codecs<S, M>(schema: &str) -> NativeCodecs
+            async fn native_codecs<S, M>(schema: &str) -> NativeCodecs
             where
                 S: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
                 M: Mutation<S> + PartialEq + Serialize + DeserializeOwned + Send + OpText + protocol::OpBinary + 'static,
@@ -14683,7 +14683,7 @@ pub mod app {
             /// 🏗️ Minimal valid `AppDefinition` — `.document(...)`/`.mode(...)`/`.window_kind(...)` are
             /// `AppBuilder::build_definition`'s hard asserts (non-empty document segments, ≥1 mode, ≥1
             /// window kind); every fixture surface shares this shape since only the WIRING matters here.
-            fn editor_definition(dialect: Dialect) -> AppDefinition {
+            async fn editor_definition(dialect: Dialect) -> AppDefinition {
                 Editor::builder(dialect)
                     .document(["semio", "testkit", "w1c-fixture"])
                     .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -14691,7 +14691,7 @@ pub mod app {
                     .build_definition()
             }
 
-            fn viewer_definition(dialect: Dialect) -> AppDefinition {
+            async fn viewer_definition(dialect: Dialect) -> AppDefinition {
                 Viewer::builder(dialect)
                     .document(["semio", "testkit", "w1c-fixture"])
                     .mode("view", LocalizedLabel::data("View"), "eye")
@@ -14702,7 +14702,7 @@ pub mod app {
             /// 🌳️ The fixture's whole tree: TWO standards, THREE subsets total — `standard "1"` owns
             /// `any` (base) and `strict` (conformance profile of `any`, wired via `std1_strict_entries`);
             /// `standard "2"` owns one independent `any` subset, proving the walk covers >1 standard.
-            pub(crate) fn build_declaration() -> ArtifactDeclaration {
+            pub(crate) async fn build_declaration() -> ArtifactDeclaration {
                 ArtifactDeclaration {
                     kind: ArtifactKindId::parse("s.testkit.w1c-fixture").expect("canonical fixture kind"),
                     localization: &[],
@@ -14748,17 +14748,17 @@ pub mod app {
 
             //#region 🔖️Tests
             #[test]
-            fn ids_are_derived_from_the_dialect() {
+            async fn ids_are_derived_from_the_dialect() {
                 testkit::assert_subset_declaration_ids_are_derived(&build_declaration());
             }
 
             #[test]
-            fn declaring_registers_schema_io_and_surfaces() {
+            async fn declaring_registers_schema_io_and_surfaces() {
                 testkit::assert_declaration_tree_registers_all("w1c-fixture-registers-all", build_declaration());
             }
 
             #[test]
-            fn a_conflicting_declaration_leaves_zero_rows_behind() {
+            async fn a_conflicting_declaration_leaves_zero_rows_behind() {
                 let mut invalid = build_declaration();
                 // 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
                 // "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
@@ -14774,7 +14774,7 @@ pub mod app {
             }
 
             #[test]
-            fn open_mutate_save_round_trips_through_the_generic_snapshot_builder() {
+            async fn open_mutate_save_round_trips_through_the_generic_snapshot_builder() {
                 type Construction = SnapshotBuilder<Std1AnySnapshot, Std1AnyMutation>;
                 let bytes = Std1AnySnapshot { value: 1 }.encode_pack();
                 let opened = Construction::from_binary(&bytes).expect("open");
@@ -14785,7 +14785,7 @@ pub mod app {
             }
 
             #[test]
-            fn io_route_finds_the_conformance_profile_hop() {
+            async fn io_route_finds_the_conformance_profile_hop() {
                 let _plugin = Plugin::builder("w1c-fixture-route").label("w1c-fixture-route").version("0.0.1").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
                 let route = semio_framework::io::io_mechanism::io_route(
                     &ArtifactDialect::from(STD1_ANY_DIALECT),
@@ -14823,7 +14823,7 @@ pub mod app {
     }
 
     impl<S, M> SnapshotBuilder<S, M> {
-        fn wrap(snapshot: S) -> Self {
+        async fn wrap(snapshot: S) -> Self {
             Self { snapshot, _mutation: std::marker::PhantomData }
         }
     }
@@ -14838,27 +14838,27 @@ pub mod app {
         type Mutation = M;
         type Diff = M::Diff;
 
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self::wrap(S::default())
         }
-        fn from_snapshot(snapshot: S) -> Self {
+        async fn from_snapshot(snapshot: S) -> Self {
             Self::wrap(snapshot)
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::wrap(S::parse_dsl(text)?))
         }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::wrap(S::decode_pack(bytes)?))
         }
-        fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
+        async fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
             let mut snapshot = self.snapshot;
             let outcome = mutation.diff(&snapshot).apply_to(&mut snapshot);
             (Self::wrap(snapshot), outcome)
         }
-        fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
             diff.apply(&self.snapshot).map(Self::wrap)
         }
-        fn build(self) -> Result<S, Vec<dsl::Diagnostic>> {
+        async fn build(self) -> Result<S, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -14903,44 +14903,44 @@ pub mod plugin_runtime {
         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(HashMap::new());
     }
 
-    fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
+    async fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
         store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue"))
     }
 
-    fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
+    async fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
         frames.push(protocol::AppFrame::Error { in_reply_to, fault: encode_wire_serialized(&fault), report: Vec::new() });
     }
 
-    fn push_dispatch_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: u64, fault: Fault, report: &protocol::DispatchReport) {
+    async fn push_dispatch_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: u64, fault: Fault, report: &protocol::DispatchReport) {
         frames.push(protocol::AppFrame::Error { in_reply_to: Some(in_reply_to), fault: encode_wire_serialized(&fault), report: encode_wire_serialized(report) });
     }
 
-    fn push_os_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, code: &str, message: String) {
+    async fn push_os_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, code: &str, message: String) {
         push_app_fault(frames, in_reply_to, Fault::new(FaultOrigin::Os, FaultCode::new(code), message));
     }
 
-    fn plugin_internal_fault(message: impl Into<String>) -> Fault {
+    async fn plugin_internal_fault(message: impl Into<String>) -> Fault {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
 
-    pub(crate) fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
+    pub(crate) async fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| plugin_internal_fault(error.to_string()))?;
         from_dsl_value(value).map_err(plugin_internal_fault)
     }
 
-    fn decode_wire_serialized_or<T: DeserializeOwned>(bytes: &[u8], default: T) -> T {
+    async fn decode_wire_serialized_or<T: DeserializeOwned>(bytes: &[u8], default: T) -> T {
         decode_wire_serialized(bytes).unwrap_or(default)
     }
 
     /// ⚖️ Executes the channel's local policy command and returns its canonical acknowledgment frame.
-    pub(crate) fn set_merge_policy_frames(app: &mut dyn PluginApp, seq: u64, policy: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
+    pub(crate) async fn set_merge_policy_frames(app: &mut dyn PluginApp, seq: u64, policy: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
         let policy = protocol::MergePolicy::from_u8(policy).ok_or_else(|| Fault::new(FaultOrigin::Os, FaultCode::new("merge.invalid-policy"), format!("unknown merge policy ordinal {policy}")))?;
         app.set_merge_policy(policy);
         Ok(vec![protocol::AppFrame::Done { in_reply_to: seq }])
     }
 
     /// ⚔️ Executes the channel's conflict-resolution command and returns the authoritative report and open projection.
-    pub(crate) fn resolve_conflict_frames(app: &mut dyn PluginApp, seq: u64, conflict_id: String, resolution: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
+    pub(crate) async fn resolve_conflict_frames(app: &mut dyn PluginApp, seq: u64, conflict_id: String, resolution: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
         let resolution = match resolution {
             0 => protocol::ConflictResolution::Accept,
             1 => protocol::ConflictResolution::Discard,
@@ -14952,7 +14952,7 @@ pub mod plugin_runtime {
     }
 
     /// ⚔️ Executes the channel's open-conflict read command and returns its canonical projection frame.
-    pub(crate) fn read_conflicts_frames(app: &dyn PluginApp, seq: u64) -> Vec<protocol::AppFrame> {
+    pub(crate) async fn read_conflicts_frames(app: &dyn PluginApp, seq: u64) -> Vec<protocol::AppFrame> {
         vec![protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&app.open_conflicts()) }]
     }
 
@@ -14963,7 +14963,7 @@ pub mod plugin_runtime {
     /// `wit_bridge`, so this is gated identically (native never reaches it; `instance_actor`'s
     /// `"local"` fallback below is what native sees).
     #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-    pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+    pub(crate) async fn set_instance_actor(instance_id: u32, actor: String) {
         INSTANCE_ACTORS.with(|slot| {
             slot.borrow_mut().insert(instance_id, actor);
         });
@@ -14974,13 +14974,13 @@ pub mod plugin_runtime {
     /// `pub(crate)`: also read by `⚛️reactor::restore_now` to best-effort attribute a replayed
     /// `task_restarts` entry's `ActionMeta` (design-abi.md §4 — a checkpoint restart has no
     /// "spawn time" meta of its own to snapshot from).
-    pub(crate) fn instance_actor(instance_id: u32) -> String {
+    pub(crate) async fn instance_actor(instance_id: u32) -> String {
         INSTANCE_ACTORS.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_else(|| "local".to_string())
     }
 
     /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global cache —
     /// host-authoritative chrome/draft owns locale; every command/refresh carries view_state on the wire.
-    fn decode_view_state(view_state_bytes: &[u8]) -> ViewModel {
+    async fn decode_view_state(view_state_bytes: &[u8]) -> ViewModel {
         if view_state_bytes.is_empty() {
             ViewModel::default()
         } else {
@@ -14992,7 +14992,7 @@ pub mod plugin_runtime {
     /// by `RefCell::borrow_mut` itself (a real re-entrant call panics loudly instead of silently
     /// reusing a stale "busy" flag), and cross-call recovery after a trap is the checkpoint/restore
     /// cycle's job now, not a manually-cleared guard.
-    fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>>(f: F) -> Result<R, Fault> {
+    async fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>>(f: F) -> Result<R, Fault> {
         INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
     }
 
@@ -15001,7 +15001,7 @@ pub mod plugin_runtime {
     /// `AsyncTask` resume test only needs A `dyn PluginApp` at a known id, not a fully assembled
     /// plugin bundle. `#[cfg(test)]`-gated, never part of the real API surface.
     #[cfg(test)]
-    pub(crate) fn test_push_instance(instance: AppInstance) {
+    pub(crate) async fn test_push_instance(instance: AppInstance) {
         with_instances_mut(|list| {
             list.push(instance);
             Ok(())
@@ -15011,7 +15011,7 @@ pub mod plugin_runtime {
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
 
-    pub fn install_plugin_bundle(bundle: Plugin) {
+    pub async fn install_plugin_bundle(bundle: Plugin) {
         PLUGIN.with(|slot| {
             *slot.borrow_mut() = Some(bundle);
         });
@@ -15021,7 +15021,7 @@ pub mod plugin_runtime {
     }
 
     /// 🧩️ Installs a successful plugin bundle or retains its typed assembly fault for WIT startup calls.
-    pub fn install_plugin_bundle_result(bundle: Result<Plugin, PluginAssemblyError>) {
+    pub async fn install_plugin_bundle_result(bundle: Result<Plugin, PluginAssemblyError>) {
         match bundle {
             Ok(bundle) => install_plugin_bundle(bundle),
             Err(error) => {
@@ -15037,7 +15037,7 @@ pub mod plugin_runtime {
     static PLUGIN_BUNDLE_INSTALLER: std::sync::OnceLock<fn()> = std::sync::OnceLock::new();
 
     /// @emoji 🧩️ Registers the embedding plugin crate's bundle installer (expanded from `plugin_exports!`).
-    pub fn register_plugin_bundle_installer(install: fn()) {
+    pub async fn register_plugin_bundle_installer(install: fn()) {
         let _ = PLUGIN_BUNDLE_INSTALLER.set(install);
     }
 
@@ -15050,7 +15050,7 @@ pub mod plugin_runtime {
     pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
 
     /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
-    pub fn ensure_plugin_initialized() {
+    pub async fn ensure_plugin_initialized() {
         PLUGIN_INIT_ONCE.call_once(|| {
             // 🩹️ `console_error_panic_hook` calls into `web-sys`'s wasm-bindgen `console.error` import,
             // which only exists for a classic wasm-bindgen `wasm32-unknown-unknown` browser build — the
@@ -15087,7 +15087,7 @@ pub mod plugin_runtime {
         });
     }
 
-    pub fn plugin_manifest() -> PluginManifest {
+    pub async fn plugin_manifest() -> PluginManifest {
         ensure_plugin_initialized();
         if let Some(fault) = PLUGIN_ASSEMBLY_ERROR.with(|slot| slot.borrow().clone()) {
             return PluginManifest {
@@ -15145,12 +15145,12 @@ pub mod plugin_runtime {
     }
 
     /// 📤️ Installs the builder-declared descriptor extras — called once by `PluginBuilder::try_build()`.
-    pub fn install_plugin_descriptor_extras(extras: PluginDescriptorExtras) {
+    pub async fn install_plugin_descriptor_extras(extras: PluginDescriptorExtras) {
         PLUGIN_DESCRIPTOR_EXTRAS.with(|slot| *slot.borrow_mut() = Some(extras));
     }
 
     /// 📖️ The installed descriptor extras, or an empty default before any plugin bundle assembled.
-    pub fn plugin_descriptor_extras() -> PluginDescriptorExtras {
+    pub async fn plugin_descriptor_extras() -> PluginDescriptorExtras {
         PLUGIN_DESCRIPTOR_EXTRAS.with(|slot| slot.borrow().clone()).unwrap_or_default()
     }
 
@@ -15165,7 +15165,7 @@ pub mod plugin_runtime {
     /// hash-blanked before the byte comparison; hash correctness is `📇️registry:check`'s own gate
     /// (built wasm's SHA-256 vs `hashes.wasm_sha256`), not this test's job. `None` on any decode
     /// failure (caller treats that as "cannot compare", same as a missing file).
-    pub fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
+    pub async fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
         let value = store::pack_rt::decode_wire_value(bytes).ok()?;
         let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
@@ -15173,7 +15173,7 @@ pub mod plugin_runtime {
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
-    pub fn plugin_wire_list_artifact_inference_services() -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
+    pub async fn plugin_wire_list_artifact_inference_services() -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
         ensure_plugin_initialized();
         PLUGIN.with(|slot| {
             let plugin = slot.borrow();
@@ -15183,7 +15183,7 @@ pub mod plugin_runtime {
     }
 
     /// 💡️ Executes only an inference service frozen into the installed plugin assembly.
-    pub fn plugin_wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
+    pub async fn plugin_wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
         ensure_plugin_initialized();
         PLUGIN.with(|slot| {
             let plugin = slot.borrow();
@@ -15193,13 +15193,13 @@ pub mod plugin_runtime {
     }
 
     /// 🎯️ Lists only mutation rows frozen into the installed plugin assembly.
-    pub fn plugin_wire_list_artifact_mutations() -> Vec<u8> {
+    pub async fn plugin_wire_list_artifact_mutations() -> Vec<u8> {
         ensure_plugin_initialized();
         PLUGIN.with(|slot| slot.borrow().as_ref().map(Plugin::wire_list_artifact_mutations).unwrap_or_else(|| encode_wire_serialized(&Vec::<crate::app::WireMutationRosterEntry>::new())))
     }
 
     /// 🎯️ Plans only a mutation service frozen into the installed plugin assembly.
-    pub fn plugin_wire_artifact_mutation_plan(request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub async fn plugin_wire_artifact_mutation_plan(request: &[u8]) -> Result<Vec<u8>, Fault> {
         ensure_plugin_initialized();
         PLUGIN.with(|slot| slot.borrow().as_ref().ok_or_else(|| plugin_internal_fault("no plugin bundle is installed"))?.wire_artifact_mutation_plan(request))
     }
@@ -15210,7 +15210,7 @@ pub mod plugin_runtime {
     /// mutations (`"<target-document-schema>#<plugin-id>:<kebab-kind>"`, committed by
     /// `PluginBuilder::try_build`/`ExtensionBundle::contributes`) — `crate::app::mutation_roster_entries`
     /// sorts by `mutation_id`, so repeated calls here never reorder or duplicate rows.
-    pub fn wire_list_artifact_mutations() -> Vec<u8> {
+    pub async fn wire_list_artifact_mutations() -> Vec<u8> {
         encode_wire_serialized(&crate::app::mutation_roster_entries())
     }
 
@@ -15222,7 +15222,7 @@ pub mod plugin_runtime {
     /// to `artifact_kind`/`mutation_id` instead of the inference metadata tuple: `crate::
     /// app::contributed_mutation_plan` rejects a request whose `artifact_kind` does not match the
     /// mutation's own registered target before ever touching the snapshot/payload bytes).
-    pub fn wire_artifact_mutation_plan(request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub async fn wire_artifact_mutation_plan(request: &[u8]) -> Result<Vec<u8>, Fault> {
         let request: crate::app::WireArtifactMutationPlanRequest = decode_wire_serialized(request)?;
         if request.mutation_id.trim().is_empty() {
             return Err(plugin_internal_fault("artifact-mutation-plan requires a non-empty mutation_id"));
@@ -15250,10 +15250,10 @@ pub mod plugin_runtime {
             value: i32,
         }
         impl ArtifactPack for WireTestSnapshot {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
             }
         }
@@ -15263,10 +15263,10 @@ pub mod plugin_runtime {
             delta: i32,
         }
         impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
-            fn apply(&self, base: &WireTestSnapshot) -> protocol::MutationApplyResult<WireTestSnapshot> {
+            async fn apply(&self, base: &WireTestSnapshot) -> protocol::MutationApplyResult<WireTestSnapshot> {
                 Ok(WireTestSnapshot { value: base.value + self.delta })
             }
-            fn absorb(&mut self, other: Self) {
+            async fn absorb(&mut self, other: Self) {
                 self.delta += other.delta;
             }
         }
@@ -15277,20 +15277,20 @@ pub mod plugin_runtime {
         }
         impl protocol::Mutation<WireTestSnapshot> for WireTestOp {
             type Diff = WireTestDiff;
-            fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
+            async fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
                 let WireTestOp::Add(delta) = self;
                 protocol::MutationOutcome::new(WireTestDiff { delta: *delta })
             }
-            fn inverse(&self, _base: &WireTestSnapshot) -> Vec<Self> {
+            async fn inverse(&self, _base: &WireTestSnapshot) -> Vec<Self> {
                 let WireTestOp::Add(delta) = self;
                 vec![WireTestOp::Add(-delta)]
             }
         }
         impl OpBinary for WireTestOp {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
                 Ok(serde_json::to_vec(self).expect("wire test op always encodes"))
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
                 serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
             }
         }
@@ -15301,15 +15301,15 @@ pub mod plugin_runtime {
         }
         impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestOp> for WireTestMutationKind {
             const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-            fn plan(&self, _base: &WireTestSnapshot, planner: &mut protocol::Planner<WireTestSnapshot, WireTestOp>) -> Result<(), protocol::PlanError> {
+            async fn plan(&self, _base: &WireTestSnapshot, planner: &mut protocol::Planner<WireTestSnapshot, WireTestOp>) -> Result<(), protocol::PlanError> {
                 planner.call(WireTestOp::Add(self.delta))
             }
-            fn label(&self) -> String {
+            async fn label(&self) -> String {
                 format!("Add {} to value", self.delta)
             }
         }
 
-        fn commit_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str, delta: i32) -> String {
+        async fn commit_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str, delta: i32) -> String {
             let contribution = crate::app::ArtifactContribution::builder(artifact_kind).mutation::<WireTestSnapshot, WireTestOp, WireTestMutationKind>(target_document_schema, 1, 1).build();
             let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
             let mutation_id = descriptor.mutations[0].mutation_id.clone();
@@ -15319,7 +15319,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn artifact_mutation_plan_rejects_a_mismatched_artifact_kind() {
+        async fn artifact_mutation_plan_rejects_a_mismatched_artifact_kind() {
             let mutation_id = commit_test_contribution("s.wiretest.kind-mismatch", "wiretest.kind-mismatch.document", "wiretest-contributor-a", 5);
             let payload = crate::app::encode_contributed_wire(&WireTestMutationKind { delta: 5 });
             let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.wrong-kind".into(), mutation_id, revision: 7, generation: 3, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
@@ -15328,7 +15328,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn artifact_mutation_plan_rejects_an_unregistered_mutation_id() {
+        async fn artifact_mutation_plan_rejects_an_unregistered_mutation_id() {
             let request = crate::app::WireArtifactMutationPlanRequest {
                 artifact_kind: "s.wiretest.unregistered".into(),
                 mutation_id: "wiretest.unregistered.document#nobody:add-value".into(),
@@ -15342,7 +15342,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
+        async fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
             let mutation_id = commit_test_contribution("s.wiretest.echo", "wiretest.echo.document", "wiretest-contributor-b", 5);
             let payload = crate::app::encode_contributed_wire(&WireTestMutationKind { delta: 5 });
             let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
@@ -15360,7 +15360,7 @@ pub mod plugin_runtime {
         }
     }
 
-    pub fn plugin_create_app(app_id: &str) -> Result<u32, Fault> {
+    pub async fn plugin_create_app(app_id: &str) -> Result<u32, Fault> {
         plugin_create_app_with_id(NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst), app_id)
     }
 
@@ -15370,7 +15370,7 @@ pub mod plugin_runtime {
     /// of `plugin_create_app`. `plugin_create_app` (unchanged signature, still used by every
     /// pre-existing caller) now delegates here with a locally-allocated id, so nothing observing
     /// its old auto-increment behavior breaks.
-    pub fn plugin_create_app_with_id(id: u32, app_id: &str) -> Result<u32, Fault> {
+    pub async fn plugin_create_app_with_id(id: u32, app_id: &str) -> Result<u32, Fault> {
         if let Some(fault) = PLUGIN_ASSEMBLY_ERROR.with(|slot| slot.borrow().clone()) {
             return Err(fault);
         }
@@ -15386,7 +15386,7 @@ pub mod plugin_runtime {
         })
     }
 
-    pub fn plugin_destroy_app(instance_id: u32) -> Result<(), Fault> {
+    pub async fn plugin_destroy_app(instance_id: u32) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let index = list.iter().position(|instance| instance.id == instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
             list.remove(index);
@@ -15394,11 +15394,11 @@ pub mod plugin_runtime {
         })
     }
 
-    fn find_instance(list: &mut [AppInstance], instance_id: u32) -> Result<&mut AppInstance, Fault> {
+    async fn find_instance(list: &mut [AppInstance], instance_id: u32) -> Result<&mut AppInstance, Fault> {
         list.iter_mut().find(|instance| instance.id == instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))
     }
 
-    pub fn plugin_handle_action(instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
+    pub async fn plugin_handle_action(instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
         let invocation: ManifestActionInvocation = serde_json::from_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
@@ -15423,7 +15423,7 @@ pub mod plugin_runtime {
     /// @emoji 🎛️ Dispatches a structurally addressed command to its actual owner. Plugin commands
     /// execute on the program registry; app/mode commands execute on the addressed app instance, with
     /// active-mode gating for mode ownership. OS commands never enter a plugin runtime.
-    pub fn plugin_handle_command(instance_id: u32, command_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
+    pub async fn plugin_handle_command(instance_id: u32, command_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
         let invocation: ManifestCommandInvocation = serde_json::from_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
@@ -15453,7 +15453,7 @@ pub mod plugin_runtime {
     /// the instance's document store (idempotent — duplicate mutation ids are dropped by the causal
     /// DAG / edit-id dedupe), returning one `protocol::MergeReport` per envelope for the caller
     /// (`ApplyEnvelopes`'s handler) to frame as unsolicited `AppFrame::MergeReport` frames.
-    pub fn plugin_ingest_operations(instance_id: u32, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
+    pub async fn plugin_ingest_operations(instance_id: u32, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.ingest_operations(mutations)
@@ -15462,7 +15462,7 @@ pub mod plugin_runtime {
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
     /// per non-blank op-text line instead of a binary `MutationEnvelope` array.
-    pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) -> Result<(), Fault> {
+    pub async fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.ingest_operations_text(operations_text)
@@ -15470,7 +15470,7 @@ pub mod plugin_runtime {
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_document_pack}.
-    pub fn plugin_document_text(instance_id: u32) -> Result<store::ArtifactTextFiles, Fault> {
+    pub async fn plugin_document_text(instance_id: u32) -> Result<store::ArtifactTextFiles, Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.document_text()
@@ -15478,7 +15478,7 @@ pub mod plugin_runtime {
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_load_document_pack}.
-    pub fn plugin_load_document_text(instance_id: u32, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
+    pub async fn plugin_load_document_text(instance_id: u32, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.load_document_text(files)
@@ -15487,7 +15487,7 @@ pub mod plugin_runtime {
 
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes
     /// ({@link store::ArtifactPackFiles}) via `store::print_document_pack`.
-    pub fn plugin_document_pack(instance_id: u32) -> Result<store::ArtifactPackFiles, Fault> {
+    pub async fn plugin_document_pack(instance_id: u32) -> Result<store::ArtifactPackFiles, Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.document_pack()
@@ -15496,7 +15496,7 @@ pub mod plugin_runtime {
 
     /// @emoji 📦️ Replaces the instance's document from pack+spr bytes ({@link store::ArtifactPackFiles})
     /// via `store::parse_document_pack`.
-    pub fn plugin_load_document_pack(instance_id: u32, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
+    pub async fn plugin_load_document_pack(instance_id: u32, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.load_document_pack(files)
@@ -15508,13 +15508,13 @@ pub mod plugin_runtime {
     /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
     /// depending on its concrete `Snapshot`/`Mutation` types.
-    pub fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError> {
+    pub async fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError> {
         store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
     /// (a pure queue relayed across the wasm sandbox to the host); the host owns the real IO endpoint.
-    pub fn plugin_attach_backbone(instance_id: u32, uri: &str) -> Result<(), Fault> {
+    pub async fn plugin_attach_backbone(instance_id: u32, uri: &str) -> Result<(), Fault> {
         let backbone: Box<dyn store::Backbone> = Box::new(store::PortBackbone::new(uri));
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
@@ -15523,7 +15523,7 @@ pub mod plugin_runtime {
     }
 
     /// @emoji ✂️ Detaches the instance's backbone channel; the document graph stays in memory.
-    pub fn plugin_detach_backbone(instance_id: u32) -> Result<(), Fault> {
+    pub async fn plugin_detach_backbone(instance_id: u32) -> Result<(), Fault> {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.detach_backbone();
@@ -15533,7 +15533,7 @@ pub mod plugin_runtime {
 
     /// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
     /// and dispatches to `PluginApp::consume_media`.
-    pub fn plugin_consume_media(instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), Fault> {
+    pub async fn plugin_consume_media(instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), Fault> {
         let descriptor: MediaArtifactDescriptor = serde_json::from_str(descriptor_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let artifact = MediaArtifact { descriptor, data };
         with_instances_mut(|list| {
@@ -15545,7 +15545,7 @@ pub mod plugin_runtime {
     /// 🎞️ WIT `produce-media` glue — dispatches to `PluginApp::produce_media` and encodes the result back
     /// into `(descriptor-json, data)` for the `media-artifact` WIT record. `_request_json` is reserved for
     /// future parameterized requests; unused by the SDK default (see `PluginApp::produce_media`).
-    pub fn plugin_produce_media(instance_id: u32, port_id: &str, _request_json: &str) -> Result<(String, Vec<u8>), Fault> {
+    pub async fn plugin_produce_media(instance_id: u32, port_id: &str, _request_json: &str) -> Result<(String, Vec<u8>), Fault> {
         let artifact = with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             instance.app.produce_media(port_id).map_err(|error| plugin_internal_fault(error.to_string()))
@@ -15554,11 +15554,11 @@ pub mod plugin_runtime {
         Ok((descriptor_json, artifact.data))
     }
 
-    pub fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) -> Result<UiNode, Fault> {
+    pub async fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) -> Result<UiNode, Fault> {
         plugin_render_with_document(instance_id, body_key, None, view_state_json)
     }
 
-    pub fn plugin_render_with_document(instance_id: u32, body_key: &str, snapshot_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {
+    pub async fn plugin_render_with_document(instance_id: u32, body_key: &str, snapshot_override_json: Option<&str>, view_state_json: &str) -> Result<UiNode, Fault> {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct WindowRenderInput {
@@ -15590,7 +15590,7 @@ pub mod plugin_runtime {
     /// is the right tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in
     /// puzzle's plugin). Used by `ui_refresh_fnv1a_hash` below (`plugin_refresh_ui`'s legacy JSON
     /// `refreshUi` wire, unrelated to channel v12's binary `AppCommand`/`AppFrame`).
-    fn fnv1a64(bytes: &[u8]) -> u64 {
+    async fn fnv1a64(bytes: &[u8]) -> u64 {
         let mut hash: u64 = 0xcbf29ce484222325;
         for byte in bytes {
             hash ^= u64::from(*byte);
@@ -15602,14 +15602,14 @@ pub mod plugin_runtime {
     /// 🐢️ A tiny non-cryptographic hash (fnv1a-64) for cheap "did this section's content change" checks —
     /// not a security boundary, just change detection, so speed over collision-resistance is the right
     /// tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in puzzle's plugin).
-    fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
+    async fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
         format!("{:016x}", fnv1a64(bytes))
     }
 
     /// 🐢️ Hashes `value`'s canonical JSON serialization and returns `(hash, Some(value))` when it differs
     /// from `known_hash`, or `(hash, None)` when unchanged — the response omits the payload either way the
     /// caller doesn't need it, keeping the wire payload proportional to what actually changed.
-    fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (String, Option<Value>) {
+    async fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (String, Option<Value>) {
         let wire = serde_json::to_string(value).unwrap_or_default();
         let hash = ui_refresh_fnv1a_hash(wire.as_bytes());
         if known_hash == Some(hash.as_str()) {
@@ -15626,7 +15626,7 @@ pub mod plugin_runtime {
     /// `{key, bodyKey, hash}`, engagements/measures/labels each `{hash}`); the response includes a payload
     /// only for sections whose hash differs from what the host already holds. Utility bars are no longer a
     /// plugin section — the renderer derives them from the utility registry via `derive_utility_nodes`.
-    pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
+    pub async fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct SectionRequest {
@@ -15779,7 +15779,7 @@ pub mod plugin_runtime {
 
     /// 🖱️ On-demand context-menu computation (WIT `context-menu` export's SDK entry point) — never
     /// cached, never part of `refresh_ui`. String-in/string-out JSON entry point for the WIT boundary.
-    pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<String, String> {
+    pub async fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<String, String> {
         let wire: ContextMenuWireRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
         let request: ContextMenuRequest = wire.into();
         with_instances_mut(|list| {
@@ -15803,13 +15803,13 @@ pub mod plugin_runtime {
     /// `TurnResult` (design-abi.md §2/§4) instead of being wrapped as a frame; `PluginExchangeOutput`
     /// carries them alongside `frames`. Shared by `AppCommand::Command`'s and
     /// `AppCommand::ArtifactCommand`'s handling below.
-    fn push_invocation_side_frames(effects: &mut Vec<Vec<u8>>, events: &mut Vec<Vec<u8>>, result: &InvocationResult) {
+    async fn push_invocation_side_frames(effects: &mut Vec<Vec<u8>>, events: &mut Vec<Vec<u8>>, result: &InvocationResult) {
         effects.extend(result.requested_effects.iter().map(|effect| encode_wire_serialized(effect)));
         events.extend(result.events.iter().map(|event| encode_wire_serialized(event)));
     }
 
     //#region 🔖️OpeningCommandRelay
-    fn opening_role(role: u8) -> Result<semio_framework::AppRole, Fault> {
+    async fn opening_role(role: u8) -> Result<semio_framework::AppRole, Fault> {
         match role {
             0 => Ok(semio_framework::AppRole::Viewer),
             1 => Ok(semio_framework::AppRole::Editor),
@@ -15817,7 +15817,7 @@ pub mod plugin_runtime {
         }
     }
 
-    fn opening_dialect(artifact_kind: String, standard: String, subset: String) -> Result<semio_framework::ArtifactDialect, Fault> {
+    async fn opening_dialect(artifact_kind: String, standard: String, subset: String) -> Result<semio_framework::ArtifactDialect, Fault> {
         for (field, value) in [("artifact_kind", &artifact_kind), ("standard", &standard), ("subset", &subset)] {
             if value.trim().is_empty() {
                 return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), format!("opening {field} must be non-empty")));
@@ -15828,11 +15828,11 @@ pub mod plugin_runtime {
         Ok(dialect)
     }
 
-    fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<Effect, Fault> {
+    async fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<Effect, Fault> {
         Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(to_dsl_value(&arguments).map_err(plugin_internal_fault)?) })
     }
 
-    fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+    async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
         let role = opening_role(role_wire)?;
         let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
@@ -15851,7 +15851,7 @@ pub mod plugin_runtime {
         relay_opening_command("os.open-artifact", serde_json::json!({ "artifactRef": artifact_ref, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
     }
 
-    fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+    async fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
         let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
         let role = opening_role(role_wire)?;
         if plugin_id.trim().is_empty() {
@@ -15864,7 +15864,7 @@ pub mod plugin_runtime {
         relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
     }
 
-    fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
+    async fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
         opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
         opening_role(role_wire)?;
         relay_opening_command("os.clear-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire }))
@@ -15876,20 +15876,20 @@ pub mod plugin_runtime {
     mod opening_command_relay_tests {
         use super::*;
 
-        fn replay(effect: Effect) -> (String, Value) {
+        async fn replay(effect: Effect) -> (String, Value) {
             let Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
             (action_id, from_dsl_value(args).expect("relay arguments decode"))
         }
 
         #[test]
-        fn open_artifact_relays_an_exactly_matched_surface() {
+        async fn open_artifact_relays_an_exactly_matched_surface() {
             let (action_id, args) = replay(relay_open_artifact("s.test.document@1/*#editor".into(), 1, "test-plugin".into(), "s.test.document@1/*#editor".into()).expect("matching surface relays"));
             assert_eq!(action_id, "os.open-artifact");
             assert_eq!(args, serde_json::json!({ "artifactRef": "s.test.document@1/*#editor", "role": 1, "pluginId": "test-plugin", "appId": "s.test.document@1/*#editor" }));
         }
 
         #[test]
-        fn default_app_commands_relay_the_validated_wire_coordinates() {
+        async fn default_app_commands_relay_the_validated_wire_coordinates() {
             let (set_action_id, set_args) = replay(relay_set_default_app("s.test.document".into(), "1".into(), "*".into(), 0, "test-plugin".into(), "s.test.document@1/*#viewer".into()).expect("matching default surface relays"));
             assert_eq!(set_action_id, "os.set-default-app");
             assert_eq!(set_args, serde_json::json!({ "artifactKind": "s.test.document", "standard": "1", "subset": "*", "role": 0, "pluginId": "test-plugin", "appId": "s.test.document@1/*#viewer" }));
@@ -15900,7 +15900,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn opening_relays_reject_invalid_or_inconsistent_addresses() {
+        async fn opening_relays_reject_invalid_or_inconsistent_addresses() {
             let invalid_role = relay_open_artifact("s.test.document@1/*#viewer".into(), 7, String::new(), String::new()).expect_err("unknown role must fail");
             assert_eq!(invalid_role.code.0, "opening.invalid-role");
 
@@ -15918,7 +15918,7 @@ pub mod plugin_runtime {
     /// `ForeignStep` encoding note) and minting a proposal id scoped to this dispatch
     /// (`"<instance_id>:<seq>"`, unique enough for one instance's own in-flight proposals — all a
     /// single-command dispatch ever needs).
-    fn transaction_proposal_frame(instance_id: u32, seq: u64, proposal: TransactionProposalDraft) -> protocol::AppFrame {
+    async fn transaction_proposal_frame(instance_id: u32, seq: u64, proposal: TransactionProposalDraft) -> protocol::AppFrame {
         protocol::AppFrame::TransactionProposal {
             in_reply_to: seq,
             proposal_id: format!("{instance_id}:{seq}"),
@@ -15965,7 +15965,7 @@ pub mod plugin_runtime {
     /// module — this function itself never fails. Returns the SAME `(frames, effects, events)`
     /// shape `PluginExchangeOutput` carries so the caller (`⚛️reactor::drain_task_resumes`) feeds
     /// `frames` through the SAME `route_app_frame` a live turn's command frames go through.
-    pub fn plugin_resume_task(instance_id: u32, meta: &ActionMeta, input: TaskResumeInput) -> PluginExchangeOutput {
+    pub async fn plugin_resume_task(instance_id: u32, meta: &ActionMeta, input: TaskResumeInput) -> PluginExchangeOutput {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
@@ -16024,7 +16024,7 @@ pub mod plugin_runtime {
     /// rendering is driven by `surface-visible`/`hidden` instead of `RefreshUi` probes, and the
     /// backbone attach/detach commands are gone with no replacement command in this wave. Those arms
     /// are deleted here rather than adapted (design-abi.md §4).
-    pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<PluginExchangeOutput, Fault> {
+    pub async fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<PluginExchangeOutput, Fault> {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
@@ -16520,7 +16520,7 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! plugin_exports {
         ($bundle_fn:expr) => {
-            fn __semio_install_plugin_bundle() {
+            async fn __semio_install_plugin_bundle() {
                 $crate::plugin_runtime::install_plugin_bundle_result(($bundle_fn)());
             }
 
@@ -16561,7 +16561,7 @@ pub mod plugin_runtime {
             // the thing that should trend toward `<total>` as this list grows, never this test alone.
             #[cfg(test)]
             #[test]
-            fn descriptor_is_fresh() {
+            async fn descriptor_is_fresh() {
                 __semio_install_plugin_bundle();
                 let plugin_id = $crate::plugin_runtime::plugin_manifest().plugin_id;
                 let assembled = $crate::describe::describe_plugin();
@@ -16624,7 +16624,7 @@ pub mod plugin_runtime {
 
     impl ExtensionBundle {
         /// 🧩️ Starts an extension bundle with identity + version.
-        pub fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
+        pub async fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
                 manifest: ExtensionManifest {
                     extension_id: extension_id.into(),
@@ -16643,7 +16643,7 @@ pub mod plugin_runtime {
         }
 
         /// 🔗 Declares the host app/plugin this extension extends.
-        pub fn extends(mut self, extends: impl Into<String>) -> Self {
+        pub async fn extends(mut self, extends: impl Into<String>) -> Self {
             self.manifest.extends = extends.into();
             self.assert_extends_matches_primary_dependency();
             self
@@ -16651,7 +16651,7 @@ pub mod plugin_runtime {
 
         /// 🔗️ Declares a direct plugin dependency — contract freeze §3/§4: the FIRST dependency
         /// declared (in call order) must be the same plugin `.extends(...)` names.
-        pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
+        pub async fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
             self.manifest.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
             self.assert_extends_matches_primary_dependency();
             self
@@ -16662,7 +16662,7 @@ pub mod plugin_runtime {
         /// this file, since every `ExtensionBundle` builder method is infallible (`-> Self`, never
         /// `Result`). Called from both `.extends`/`.depends_on` so the check holds regardless of call
         /// order; a no-op until both fields are non-empty.
-        fn assert_extends_matches_primary_dependency(&self) {
+        async fn assert_extends_matches_primary_dependency(&self) {
             if self.manifest.extends.is_empty() {
                 return;
             }
@@ -16676,7 +16676,7 @@ pub mod plugin_runtime {
         }
 
         /// 🔒️ Declares a capability requirement for the extension.
-        pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
+        pub async fn capability(mut self, capability: CapabilityRequirement) -> Self {
             if !self.manifest.capabilities.contains(&capability) {
                 self.manifest.capabilities.push(capability);
             }
@@ -16685,7 +16685,7 @@ pub mod plugin_runtime {
 
         /// 🗂️ Adds an open topic contribution to the extension manifest; `topic` reuses this crate's
         /// own `contributes`/`consumes` metadata vocabulary (e.g. `"cad.computer"`).
-        pub fn contributes_topic(mut self, topic: impl Into<String>, payload: Value) -> Self {
+        pub async fn contributes_topic(mut self, topic: impl Into<String>, payload: Value) -> Self {
             self.manifest.topic_contributions.push(TopicContribution::new(topic, payload));
             self
         }
@@ -16696,7 +16696,7 @@ pub mod plugin_runtime {
         /// `crate::app::register_contributions` and committed to the same process-global runtime
         /// registries `PluginBuilder::try_build` commits to. Panics on a gate violation — same idiom as
         /// `.extends`/`.depends_on` above.
-        pub fn contributes(mut self, contribution: crate::app::ArtifactContribution) -> Self {
+        pub async fn contributes(mut self, contribution: crate::app::ArtifactContribution) -> Self {
             let contributor = self.manifest.extension_id.clone();
             let (descriptor, inference_services, mutation_runtime) = contribution.resolve(&contributor);
             crate::app::register_contributions(&contributor, &self.manifest.dependencies, std::slice::from_ref(&descriptor)).unwrap_or_else(|error| panic!("extension {contributor:?} contribution rejected: {error}"));
@@ -16708,21 +16708,21 @@ pub mod plugin_runtime {
         }
 
         /// 🔀️ Registers a capability handler invoked via WIT `extension::invoke`.
-        pub fn handler(mut self, capability: impl Into<String>, handler: impl Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static) -> Self {
+        pub async fn handler(mut self, capability: impl Into<String>, handler: impl Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static) -> Self {
             self.handlers.insert(capability.into(), Box::new(handler));
             self
         }
 
         /// 🚦️ Sets how this extension's actor runs relative to its host plugin — default `Isolated`
         /// (`📓️design-abi.md` §5).
-        pub fn mode(mut self, mode: ExecutionMode) -> Self {
+        pub async fn mode(mut self, mode: ExecutionMode) -> Self {
             self.manifest.execution = mode;
             self
         }
 
         /// 🙏️ Declares one capability ask the broker resolves at install/link/runtime
         /// (`📓️design-abi.md` §5). Repeatable; idempotent for a byte-identical ask.
-        pub fn requests(mut self, request: CapabilityRequest) -> Self {
+        pub async fn requests(mut self, request: CapabilityRequest) -> Self {
             if !self.manifest.capability_requests.contains(&request) {
                 self.manifest.capability_requests.push(request);
             }
@@ -16735,19 +16735,19 @@ pub mod plugin_runtime {
         use super::*;
 
         #[test]
-        fn extends_mismatching_the_first_dependency_panics() {
+        async fn extends_mismatching_the_first_dependency_panics() {
             let result = std::panic::catch_unwind(|| ExtensionBundle::new("ext-mismatch", "Ext Mismatch", "0.1.0").depends_on("primary-dep", semio_framework::VersionReq::Any).extends("someone-else"));
             assert!(result.is_err(), "extends != dependencies[0].plugin_id must panic");
         }
 
         #[test]
-        fn extends_set_before_a_mismatching_dependency_also_panics() {
+        async fn extends_set_before_a_mismatching_dependency_also_panics() {
             let result = std::panic::catch_unwind(|| ExtensionBundle::new("ext-mismatch-2", "Ext Mismatch 2", "0.1.0").extends("primary-dep").depends_on("someone-else", semio_framework::VersionReq::Any));
             assert!(result.is_err(), "extends != dependencies[0].plugin_id must panic regardless of call order");
         }
 
         #[test]
-        fn extends_matching_the_first_dependency_is_accepted_regardless_of_call_order() {
+        async fn extends_matching_the_first_dependency_is_accepted_regardless_of_call_order() {
             let bundle = ExtensionBundle::new("ext-ok", "Ext Ok", "0.1.0").extends("primary-dep").depends_on("primary-dep", semio_framework::VersionReq::Any).depends_on("secondary-dep", semio_framework::VersionReq::Any);
             assert_eq!(bundle.manifest.dependencies[0].plugin_id, "primary-dep");
             assert_eq!(bundle.manifest.dependencies[1].plugin_id, "secondary-dep");
@@ -16761,7 +16761,7 @@ pub mod plugin_runtime {
     }
 
     /// 📤️ Installs the process-local extension bundle (from `extension_exports!`).
-    pub fn install_extension_bundle(bundle: ExtensionBundle) {
+    pub async fn install_extension_bundle(bundle: ExtensionBundle) {
         EXTENSION_BUNDLE.with(|slot| {
             *slot.borrow_mut() = Some(bundle);
         });
@@ -16771,7 +16771,7 @@ pub mod plugin_runtime {
     static EXTENSION_BUNDLE_INSTALLER: std::sync::OnceLock<fn()> = std::sync::OnceLock::new();
 
     /// 🧩️ Registers the embedding extension crate's bundle installer (expanded from `extension_exports!`).
-    pub fn register_extension_bundle_installer(install: fn()) {
+    pub async fn register_extension_bundle_installer(install: fn()) {
         let _ = EXTENSION_BUNDLE_INSTALLER.set(install);
     }
 
@@ -16788,7 +16788,7 @@ pub mod plugin_runtime {
 
     /// Ensures the embedding extension crate's bundle installer ran before any WIT export is served
     /// — mirrors `ensure_plugin_initialized`'s explicit weak/strong-linkage shim call.
-    fn ensure_extension_initialized() {
+    async fn ensure_extension_initialized() {
         EXTENSION_BUNDLE.with(|slot| {
             if slot.borrow().is_none() {
                 #[cfg(feature = "component-extension-guest")]
@@ -16803,7 +16803,7 @@ pub mod plugin_runtime {
     }
 
     /// 📦️ Returns the installed extension manifest (empty defaults when unset).
-    pub fn extension_manifest() -> ExtensionManifest {
+    pub async fn extension_manifest() -> ExtensionManifest {
         ensure_extension_initialized();
         EXTENSION_BUNDLE.with(|slot| {
             slot.borrow().as_ref().map(|bundle| bundle.manifest.clone()).unwrap_or_else(|| ExtensionManifest {
@@ -16822,7 +16822,7 @@ pub mod plugin_runtime {
     }
 
     /// 🚨️ Marks the extension active for subsequent `extension_invoke` calls.
-    pub fn extension_activate() -> Result<(), Fault> {
+    pub async fn extension_activate() -> Result<(), Fault> {
         ensure_extension_initialized();
         let ready = EXTENSION_BUNDLE.with(|slot| slot.borrow().is_some());
         if !ready {
@@ -16833,12 +16833,12 @@ pub mod plugin_runtime {
     }
 
     /// 🛑 Clears the active flag without dropping handlers.
-    pub fn extension_deactivate() {
+    pub async fn extension_deactivate() {
         EXTENSION_ACTIVE.with(|slot| slot.set(false));
     }
 
     /// 🔀️ Dispatches `capability` to the registered handler with wire-encoded `request` bytes.
-    pub fn extension_invoke(capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub async fn extension_invoke(capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
         ensure_extension_initialized();
         if !EXTENSION_ACTIVE.with(|slot| slot.get()) {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.inactive"), "extension not activated"));
@@ -16860,14 +16860,14 @@ pub mod plugin_runtime {
     /// ever wired inference services — this is a deterministic EMPTY roster
     /// (`store::pack_rt::encode_wire_value` of an empty list) until W1-A adds real extension-side
     /// inference wiring (mirroring `crate::app::wire_list_artifact_inference_services`, plugin-side).
-    pub fn extension_wire_list_artifact_inferences() -> Vec<u8> {
+    pub async fn extension_wire_list_artifact_inferences() -> Vec<u8> {
         store::pack_rt::encode_wire_value(&dsl::DslValue::Array(Vec::new()))
     }
 
     /// 🚧️ PLACEHOLDER for W1-A. Companion to `extension_wire_list_artifact_inferences` — since the
     /// roster above is always empty, this can never legitimately be called; it exists only so
     /// `contributor.artifact-infer` type-checks on `extension-world`. Always returns a typed `Fault`.
-    pub fn extension_wire_artifact_infer() -> Fault {
+    pub async fn extension_wire_artifact_infer() -> Fault {
         plugin_internal_fault("artifact-infer not implemented for extensions (W1-A placeholder)")
     }
 
@@ -16875,7 +16875,7 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! extension_exports {
         ($bundle_fn:expr) => {
-            fn __semio_install_extension_bundle() {
+            async fn __semio_install_extension_bundle() {
                 $crate::plugin_runtime::install_extension_bundle(($bundle_fn)());
             }
 
@@ -16910,7 +16910,7 @@ pub mod plugin_runtime {
             // emission packet lands.
             #[cfg(test)]
             #[test]
-            fn descriptor_is_fresh() {
+            async fn descriptor_is_fresh() {
                 __semio_install_extension_bundle();
                 let extension_id = $crate::plugin_runtime::extension_manifest().extension_id;
                 let assembled = $crate::describe::describe_extension();
@@ -16975,7 +16975,7 @@ pub mod plugin_runtime {
 
         /// 🪪️ Live `surface_app_id` call over `TEST_APP_DIALECT` — the id every `App::builder(...)` call
         /// in this module passes, per contract §1 (`AppBuilder::build_definition` rejects a hand-written id).
-        fn test_app_surface_id() -> String {
+        async fn test_app_surface_id() -> String {
             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
         }
 
@@ -16989,22 +16989,22 @@ pub mod plugin_runtime {
         /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
         impl store::ArtifactDsl for TestSnapshot {
             const EXTENSION: &'static str = "testkit-macro";
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+            async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                 if text.trim().is_empty() {
                     return Ok(Self::default());
                 }
                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
             }
-            fn print_dsl(&self) -> String {
+            async fn print_dsl(&self) -> String {
                 serde_json::to_string(self).unwrap_or_default()
             }
         }
 
         impl ArtifactPack for TestSnapshot {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 if bytes.is_empty() {
                     return Ok(Self::default());
                 }
@@ -17037,7 +17037,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn serializer_entry_of_and_deserializer_entry_of_erase_correctly() {
+        async fn serializer_entry_of_and_deserializer_entry_of_erase_correctly() {
             let ser = serializer_entry_of::<DummySerializer>();
             assert_eq!(ser.writes, DummySerializer::INTO);
             assert_eq!(ser.reads.to_vec(), vec![DummySerializer::FROM]);
@@ -17074,11 +17074,11 @@ pub mod plugin_runtime {
         }
 
         impl MutationDiff<TestSnapshot> for TestDiff {
-            fn apply(&self, snapshot: &TestSnapshot) -> protocol::MutationApplyResult<TestSnapshot> {
+            async fn apply(&self, snapshot: &TestSnapshot) -> protocol::MutationApplyResult<TestSnapshot> {
                 Ok(TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()) })
             }
 
-            fn absorb(&mut self, other: Self) {
+            async fn absorb(&mut self, other: Self) {
                 if other.count.is_some() {
                     self.count = other.count;
                 }
@@ -17100,14 +17100,14 @@ pub mod plugin_runtime {
         impl Mutation<TestSnapshot> for TestMutation {
             type Diff = TestDiff;
 
-            fn diff(&self, _snapshot: &TestSnapshot) -> ::protocol::MutationOutcome<TestDiff> {
+            async fn diff(&self, _snapshot: &TestSnapshot) -> ::protocol::MutationOutcome<TestDiff> {
                 ::protocol::MutationOutcome::new(match self {
                     TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
                     TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
                 })
             }
 
-            fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
+            async fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
                 match self {
                     TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: snapshot.count }],
                     TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: snapshot.label.clone() }],
@@ -17116,7 +17116,7 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpText for TestMutation {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -17128,7 +17128,7 @@ pub mod plugin_runtime {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -17142,10 +17142,10 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpBinary for TestMutation {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -17155,24 +17155,24 @@ pub mod plugin_runtime {
         /// TestMutation>` registered via `VcsArtifactApp::register_child`) share the identical
         /// `TestSnapshot`/`TestMutation` pair, so the composition tests below need no second mutation enum.
         impl protocol::SemanticMutation<TestSnapshot> for TestMutation {
-            fn kinds() -> &'static [protocol::SemanticDescriptor] {
+            async fn kinds() -> &'static [protocol::SemanticDescriptor] {
                 const KINDS: &[protocol::SemanticDescriptor] =
                     &[protocol::SemanticDescriptor { verb: "set", entity: "count", kind: "set-count", record: "SetCount" }, protocol::SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" }];
                 KINDS
             }
-            fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+            async fn semantics(&self) -> &'static protocol::SemanticDescriptor {
                 match self {
                     TestMutation::SetCount { .. } => &Self::kinds()[0],
                     TestMutation::SetLabel { .. } => &Self::kinds()[1],
                 }
             }
-            fn label(&self) -> String {
+            async fn label(&self) -> String {
                 match self {
                     TestMutation::SetCount { value } => format!("Set count to {value}"),
                     TestMutation::SetLabel { value } => format!("Set label to {value}"),
                 }
             }
-            fn target(&self) -> Vec<String> {
+            async fn target(&self) -> Vec<String> {
                 Vec::new()
             }
         }
@@ -17189,22 +17189,22 @@ pub mod plugin_runtime {
         /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
         impl store::ArtifactDsl for TestConfig {
             const EXTENSION: &'static str = "testkit-macro-cfg";
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+            async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                 if text.trim().is_empty() {
                     return Ok(Self::default());
                 }
                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
             }
-            fn print_dsl(&self) -> String {
+            async fn print_dsl(&self) -> String {
                 serde_json::to_string(self).unwrap_or_default()
             }
         }
 
         impl ArtifactPack for TestConfig {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 if bytes.is_empty() {
                     return Ok(Self::default());
                 }
@@ -17215,10 +17215,10 @@ pub mod plugin_runtime {
         impl store::ConfigRecord for TestConfig {}
 
         impl MutationDiff<TestConfig> for TestConfig {
-            fn apply(&self, _base: &TestConfig) -> protocol::MutationApplyResult<TestConfig> {
+            async fn apply(&self, _base: &TestConfig) -> protocol::MutationApplyResult<TestConfig> {
                 Ok(self.clone())
             }
-            fn absorb(&mut self, other: Self) {
+            async fn absorb(&mut self, other: Self) {
                 *self = other;
             }
         }
@@ -17236,20 +17236,20 @@ pub mod plugin_runtime {
         impl Mutation<TestConfig> for TestConfigMutation {
             type Diff = TestConfig;
 
-            fn diff(&self, _base: &TestConfig) -> ::protocol::MutationOutcome<TestConfig> {
+            async fn diff(&self, _base: &TestConfig) -> ::protocol::MutationOutcome<TestConfig> {
                 ::protocol::MutationOutcome::new(match self {
                     TestConfigMutation::SetSelected { value } => TestConfig { selected: value.clone() },
                     TestConfigMutation::Snapshot { selected } => TestConfig { selected: selected.clone() },
                 })
             }
 
-            fn inverse(&self, base: &TestConfig) -> Vec<Self> {
+            async fn inverse(&self, base: &TestConfig) -> Vec<Self> {
                 vec![TestConfigMutation::Snapshot { selected: base.selected.clone() }]
             }
         }
 
         impl ::protocol::OpText for TestConfigMutation {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -17261,7 +17261,7 @@ pub mod plugin_runtime {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -17275,10 +17275,10 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpBinary for TestConfigMutation {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -17332,7 +17332,7 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpText for TestCommand {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{keyword} ");
@@ -17344,7 +17344,7 @@ pub mod plugin_runtime {
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
-            fn print_op(&self) -> String {
+            async fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -17358,10 +17358,10 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpBinary for TestCommand {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::decode_op(bytes)
             }
         }
@@ -17392,7 +17392,7 @@ pub mod plugin_runtime {
             type TransientMutation = crate::app::NoTransientMutation;
             type Command = TestCommand;
 
-            fn initial_snapshot() -> TestSnapshot {
+            async fn initial_snapshot() -> TestSnapshot {
                 TestSnapshot::default()
             }
 
@@ -17401,7 +17401,7 @@ pub mod plugin_runtime {
             /// compiled. `Noop` is a real mutation of the `No*` lane types — it changes no content
             /// but does bump each store's generation, which is exactly the signal the host
             /// broadcasts (presence) and re-renders (transient) on.
-            fn ephemeral(
+            async fn ephemeral(
                 command: &TestCommand,
                 _doc: &ArtifactView<'_, TestSnapshot>,
                 _cfg: &ConfigView<'_, TestConfig>,
@@ -17414,7 +17414,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn command_id(command: &TestCommand) -> &'static str {
+            async fn command_id(command: &TestCommand) -> &'static str {
                 match command {
                     TestCommand::Increment => "increment",
                     TestCommand::SetLabel { .. } => "setLabel",
@@ -17435,7 +17435,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
                 match action {
                     "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
                     "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
@@ -17444,7 +17444,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn handle(
+            async fn handle(
                 command: &TestCommand,
                 doc: &ArtifactView<'_, TestSnapshot>,
                 _cfg: &ConfigView<'_, TestConfig>,
@@ -17487,15 +17487,15 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
+            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
                 ui_text(Label::data(format!("count={}", doc.snapshot.count)))
             }
 
-            fn clipboard_media_type() -> Option<MediaType> {
+            async fn clipboard_media_type() -> Option<MediaType> {
                 Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
             }
 
-            fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+            async fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
                 if doc.snapshot.label.is_empty() {
                     return Err(ClipboardError::EmptySelection);
                 }
@@ -17509,7 +17509,7 @@ pub mod plugin_runtime {
                 })
             }
 
-            fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Vec<TestMutation> {
+            async fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Vec<TestMutation> {
                 if doc.snapshot.label.is_empty() {
                     Vec::new()
                 } else {
@@ -17517,7 +17517,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn paste_operations(_doc: &ArtifactView<'_, TestSnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
+            async fn paste_operations(_doc: &ArtifactView<'_, TestSnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
                 if !Self::clipboard_accepts().contains(&fragment.media_type) {
                     return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
                 }
@@ -17534,7 +17534,7 @@ pub mod plugin_runtime {
             /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
             /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
             /// proving `VcsArtifactApp::context_menu` runs every emitter through `organize_context_menu`.
-            fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
                 Menu::of(registry)
                     .action("setLabelRequired")
                     .when(!doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
@@ -17547,7 +17547,7 @@ pub mod plugin_runtime {
             /// them) is `HierarchyProvider::Topology`-backed by a single synthetic id, "item-1", present
             /// exactly when `doc.snapshot.label` is non-empty — lets a test simulate "delete the selected
             /// node" by setting the label back to empty and observing `validate_state` prune it.
-            fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
+            async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
                 let mut domains = BTreeMap::new();
                 let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![protocol::TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
                 domains.insert("items".to_string(), protocol::DomainTopology { ordered });
@@ -17555,11 +17555,11 @@ pub mod plugin_runtime {
             }
         }
 
-        fn meta() -> ActionMeta {
+        async fn meta() -> ActionMeta {
             ActionMeta { actor: "local".into(), instance_id: 1 }
         }
 
-        fn synthetic_play_app() -> App {
+        async fn synthetic_play_app() -> App {
             App::from_builder(App::builder(test_app_surface_id(), LocalizedLabel::data("Synthetic")).document(["state"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind(
                 "main",
                 LocalizedLabel::data("Main"),
@@ -17577,7 +17577,7 @@ pub mod plugin_runtime {
         /// Rust caller constructs directly (a "missing required field" is a compile error, not a runtime
         /// one). `setLabelRequired` stays declared here purely as a registry fixture for the context-menu
         /// label-resolution test below.
-        fn contract_registry() -> AppActionRegistry {
+        async fn contract_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id(), LocalizedLabel::data("Synthetic"))
                 .document(["state"])
@@ -17598,7 +17598,7 @@ pub mod plugin_runtime {
             AppActionRegistry::from_definition(&app.definition)
         }
 
-        fn contract_app_under_test() -> VcsArtifactApp<TestApp> {
+        async fn contract_app_under_test() -> VcsArtifactApp<TestApp> {
             VcsArtifactApp::with_registry(TestApp::default(), contract_registry())
         }
 
@@ -17606,7 +17606,7 @@ pub mod plugin_runtime {
         /// `TestApp::interaction_topology`) — the `🕹️InteractionDispatch` fixture. Auto-injects the six
         /// framework interaction actions via `interaction_action_definitions` (verified by
         /// `build_definition_carries_window_interactions_and_injects_framework_actions` above).
-        fn interaction_registry() -> AppActionRegistry {
+        async fn interaction_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id(), LocalizedLabel::data("Synthetic"))
                     .document(["state"])
@@ -17631,26 +17631,26 @@ pub mod plugin_runtime {
             AppActionRegistry::from_definition(&app.definition)
         }
 
-        fn interaction_app_under_test() -> VcsArtifactApp<TestApp> {
+        async fn interaction_app_under_test() -> VcsArtifactApp<TestApp> {
             VcsArtifactApp::with_registry(TestApp::default(), interaction_registry())
         }
 
         /// 🧪️ Builds the JSON `args` an `interactionSelect`/`interactionHover` dispatch carries — the
         /// `targets` arg is itself a JSON-encoded string (an `ActionArgDef::text`, matching
         /// `interaction_action_definitions`'s declaration), not a nested JSON array.
-        fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+        async fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
             let targets = serde_json::to_string(&vec![protocol::InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
             let mut object = extra;
             object["targets"] = json!(targets);
             object
         }
 
-        fn __semio_plugin_bundle() -> Result<crate::Plugin, crate::PluginAssemblyError> {
+        async fn __semio_plugin_bundle() -> Result<crate::Plugin, crate::PluginAssemblyError> {
             crate::Plugin::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(synthetic_play_app()).document_app_mutation_roster::<TestApp>().try_build()
         }
 
         #[test]
-        fn plugin_builder_builds_bundle_from_fluent_spec() {
+        async fn plugin_builder_builds_bundle_from_fluent_spec() {
             let bundle = __semio_plugin_bundle().expect("synthetic plugin assembly");
             assert_eq!(bundle.manifest.plugin_id, "synthetic");
             assert_eq!(bundle.manifest.label.as_str(), "Synthetic");
@@ -17659,12 +17659,12 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn test_app_id_matches_its_own_dialect() {
+        async fn test_app_id_matches_its_own_dialect() {
             assert_eq!(TestApp::APP_ID, test_app_surface_id(), "TestApp::APP_ID must not drift from TEST_APP_DIALECT (contract §1)");
         }
 
         #[test]
-        fn plugin_builder_wires_app_factory_for_create_app() {
+        async fn plugin_builder_wires_app_factory_for_create_app() {
             let bundle = __semio_plugin_bundle().expect("synthetic plugin assembly");
             let app = bundle.create_app(TestApp::APP_ID).expect("registered app");
             assert_eq!(app.app_id(), TestApp::APP_ID);
@@ -17672,7 +17672,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
+        async fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let before_snapshot = app.test_snapshot();
             let before_edits = app.test_store().applied_edit_ids().len();
@@ -17727,7 +17727,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn operation_action_emits_kernel_op_with_true_inverse() {
+        async fn operation_action_emits_kernel_op_with_true_inverse() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
             assert_eq!(result.mutations.len(), 1);
@@ -17739,7 +17739,7 @@ pub mod plugin_runtime {
 
         //#region 🔖️EphemeralLaneTests
         #[test]
-        fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
+        async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             assert_eq!(app.presence_store.generation(), 0);
             assert_eq!(app.transient_store.generation(), 0);
@@ -17767,7 +17767,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
+        async fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta()).expect("set label");
             assert_eq!(app.presence_store.generation(), 0);
@@ -17779,7 +17779,7 @@ pub mod plugin_runtime {
         /// `ephemeral_snapshot().interaction` — assembled purely from `AppDefinition.interactions` plus
         /// the framework-owned `interaction_store`/`interaction_hover` state.
         #[test]
-        fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
+        async fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
             let mut app = interaction_app_under_test();
             // 🧪️ `interaction_topology`'s fixture only knows "item-1" once `doc.snapshot.label` is
             // non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
@@ -17799,7 +17799,7 @@ pub mod plugin_runtime {
         //#endregion 🔖️EphemeralLaneTests
 
         //#region 🔖️AdoptPresenceTests
-        fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> protocol::PresencePeer {
+        async fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> protocol::PresencePeer {
             protocol::PresencePeer {
                 actor: actor.to_string(),
                 connected_at_ms: 1,
@@ -17821,7 +17821,7 @@ pub mod plugin_runtime {
         /// `interaction` into `peer_presence` for every peer in the roster, and (3) treats the roster
         /// as the single source of truth — a peer absent from a later call is dropped from BOTH maps.
         #[test]
-        fn adopt_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
+        async fn adopt_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let alice = sample_presence_peer("user:alice#s1", Some(3), true);
             let bob = sample_presence_peer("user:bob#s1", Some(5), false);
@@ -17845,7 +17845,7 @@ pub mod plugin_runtime {
 
         //#region 🔖️InteractionViewPeersTests
         #[test]
-        fn interaction_view_peers_selecting_returns_actor_and_color() {
+        async fn interaction_view_peers_selecting_returns_actor_and_color() {
             let mut peers: BTreeMap<String, PeerPresence> = BTreeMap::new();
             let mark_interaction = |selected: &[&str], hovered: &[&str]| {
                 Some(protocol::PresenceInteraction {
@@ -17887,17 +17887,17 @@ pub mod plugin_runtime {
         /// directly (no real `ChildStoreFactory` registration needed for these in-process tests) —
         /// the SAME `TestSnapshot`/`TestMutation` pair `TestApp` itself uses, so a "child" here is
         /// just a second, independently-owned instance of the identical document shape.
-        fn new_test_child(id: &str) -> Result<Box<dyn store::SpaceMember>, store::VcsError> {
+        async fn new_test_child(id: &str) -> Result<Box<dyn store::SpaceMember>, store::VcsError> {
             let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
             Ok(Box::new(store::ArtifactStore::new(envelope)?))
         }
 
-        fn test_child_dialect() -> store::os_io::ArtifactDialect {
+        async fn test_child_dialect() -> store::os_io::ArtifactDialect {
             store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
         }
 
         #[test]
-        fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
+        async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child seeds ownership");
 
@@ -17934,12 +17934,12 @@ pub mod plugin_runtime {
 
         /// 🧪️ Registers the production `TypedChildStoreFactory` for the test child kind, so the
         /// paths below go through the SAME factory a real plugin uses rather than a test-only stub.
-        fn register_test_child_factory() {
+        async fn register_test_child_factory() {
             store::register_typed_child_store_factory::<TestSnapshot, TestMutation>(store::os_io::ArtifactKindId::parse("s.test.child").expect("canonical kind"), "semio.test/v1").expect("register child factory");
         }
 
         #[test]
-        fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
+        async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
             register_test_child_factory();
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
@@ -17968,7 +17968,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
+        async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
             register_test_child_factory();
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
@@ -17994,13 +17994,13 @@ pub mod plugin_runtime {
         }
 
         /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
-        fn reads_child_count(app: &VcsArtifactApp<TestApp>) -> i32 {
+        async fn reads_child_count(app: &VcsArtifactApp<TestApp>) -> i32 {
             let view = crate::app::ChildContentView::new(&app.children);
             view.typed::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
         }
 
         #[test]
-        fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
+        async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1").expect("construct child")).expect("register child");
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
@@ -18015,7 +18015,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
+        async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.register_child("slot", "child-a", test_child_dialect(), new_test_child("child-a").expect("construct child")).expect("register child seeds ownership");
             // `child-b` is registered but NEVER targeted by the composite gesture below — its
@@ -18042,7 +18042,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn created_children_survive_absorb_into_the_child_store_map() {
+        async fn created_children_survive_absorb_into_the_child_store_map() {
             // 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
             // `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
             // freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
@@ -18062,7 +18062,7 @@ pub mod plugin_runtime {
         //#endregion 🔖️CompositionTests
 
         #[test]
-        fn view_action_emits_no_operations() {
+        async fn view_action_emits_no_operations() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).expect("select");
             assert!(result.mutations.is_empty());
@@ -18072,7 +18072,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
+        async fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             // Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
@@ -18101,7 +18101,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
+        async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })), &meta())
                 .expect("noteShellCommand with inverse");
@@ -18121,7 +18121,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn shell_action_emits_host_effect_without_operations() {
+        async fn shell_action_emits_host_effect_without_operations() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Navigate, &meta()).expect("navigate");
             assert!(result.mutations.is_empty());
@@ -18129,7 +18129,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn copy_emits_clipboard_write_effect_with_no_operations() {
+        async fn copy_emits_clipboard_write_effect_with_no_operations() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
             let result = app.handle_action("copy", None, &meta()).expect("copy");
@@ -18141,7 +18141,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn copy_on_empty_selection_is_a_benign_no_operation() {
+        async fn copy_on_empty_selection_is_a_benign_no_operation() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.handle_action("copy", None, &meta()).expect("copy");
             assert!(result.mutations.is_empty());
@@ -18149,7 +18149,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
+        async fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
             let result = app.handle_action("cut", None, &meta()).expect("cut");
@@ -18162,7 +18162,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn paste_materializes_fragment_at_original_anchor() {
+        async fn paste_materializes_fragment_at_original_anchor() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let fragment =
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::APP_ID.into(), label: "pasted".into() };
@@ -18172,7 +18172,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn paste_with_non_original_anchor_reaches_the_app_placement() {
+        async fn paste_with_non_original_anchor_reaches_the_app_placement() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let fragment =
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::APP_ID.into(), label: "pasted".into() };
@@ -18182,7 +18182,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
+        async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.handle_action("paste", None, &meta()).expect("paste");
             assert!(result.mutations.is_empty());
@@ -18190,7 +18190,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn copy_cut_paste_are_registered_as_clipboard_kind_actions() {
+        async fn copy_cut_paste_are_registered_as_clipboard_kind_actions() {
             let definition = synthetic_play_app().definition;
             for id in ["copy", "cut", "paste"] {
                 let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
@@ -18199,7 +18199,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn coalesced_operations_amend_a_single_edit() {
+        async fn coalesced_operations_amend_a_single_edit() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).expect("setLabel");
@@ -18211,7 +18211,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn history_actions_round_trip_through_the_store() {
+        async fn history_actions_round_trip_through_the_store() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
@@ -18232,7 +18232,7 @@ pub mod plugin_runtime {
 
         //#region 🔖️CommandLogTests
         #[test]
-        fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
+        async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
             let history = app.test_history();
@@ -18247,7 +18247,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
+        async fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).expect("setLabel");
@@ -18258,7 +18258,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn undo_and_redo_append_entries_and_never_shrink_the_log() {
+        async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
             assert_eq!(app.test_history().commands.len(), 1);
@@ -18273,7 +18273,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
+        async fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
@@ -18292,7 +18292,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn ingested_remote_edits_are_backfilled_into_the_command_log() {
+        async fn ingested_remote_edits_are_backfilled_into_the_command_log() {
             let mut sender = VcsArtifactApp::new(TestApp::default());
             let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill");
             sender.attach_backbone(Box::new(near)).expect("attach");
@@ -18316,7 +18316,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
+        async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).expect("setHistoryCommandFilter");
             assert!(result.mutations.is_empty());
@@ -18324,7 +18324,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn ui_history_panel_filters_rows_and_gates_the_backwards_action() {
+        async fn ui_history_panel_filters_rows_and_gates_the_backwards_action() {
             let history = HistoryView {
                 columns: Vec::new(),
                 can_undo: true,
@@ -18387,7 +18387,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
+        async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).expect("select");
             let history = app.test_history();
@@ -18401,7 +18401,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
+        async fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             for id in ["node-1", "node-2", "node-3"] {
                 app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).expect("select");
@@ -18412,7 +18412,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn view_dispatches_remain_distinct_across_interleaved_entries() {
+        async fn view_dispatches_remain_distinct_across_interleaved_entries() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
             app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).expect("select b");
@@ -18425,7 +18425,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
+        async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).expect("noteShellCommand");
@@ -18445,14 +18445,14 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn history_delivery_does_not_widen_a_none_ui_scope() {
+        async fn history_delivery_does_not_widen_a_none_ui_scope() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).expect("viewNoScope");
             assert_eq!(result.ui_scope, UiDirtyScope::None);
         }
 
         #[test]
-        fn history_delivery_preserves_partial_ui_scope() {
+        async fn history_delivery_preserves_partial_ui_scope() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).expect("viewPartialScope");
             let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
@@ -18461,14 +18461,14 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn scope_upgrade_full_stays_full() {
+        async fn scope_upgrade_full_stays_full() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
             assert_eq!(result.ui_scope, UiDirtyScope::Full);
         }
 
         #[test]
-        fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
+        async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let before_len = app.test_history().commands.len();
             let result = app.handle_action("undo", None, &meta()).expect("undo");
@@ -18477,7 +18477,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn set_history_command_filter_is_never_logged() {
+        async fn set_history_command_filter_is_never_logged() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let before_len = app.test_history().commands.len();
             app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).expect("setHistoryCommandFilter");
@@ -18485,7 +18485,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
+        async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).expect("render before");
             app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
@@ -18496,7 +18496,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
+        async fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
             let mut app = contract_app_under_test();
             app.dispatch_typed(TestCommand::NoopMutation, &meta()).expect("noopMutation");
             let history = app.test_history();
@@ -18510,7 +18510,7 @@ pub mod plugin_runtime {
         //#endregion 🔖️CommandLogTests
 
         #[test]
-        fn undo_on_empty_history_is_a_benign_no_operation() {
+        async fn undo_on_empty_history_is_a_benign_no_operation() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.handle_action("undo", None, &meta()).expect("undo");
             assert!(result.mutations.is_empty());
@@ -18518,7 +18518,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn document_round_trips_through_serialization() {
+        async fn document_round_trips_through_serialization() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc");
             app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).expect("label");
@@ -18530,7 +18530,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn ingest_operations_is_idempotent() {
+        async fn ingest_operations_is_idempotent() {
             let mut sender = VcsArtifactApp::new(TestApp::default());
             let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc");
             sender.attach_backbone(Box::new(near)).expect("attach");
@@ -18552,7 +18552,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn attach_detach_reattach_resumes_backbone_convergence() {
+        async fn attach_detach_reattach_resumes_backbone_convergence() {
             let mut app = VcsArtifactApp::new(TestApp::default());
             assert!(app.backbone_ref().is_none(), "default is unattached");
 
@@ -18576,7 +18576,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn selection_count_phrase_formats_mixed_selection() {
+        async fn selection_count_phrase_formats_mixed_selection() {
             assert_eq!(selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]), "8 nodes and 13 edges");
             assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]), "1 node");
             assert_eq!(selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]), "8 Knoten und 13 Kanten");
@@ -18586,7 +18586,7 @@ pub mod plugin_runtime {
         /// "selection guard" (`Menu::when`) drops the gated command; once a label is set (a stand-in for
         /// "something is selected"), both rows resolve label/icon from the declared registry entries.
         #[test]
-        fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
+        async fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
             let mut app = contract_app_under_test();
             let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
@@ -18607,13 +18607,13 @@ pub mod plugin_runtime {
 
         //#region 🗂️GroupedContextMenu
         #[test]
-        fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
+        async fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
             let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation).with_category("view");
             assert_eq!(action.category.as_deref(), Some("view"));
         }
 
         #[test]
-        fn menu_group_produces_a_group_row_keyed_by_category() {
+        async fn menu_group_produces_a_group_row_keyed_by_category() {
             let registry = contract_registry();
             let items = Menu::of(&registry).action("setLabelRequired").group("export", |m| m.command("incrementViaCommand")).build();
             assert_eq!(items.len(), 2);
@@ -18626,7 +18626,7 @@ pub mod plugin_runtime {
         /// 🧪️ A registry declaring `setLabelRequired` plus ten `flatLeaf1..10` actions (four carrying a
         /// `RIBBON_PARENT_CATEGORIES` category via `with_category`) — feeds `TestApp::context_menu`'s
         /// `"flat-menu-test"` branch below.
-        fn flat_menu_registry() -> AppActionRegistry {
+        async fn flat_menu_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id(), LocalizedLabel::data("FlatMenuTest"))
                     .document(["state"])
@@ -18652,7 +18652,7 @@ pub mod plugin_runtime {
         /// back as 5 primaries + 3 taxonomy-sorted `menu.group.<category>` rows — proving the funnel applies
         /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
         #[test]
-        fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
+        async fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
             let mut app = VcsArtifactApp::with_registry(TestApp::default(), flat_menu_registry());
             app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).expect("set label");
             let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
@@ -18671,7 +18671,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn context_menu_wire_request_without_view_state_still_parses() {
+        async fn context_menu_wire_request_without_view_state_still_parses() {
             let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"}}"#).expect("viewState is no longer a required field");
             assert_eq!(wire.menu.id, "window");
             assert!(wire.surface.is_none());
@@ -18681,7 +18681,7 @@ pub mod plugin_runtime {
         //#endregion 🗂️GroupedContextMenu
 
         #[test]
-        fn view_action_emitting_ops_is_rejected() {
+        async fn view_action_emitting_ops_is_rejected() {
             let mut app = contract_app_under_test();
             let error = app.dispatch_typed(TestCommand::BadView, &meta()).expect_err("a View command emitting operations must be rejected");
             assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
@@ -18689,7 +18689,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
+        async fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
             let mut app = contract_app_under_test();
             let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).expect("setActiveUtility is a valid View command");
             assert!(result.mutations.is_empty(), "utility switching must not create history");
@@ -18698,7 +18698,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn action_emit_amend_coalesces_while_commit_does_not() {
+        async fn action_emit_amend_coalesces_while_commit_does_not() {
             let mut app = contract_app_under_test();
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).expect("amendLabel");
@@ -18718,7 +18718,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn amend_dispatch_reports_only_this_dispatch_new_operations() {
+        async fn amend_dispatch_reports_only_this_dispatch_new_operations() {
             // 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
             // coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
             // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
@@ -18743,7 +18743,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn operation_command_emits_kernel_op_with_true_inverse() {
+        async fn operation_command_emits_kernel_op_with_true_inverse() {
             let mut app = contract_app_under_test();
             let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("incrementViaCommand");
             assert_eq!(result.mutations.len(), 1);
@@ -18753,7 +18753,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn manifest_command_dispatch_validates_structural_app_ownership() {
+        async fn manifest_command_dispatch_validates_structural_app_ownership() {
             use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
             let mut app = contract_app_under_test();
             let valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
@@ -18765,7 +18765,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn manifest_mode_command_requires_the_active_structural_owner() {
+        async fn manifest_mode_command_requires_the_active_structural_owner() {
             use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
             let invocation = CommandInvocation {
                 address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "test".into(), app_id: TestApp::APP_ID.into(), mode_id: "edit".into() }, command_id: "mode.increment".into() },
@@ -18779,7 +18779,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
+        async fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
             use semio_framework::manifest::{ActionAddress, ActionInvocation};
             let invocation = ActionInvocation {
                 address: ActionAddress { plugin_id: "test".into(), app_id: TestApp::APP_ID.into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance-2".into(), action_id: "targetWindow".into() },
@@ -18791,7 +18791,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn plugin_command_handler_is_program_owned_across_app_instances() {
+        async fn plugin_command_handler_is_program_owned_across_app_instances() {
             use semio_framework::kernel::{InvocationId, InvocationResult, UndoGroup};
             use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
             use std::sync::{
@@ -18823,7 +18823,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn command_op_records_history_exactly_like_an_operation_action() {
+        async fn command_op_records_history_exactly_like_an_operation_action() {
             let mut app = contract_app_under_test();
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
@@ -18833,7 +18833,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn registry_less_construction_skips_enforcement() {
+        async fn registry_less_construction_skips_enforcement() {
             // The empty-registry path (VcsArtifactApp::new) passes commands through unchecked.
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::BadView, &meta()).expect("no registry ⇒ kind discipline skipped");
@@ -18841,7 +18841,7 @@ pub mod plugin_runtime {
 
         //#region 🔖️InteractionDispatchTests
         #[test]
-        fn interaction_select_replace_persists_through_the_interaction_store() {
+        async fn interaction_select_replace_persists_through_the_interaction_store() {
             let mut app = interaction_app_under_test();
             // 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
@@ -18852,7 +18852,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
+        async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
@@ -18869,7 +18869,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
+        async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
@@ -18883,7 +18883,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
+        async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
             let mut app = interaction_app_under_test();
             app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &meta()).expect("setSelectionMode");
             assert_eq!(app.interaction_state().active_mode.get("items").copied(), Some(protocol::SelectionMode::Single));
@@ -18897,7 +18897,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn clear_selection_and_select_all_apply_across_every_declared_domain() {
+        async fn clear_selection_and_select_all_apply_across_every_declared_domain() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
 
@@ -18909,7 +18909,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
+        async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
@@ -18923,7 +18923,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
+        async fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
@@ -18935,7 +18935,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn build_definition_rejects_transitive_flat_interaction() {
+        async fn build_definition_rejects_transitive_flat_interaction() {
             let outcome = std::panic::catch_unwind(|| {
                 App::from_builder(
                     App::builder("bad-transitive-flat", LocalizedLabel::data("Bad"))
@@ -18956,7 +18956,7 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn ui_tree_stamping_replaces_app_supplied_presence_from_interaction_state() {
+        async fn ui_tree_stamping_replaces_app_supplied_presence_from_interaction_state() {
             let mut app = interaction_app_under_test();
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
@@ -19016,7 +19016,7 @@ pub mod plugin_runtime {
         /// resolves it; the follow-up `TaskResolution::Command` mutates the store, stamped with
         /// the task's CLONED originating `ActionMeta`.
         #[test]
-        fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
+        async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
             let instance = 501;
             let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance };
             let mut app = VcsArtifactApp::new(TestApp::default());
@@ -19069,7 +19069,7 @@ pub mod plugin_runtime {
         /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
         /// silent drop — while earlier tasks and OTHER instances are unaffected.
         #[test]
-        fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
+        async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
             let instance = 502;
             let meta = ActionMeta { actor: "local".into(), instance_id: instance };
             crate::reactor::test_support::set_instance_quota(instance, 2);
@@ -19096,7 +19096,7 @@ pub mod plugin_runtime {
         /// future is dropped (never runs to completion, never queues a resume) — and the dedupe
         /// index tracks only the NEW task afterward.
         #[test]
-        fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
+        async fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
             let instance = 504;
             let meta = ActionMeta { actor: "local".into(), instance_id: instance };
             let first_ran = std::rc::Rc::new(std::cell::Cell::new(false));
@@ -19130,7 +19130,7 @@ pub mod plugin_runtime {
         /// executor (never runs to completion) and its pending `RequestRegistry` slot is gone too
         /// — no leaked slot — while a DIFFERENT instance's live task/request is untouched.
         #[test]
-        fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
+        async fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
             let dying = 505;
             let survivor = 506;
             let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying };
@@ -19177,7 +19177,7 @@ pub mod plugin_runtime {
         /// `plugin_resume_task` on the very next turn — exercised end to end against a fresh
         /// `TestApp` instance, exactly like a live task's own resume.
         #[test]
-        fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
+        async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
             let instance = 507;
             let meta = ActionMeta { actor: "local".into(), instance_id: instance };
             let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
@@ -19252,17 +19252,17 @@ pub mod world3d_host {
     }
 
     /** 🌞️ Builds the `environment_json` payload consumed by `world-3d-host.tsx`'s `WorldEnvironmentRecord.sun`. */
-    pub fn world3d_environment_json(sun: &WorldSunConfig) -> String {
+    pub async fn world3d_environment_json(sun: &WorldSunConfig) -> String {
         json!({ "sun": sun }).to_string()
     }
 
     /** 🌳️ Measure group with optional open state and no header slider fields. */
-    fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
+    async fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
         WindowMeasure::Group { id, label: label.into(), default_open, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }
     }
 
     /** 🌞️ Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern. */
-    pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    pub async fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         measure_group_with_open(
             format!("{id_prefix}-measure-sun"),
             "Sun",
@@ -19316,7 +19316,7 @@ pub mod world3d_host {
     }
 
     /** 🌞️ Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
-    pub fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args: Option<&Value>) -> bool {
+    pub async fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args: Option<&Value>) -> bool {
         match action_id {
             "toggleSun" => {
                 sun.enabled = !sun.enabled;
@@ -19393,7 +19393,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Serializes mode ⊗ orientation — the `WorldProjectionSpec` shape the JS world layer parses. */
-    pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
+    pub async fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
         let mode = match p.kind.as_str() {
             "orthographic" => json!({ "kind": "orthographic" }),
             "axonometric" => {
@@ -19429,7 +19429,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object — replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */
-    pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
+    pub async fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
         let mut value = json!({
             "position": position,
             "target": target,
@@ -19446,7 +19446,7 @@ pub mod world3d_host {
 
     /** 📐️ Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` — mirrors
      * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */
-    pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
+    pub async fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
         let [tx, ty, tz] = target;
         match p.kind.as_str() {
             "orthographic" => match p.orthographic_view.as_str() {
@@ -19495,7 +19495,7 @@ pub mod world3d_host {
 
     /** 📐️ Shared "Projection" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear —
      * every leaf targets `action`, parameter sliders gated to the kind/variant they apply to (see `puzzle3d_fill_utility_options` for the sibling gating pattern). */
-    pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    pub async fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         let select = |id: String, value: String, items: Vec<(&str, &str)>, field: &str| WindowMeasure::Select {
             id,
             label: None,
@@ -19598,7 +19598,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
-    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
+    pub async fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
         let field = args.and_then(|v| v.get("field")).and_then(Value::as_str);
         let value_str = args.and_then(|v| v.get("value")).and_then(Value::as_str);
         let value_f64 = args.and_then(|v| v.get("value")).and_then(Value::as_f64);
@@ -19655,7 +19655,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */
-    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
+    pub async fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
         if action_id != "setProjection" {
             return false;
         }
@@ -19663,11 +19663,11 @@ pub mod world3d_host {
     }
     //#endregion 📐️ WorldProjection
 
-    pub fn mesh_kind_from_json(mesh_json: &str) -> String {
+    pub async fn mesh_kind_from_json(mesh_json: &str) -> String {
         serde_json::from_str::<Value>(mesh_json).ok().and_then(|value| value.get("kind").and_then(|v| v.as_str()).map(str::to_string)).unwrap_or_else(|| "box".into())
     }
 
-    pub fn world3d_meshes_json_from_kinds(kinds: &[String]) -> String {
+    pub async fn world3d_meshes_json_from_kinds(kinds: &[String]) -> String {
         let meshes: Vec<Value> = kinds
             .iter()
             .map(|kind| {
@@ -19678,12 +19678,12 @@ pub mod world3d_host {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn world3d_mesh_id_from_url(url: &str) -> String {
+    pub async fn world3d_mesh_id_from_url(url: &str) -> String {
         let slug = url.trim_start_matches('/').rsplit('/').next().unwrap_or(url).trim_end_matches(".glb").trim_end_matches(".gltf");
         format!("mesh:{slug}")
     }
 
-    pub fn world3d_meshes_json_from_urls(urls: &[String]) -> String {
+    pub async fn world3d_meshes_json_from_urls(urls: &[String]) -> String {
         let meshes: Vec<Value> = urls
             .iter()
             .map(|url| {
@@ -19696,7 +19696,7 @@ pub mod world3d_host {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]) -> String {
+    pub async fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]) -> String {
         let mut meshes: Vec<Value> = kinds
             .iter()
             .map(|kind| {
@@ -19714,11 +19714,11 @@ pub mod world3d_host {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
+    pub async fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
         world3d_selection_json_with_granularity(method, ids, hovered_id, None)
     }
 
-    pub fn world3d_selection_json_with_granularity(method: &str, ids: &[String], hovered_id: Option<&str>, granularity: Option<&str>) -> String {
+    pub async fn world3d_selection_json_with_granularity(method: &str, ids: &[String], hovered_id: Option<&str>, granularity: Option<&str>) -> String {
         let mut value = json!({
             "method": method,
             "mode": "replace",
@@ -19733,14 +19733,14 @@ pub mod world3d_host {
         value.to_string()
     }
 
-    pub fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
+    pub async fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
         world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, None, None, None, None, None, None, None, None, None, Some(world3d_environment_json(sun)), None, None, None, None, None, None, None)
     }
 
     /// 🪟️ `domain_id`/`domain_granularity_id`: see `World3dScene`'s own doc comments — pass the app's
     /// bound `InteractionRef` id (and its plain-pick granularity id) for this window kind, or `None`
     /// to leave this window on the OS's shared `world` board domain.
-    pub fn world3d_scene_extended(
+    pub async fn world3d_scene_extended(
         camera_json: String,
         meshes_json: String,
         instances_json: String,
@@ -19788,7 +19788,7 @@ pub mod world3d_host {
         }
     }
 
-    pub fn world3d_default_camera() -> String {
+    pub async fn world3d_default_camera() -> String {
         world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0)
     }
 
@@ -19800,53 +19800,53 @@ pub mod world3d_host {
     }
 
     impl SelectionSet {
-        pub fn from_ids(ids: Vec<String>) -> Self {
+        pub async fn from_ids(ids: Vec<String>) -> Self {
             let index: std::collections::HashSet<String> = ids.iter().cloned().collect();
             Self { ids, index }
         }
 
-        pub fn contains(&self, id: &str) -> bool {
+        pub async fn contains(&self, id: &str) -> bool {
             self.index.contains(id)
         }
 
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.ids.is_empty()
         }
 
-        pub fn len(&self) -> usize {
+        pub async fn len(&self) -> usize {
             self.ids.len()
         }
 
-        pub fn clear(&mut self) {
+        pub async fn clear(&mut self) {
             self.ids.clear();
             self.index.clear();
         }
 
-        pub fn first(&self) -> Option<&str> {
+        pub async fn first(&self) -> Option<&str> {
             self.ids.first().map(String::as_str)
         }
 
-        pub fn as_slice(&self) -> &[String] {
+        pub async fn as_slice(&self) -> &[String] {
             &self.ids
         }
 
-        pub fn iter(&self) -> impl Iterator<Item = &String> {
+        pub async fn iter(&self) -> impl Iterator<Item = &String> {
             self.ids.iter()
         }
 
-        pub fn push_unique(&mut self, id: String) {
+        pub async fn push_unique(&mut self, id: String) {
             if self.index.insert(id.clone()) {
                 self.ids.push(id);
             }
         }
 
-        pub fn remove_id(&mut self, id: &str) {
+        pub async fn remove_id(&mut self, id: &str) {
             if self.index.remove(id) {
                 self.ids.retain(|entry| entry != id);
             }
         }
 
-        pub fn to_vec(&self) -> Vec<String> {
+        pub async fn to_vec(&self) -> Vec<String> {
             self.ids.clone()
         }
     }
@@ -19889,7 +19889,7 @@ pub mod world3d_host {
     }
 
     impl From<Vec<String>> for SelectionSet {
-        fn from(ids: Vec<String>) -> Self {
+        async fn from(ids: Vec<String>) -> Self {
             Self::from_ids(ids)
         }
     }
@@ -19900,7 +19900,7 @@ pub mod world3d_host {
         }
     }
 
-    pub fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: &str) -> SelectionSet {
+    pub async fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: &str) -> SelectionSet {
         match merge {
             "add" => {
                 let mut merged = existing.clone();
@@ -19933,7 +19933,7 @@ pub mod world3d_host {
         }
     }
 
-    pub fn default_world3d_selection() -> String {
+    pub async fn default_world3d_selection() -> String {
         world3d_default_selection_json()
     }
 
@@ -19942,7 +19942,7 @@ pub mod world3d_host {
         use super::*;
 
         #[test]
-        fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
+        async fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
             let a = || SelectionSet::from_ids(vec!["a".into()]);
             let ab = || SelectionSet::from_ids(vec!["a".into(), "b".into()]);
             let abc = || SelectionSet::from_ids(vec!["a".into(), "b".into(), "c".into()]);
@@ -19955,14 +19955,14 @@ pub mod world3d_host {
         }
 
         #[test]
-        fn selection_set_membership_is_constant_time() {
+        async fn selection_set_membership_is_constant_time() {
             let set = SelectionSet::from_ids((0..100).map(|index| format!("id-{index}")).collect());
             assert!(set.contains("id-50"));
             assert!(!set.contains("missing"));
         }
 
         #[test]
-        fn isometric_pose_matches_the_classic_35_264_45_direction() {
+        async fn isometric_pose_matches_the_classic_35_264_45_direction() {
             let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
             p.axonometric_quadrant = "ne".into();
             let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
@@ -19973,7 +19973,7 @@ pub mod world3d_host {
         }
 
         #[test]
-        fn projection_spec_json_projects_only_active_kind_fields() {
+        async fn projection_spec_json_projects_only_active_kind_fields() {
             let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
             let spec = world3d_projection_spec_json(&p);
             let mode = spec.get("mode").expect("mode object");
@@ -19983,7 +19983,7 @@ pub mod world3d_host {
         }
 
         #[test]
-        fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
+        async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
             let mut p = WorldProjectionConfig::default();
             p.axonometric_angle_a = 22.0;
             assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
@@ -19997,7 +19997,7 @@ pub mod world3d_host {
         }
 
         #[test]
-        fn projection_measures_tree_matches_the_requested_taxonomy() {
+        async fn projection_measures_tree_matches_the_requested_taxonomy() {
             let p = WorldProjectionConfig::default();
             let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
             let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
@@ -20027,7 +20027,7 @@ pub mod engagement {
     sides, and returns the trimmed remainder (e.g. `strip_engagement_prefix("Fill20", "fill")`
     and `strip_engagement_prefix("fill 20", "fill")` both yield `Some("20")`). Decimal points
     inside numeric remainders are preserved. Returns `None` when `raw` doesn't start with `command`. */
-    pub fn strip_engagement_prefix<'a>(raw: &'a str, command: &str) -> Option<&'a str> {
+    pub async fn strip_engagement_prefix<'a>(raw: &'a str, command: &str) -> Option<&'a str> {
         let raw_bytes = raw.as_bytes();
         let mut raw_index = 0usize;
         let mut command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
@@ -20060,7 +20060,7 @@ pub mod engagement {
 
     /** @emoji 🔤️ True when `raw` matches `command` in full, ignoring case and separators (e.g.
     `engagement_token_matches("LineNumbers", "line numbers")` is `true`). */
-    pub fn engagement_token_matches(raw: &str, command: &str) -> bool {
+    pub async fn engagement_token_matches(raw: &str, command: &str) -> bool {
         strip_engagement_prefix(raw, command).is_some_and(str::is_empty)
     }
 
@@ -20069,7 +20069,7 @@ pub mod engagement {
         use super::*;
 
         #[test]
-        fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
+        async fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
             assert_eq!(strip_engagement_prefix("Fill20", "fill"), Some("20"));
             assert_eq!(strip_engagement_prefix("fill 20", "fill"), Some("20"));
             assert_eq!(strip_engagement_prefix("fill  20", "fill"), Some("20"));
@@ -20078,19 +20078,19 @@ pub mod engagement {
         }
 
         #[test]
-        fn strip_engagement_prefix_preserves_decimal_points() {
+        async fn strip_engagement_prefix_preserves_decimal_points() {
             assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height"), Some("3.5"));
             assert_eq!(strip_engagement_prefix("set height 3.5", "set height"), Some("3.5"));
         }
 
         #[test]
-        fn strip_engagement_prefix_rejects_non_matching_commands() {
+        async fn strip_engagement_prefix_rejects_non_matching_commands() {
             assert_eq!(strip_engagement_prefix("Brush", "fill"), None);
             assert_eq!(strip_engagement_prefix("Filled", "fill"), Some("ed"));
         }
 
         #[test]
-        fn engagement_token_matches_full_token_only() {
+        async fn engagement_token_matches_full_token_only() {
             assert!(engagement_token_matches("LineNumbers", "line numbers"));
             assert!(engagement_token_matches("linenumbers", "line numbers"));
             assert!(!engagement_token_matches("LineNumbers2", "line numbers"));
@@ -20320,13 +20320,13 @@ macro_rules! derive_artifact_facets {
             type Mutation = <$spec as $crate::DerivedArtifactSpec>::Mutation;
             type Diff = <$spec as $crate::DerivedArtifactSpec>::Diff;
 
-            fn empty() -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::empty()) }
-            fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_snapshot(snapshot)) }
-            fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_text(text)?)) }
-            fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_binary(bytes)?)) }
-            fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) { let (builder, outcome) = <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::mutate(self.0, mutation); (Self(builder), outcome) }
-            fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::absorb(self.0, diff).map(Self) }
-            fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0) }
+            async fn empty() -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::empty()) }
+            async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_snapshot(snapshot)) }
+            async fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_text(text)?)) }
+            async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_binary(bytes)?)) }
+            async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) { let (builder, outcome) = <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::mutate(self.0, mutation); (Self(builder), outcome) }
+            async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::absorb(self.0, diff).map(Self) }
+            async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0) }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never construct this — see comment above $builder")]
@@ -20335,14 +20335,14 @@ macro_rules! derive_artifact_facets {
         impl $crate::ArtifactAnalyzer for $analyzer {
             type Parts = <$analysis as $crate::ArtifactAnalysis>::Parts;
             const DIALECT: $crate::Dialect = <$analysis as $crate::ArtifactAnalysis>::DIALECT;
-            fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source) }
-            fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
+            async fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source) }
+            async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicates — see comment above $builder")]
         impl $analyzer {
-            pub fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
-            pub fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
+            pub async fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
+            pub async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
         }
 
         $visibility struct $composer;
@@ -20355,7 +20355,7 @@ macro_rules! derive_artifact_facets {
         impl $crate::ArtifactComposer for $composer {
             type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
             const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
-            fn reads() -> &'static [$crate::Dialect] { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::reads() }
+            async fn reads() -> &'static [$crate::Dialect] { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::reads() }
             async fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources).await }
         }
 
@@ -20387,10 +20387,10 @@ mod derived_artifact_children_tests {
     struct ChildrenTestDiff;
 
     impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
-        fn apply(&self, snapshot: &ChildrenTestSnapshot) -> protocol::MutationApplyResult<ChildrenTestSnapshot> {
+        async fn apply(&self, snapshot: &ChildrenTestSnapshot) -> protocol::MutationApplyResult<ChildrenTestSnapshot> {
             Ok(snapshot.clone())
         }
-        fn absorb(&mut self, _other: Self) {}
+        async fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -20398,10 +20398,10 @@ mod derived_artifact_children_tests {
 
     impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
         type Diff = ChildrenTestDiff;
-        fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
+        async fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
             protocol::MutationOutcome::new(ChildrenTestDiff)
         }
-        fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
+        async fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
             Vec::new()
         }
     }
@@ -20413,27 +20413,27 @@ mod derived_artifact_children_tests {
         type Snapshot = ChildrenTestSnapshot;
         type Mutation = ChildrenTestMutation;
         type Diff = ChildrenTestDiff;
-        fn empty() -> Self {
+        async fn empty() -> Self {
             Self(ChildrenTestSnapshot)
         }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(snapshot)
         }
-        fn from_text(_text: &str) -> Result<Self, TextError> {
+        async fn from_text(_text: &str) -> Result<Self, TextError> {
             Ok(Self::empty())
         }
-        fn from_binary(_bytes: &[u8]) -> Result<Self, store::PackError> {
+        async fn from_binary(_bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::empty())
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.0);
             self.0 = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.0).expect("children test diff applies");
             (self, outcome)
         }
-        fn absorb(self, _diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(self, _diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             Ok(self.0)
         }
     }
@@ -20443,10 +20443,10 @@ mod derived_artifact_children_tests {
     impl ArtifactAnalysis for ChildrenTestAnalysis {
         type Parts = ();
         const DIALECT: Dialect = Dialect { artifact_kind: "s.test.children-parent", standard: StandardId("1"), subset: SubsetId::ANY };
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Low
         }
-        fn analyze(_sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        async fn analyze(_sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             Analysis { parts: (), dialect: Self::DIALECT, confidence: IoConfidence::Low, diagnostics: Vec::new() }
         }
     }
@@ -20456,10 +20456,10 @@ mod derived_artifact_children_tests {
     impl ArtifactComposition for ChildrenTestComposition {
         type Snapshot = ChildrenTestSnapshot;
         const WRITES: Dialect = ChildrenTestAnalysis::DIALECT;
-        fn reads() -> &'static [Dialect] {
+        async fn reads() -> &'static [Dialect] {
             &[]
         }
-        fn compose(_sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        async fn compose(_sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             Err(ComposeError { message: "ChildrenTestComposition::compose is unreachable in this test — only reads()/child routing is exercised".into(), diagnostics: Vec::new() })
         }
     }
@@ -20470,17 +20470,17 @@ mod derived_artifact_children_tests {
 
     impl ArtifactChildren for ChildrenTestChildren {
         type Snapshot = ChildrenTestSnapshot;
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+        async fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
             CHILD_SLOTS
         }
-        fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
+        async fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
             if parts.iter().all(|(dialect, _)| dialect.artifact_kind == "s.stdio.mesh") {
                 Ok(ChildrenTestSnapshot)
             } else {
                 Err(ComposeError { message: "unexpected child dialect".into(), diagnostics: Vec::new() })
             }
         }
-        fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
+        async fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
             Vec::new()
         }
     }
@@ -20498,7 +20498,7 @@ mod derived_artifact_children_tests {
     }
 
     #[test]
-    fn derived_composer_reads_includes_child_slot_dialects() {
+    async fn derived_composer_reads_includes_child_slot_dialects() {
         let reads = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::reads();
         assert_eq!(reads.len(), 1, "Composition::reads() is empty here — the ONE entry must be the child slot's synthesized dialect");
         assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
@@ -20507,7 +20507,7 @@ mod derived_artifact_children_tests {
     }
 
     #[test]
-    fn derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children() {
+    async fn derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children() {
         // 🍃️ `NoChildren<S>::slots()` is `&[]` — proves the pre-C1 behavior is byte-identical for
         // any spec that never names a `children: $ty` (every macro invocation before this wave).
         struct LeafSpec;
@@ -20525,7 +20525,7 @@ mod derived_artifact_children_tests {
     }
 
     #[test]
-    fn derived_composer_compose_routes_matching_sources_through_compose_from_children() {
+    async fn derived_composer_compose_routes_matching_sources_through_compose_from_children() {
         let sources = vec![ComposeSource { dialect: Dialect { artifact_kind: "s.stdio.mesh", standard: StandardId("1"), subset: SubsetId::ANY }, payload: AnalyzeSource::Binary(&[1, 2, 3]) }];
         let composed = resolve_ready(<DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::compose(&sources)).expect("child-slot-matching sources route through compose_from_children");
         assert_eq!(composed.snapshot, ChildrenTestSnapshot);
@@ -20548,7 +20548,7 @@ mod derived_artifact_children_tests {
     }
 
     #[test]
-    fn derive_artifact_facets_children_arm_wires_the_macro_generated_composer() {
+    async fn derive_artifact_facets_children_arm_wires_the_macro_generated_composer() {
         let reads = <ChildrenMacroComposer as ArtifactComposer>::reads();
         assert_eq!(reads.len(), 1);
         assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
@@ -20609,7 +20609,7 @@ macro_rules! subset {
                 VALIDATOR_ENTRY.get_or_init(|| $crate::subset_validator_entry_of::<$validator>())
             })?
 
-            pub fn register() {
+            pub async fn register() {
                 REGISTERED.call_once(|| {
                     let mut entries = vec![$crate::composer_entry_of::<$composer>()];
                     $(entries.extend([$($io_entry),+]);)?
@@ -20625,7 +20625,7 @@ macro_rules! subset {
                 use super::*;
 
                 #[test]
-                fn subset_macro_owning_dialect_matches_spec() {
+                async fn subset_macro_owning_dialect_matches_spec() {
                     assert_eq!(SUBSET_DIALECT, <$composition as $crate::ArtifactComposition>::WRITES);
                 }
             }
@@ -20656,11 +20656,11 @@ macro_rules! subset {
             static REGISTERED: Once = Once::new();
             static VALIDATOR_ENTRY: OnceLock<$crate::SubsetValidatorEntry> = OnceLock::new();
 
-            fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
+            async fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
                 VALIDATOR_ENTRY.get_or_init(|| $crate::subset_validator_entry_of::<$validator>())
             }
 
-            pub fn register() {
+            pub async fn register() {
                 REGISTERED.call_once(|| {
                     $crate::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
                     $( $crate::register_composer_entries(&[$($io_entry),+]).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error"); )?
@@ -20675,12 +20675,12 @@ macro_rules! subset {
                 use super::*;
 
                 #[test]
-                fn subset_macro_derived_dialect_is_non_any() {
+                async fn subset_macro_derived_dialect_is_non_any() {
                     assert_ne!(SUBSET_DIALECT.subset, $crate::SubsetId::ANY);
                 }
 
                 #[test]
-                fn subset_macro_derived_validator_registers() {
+                async fn subset_macro_derived_validator_registers() {
                     register();
                     let payload = $crate::IoPayload::Text(String::new());
                     let _ = <$validator as $crate::SubsetValidator>::validate(&payload);
@@ -20702,7 +20702,7 @@ mod subset_macro_tests {
     impl SubsetValidator for MacroDerivedValidator {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.test.subset-macro", standard: StandardId("1"), subset: SubsetId("derived") };
 
-        fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
+        async fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
             vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: FaultScope::default() }]
         }
     }
@@ -20714,7 +20714,7 @@ mod subset_macro_tests {
     }
 
     #[test]
-    fn subset_macro_derived_register_is_idempotent() {
+    async fn subset_macro_derived_register_is_idempotent() {
         register_subset();
         register_subset();
         let diagnostics = MacroDerivedValidator::validate(&IoPayload::Text(String::new()));
@@ -20723,7 +20723,7 @@ mod subset_macro_tests {
     }
 
     #[test]
-    fn subset_macro_derived_kind_and_dialect() {
+    async fn subset_macro_derived_kind_and_dialect() {
         assert_eq!(KIND, SubsetKind::Derived);
         assert_eq!(SUBSET_DIALECT.artifact_kind, "s.test.subset-macro");
         assert_eq!(SUBSET_DIALECT.standard.0, "1");

@@ -36,7 +36,7 @@ pub struct SceneSlot<'tree> {
 impl<'tree> SceneSlot<'tree> {
     /// 🪪️ `(surface_id, SurfaceKind)` when this slot is a `ComponentScene` — `None` for `Image`,
     /// which carries no `SurfaceKind` (it's routed by `SlotContent`'s own variant instead).
-    pub fn surface(&self) -> Option<(&'tree str, SurfaceKind)> {
+    pub async fn surface(&self) -> Option<(&'tree str, SurfaceKind)> {
         match self.content {
             SlotContent::Scene(scene) => Some((scene.surface_id.as_str(), scene.component_kind)),
             SlotContent::Image(_) => None,
@@ -57,7 +57,7 @@ pub trait SceneHost {
     /// retained-paint call). `atlas`/`icons` are the SAME instances the frame's caller passed into
     /// `Ui::frame`, reborrowed fresh per slot so a host that draws text/icons shares the one real,
     /// GPU-uploaded glyph/icon texture instead of needing (or clobbering) its own.
-    fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>);
+    async fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>);
 }
 
 /// 📥️ Walks `tree` from `root`, collecting every `ComponentScene`/`Image` leaf's absolute rect
@@ -70,13 +70,13 @@ pub trait SceneHost {
 /// reachable leaf regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene/image leaves are always-dirty
 /// unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the host's behalf
 /// this milestone.
-pub(crate) fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
+pub(crate) async fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
     let mut slots = Vec::new();
     collect_scene_slots_node(tree, root, 0.0, 0.0, &mut slots);
     slots
 }
 
-fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
+async fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
     let Some(node) = tree.node(id) else { return };
     let abs_x = origin_x + node.layout.x;
     let abs_y = origin_y + node.layout.y;
@@ -98,11 +98,11 @@ mod tests {
     use crate::wgpu::flex::LayoutEngine;
     use crate::wgpu::theme::Theme;
 
-    fn text(value: &str) -> UiNode {
+    async fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn scene(surface_id: &str) -> UiNode {
+    async fn scene(surface_id: &str) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: surface_id.into(),
             controller_id: "ctrl".into(),
@@ -129,11 +129,11 @@ mod tests {
         })
     }
 
-    fn image(id: &str) -> UiNode {
+    async fn image(id: &str) -> UiNode {
         UiNode::Image(UiImageNode { id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn stack(children: Vec<UiNode>) -> UiNode {
+    async fn stack(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: Some("none".into()),
@@ -148,11 +148,11 @@ mod tests {
         })
     }
 
-    fn group(children: Vec<UiNode>) -> UiNode {
+    async fn group(children: Vec<UiNode>) -> UiNode {
         UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(), children, menu: None })
     }
 
-    fn layout(node: &UiNode) -> UiTree {
+    async fn layout(node: &UiNode) -> UiTree {
         let mut tree = UiTree::new();
         tree.apply_tree(node);
         let root = tree.root.unwrap();
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets() {
+    async fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets() {
         let tree = layout(&stack(vec![text("above"), scene("surface.one")]));
         let root = tree.root.unwrap();
 
@@ -180,14 +180,14 @@ mod tests {
     }
 
     #[test]
-    fn finds_no_slots_when_the_tree_has_no_scene_nodes() {
+    async fn finds_no_slots_when_the_tree_has_no_scene_nodes() {
         let tree = layout(&stack(vec![text("only text")]));
         let root = tree.root.unwrap();
         assert!(collect_scene_slots(&tree, root).is_empty());
     }
 
     #[test]
-    fn collects_multiple_scene_leaves_in_document_order() {
+    async fn collects_multiple_scene_leaves_in_document_order() {
         let tree = layout(&stack(vec![scene("surface.a"), scene("surface.b")]));
         let root = tree.root.unwrap();
 
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn collects_an_image_leaf_alongside_a_scene_leaf() {
+    async fn collects_an_image_leaf_alongside_a_scene_leaf() {
         let tree = layout(&stack(vec![image("img.one"), scene("surface.one")]));
         let root = tree.root.unwrap();
 
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn collects_a_scene_leaf_nested_under_a_group_ancestor() {
+    async fn collects_a_scene_leaf_nested_under_a_group_ancestor() {
         // 🌳️ Regression for the shadow-walk gap this bridge replaces: the legacy immediate-mode walk
         // it superseded only recursed into Stack/Section/Field, so a ComponentScene nested under a
         // Group never resolved to real content. `collect_scene_slots_node` recurses into every

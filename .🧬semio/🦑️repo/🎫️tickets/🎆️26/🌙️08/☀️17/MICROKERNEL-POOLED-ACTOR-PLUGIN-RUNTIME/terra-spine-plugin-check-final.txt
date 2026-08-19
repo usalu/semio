@@ -1,0 +1,1390 @@
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking icu_properties v2.2.0
+    Checking zip v2.4.2
+    Checking futures-util v0.3.32
+    Checking icu_normalizer v2.2.0
+   Compiling wasm-metadata v0.247.0
+    Checking getrandom v0.3.4
+    Checking zerocopy v0.8.48
+    Checking parking_lot_core v0.9.12
+   Compiling ahash v0.8.12
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+error[E0728]: `await` is only allowed inside `async` functions and blocks
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:80:23
+   |
+80 |         self.get(key).await.unwrap_or(&NULL)
+   |                       ^^^^^ only allowed inside `async` functions and blocks
+
+error[E0728]: `await` is only allowed inside `async` functions and blocks
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:234:32
+    |
+234 |         let key = key.as_str().await.ok_or_else(|| SerdeError("map keys must be strings".to_string()))?.to_owned();
+    |                                ^^^^^ only allowed inside `async` functions and blocks
+
+error[E0053]: method `deserialize_any` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:300:68
+    |
+300 |     async fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(&mut ValueDeserializer, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(&mut ValueDeserializer, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <&mut ValueDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_bool` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:44:47
+   |
+44 |     async fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `deserialize_any` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:468:68
+    |
+468 |     async fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(VariantNameDeserializer, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(VariantNameDeserializer, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <VariantNameDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_i8` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:48:43
+   |
+48 |     async fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
+   |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `deserialize_option` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:329:71
+    |
+329 |     async fn deserialize_option<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
+    |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(&mut ValueDeserializer, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(&mut ValueDeserializer, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <&mut ValueDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_i16` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:52:45
+   |
+52 |     async fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `deserialize_enum` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:337:126
+    |
+337 | ..., visitor: V) -> Result<V::Value, Self::Error> {
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(&mut ValueDeserializer, &'static _, &'static _, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(&mut ValueDeserializer, &'static _, &'static _, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <&mut ValueDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_i32` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:56:45
+   |
+56 |     async fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `deserialize_newtype_struct` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:352:100
+    |
+352 |     async fn deserialize_newtype_struct<V: Visitor<'de>>(self, _name: &'static str, visitor: V) -> Result<V::Value, Self::Error> {
+    |                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(&mut ValueDeserializer, &'static _, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(&mut ValueDeserializer, &'static _, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <&mut ValueDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_i64` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:60:45
+   |
+60 |     async fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_u8` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:64:43
+   |
+64 |     async fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
+   |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_u16` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:68:45
+   |
+68 |     async fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_u32` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:72:45
+   |
+72 |     async fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_u64` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:76:45
+   |
+76 |     async fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_f32` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:80:45
+   |
+80 |     async fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_f64` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:84:45
+   |
+84 |     async fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_char` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:88:47
+   |
+88 |     async fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, _) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_str` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:92:46
+   |
+92 |     async fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
+   |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, &_) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, &_) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `deserialize_any` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:419:68
+    |
+419 |     async fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+    |
+    = note: expected signature `fn(MapKeyDeserializer, _) -> Result<<V as Visitor<'de>>::Value, SerdeError>`
+               found signature `fn(MapKeyDeserializer, _) -> impl Future<Output = Result<<V as Visitor<'de>>::Value, <MapKeyDeserializer as diagnostic::_::_serde::Deserializer<'de>>::Error>>`
+
+error[E0053]: method `serialize_bytes` has an incompatible type for trait
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:96:49
+   |
+96 |     async fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+   |
+   = note: expected signature `fn(ValueSerializer, &_) -> Result<DslValue, SerdeError>`
+              found signature `fn(ValueSerializer, &_) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_none` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:100:38
+    |
+100 |     async fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_some` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:104:72
+    |
+104 |     async fn serialize_some<T: ?Sized + Serialize>(self, value: &T) -> Result<Self::Ok, Self::Error> {
+    |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &_) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer, &_) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_unit` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:108:38
+    |
+108 |     async fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_unit_struct` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:112:66
+    |
+112 |     async fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_unit_variant` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:116:111
+    |
+116 | ...ant: &'static str) -> Result<Self::Ok, Self::Error> {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _, &'static _) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _, &'static _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_newtype_struct` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:120:103
+    |
+120 |     async fn serialize_newtype_struct<T: ?Sized + Serialize>(self, _name: &'static str, value: &T) -> Result<Self::Ok, Self::Error> {
+    |                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, &_) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, &_) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_newtype_variant` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:124:148
+    |
+124 | ...ic str, value: &T) -> Result<Self::Ok, Self::Error> {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<DslValue, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _, &'static _, &_) -> Result<DslValue, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _, &'static _, &_) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::Ok, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_seq` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:128:57
+    |
+128 |     async fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<SeqSerializer, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, std::option::Option<_>) -> Result<SeqSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, std::option::Option<_>) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeSeq, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_tuple` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:132:51
+    |
+132 |     async fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<SeqSerializer, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, _) -> Result<SeqSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeTuple, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_tuple_struct` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:136:79
+    |
+136 |     async fn serialize_tuple_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+    |                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<SeqSerializer, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _) -> Result<SeqSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeTuple, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_tuple_variant` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:140:124
+    |
+140 | ...size) -> Result<Self::SerializeTupleVariant, Self::Error> {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<TupleVariantSerializer, ...>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _, &'static _, _) -> Result<TupleVariantSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _, &'static _, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeTupleVariant, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_map` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:144:57
+    |
+144 |     async fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<MapSerializer, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, std::option::Option<_>) -> Result<MapSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, std::option::Option<_>) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeMap, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_struct` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:148:73
+    |
+148 |     async fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<MapSerializer, SerdeError>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _) -> Result<MapSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeStruct, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0053]: method `serialize_struct_variant` has an incompatible type for trait
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:152:125
+    |
+152 | ...ize) -> Result<Self::SerializeStructVariant, Self::Error> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<StructVariantSerializer, ...>`, found future
+    |
+    = note: expected signature `fn(ValueSerializer, &'static _, _, &'static _, _) -> Result<StructVariantSerializer, SerdeError>`
+               found signature `fn(ValueSerializer, &'static _, _, &'static _, _) -> impl Future<Output = Result<<ValueSerializer as diagnostic::_::_serde::Serializer>::SerializeStructVariant, <ValueSerializer as diagnostic::_::_serde::Serializer>::Error>>`
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:76
+    |
+153 |             Some(expected) => TextError::expected(self.message, self.span, expected).await,
+    |                               -------------------                          ^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+    |                               |
+    |                               required by a bound introduced by this call
+    |
+    = help: `std::string::String` implements trait `From<T>`:
+              From<&mut str>
+              From<&std::string::String>
+              From<&str>
+              From<Box<str>>
+              From<Cow<'_, str>>
+              From<char>
+    = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `TextError::expected`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:23:86
+    |
+ 23 |     pub async fn expected(message: impl Into<String>, span: TextSpan, expected: impl Into<String>) -> Self {
+    |                                                                                      ^^^^^^^^^^^^ required by this bound in `TextError::expected`
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:31
+    |
+153 |             Some(expected) => TextError::expected(self.message, self.span, expected).await,
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+    |
+    = help: `std::string::String` implements trait `From<T>`:
+              From<&mut str>
+              From<&std::string::String>
+              From<&str>
+              From<Box<str>>
+              From<Cow<'_, str>>
+              From<char>
+    = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `TextError::expected`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:23:86
+    |
+ 23 |     pub async fn expected(message: impl Into<String>, span: TextSpan, expected: impl Into<String>) -> Self {
+    |                                                                                      ^^^^^^^^^^^^ required by this bound in `TextError::expected`
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:86
+    |
+153 |             Some(expected) => TextError::expected(self.message, self.span, expected).await,
+    |                                                                                      ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+    |
+    = help: `std::string::String` implements trait `From<T>`:
+              From<&mut str>
+              From<&std::string::String>
+              From<&str>
+              From<Box<str>>
+              From<Cow<'_, str>>
+              From<char>
+    = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `TextError::expected`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:23:86
+    |
+ 23 |     pub async fn expected(message: impl Into<String>, span: TextSpan, expected: impl Into<String>) -> Self {
+    |                                                                                      ^^^^^^^^^^^^ required by this bound in `TextError::expected`
+
+error[E0277]: the trait bound `impl Future<Output = Fault>: serde::Deserialize<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:323:5
+     |
+ 323 |     serde_json::from_slice(bytes).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)...
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `impl Future<Output = Fault>`
+     |
+     = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `impl Future<Output = Fault>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `Deserialize<'de>`:
+               &'a Path
+               &'a RawValue
+               &'a [u8]
+               &'a str
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+             and 216 others
+note: required by a bound in `from_slice`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/de.rs:2659:8
+     |
+2657 | pub fn from_slice<'a, T>(v: &'a [u8]) -> Result<T>
+     |        ---------- required by a bound in this function
+2658 | where
+2659 |     T: de::Deserialize<'a>,
+     |        ^^^^^^^^^^^^^^^^^^^ required by this bound in `from_slice`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:320:25
+     |
+ 320 |                 visitor.visit_seq(&mut seq)
+     |                         ^^^^^^^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:320:40
+     |
+ 320 |                 visitor.visit_seq(&mut seq)
+     |                         ---------      ^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+note: required by a bound in `visit_seq`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1684:12
+     |
+1682 |     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1683 |     where
+1684 |         A: SeqAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_seq`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:324:25
+    |
+324 |                 visitor.visit_map(&mut map)
+    |                         ^^^^^^^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+    |
+    = help: the following other types implement trait `MapAccess<'de>`:
+              &mut A
+              MapDeserializer<'de, I, E>
+              dsl_value_serde::MapAccessDeserializer
+              serde_json::raw::BorrowedRawDeserializer<'de>
+              serde_json::raw::OwnedRawDeserializer
+    = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:324:40
+     |
+ 324 |                 visitor.visit_map(&mut map)
+     |                         ---------      ^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+     = help: the following other types implement trait `MapAccess<'de>`:
+               &mut A
+               MapDeserializer<'de, I, E>
+               dsl_value_serde::MapAccessDeserializer
+               serde_json::raw::BorrowedRawDeserializer<'de>
+               serde_json::raw::OwnedRawDeserializer
+     = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+note: required by a bound in `visit_map`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1695:12
+     |
+1693 |     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1694 |     where
+1695 |         A: MapAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_map`
+
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:140:20
+    |
+140 |     T::deserialize(&mut dsl_value_serde::ValueDeserializer::new(value)).map_err(|error| error.to_string())
+    |     -------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `diagnostic::_::_serde::Deserializer<'_>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+    |     |
+    |     required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `diagnostic::_::_serde::Deserializer<'de>`:
+              &'de RawValue
+              &'de Value
+              &'de serde_json::Map<std::string::String, Value>
+              &mut ValueDeserializer
+              &mut serde_json::Deserializer<R>
+              &serde_json::Number
+              BoolDeserializer<E>
+              BorrowedBytesDeserializer<'de, E>
+            and 29 others
+note: required by a bound in `diagnostic::_::_serde::Deserialize::deserialize`
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:563:12
+    |
+561 |     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    |        ----------- required by a bound in this associated function
+562 |     where
+563 |         D: Deserializer<'de>;
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Deserialize::deserialize`
+
+error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:140:5
+    |
+140 |     T::deserialize(&mut dsl_value_serde::ValueDeserializer::new(value)).map_err(|error| error.to_string())
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `diagnostic::_::_serde::Deserializer<'_>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+    |
+    = help: the following other types implement trait `diagnostic::_::_serde::Deserializer<'de>`:
+              &'de RawValue
+              &'de Value
+              &'de serde_json::Map<std::string::String, Value>
+              &mut ValueDeserializer
+              &mut serde_json::Deserializer<R>
+              &serde_json::Number
+              BoolDeserializer<E>
+              BorrowedBytesDeserializer<'de, E>
+            and 29 others
+
+    Checking num-iter v0.1.46
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+error[E0308]: mismatched types
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:61:9
+   |
+60 |     fn from(value: DiagnosticCode) -> Self {
+   |                                       ---- expected `diagnostic::FaultCode` because of return type
+61 |         FaultCode::new(value.0)
+   |         ^^^^^^^^^^^^^^^^^^^^^^^ expected `FaultCode`, found future
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:382:5
+    |
+382 |     async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+382 -     async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle;
+382 +     fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> impl std::future::Future<Output = ScopeHandle> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:5
+    |
+387 |     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+387 -     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+387 +     fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:391:5
+    |
+391 |     async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+391 -     async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>);
+391 +     fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:399:5
+    |
+399 |     async fn sleep_until(&self, deadline_ms: u64);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+399 -     async fn sleep_until(&self, deadline_ms: u64);
+399 +     fn sleep_until(&self, deadline_ms: u64) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:405:5
+    |
+405 |     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+405 -     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport;
+405 +     fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> impl std::future::Future<Output = ScopeDrainReport> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:410:5
+    |
+410 |     async fn now_ms(&self) -> u64;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+410 -     async fn now_ms(&self) -> u64;
+410 +     fn now_ms(&self) -> impl std::future::Future<Output = u64> + Send;
+    |
+
+error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:511:26
+    |
+511 |         seed.deserialize(&mut ValueDeserializer::new(self.0))
+    |              ----------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+    |              |
+    |              required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `diagnostic::_::_serde::Deserializer<'de>`:
+              &'de RawValue
+              &'de Value
+              &'de serde_json::Map<std::string::String, Value>
+              &mut ValueDeserializer
+              &mut serde_json::Deserializer<R>
+              &serde_json::Number
+              BoolDeserializer<E>
+              BorrowedBytesDeserializer<'de, E>
+            and 31 others
+note: required by a bound in `diagnostic::_::_serde::de::DeserializeSeed::deserialize`
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:811:12
+    |
+809 |     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    |        ----------- required by a bound in this associated function
+810 |     where
+811 |         D: Deserializer<'de>;
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `DeserializeSeed::deserialize`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:518:25
+     |
+ 518 |                 visitor.visit_seq(&mut seq)
+     |                         ^^^^^^^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:518:40
+     |
+ 518 |                 visitor.visit_seq(&mut seq)
+     |                         ---------      ^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+note: required by a bound in `visit_seq`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1684:12
+     |
+1682 |     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1683 |     where
+1684 |         A: SeqAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_seq`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:522:25
+     |
+ 522 |                 visitor.visit_seq(&mut SeqAccessDeserializer::new(vec![]))
+     |                         ^^^^^^^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+
+error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:377:58
+    |
+377 |         Ok(self.iter.next().map(|value| seed.deserialize(&mut ValueDeserializer::new(value))).transpose()?)
+    |                                              ----------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+    |                                              |
+    |                                              required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `diagnostic::_::_serde::Deserializer<'de>`:
+              &'de RawValue
+              &'de Value
+              &'de serde_json::Map<std::string::String, Value>
+              &mut ValueDeserializer
+              &mut serde_json::Deserializer<R>
+              &serde_json::Number
+              BoolDeserializer<E>
+              BorrowedBytesDeserializer<'de, E>
+            and 31 others
+note: required by a bound in `diagnostic::_::_serde::de::DeserializeSeed::deserialize`
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:811:12
+    |
+809 |     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    |        ----------- required by a bound in this associated function
+810 |     where
+811 |         D: Deserializer<'de>;
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `DeserializeSeed::deserialize`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:522:40
+     |
+ 522 |                 visitor.visit_seq(&mut SeqAccessDeserializer::new(vec![]))
+     |                         ---------      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+help: the following other types implement trait `SeqAccess<'de>`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:373:1
+     |
+ 373 |   impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `dsl_value_serde::SeqAccessDeserializer`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/value.rs:1082:1
+     |
+1082 | / impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
+1083 | | where
+1084 | |     I: Iterator<Item = T>,
+1085 | |     T: IntoDeserializer<'de, E>,
+1086 | |     E: de::Error,
+     | |_________________^ `SeqDeserializer<I, E>`
+...
+1411 | / impl<'de, I, E> de::SeqAccess<'de> for MapDeserializer<'de, I, E>
+1412 | | where
+1413 | |     I: Iterator,
+1414 | |     I::Item: private::Pair,
+1415 | |     First<I::Item>: IntoDeserializer<'de, E>,
+1416 | |     Second<I::Item>: IntoDeserializer<'de, E>,
+1417 | |     E: de::Error,
+     | |_________________^ `MapDeserializer<'de, I, E>`
+     |
+    ::: /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1783:1
+     |
+1783 | / impl<'de, A> SeqAccess<'de> for &mut A
+1784 | | where
+1785 | |     A: ?Sized + SeqAccess<'de>,
+     | |_______________________________^ `&mut A`
+     = note: required for `&mut impl Future<Output = dsl_value_serde::SeqAccessDeserializer>` to implement `SeqAccess<'de>`
+note: required by a bound in `visit_seq`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1684:12
+     |
+1682 |     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1683 |     where
+1684 |         A: SeqAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_seq`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:279:12
+    |
+279 | ...   Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Object(self.entries))]))
+    |       -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found future
+    |       |
+    |       arguments to this enum variant are incorrect
+    |
+help: the type constructed contains `impl Future<Output = DslValue>` due to the type of the argument passed
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:279:9
+    |
+279 | ...   Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Object(self.entries))]))
+    |       ^^^----------------------------------------------------------------------------------------------------------------------------------------^
+    |          |
+    |          this argument influences the type of `Ok`
+note: tuple variant defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:561:5
+    |
+561 |     Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ^^
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:531:25
+    |
+531 |                 visitor.visit_map(&mut map)
+    |                         ^^^^^^^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+    |
+    = help: the following other types implement trait `MapAccess<'de>`:
+              &mut A
+              MapDeserializer<'de, I, E>
+              dsl_value_serde::MapAccessDeserializer
+              serde_json::raw::BorrowedRawDeserializer<'de>
+              serde_json::raw::OwnedRawDeserializer
+    = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:219:12
+    |
+219 | ...   Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Array(self.vec))]))
+    |       -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found future
+    |       |
+    |       arguments to this enum variant are incorrect
+    |
+help: the type constructed contains `impl Future<Output = DslValue>` due to the type of the argument passed
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:219:9
+    |
+219 | ...   Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Array(self.vec))]))
+    |       ^^^-----------------------------------------------------------------------------------------------------------------------------------^
+    |          |
+    |          this argument influences the type of `Ok`
+note: tuple variant defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:561:5
+    |
+561 |     Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ^^
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:531:40
+     |
+ 531 |                 visitor.visit_map(&mut map)
+     |                         ---------      ^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+     = help: the following other types implement trait `MapAccess<'de>`:
+               &mut A
+               MapDeserializer<'de, I, E>
+               dsl_value_serde::MapAccessDeserializer
+               serde_json::raw::BorrowedRawDeserializer<'de>
+               serde_json::raw::OwnedRawDeserializer
+     = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+note: required by a bound in `visit_map`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1695:12
+     |
+1693 |     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1694 |     where
+1695 |         A: MapAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_map`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:536:25
+    |
+536 |                 visitor.visit_map(&mut map)
+    |                         ^^^^^^^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+    |
+    = help: the following other types implement trait `MapAccess<'de>`:
+              &mut A
+              MapDeserializer<'de, I, E>
+              dsl_value_serde::MapAccessDeserializer
+              serde_json::raw::BorrowedRawDeserializer<'de>
+              serde_json::raw::OwnedRawDeserializer
+    = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+
+error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:536:40
+     |
+ 536 |                 visitor.visit_map(&mut map)
+     |                         ---------      ^^^ the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+     |                         |
+     |                         required by a bound introduced by this call
+     |
+     = help: the following other types implement trait `MapAccess<'de>`:
+               &mut A
+               MapDeserializer<'de, I, E>
+               dsl_value_serde::MapAccessDeserializer
+               serde_json::raw::BorrowedRawDeserializer<'de>
+               serde_json::raw::OwnedRawDeserializer
+     = note: required for `&mut impl Future<Output = dsl_value_serde::MapAccessDeserializer>` to implement `MapAccess<'de>`
+note: required by a bound in `visit_map`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:1695:12
+     |
+1693 |     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+     |        --------- required by a bound in this associated function
+1694 |     where
+1695 |         A: MapAccess<'de>,
+     |            ^^^^^^^^^^^^^^ required by this bound in `Visitor::visit_map`
+
+error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:408:26
+    |
+408 |         seed.deserialize(&mut ValueDeserializer::new(value))
+    |              ----------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+    |              |
+    |              required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `diagnostic::_::_serde::Deserializer<'de>`:
+              &'de RawValue
+              &'de Value
+              &'de serde_json::Map<std::string::String, Value>
+              &mut ValueDeserializer
+              &mut serde_json::Deserializer<R>
+              &serde_json::Number
+              BoolDeserializer<E>
+              BorrowedBytesDeserializer<'de, E>
+            and 31 others
+note: required by a bound in `diagnostic::_::_serde::de::DeserializeSeed::deserialize`
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/src/de/mod.rs:811:12
+    |
+809 |     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    |        ----------- required by a bound in this associated function
+810 |     where
+811 |         D: Deserializer<'de>;
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `DeserializeSeed::deserialize`
+
+error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:38
+    |
+223 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ----------                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |         |
+    |         required by a bound introduced by this call
+    |
+help: the trait `From<impl Future<Output = diagnostic::FaultCode>>` is not implemented for `diagnostic::FaultCode`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:35:1
+    |
+ 35 | pub struct FaultCode(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^
+help: `diagnostic::FaultCode` implements trait `From<T>`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:43:1
+    |
+ 43 | impl From<&'static str> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<&str>`
+...
+ 53 | impl From<String> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<std::string::String>`
+...
+ 59 | impl From<DiagnosticCode> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<DiagnosticCode>`
+    = note: required for `impl Future<Output = diagnostic::FaultCode>` to implement `Into<diagnostic::FaultCode>`
+note: required by a bound in `Fault::new`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:234:54
+    |
+234 |     pub async fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
+    |                                                      ^^^^^^^^^^^^^^^ required by this bound in `Fault::new`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:9
+    |
+222 |     fn from(value: &str) -> Self {
+    |                             ---- expected `Fault` because of return type
+223 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Fault`, found future
+
+error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:9
+    |
+223 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `From<impl Future<Output = diagnostic::FaultCode>>` is not implemented for `diagnostic::FaultCode`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:35:1
+    |
+ 35 | pub struct FaultCode(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^
+help: `diagnostic::FaultCode` implements trait `From<T>`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:43:1
+    |
+ 43 | impl From<&'static str> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<&str>`
+...
+ 53 | impl From<String> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<std::string::String>`
+...
+ 59 | impl From<DiagnosticCode> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<DiagnosticCode>`
+    = note: required for `impl Future<Output = diagnostic::FaultCode>` to implement `Into<diagnostic::FaultCode>`
+note: required by a bound in `Fault::new`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:234:54
+    |
+234 |     pub async fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
+    |                                                      ^^^^^^^^^^^^^^^ required by this bound in `Fault::new`
+
+error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:38
+    |
+229 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ----------                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |         |
+    |         required by a bound introduced by this call
+    |
+help: the trait `From<impl Future<Output = diagnostic::FaultCode>>` is not implemented for `diagnostic::FaultCode`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:35:1
+    |
+ 35 | pub struct FaultCode(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^
+help: `diagnostic::FaultCode` implements trait `From<T>`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:43:1
+    |
+ 43 | impl From<&'static str> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<&str>`
+...
+ 53 | impl From<String> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<std::string::String>`
+...
+ 59 | impl From<DiagnosticCode> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<DiagnosticCode>`
+    = note: required for `impl Future<Output = diagnostic::FaultCode>` to implement `Into<diagnostic::FaultCode>`
+note: required by a bound in `Fault::new`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:234:54
+    |
+234 |     pub async fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
+    |                                                      ^^^^^^^^^^^^^^^ required by this bound in `Fault::new`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:9
+    |
+228 |     fn from(value: String) -> Self {
+    |                               ---- expected `Fault` because of return type
+229 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Fault`, found future
+
+error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:9
+    |
+229 |         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `From<impl Future<Output = diagnostic::FaultCode>>` is not implemented for `diagnostic::FaultCode`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:35:1
+    |
+ 35 | pub struct FaultCode(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^
+help: `diagnostic::FaultCode` implements trait `From<T>`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:43:1
+    |
+ 43 | impl From<&'static str> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<&str>`
+...
+ 53 | impl From<String> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<std::string::String>`
+...
+ 59 | impl From<DiagnosticCode> for FaultCode {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `From<DiagnosticCode>`
+    = note: required for `impl Future<Output = diagnostic::FaultCode>` to implement `Into<diagnostic::FaultCode>`
+note: required by a bound in `Fault::new`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:234:54
+    |
+234 |     pub async fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
+    |                                                      ^^^^^^^^^^^^^^^ required by this bound in `Fault::new`
+
+warning: `semio-framework-async` (lib) generated 6 warnings
+    Checking num-complex v0.4.6
+Some errors have detailed explanations: E0053, E0277, E0308, E0728.
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-framework-replication` (lib) generated 20 warnings
+error: could not compile `semio-framework-replication` (lib) due to 66 previous errors; 20 warnings emitted
+warning: build failed, waiting for other jobs to finish...

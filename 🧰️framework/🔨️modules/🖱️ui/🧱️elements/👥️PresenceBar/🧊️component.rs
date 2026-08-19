@@ -71,7 +71,7 @@ pub enum PresenceAppearance {
 /// desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
 /// `±0.14` every other cycle (lighter in `Light`, darker in `Dark`). Byte-identical to the TS twin
 /// `presenceColor` in `🟦️component.tsx`.
-pub fn presence_color(index: u8, appearance: PresenceAppearance) -> PresenceHsl {
+pub async fn presence_color(index: u8, appearance: PresenceAppearance) -> PresenceHsl {
     use ui_styling::presence;
     let base = (index % 12) as usize;
     let k = index / 12;
@@ -92,12 +92,12 @@ pub fn presence_color(index: u8, appearance: PresenceAppearance) -> PresenceHsl 
 /// 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
 /// meaningful when `index / 12 == 0`; callers past the first cycle render [`presence_color`]'s HSL
 /// inline instead (contract freeze §C7.5).
-pub fn presence_css_var(index: u8) -> String {
+pub async fn presence_css_var(index: u8) -> String {
     format!("var(--presence-{})", index % 12)
 }
 //#endregion 🔖️Palette
 
-fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
+async fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "horizontal".into(),
         gap: Some("tight".into()),
@@ -112,7 +112,7 @@ fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
     })
 }
 
-fn presence_text(value: String) -> UiNode {
+async fn presence_text(value: String) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
@@ -122,14 +122,14 @@ fn presence_text(value: String) -> UiNode {
 /// the root `UiStackNode`'s own id (the shells pass `s-presence-peers`, contract freeze §C0).
 /// `locale` resolves this element's own framework-owned copy (empty state, overflow suffix, role
 /// words) — terminology-invariant, so [`Terminology::ALL`]'s first entry is used to resolve it.
-pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>) -> UiNode {
+pub async fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>) -> UiNode {
     build_presence_bar_localized(id, peers, max, Locale::default())
 }
 
 /// 🌐️ [`build_presence_bar`] with an explicit [`Locale`] — the host resolves the active locale itself
 /// (native shells read it from the same source as every other framework-owned label); this is the
 /// entry point that actually localizes.
-pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
+pub async fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
     let id = id.into();
     let terminology = Terminology::ALL[0];
     if peers.is_empty() {
@@ -156,12 +156,12 @@ pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeer
 mod tests {
     use super::*;
 
-    fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
+    async fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
         PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None }
     }
 
     #[test]
-    fn presence_color_wraps_after_twelve_with_lightness_then_saturation_shift() {
+    async fn presence_color_wraps_after_twelve_with_lightness_then_saturation_shift() {
         let base = presence_color(0, PresenceAppearance::Light);
         let cycle_one = presence_color(12, PresenceAppearance::Light); // k=1: same hue, lighter (odd k)
         let cycle_two = presence_color(24, PresenceAppearance::Light); // k=2: same hue, desaturated, lightness back to base
@@ -179,14 +179,14 @@ mod tests {
     }
 
     #[test]
-    fn presence_css_var_only_addresses_the_base_cycle() {
+    async fn presence_css_var_only_addresses_the_base_cycle() {
         assert_eq!(presence_css_var(0), "var(--presence-0)");
         assert_eq!(presence_css_var(11), "var(--presence-11)");
         assert_eq!(presence_css_var(12), "var(--presence-0)", "wraps modulo 12 — callers past k=0 must render inline HSL instead");
     }
 
     #[test]
-    fn build_presence_bar_renders_one_stack_child_per_peer_under_max() {
+    async fn build_presence_bar_renders_one_stack_child_per_peer_under_max() {
         let peers = vec![peer("user:a#1", "Alice", Some(PresenceRole::Author)), peer("user:b#1", "Bob", Some(PresenceRole::Spectator))];
         let node = build_presence_bar("s-presence-peers", &peers, None);
         let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
+    async fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
         let peers: Vec<PresencePeerRow> = (0..7).map(|i| peer(&format!("user:{i}#1"), &format!("Peer {i}"), None)).collect();
         let node = build_presence_bar("s-presence-peers", &peers, Some(5));
         let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn build_presence_bar_empty_peers_renders_localized_empty_text() {
+    async fn build_presence_bar_empty_peers_renders_localized_empty_text() {
         let en = build_presence_bar_localized("s-presence-peers", &[], None, Locale::En);
         let de = build_presence_bar_localized("s-presence-peers", &[], None, Locale::De);
         for (node, expected) in [(en, "No one else is here"), (de, "Niemand sonst ist hier")] {

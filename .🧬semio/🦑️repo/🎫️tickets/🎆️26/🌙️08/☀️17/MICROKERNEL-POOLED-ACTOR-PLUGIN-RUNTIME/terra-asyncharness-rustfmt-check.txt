@@ -1,0 +1,105 @@
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:10:
+ 
+ use anyhow::Result;
+ use std::collections::HashMap;
++use std::future::Future;
+ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+ use std::sync::{Arc, Mutex};
+-use std::future::Future;
+ use std::task::{Context, Poll};
+ use std::time::{Duration, Instant};
+ use wasmtime::component::{Accessor, AccessorTask, Component, HasSelf, Linker, ResourceTable};
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:178:
+ 
+     let events = vec![Event::AwaitSignal(7)];
+     let budget = Budget { fuel: 1_000_000, deadline_ms: 10_000 };
+-    let poll_task = tokio::spawn(async move {
+-        store
+-            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-            })
+-            .await
+-    });
++    let poll_task =
++        tokio::spawn(
++            async move { store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await },
++        );
+ 
+     // 🎯️ Q1's actual mechanism under test: the host resolves the import from OUTSIDE the guest's
+     // own call, while `poll_task` is genuinely still in flight — `oneshot::send` needs no
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:208:
+ 
+     let events = vec![Event::AwaitHang(99)];
+     let budget = Budget { fuel: u64::MAX, deadline_ms: 30_000 };
+-    let fut = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-        instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-    });
++    let fut = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) });
+     let mut fut = Box::pin(fut);
+     let waker = std::task::Waker::noop();
+     let mut cx = Context::from_waker(waker);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:268:
+     let fut_a = async move {
+         let events = vec![Event::Burn(iters_a)];
+         let budget = Budget { fuel: u64::MAX, deadline_ms: 600_000 };
+-        let r = store_a
+-            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                instance_a.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-            })
+-            .await??;
++        let r = store_a.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance_a.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await??;
+         *da.lock().expect("done_a poisoned") = Some(start.elapsed());
+         Ok::<TurnResult, anyhow::Error>(r)
+     };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:279:
+     let fut_b = async move {
+         let events = vec![Event::Burn(iters_b)];
+         let budget = Budget { fuel: u64::MAX, deadline_ms: 600_000 };
+-        let r = store_b
+-            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                instance_b.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-            })
+-            .await??;
++        let r = store_b.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance_b.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await??;
+         *db.lock().expect("done_b poisoned") = Some(start.elapsed());
+         Ok::<TurnResult, anyhow::Error>(r)
+     };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:397:
+         let instance = Turnharness::instantiate_async(&mut store, component, linker).await?;
+         let events = vec![Event::Burn(2_000_000_000u64)];
+         let budget = Budget { fuel: u64::MAX, deadline_ms: 20 };
+-        let result = store
+-            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-            })
+-            .await;
++        let result = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await;
+         let message = match result {
+             Ok(Ok(v)) => format!("UNEXPECTED — poll() returned Ok({v:?}) instead of trapping"),
+             Ok(Err(e)) => format!("{e:#}"),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:467:
+             Ok(instance) => {
+                 let events = vec![Event::Tick];
+                 let budget = Budget { fuel: u64::MAX, deadline_ms: 1 };
+-                let result = store
+-                    .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                        instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-                    })
+-                    .await;
++                let result = store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await;
+                 let message = match result {
+                     Ok(Ok(v)) => format!("UNEXPECTED — poll() returned Ok({v:?}) instead of trapping (would suggest u64::MAX did NOT wrap to an already-past deadline)"),
+                     Ok(Err(e)) => format!("{e:#}"),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:503:
+     let join = handle.spawn(async move {
+         let events = vec![Event::AwaitHang(11)];
+         let budget = Budget { fuel: u64::MAX, deadline_ms: 30_000 };
+-        store
+-            .run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> {
+-                instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault))
+-            })
+-            .await
++        store.run_concurrent(async move |accessor: &Accessor<HostState>| -> Result<TurnResult> { instance.semio_turnharness_reactor().call_poll(accessor, events, budget).await?.map_err(|fault| anyhow::anyhow!(fault)) }).await
+     });
+ 
+     for _ in 0..500 {

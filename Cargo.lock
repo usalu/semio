@@ -6635,8 +6635,18 @@ dependencies = [
 name = "semio-framework-async"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "serde",
  "ts-rs",
+]
+
+[[package]]
+name = "semio-framework-async-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -6646,6 +6656,15 @@ dependencies = [
  "base64",
  "rustybuzz",
  "semio-framework-os-kernel",
+]
+
+[[package]]
+name = "semio-framework-dispatch-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -6716,6 +6735,7 @@ dependencies = [
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "wasm-bindgen",
 ]
@@ -6725,6 +6745,7 @@ name = "semio-framework-mesh-engine"
 version = "0.1.0"
 dependencies = [
  "gltf",
+ "semio-framework-async-macros",
  "serde",
 ]
 
@@ -7015,6 +7036,7 @@ dependencies = [
  "async-trait",
  "blake3",
  "futures-lite",
+ "semio-framework-async-macros",
  "semio-framework-replication",
  "serde",
  "serde_json",
@@ -7075,6 +7097,7 @@ dependencies = [
  "base64",
  "blake3",
  "miniz_oxide",
+ "semio-framework-async-macros",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

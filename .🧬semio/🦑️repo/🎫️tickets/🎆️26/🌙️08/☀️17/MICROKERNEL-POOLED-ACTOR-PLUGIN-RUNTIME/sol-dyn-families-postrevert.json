@@ -1,0 +1,646 @@
+[
+ {
+  "trait": "Sobject",
+  "uses": 131,
+  "methods": 37,
+  "async": 37,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🦀️component.rs"
+ },
+ {
+  "trait": "LogitsProcessor",
+  "uses": 38,
+  "methods": 8,
+  "async": 8,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "HostAsyncRuntime",
+  "uses": 34,
+  "methods": 8,
+  "async": 8,
+  "decl": "🧰️framework/🔨️modules/⏳️async/🦀️component.rs"
+ },
+ {
+  "trait": "BrepKernel",
+  "uses": 34,
+  "methods": 92,
+  "async": 92,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs"
+ },
+ {
+  "trait": "NationalAnnex",
+  "uses": 25,
+  "methods": 9,
+  "async": 9,
+  "decl": "✏️s/🔌️plugins/📕️norm/📄️artifact/🦀️component.rs"
+ },
+ {
+  "trait": "OsBackbonePort",
+  "uses": 24,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs"
+ },
+ {
+  "trait": "ErasedProjection",
+  "uses": 22,
+  "methods": 7,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🦀️component.rs"
+ },
+ {
+  "trait": "Animation",
+  "uses": 22,
+  "methods": 9,
+  "async": 9,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs"
+ },
+ {
+  "trait": "CommandSink",
+  "uses": 20,
+  "methods": 1,
+  "async": 1,
+  "decl": "🧰️framework/🔨️modules/🔄️machine/🦀️component.rs"
+ },
+ {
+  "trait": "Constraint",
+  "uses": 20,
+  "methods": 10,
+  "async": 10,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "QueryableGraph",
+  "uses": 20,
+  "methods": 7,
+  "async": 7,
+  "decl": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/🦀️component.rs"
+ },
+ {
+  "trait": "Element",
+  "uses": 20,
+  "methods": 8,
+  "async": 8,
+  "decl": "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs"
+ },
+ {
+  "trait": "PluginApp",
+  "uses": 19,
+  "methods": 51,
+  "async": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs"
+ },
+ {
+  "trait": "RandomSource",
+  "uses": 18,
+  "methods": 8,
+  "async": 8,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "GuestRuntime",
+  "uses": 18,
+  "methods": 9,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs"
+ },
+ {
+  "trait": "SpaceMember",
+  "uses": 17,
+  "methods": 25,
+  "async": 25,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs"
+ },
+ {
+  "trait": "IndexStorage",
+  "uses": 17,
+  "methods": 4,
+  "async": 4,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "Emit",
+  "uses": 15,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🕸️version-graph/🦀️component.rs"
+ },
+ {
+  "trait": "Operator",
+  "uses": 14,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs"
+ },
+ {
+  "trait": "LeaseStorage",
+  "uses": 13,
+  "methods": 4,
+  "async": 4,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "WalStorage",
+  "uses": 11,
+  "methods": 9,
+  "async": 9,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "MachineCatalog",
+  "uses": 11,
+  "methods": 4,
+  "async": 4,
+  "decl": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs"
+ },
+ {
+  "trait": "BlobStore",
+  "uses": 10,
+  "methods": 3,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "TokenTextAdapter",
+  "uses": 9,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "SpaceBackbonePort",
+  "uses": 9,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️component.rs"
+ },
+ {
+  "trait": "TokenSampler",
+  "uses": 7,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "HttpBody",
+  "uses": 7,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs"
+ },
+ {
+  "trait": "AuditSink",
+  "uses": 7,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📒️audit/🦀️component.rs"
+ },
+ {
+  "trait": "HubDirectory",
+  "uses": 7,
+  "methods": 28,
+  "async": 28,
+  "decl": "🌎️hub/📇️directory/🦀️component.rs"
+ },
+ {
+  "trait": "PayloadSource",
+  "uses": 5,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs"
+ },
+ {
+  "trait": "PayloadSink",
+  "uses": 5,
+  "methods": 1,
+  "async": 1,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs"
+ },
+ {
+  "trait": "Migration",
+  "uses": 5,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🔄️machine/🦀️component.rs"
+ },
+ {
+  "trait": "StopCondition",
+  "uses": 5,
+  "methods": 6,
+  "async": 6,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "Decider",
+  "uses": 5,
+  "methods": 3,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/🦀️component.rs"
+ },
+ {
+  "trait": "DirectoryWsConnection",
+  "uses": 5,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs"
+ },
+ {
+  "trait": "HttpTransport",
+  "uses": 5,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs"
+ },
+ {
+  "trait": "RouterEffectHandler",
+  "uses": 5,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "VersionGraph",
+  "uses": 5,
+  "methods": 4,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🕸️version-graph/🦀️component.rs"
+ },
+ {
+  "trait": "SnapshotStorage",
+  "uses": 5,
+  "methods": 5,
+  "async": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "ArtifactChannel",
+  "uses": 5,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔀️dispatch/🦀️component.rs"
+ },
+ {
+  "trait": "ResourceResolver",
+  "uses": 4,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs"
+ },
+ {
+  "trait": "SamplingObserver",
+  "uses": 4,
+  "methods": 5,
+  "async": 5,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "PrincipalResolver",
+  "uses": 4,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🛡️policy/🦀️component.rs"
+ },
+ {
+  "trait": "QueryHandler",
+  "uses": 4,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs"
+ },
+ {
+  "trait": "Backbone",
+  "uses": 4,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs"
+ },
+ {
+  "trait": "AuthzHook",
+  "uses": 4,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs"
+ },
+ {
+  "trait": "SourcingModule",
+  "uses": 4,
+  "methods": 5,
+  "async": 5,
+  "decl": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"
+ },
+ {
+  "trait": "RandomAccessPayload",
+  "uses": 3,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs"
+ },
+ {
+  "trait": "Collective",
+  "uses": 3,
+  "methods": 5,
+  "async": 5,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "DocumentAuthority",
+  "uses": 3,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs"
+ },
+ {
+  "trait": "JoinHandleLike",
+  "uses": 3,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs"
+ },
+ {
+  "trait": "GatewayBackend",
+  "uses": 3,
+  "methods": 7,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs"
+ },
+ {
+  "trait": "AgentRunner",
+  "uses": 3,
+  "methods": 3,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🦑️repo/🎮️commands/🌊️workflow/🦀️component.rs"
+ },
+ {
+  "trait": "ActionHandler",
+  "uses": 2,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs"
+ },
+ {
+  "trait": "Denoiser",
+  "uses": 2,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs"
+ },
+ {
+  "trait": "Saga",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/🦀️component.rs"
+ },
+ {
+  "trait": "ProjectionStore",
+  "uses": 2,
+  "methods": 6,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "AuthorityStore",
+  "uses": 2,
+  "methods": 12,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "ServerModule",
+  "uses": 2,
+  "methods": 5,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs"
+ },
+ {
+  "trait": "ShardTransport",
+  "uses": 2,
+  "methods": 4,
+  "async": 4,
+  "decl": "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs"
+ },
+ {
+  "trait": "EnvelopeInjector",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "BackboneTransport",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "CapabilityChecker",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "StorageBackend",
+  "uses": 2,
+  "methods": 3,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "EffectMetricsRecorder",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs"
+ },
+ {
+  "trait": "ThreadSpawner",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs"
+ },
+ {
+  "trait": "QuerySource",
+  "uses": 2,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs"
+ },
+ {
+  "trait": "FullTextLookup",
+  "uses": 2,
+  "methods": 1,
+  "async": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs"
+ },
+ {
+  "trait": "AsyncHttpTransport",
+  "uses": 2,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs"
+ },
+ {
+  "trait": "ToolRegistry",
+  "uses": 2,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs"
+ },
+ {
+  "trait": "ResourceRegistry",
+  "uses": 2,
+  "methods": 5,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs"
+ },
+ {
+  "trait": "PromptRegistry",
+  "uses": 2,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs"
+ },
+ {
+  "trait": "DashboardTransport",
+  "uses": 2,
+  "methods": 0,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs"
+ },
+ {
+  "trait": "Part21Preamble",
+  "uses": 2,
+  "methods": 1,
+  "async": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📐️part21/🦀️component.rs"
+ },
+ {
+  "trait": "CiTest",
+  "uses": 2,
+  "methods": 1,
+  "async": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🔗️causal-internals/🦀️component.rs"
+ },
+ {
+  "trait": "TextRenderer",
+  "uses": 2,
+  "methods": 1,
+  "async": 1,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔤️text/🦀️component.rs"
+ },
+ {
+  "trait": "SoftConstraint",
+  "uses": 2,
+  "methods": 2,
+  "async": 2,
+  "decl": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs"
+ },
+ {
+  "trait": "SessionStore",
+  "uses": 1,
+  "methods": 4,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "MediaCache",
+  "uses": 1,
+  "methods": 2,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs"
+ },
+ {
+  "trait": "ConflictOracle",
+  "uses": 1,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️preview/🦀️component.rs"
+ },
+ {
+  "trait": "Signer",
+  "uses": 1,
+  "methods": 3,
+  "async": 3,
+  "decl": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/🦀️component.rs"
+ },
+ {
+  "trait": "SignatureVerifier",
+  "uses": 1,
+  "methods": 1,
+  "async": 1,
+  "decl": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/🦀️component.rs"
+ },
+ {
+  "trait": "PayloadStorage",
+  "uses": 1,
+  "methods": 5,
+  "async": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs"
+ },
+ {
+  "trait": "ConsistencyResolver",
+  "uses": 1,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs"
+ },
+ {
+  "trait": "CompletionSink",
+  "uses": 1,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs"
+ },
+ {
+  "trait": "DynEngine",
+  "uses": 1,
+  "methods": 1,
+  "async": 0,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs"
+ },
+ {
+  "trait": "MeshExporter",
+  "uses": 1,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs"
+ },
+ {
+  "trait": "MeshImporter",
+  "uses": 1,
+  "methods": 2,
+  "async": 2,
+  "decl": "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs"
+ },
+ {
+  "trait": "SolidExporter",
+  "uses": 1,
+  "methods": 2,
+  "async": 2,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs"
+ },
+ {
+  "trait": "SolidImporter",
+  "uses": 1,
+  "methods": 2,
+  "async": 2,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs"
+ },
+ {
+  "trait": "ScriptRuntime",
+  "uses": 1,
+  "methods": 1,
+  "async": 1,
+  "decl": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"
+ },
+ {
+  "trait": "Compressor",
+  "uses": 1,
+  "methods": 1,
+  "async": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️entropy-internals/🦀️component.rs"
+ }
+]

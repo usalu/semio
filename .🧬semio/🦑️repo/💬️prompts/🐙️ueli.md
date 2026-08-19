@@ -24,7 +24,7 @@ Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of parallel agents.
-Everything end to end for all non-legacy technology.
+Everything end to end (ignore everything inside ./compose folder).
 Use the main chat with Fable 5 High for creating the plan, then use the main chat with Opus 5 High for main plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
@@ -399,6 +399,49 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+`<name>.<serialization-artifact>...<kind>.<subset>.<standard>.<artifact>(.<seralization-subset>.<serialization-standard>)?`
+
+
+`nakagin-capsule-tower-flat.snapshot.puzzle.v1.semio.cv.2x3.ifc` # uses defined protobuf schema with 2024 version
+`33-projektetage.presentation.v1.semio.a.2-0.pdf` # semio presentation artifact exported as pdf 2.0/a
+`33-projektetage.presentation.v1.semio.complete.isobmff.mp4` # semio presentation artifact exported as isobmff video
+
+`bachelor-thesis.a.2-0.pdf` # pdf 2.0/a archive artifact
+
+
+---
+
+`<name>.<serialization-artifact>.<serialization-standard>.<seralization-subset>.<kind>.<subset>.<standard>.<artifact>.semio`
+
+`nakagin-capsule-tower-flat.txt.utf-8.*.snapshot.*.v1.puzzle.semio` # uses custom dsl
+`nakagin-capsule-tower-flat.bin.utf-8.*.snapshot.*.v1.puzzle.semio` # uses custom dsl
+`nakagin-capsule-tower-flat.json.rfc-8259.*.snapshot.*.v1.puzzle.semio`
+`nakagin-capsule-tower-flat.proto.2024.*.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
+`nakagin-capsule-tower-flat.ifc.4x3.dtv.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
+`nakagin-capsule-tower-flat.ifc.2x3.cv.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
+
+
+---
+
+Every single mutation must be tested.
+
+```
+<mutation> e.g. flatten-puzzle5d for puzzle 5d
+  fixtures
+    <fixture-file> e.g. nakagin-capsule-tower.puzzle5d.diff.semio, nakagin-capsule-tower-flat.puzzle5d.dsl.semio, etc
+  tests
+    <test> e.g. nakagin-capsule-tower that uses the nakagin-capsule-tower.puzzle5d.dsl.semio fixture and checks if the nakagin-capsule-tower-flat.puzzle5d.dsl.semio fixture is the result
+      component.rs
+      …
+
+```
+
+---
+
+Get s working again for all plugins end to end with the new architecture (everything async, every external sync dependency is reimplemented with async if no async version is available, plugins and plugin extensions are microkerceled to allow for 50 pluigns with each 50 extensions at runtime, etc)
 
 ---
 

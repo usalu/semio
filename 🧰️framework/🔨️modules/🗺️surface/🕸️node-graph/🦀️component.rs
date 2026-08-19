@@ -92,7 +92,7 @@ pub struct GraphViewport {
     zoom: f64,
 }
 
-fn default_zoom() -> f64 {
+async fn default_zoom() -> f64 {
     1.0
 }
 
@@ -109,14 +109,14 @@ pub enum NodeGraphError {
 }
 //#endregion ⚠️ Errors
 
-fn port_label(port: &GraphPortRecord) -> String {
+async fn port_label(port: &GraphPortRecord) -> String {
     port.label.clone().unwrap_or_else(|| {
         let segments: Vec<_> = port.id.split('@').collect();
         segments.last().map(|s| (*s).to_string()).unwrap_or_else(|| port.id.clone())
     })
 }
 
-fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
+async fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
     let label = port_label(port);
     let mut spec = IoPortSpec::simple(port.id.clone(), label);
     if let Some(code) = &port.code {
@@ -134,7 +134,7 @@ fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
     spec
 }
 
-fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
+async fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
     let name = record.label.clone().unwrap_or_else(|| record.id.clone());
     let abbreviation = name.chars().take(3).collect::<String>();
     let icon = record.icon.clone().unwrap_or_else(|| "emoji:🔷️".into());
@@ -165,7 +165,7 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
     node
 }
 
-pub fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport_json: &str) -> Result<DagFixture, NodeGraphError> {
+pub async fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport_json: &str) -> Result<DagFixture, NodeGraphError> {
     let nodes: Vec<GraphNodeRecord> = if nodes_json.trim().is_empty() { vec![] } else { serde_json::from_str(nodes_json)? };
     let edges: Vec<GraphEdgeRecord> = if edges_json.trim().is_empty() { vec![] } else { serde_json::from_str(edges_json)? };
     let viewport: GraphViewport = if viewport_json.trim().is_empty() { GraphViewport::default() } else { serde_json::from_str(viewport_json)? };
@@ -174,7 +174,7 @@ pub fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport
 
 /// 🕸️ Same as [`fixture_from_node_graph_json`] but over already-typed records (the `NodeGraphScene`
 /// wire shape decodes straight into these, no per-field JSON-string hop).
-pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&GraphViewport>) -> DagFixture {
+pub async fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&GraphViewport>) -> DagFixture {
     let viewport = viewport.cloned().unwrap_or_default();
     DagFixture {
         schema: "dag.fixture".into(),
@@ -205,7 +205,7 @@ pub struct NodeGraphScenePayload {
     pub fixture_json: Option<String>,
 }
 
-fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(), NodeGraphError> {
+async fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(), NodeGraphError> {
     if let Some(json) = payload.preview_off_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
@@ -237,7 +237,7 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
 }
 
 impl NodeGraphScenePayload {
-    pub fn from_json(value: &Value) -> Self {
+    pub async fn from_json(value: &Value) -> Self {
         Self {
             nodes: value.get("nodes").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
             edges: value.get("edges").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
@@ -268,7 +268,7 @@ pub struct SelectionGather {
 
 /// 🔤️ `DagHost::selection_preview_method` returns its own lowercase label vocabulary (not the
 /// framework `SelectionMethod` wire enum) — this is the one narrow translation point.
-fn selection_method_from_dag_label(label: &str) -> SelectionMethod {
+async fn selection_method_from_dag_label(label: &str) -> SelectionMethod {
     match label {
         "lasso" => SelectionMethod::Lasso,
         _ => SelectionMethod::Rectangle,
@@ -306,11 +306,11 @@ impl Default for GraphHost {
 }
 
 impl GraphHost {
-    pub fn from_fixture(fixture: DagFixture) -> Self {
+    pub async fn from_fixture(fixture: DagFixture) -> Self {
         Self { dag: DagHost::from_fixture_without_layout(fixture), catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0, pending_gather: None }
     }
 
-    fn payload_signature(payload: &NodeGraphScenePayload) -> u64 {
+    async fn payload_signature(payload: &NodeGraphScenePayload) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
         let mut hasher = DefaultHasher::new();
@@ -324,7 +324,7 @@ impl GraphHost {
         hasher.finish()
     }
 
-    pub fn sync_from_payload(&mut self, payload: &NodeGraphScenePayload) -> Result<(), NodeGraphError> {
+    pub async fn sync_from_payload(&mut self, payload: &NodeGraphScenePayload) -> Result<(), NodeGraphError> {
         let signature = Self::payload_signature(payload);
         if signature != self.last_payload_signature {
             let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, payload.viewport.as_ref());
@@ -376,12 +376,12 @@ impl GraphHost {
         Ok(())
     }
 
-    pub fn sync_from_scene_json(&mut self, scene_json: &str) -> Result<(), NodeGraphError> {
+    pub async fn sync_from_scene_json(&mut self, scene_json: &str) -> Result<(), NodeGraphError> {
         let value: Value = serde_json::from_str(scene_json)?;
         self.sync_from_scene_value(&value)
     }
 
-    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), NodeGraphError> {
+    pub async fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), NodeGraphError> {
         // 📦️ Host TS `encodePackValue` is the wire-body twin of `encode_wire_value` (no SPK shell);
         // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
         let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
@@ -389,41 +389,41 @@ impl GraphHost {
         self.sync_from_scene_value(&value)
     }
 
-    fn sync_from_scene_value(&mut self, value: &Value) -> Result<(), NodeGraphError> {
+    async fn sync_from_scene_value(&mut self, value: &Value) -> Result<(), NodeGraphError> {
         let mut payload = NodeGraphScenePayload::from_json(value);
         expand_payload_pack_fields(&mut payload)?;
         self.sync_from_payload(&payload)
     }
 
-    pub fn paint_scene(&self, scene: &mut canvas::Scene, width: u32, height: u32, dpr: f64) {
+    pub async fn paint_scene(&self, scene: &mut canvas::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
     }
 
-    pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
         self.dag.set_viewport(width, height, dpr);
     }
 
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         serde_json::to_string(&self.dag.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into())
     }
 
-    pub fn selected_node_ids_json(&self) -> String {
+    pub async fn selected_node_ids_json(&self) -> String {
         serde_json::to_string(&self.dag.selected_node_ids()).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn hovered_node_id(&self) -> Option<String> {
+    pub async fn hovered_node_id(&self) -> Option<String> {
         self.dag.hovered_node_id()
     }
 
-    pub fn hovered_channel_json(&self) -> String {
+    pub async fn hovered_channel_json(&self) -> String {
         self.dag.hovered_channel_json()
     }
 
-    pub fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
+    pub async fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
     }
 
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
+    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
         if !zoom_gesture {
             let cam = &self.dag.fixture.camera;
             let zoom = cam.zoom.max(1e-9);
@@ -439,11 +439,11 @@ impl GraphHost {
         self.dag.set_camera(nx, ny, new_zoom);
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
@@ -454,7 +454,7 @@ impl GraphHost {
     /// [`GraphHost::take_selection_gather`] and dispatch as ONE batched `interactionSelect`; the
     /// os-kernel `next_selection` machine (not this file) applies merge/mode algebra, and the result
     /// flows back down through [`GraphHost::sync_interaction`] to become what actually paints.
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+    pub async fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let was_marquee = !self.dag.preselect_widget_ids().is_empty();
         let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
@@ -465,39 +465,39 @@ impl GraphHost {
     /// 🎯️ Reads (and clears) the batch of node ids the last completed pick/marquee gesture hit — the
     /// caller turns this into ONE `interactionSelect{targets,method,merge}` dispatch, applying the
     /// modifier→merge policy itself (this host receives no merge concept, only raw geometry).
-    pub fn take_selection_gather(&mut self) -> Option<SelectionGather> {
+    pub async fn take_selection_gather(&mut self) -> Option<SelectionGather> {
         self.pending_gather.take()
     }
 
     /// 🕹️ Reads the framework's current selection/hover for this domain and applies it to the paint
     /// backend — replaces the deleted `set_hover`/`set_hover_channel`/scene-payload push path. Called
     /// at render time, independent of geometry sync (interaction state changes far more often).
-    pub fn sync_interaction(&mut self, selection: Option<&DomainSelection>, hover: Option<&DomainHover>) {
+    pub async fn sync_interaction(&mut self, selection: Option<&DomainSelection>, hover: Option<&DomainHover>) {
         let ids: Vec<String> = selection.map(|selection| selection.ids.clone()).unwrap_or_default();
         self.dag.set_selection(&ids);
         let hover_id = hover.and_then(|hover| hover.ids.first()).map(String::as_str);
         self.dag.set_hover(hover_id);
     }
 
-    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
     /// @emoji 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
-    pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+    pub async fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         self.dag.entity_screen_json(domain, id)
     }
 
-    pub fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
+    pub async fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
         Ok(self.dag.align_selection(mode)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, NodeGraphError> {
+    pub async fn fixture_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.fixture_json()?)
     }
 
-    pub fn set_canvas_theme_dark(&mut self, dark: bool) {
+    pub async fn set_canvas_theme_dark(&mut self, dark: bool) {
         self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 }
@@ -529,22 +529,22 @@ mod wasm_session {
     #[wasm_bindgen]
     impl GraphSession {
         #[wasm_bindgen(constructor)]
-        pub fn new() -> Self {
+        pub async fn new() -> Self {
             Self { state: Rc::new(RefCell::new(GraphSessionInner { host: GraphHost::default(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = syncFromSceneJson)]
-        pub fn sync_from_scene_json(&self, json: &str) -> Result<(), JsValue> {
+        pub async fn sync_from_scene_json(&self, json: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.sync_from_scene_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = syncFromScenePack)]
-        pub fn sync_from_scene_pack(&self, bytes: &[u8]) -> Result<(), JsValue> {
+        pub async fn sync_from_scene_pack(&self, bytes: &[u8]) -> Result<(), JsValue> {
             self.state.borrow_mut().host.sync_from_scene_pack(bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
-        pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+        pub async fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
             let inner = self.state.clone();
             let lw = logical_w.max(1);
             let lh = logical_h.max(1);
@@ -564,12 +564,12 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = gpuReady)]
-        pub fn gpu_ready(&self) -> bool {
+        pub async fn gpu_ready(&self) -> bool {
             self.state.borrow().gpu.gpu_ready()
         }
 
         #[wasm_bindgen(js_name = setSize)]
-        pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+        pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
             let mut inner = self.state.borrow_mut();
             inner.width = width.max(1);
             inner.height = height.max(1);
@@ -582,12 +582,12 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
-        pub fn set_canvas_theme_json(&mut self, json: &str) {
+        pub async fn set_canvas_theme_json(&mut self, json: &str) {
             let _ = self.state.borrow_mut().host.dag.set_canvas_theme_from_json(json);
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
-        pub fn render_frame(&self) -> Result<(), JsValue> {
+        pub async fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             let mut scene = canvas::Scene::new();
             let clear = inner.host.dag.canvas_theme.raster_clear;
@@ -597,99 +597,99 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = pointerDownScreen)]
-        pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        pub async fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
             self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, false);
         }
 
         #[wasm_bindgen(js_name = pointerMoveScreen)]
-        pub fn pointer_move_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        pub async fn pointer_move_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
             self.state.borrow_mut().host.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
         }
 
         #[wasm_bindgen(js_name = pointerUpScreen)]
-        pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        pub async fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
             // 🕹️ Routed through the `GraphHost` wrapper (not straight to `dag`) so a completed
             // pick/marquee gesture is captured into `pending_gather` — see `take_selection_gather_json`.
             self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         }
 
         #[wasm_bindgen(js_name = wheelScreen)]
-        pub fn wheel_screen(&self, sx: f64, sy: f64, _delta_x: f64, delta_y: f64, zoom_gesture: bool) {
+        pub async fn wheel_screen(&self, sx: f64, sy: f64, _delta_x: f64, delta_y: f64, zoom_gesture: bool) {
             self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y, zoom_gesture);
         }
 
         #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
-        pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
+        pub async fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.dag.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = sliderOverlayStateJson)]
-        pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
+        pub async fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.dag.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
-        pub fn selection_union_bounds_screen_json(&self) -> String {
+        pub async fn selection_union_bounds_screen_json(&self) -> String {
             self.state.borrow().host.dag.selection_union_bounds_screen_json()
         }
 
         #[wasm_bindgen(js_name = selectionPreviewPointsJson)]
-        pub fn selection_preview_points_json(&self) -> String {
+        pub async fn selection_preview_points_json(&self) -> String {
             self.state.borrow().host.dag.selection_preview_points_json()
         }
 
         #[wasm_bindgen(js_name = selectionPreviewCrossing)]
-        pub fn selection_preview_crossing(&self) -> bool {
+        pub async fn selection_preview_crossing(&self) -> bool {
             self.state.borrow().host.dag.selection_preview_crossing()
         }
 
         #[wasm_bindgen(js_name = selectionPreviewMethod)]
-        pub fn selection_preview_method(&self) -> String {
+        pub async fn selection_preview_method(&self) -> String {
             self.state.borrow().host.dag.selection_preview_method().to_string()
         }
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
-        pub fn selected_node_ids_json(&self) -> String {
+        pub async fn selected_node_ids_json(&self) -> String {
             self.state.borrow().host.selected_node_ids_json()
         }
 
         #[wasm_bindgen(js_name = hoveredNodeId)]
-        pub fn hovered_node_id(&self) -> Option<String> {
+        pub async fn hovered_node_id(&self) -> Option<String> {
             self.state.borrow().host.hovered_node_id()
         }
 
         #[wasm_bindgen(js_name = hoveredChannelJson)]
-        pub fn hovered_channel_json(&self) -> String {
+        pub async fn hovered_channel_json(&self) -> String {
             self.state.borrow().host.hovered_channel_json()
         }
 
         #[wasm_bindgen(js_name = cameraJson)]
-        pub fn camera_json(&self) -> String {
+        pub async fn camera_json(&self) -> String {
             self.state.borrow().host.camera_json()
         }
 
         #[wasm_bindgen(js_name = lodScaleJson)]
-        pub fn lod_scale_json(&self) -> String {
+        pub async fn lod_scale_json(&self) -> String {
             dag::dag_lod_scale_json()
         }
 
         #[wasm_bindgen(js_name = drawLodLabel)]
-        pub fn draw_lod_label(&self) -> String {
+        pub async fn draw_lod_label(&self) -> String {
             self.state.borrow().host.dag.draw_lod_label().to_string()
         }
 
         #[wasm_bindgen(js_name = setAutomaticLod)]
-        pub fn set_automatic_lod(&self, enabled: bool) {
+        pub async fn set_automatic_lod(&self, enabled: bool) {
             self.state.borrow_mut().host.dag.set_automatic_lod(enabled);
         }
 
         #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
-        pub fn set_forced_draw_lod_label(&self, label: &str) {
+        pub async fn set_forced_draw_lod_label(&self, label: &str) {
             self.state.borrow_mut().host.dag.set_forced_draw_lod_label(label);
         }
 
         #[wasm_bindgen(js_name = setGhostNodeJson)]
-        pub fn set_ghost_node_json(&self, json: &str) {
+        pub async fn set_ghost_node_json(&self, json: &str) {
             if json.trim().is_empty() {
                 self.state.borrow_mut().host.dag.set_ghost_node(None);
                 return;
@@ -700,17 +700,17 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = clearGhostNode)]
-        pub fn clear_ghost_node(&self) {
+        pub async fn clear_ghost_node(&self) {
             self.state.borrow_mut().host.dag.set_ghost_node(None);
         }
 
         #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
-        pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
             self.state.borrow().host.dag.pick_targets_at_screen_json(sx, sy)
         }
 
         #[wasm_bindgen(js_name = entityScreenJson)]
-        pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+        pub async fn entity_screen_json(&self, domain: &str, id: &str) -> String {
             self.state.borrow().host.dag.entity_screen_json(domain, id)
         }
 
@@ -719,7 +719,7 @@ mod wasm_session {
         /// this domain, read from the framework's `InteractionState` at render time, not pushed
         /// arbitrarily from app code.
         #[wasm_bindgen(js_name = syncInteraction)]
-        pub fn sync_interaction(&self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+        pub async fn sync_interaction(&self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
             let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
             let selection = DomainSelection { granularity: String::new(), ids, anchor_id: None };
             let hover = hovered_id.map(|id| DomainHover { channel: "pointer".into(), ids: vec![id] });
@@ -730,27 +730,27 @@ mod wasm_session {
         /// 🎯️ Drains the last completed pick/marquee gesture's raw hit targets — the JS host pairs
         /// this with its own modifier→merge policy and dispatches ONE `interactionSelect`.
         #[wasm_bindgen(js_name = takeSelectionGatherJson)]
-        pub fn take_selection_gather_json(&self) -> Option<String> {
+        pub async fn take_selection_gather_json(&self) -> Option<String> {
             self.state.borrow_mut().host.take_selection_gather().map(|gather| serde_json::to_string(&gather).unwrap_or_else(|_| "null".into()))
         }
 
         #[wasm_bindgen(js_name = alignSelection)]
-        pub fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
+        pub async fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
-        pub fn fixture_json(&self) -> Result<String, JsValue> {
+        pub async fn fixture_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = takePendingOpenInstanceId)]
-        pub fn take_pending_open_instance_id(&self) -> Option<String> {
+        pub async fn take_pending_open_instance_id(&self) -> Option<String> {
             dag_take_pending_open_instance_id(&mut self.state.borrow_mut().host.dag)
         }
 
         #[wasm_bindgen(js_name = screenToWorld)]
-        pub fn screen_to_world(&self, x: f64, y: f64) -> js_sys::Array {
+        pub async fn screen_to_world(&self, x: f64, y: f64) -> js_sys::Array {
             let (wx, wy) = dag_screen_to_world(&self.state.borrow().host.dag, x, y);
             let out = js_sys::Array::new();
             out.push(&JsValue::from_f64(wx));
@@ -759,27 +759,27 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = worldFromScreen)]
-        pub fn world_from_screen(&self, x: f64, y: f64) -> js_sys::Array {
+        pub async fn world_from_screen(&self, x: f64, y: f64) -> js_sys::Array {
             self.screen_to_world(x, y)
         }
 
         #[wasm_bindgen(js_name = selectAll)]
-        pub fn select_all(&self) {
+        pub async fn select_all(&self) {
             self.state.borrow_mut().host.dag.select_all();
         }
 
         #[wasm_bindgen(js_name = deleteSelection)]
-        pub fn delete_selection(&self) {
+        pub async fn delete_selection(&self) {
             self.state.borrow_mut().host.dag.delete_selected();
         }
 
         #[wasm_bindgen(js_name = cancelAreaSelect)]
-        pub fn cancel_area_select(&self) {
+        pub async fn cancel_area_select(&self) {
             self.state.borrow_mut().host.dag.cancel_area_select();
         }
 
         #[wasm_bindgen(js_name = reorganize)]
-        pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
+        pub async fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
             let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap_or_default() };
             self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
@@ -796,7 +796,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fixture_from_workflow_json() {
+    async fn fixture_from_workflow_json() {
         let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
         let edges = r#"[]"#;
         let fixture = fixture_from_node_graph_json(nodes, edges, r#"{"x":0,"y":0,"zoom":1}"#).expect("fixture");
@@ -805,7 +805,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_syncs_selection_from_framework_interaction_state() {
+    async fn graph_host_syncs_selection_from_framework_interaction_state() {
         let mut host = GraphHost::default();
         let payload = NodeGraphScenePayload {
             nodes: vec![GraphNodeRecord { id: "a".into(), label: Some("A".into()), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), ..Default::default() }],
@@ -820,7 +820,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_pointer_up_after_plain_click_gathers_one_pick_target() {
+    async fn graph_host_pointer_up_after_plain_click_gathers_one_pick_target() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -834,7 +834,7 @@ mod tests {
     }
 
     #[test]
-    fn set_canvas_theme_dark_applies_board_palette() {
+    async fn set_canvas_theme_dark_applies_board_palette() {
         let mut host = GraphHost::default();
         host.set_canvas_theme_dark(true);
         let dark_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
@@ -845,25 +845,25 @@ mod tests {
 
     //#region 🔖️PortHelpers
     #[test]
-    fn port_label_uses_last_at_segment_when_label_missing() {
+    async fn port_label_uses_last_at_segment_when_label_missing() {
         let port = GraphPortRecord { id: "node@channel@foo".into(), label: None, ..Default::default() };
         assert_eq!(port_label(&port), "foo");
     }
 
     #[test]
-    fn port_label_falls_back_to_full_id_without_at() {
+    async fn port_label_falls_back_to_full_id_without_at() {
         let port = GraphPortRecord { id: "solo".into(), label: None, ..Default::default() };
         assert_eq!(port_label(&port), "solo");
     }
 
     #[test]
-    fn port_label_prefers_explicit_label() {
+    async fn port_label_prefers_explicit_label() {
         let port = GraphPortRecord { id: "node@out".into(), label: Some("Output".into()), ..Default::default() };
         assert_eq!(port_label(&port), "Output");
     }
 
     #[test]
-    fn port_to_io_copies_optional_metadata() {
+    async fn port_to_io_copies_optional_metadata() {
         let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), artifact_kind: Some("number".into()) };
         let spec = port_to_io(&port);
         assert_eq!(spec.id, "p1");
@@ -875,7 +875,7 @@ mod tests {
     }
 
     #[test]
-    fn port_to_io_uses_simple_defaults_when_optional_fields_absent() {
+    async fn port_to_io_uses_simple_defaults_when_optional_fields_absent() {
         let port = GraphPortRecord { id: "p2".into(), ..Default::default() };
         let spec = port_to_io(&port);
         assert_eq!(spec.id, "p2");
@@ -885,7 +885,7 @@ mod tests {
 
     //#region 🔖️NodeRecordConversion
     #[test]
-    fn node_record_to_spec_builds_app_instance_kind() {
+    async fn node_record_to_spec_builds_app_instance_kind() {
         let record = GraphNodeRecord { id: "n1".into(), label: Some("Widget".into()), instance_id: Some("inst-1".into()), plugin_id: None, app_id: None, ..Default::default() };
         let spec = node_record_to_spec(&record);
         match spec.kind {
@@ -900,14 +900,14 @@ mod tests {
     }
 
     #[test]
-    fn node_record_to_spec_defaults_computation_kind_without_instance_id() {
+    async fn node_record_to_spec_defaults_computation_kind_without_instance_id() {
         let record = GraphNodeRecord { id: "n2".into(), label: Some("Compute".into()), ..Default::default() };
         let spec = node_record_to_spec(&record);
         assert!(matches!(spec.kind, DagNodeKind::Computation { .. }));
     }
 
     #[test]
-    fn node_record_to_spec_defaults_position_when_missing() {
+    async fn node_record_to_spec_defaults_position_when_missing() {
         let record = GraphNodeRecord { id: "n3".into(), label: Some("Anchor".into()), ..Default::default() };
         let spec = node_record_to_spec(&record);
         assert_eq!(spec.x, 0.0);
@@ -916,7 +916,7 @@ mod tests {
     }
 
     #[test]
-    fn node_record_to_spec_falls_back_to_id_when_label_missing() {
+    async fn node_record_to_spec_falls_back_to_id_when_label_missing() {
         let record = GraphNodeRecord { id: "n4".into(), ..Default::default() };
         let spec = node_record_to_spec(&record);
         // 🔤️ Computation kind routes through `DagNodeSpec::computation`, which pascal-cases the display name.
@@ -926,7 +926,7 @@ mod tests {
 
     //#region 🔖️FixtureFromJson
     #[test]
-    fn fixture_from_node_graph_json_defaults_when_inputs_blank() {
+    async fn fixture_from_node_graph_json_defaults_when_inputs_blank() {
         let fixture = fixture_from_node_graph_json("", "", "").expect("fixture");
         assert_eq!(fixture.schema, "dag.fixture");
         assert!(fixture.nodes.is_empty());
@@ -937,7 +937,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_from_node_graph_json_builds_composite_edge_endpoints() {
+    async fn fixture_from_node_graph_json_builds_composite_edge_endpoints() {
         let nodes = r#"[{"id":"a","outputs":[{"id":"out"}]},{"id":"b","inputs":[{"id":"in"}]}]"#;
         let edges = r#"[{"id":"e1","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in"}]"#;
         let fixture = fixture_from_node_graph_json(nodes, edges, "").expect("fixture");
@@ -947,13 +947,13 @@ mod tests {
     }
 
     #[test]
-    fn fixture_from_node_graph_json_propagates_malformed_nodes_json() {
+    async fn fixture_from_node_graph_json_propagates_malformed_nodes_json() {
         let err = fixture_from_node_graph_json("not json", "[]", "").unwrap_err();
         assert!(matches!(err, NodeGraphError::Json(_)));
     }
 
     #[test]
-    fn fixture_from_node_graph_json_reads_custom_viewport() {
+    async fn fixture_from_node_graph_json_reads_custom_viewport() {
         let fixture = fixture_from_node_graph_json("[]", "[]", r#"{"x":5,"y":-3,"zoom":2.5}"#).expect("fixture");
         assert_eq!(fixture.camera.x, 5.0);
         assert_eq!(fixture.camera.y, -3.0);
@@ -963,7 +963,7 @@ mod tests {
 
     //#region 🔖️ScenePayloadFromJson
     #[test]
-    fn node_graph_scene_payload_from_json_defaults_missing_fields() {
+    async fn node_graph_scene_payload_from_json_defaults_missing_fields() {
         let value = serde_json::json!({});
         let payload = NodeGraphScenePayload::from_json(&value);
         assert!(payload.nodes.is_empty());
@@ -973,7 +973,7 @@ mod tests {
     }
 
     #[test]
-    fn node_graph_scene_payload_from_json_reads_optional_fields() {
+    async fn node_graph_scene_payload_from_json_reads_optional_fields() {
         let value = serde_json::json!({
             "nodes": [{"id": "1", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}],
             "edges": [{"id": "2", "sourceNodeId": "a", "sourcePortId": "out", "targetNodeId": "b", "targetPortId": "in"}],
@@ -999,7 +999,7 @@ mod tests {
     //#endregion 🔖️ScenePayloadFromJson
 
     //#region 🔖️GraphHostSync
-    fn payload_with_node(id: &str) -> NodeGraphScenePayload {
+    async fn payload_with_node(id: &str) -> NodeGraphScenePayload {
         NodeGraphScenePayload {
             nodes: vec![GraphNodeRecord {
                 id: id.into(),
@@ -1017,7 +1017,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_payload_updates_catalogue_without_signature_change() {
+    async fn graph_host_sync_from_payload_updates_catalogue_without_signature_change() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
         payload.catalogue_json = Some("first".into());
@@ -1029,7 +1029,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_interaction_sets_hover_node_only() {
+    async fn graph_host_sync_interaction_sets_hover_node_only() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1040,7 +1040,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_interaction_clears_hover_when_absent() {
+    async fn graph_host_sync_interaction_clears_hover_when_absent() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1052,7 +1052,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_payload_dims_preview_off_nodes() {
+    async fn graph_host_sync_from_payload_dims_preview_off_nodes() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
         payload.preview_off_json = Some(r#"["a"]"#.into());
@@ -1061,7 +1061,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_payload_applies_lod_settings() {
+    async fn graph_host_sync_from_payload_applies_lod_settings() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
         payload.lod_json = Some(r#"{"automatic":false,"lod":"micro","proximityDistance":12.5,"gridVisible":false,"gridSnapEnabled":true,"gridFactor":2.0}"#.into());
@@ -1070,7 +1070,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_payload_applies_computing_progress() {
+    async fn graph_host_sync_from_payload_applies_computing_progress() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
         payload.computing_json = Some(r#"{"active":"a","stale":[]}"#.into());
@@ -1079,7 +1079,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_scene_json_parses_raw_json() {
+    async fn graph_host_sync_from_scene_json_parses_raw_json() {
         let mut host = GraphHost::default();
         let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1},"selection":["a"]}"#;
         host.sync_from_scene_json(scene).expect("sync");
@@ -1087,7 +1087,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
+    async fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
         let mut host = GraphHost::default();
         let scene = serde_json::json!({
             "nodes": [{"id": "a", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "outputs": [{"id": "out"}]}],
@@ -1102,7 +1102,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_scene_json_rejects_invalid_json() {
+    async fn graph_host_sync_from_scene_json_rejects_invalid_json() {
         let mut host = GraphHost::default();
         let err = host.sync_from_scene_json("not json").unwrap_err();
         assert!(matches!(err, NodeGraphError::Json(_)));
@@ -1111,7 +1111,7 @@ mod tests {
 
     //#region 🔖️GraphHostQueries
     #[test]
-    fn graph_host_camera_json_reflects_viewport() {
+    async fn graph_host_camera_json_reflects_viewport() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
         payload.viewport = Some(GraphViewport { x: 11.0, y: 22.0, zoom: 3.0 });
@@ -1120,7 +1120,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_selected_node_ids_json_matches_selection() {
+    async fn graph_host_selected_node_ids_json_matches_selection() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1130,7 +1130,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_wheel_screen_pan_without_zoom_gesture() {
+    async fn graph_host_wheel_screen_pan_without_zoom_gesture() {
         let mut host = GraphHost::default();
         host.set_viewport(400, 400, 1.0);
         let before = host.dag.fixture.camera.y;
@@ -1140,7 +1140,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
+    async fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
         let mut host = GraphHost::default();
         host.set_viewport(400, 400, 1.0);
         host.wheel_screen(200.0, 200.0, -10.0, true);
@@ -1148,7 +1148,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_pointer_click_selects_node() {
+    async fn graph_host_pointer_click_selects_node() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1159,7 +1159,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_pick_targets_at_screen_json_finds_node() {
+    async fn graph_host_pick_targets_at_screen_json_finds_node() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1169,7 +1169,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_entity_screen_json_visible_for_known_node() {
+    async fn graph_host_entity_screen_json_visible_for_known_node() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1179,14 +1179,14 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_entity_screen_json_invisible_for_unknown_node() {
+    async fn graph_host_entity_screen_json_invisible_for_unknown_node() {
         let host = GraphHost::default();
         let json = host.entity_screen_json("node", "missing");
         assert_eq!(json, r#"{"visible":false}"#);
     }
 
     #[test]
-    fn graph_host_align_selection_errors_on_unknown_mode() {
+    async fn graph_host_align_selection_errors_on_unknown_mode() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1197,7 +1197,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_align_selection_ok_for_single_node() {
+    async fn graph_host_align_selection_ok_for_single_node() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1207,7 +1207,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_fixture_json_round_trips_nodes() {
+    async fn graph_host_fixture_json_round_trips_nodes() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
@@ -1216,7 +1216,7 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_label_overlay_paint_state_json_includes_camera() {
+    async fn graph_host_label_overlay_paint_state_json_includes_camera() {
         let mut host = GraphHost::default();
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");

@@ -28,7 +28,7 @@ pub struct ImperativeExtensionContributes {
 }
 
 /// 📦️ Builds manifest JSON from a module registry and catalogue fragment.
-pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> String {
+pub async fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> String {
     let manifest = ImperativeExtensionManifest {
         schema: "imperative.extension".into(),
         id: id.into(),
@@ -45,7 +45,7 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
 
 // #region 🔖️Evaluate
 /// 🧮️ Evaluates an operator and returns JSON dictionary or `{ "error": ... }`.
-pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
+pub async fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
     let input: Dictionary = match serde_json::from_str(input_json) {
         Ok(d) => d,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
@@ -61,13 +61,13 @@ pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> St
 }
 
 /// 🔀️ WIT `extension::invoke` payload for `imperative.module/evaluate`.
-pub fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
+pub async fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
     let input: serde_json::Value = serde_json::from_str(input_json).unwrap_or(serde_json::json!({}));
     serde_json::json!({ "kindId": kind_id, "input": input }).to_string()
 }
 
 /// 🔀️ Parses an evaluate invoke request and runs it against `registry`.
-pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
+pub async fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
     let body: serde_json::Value = serde_json::from_slice(request).map_err(|err| err.to_string())?;
     let kind_id = body.get("kindId").and_then(|v| v.as_str()).ok_or_else(|| "missing kindId".to_string())?;
     let input_json = body.get("input").map(|v| v.to_string()).unwrap_or_else(|| "{}".to_string());
@@ -83,7 +83,7 @@ pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
 pub const IMPERATIVE_MODULE_EVALUATE_CAPABILITY: &str = "imperative.module/evaluate";
 
 /// 🧩️ Builds one `ProgramContributionEntry` carrying the `"imperative.module"` topic contribution.
-pub fn imperative_module_contribution(
+pub async fn imperative_module_contribution(
     extension_id: &str,
     module_id: &str,
     label: &str,
@@ -105,7 +105,7 @@ pub fn imperative_module_contribution(
 /// 🗺️ Builds the `"imperative.module"` `TopicContribution` payload consumed by
 /// [`imperative_module_contribution`] — see
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
-pub fn imperative_module_topic_contribution(
+pub async fn imperative_module_topic_contribution(
     module_id: &str,
     label: &str,
     icon_id: &str,

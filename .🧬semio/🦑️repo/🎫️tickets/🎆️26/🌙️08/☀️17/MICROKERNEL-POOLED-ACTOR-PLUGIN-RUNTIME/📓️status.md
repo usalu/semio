@@ -3471,3 +3471,880 @@ Cost of the boxed-future route, measured not guessed: 84 trait methods in the SD
 in the fleet, and the cascade outward through `🖥️host`, `🎠️kernel`, both renderers and `🌎️hub` — i.e. the
 whole repo, and it lands on top of a peer's in-flight `io-async-signatures` sweep doing exactly this for the
 io subset. Routed to the owner as a scope decision rather than started unilaterally.
+
+
+# 🌅️ 2026-08-19 — SINGLE-COORDINATOR TAKEOVER, and the program that replaces both wave plans
+
+**Owner decision, this session.** One coordinator from here on. The W5/W6 coordinator and the F-wave
+(papert) fleet coordinator are both stood down; their undispatched packets are superseded, their
+landed work is absorbed. Plan of record: `📋️master-u.md` (verbatim copy of
+`/Users/ueli/.claude/plans/get-s-working-again-quiet-raccoon.md`). Designs of record:
+`📓️design-dedyn.md` (compile repair / zero first-party dyn) and §"Design B" of `📋️master-u.md`
+(one async world, runtime end to end).
+
+## 📐️ The four owner rulings this program is built on
+
+1. **Drop dyn dispatch.** NOT the boxed-future route. Every first-party dyn-dispatched seam becomes
+   enum / static / generated dispatch so plain AFIT (`async fn` in trait) works everywhere, and every
+   first-party fn keeps the LITERAL `async` keyword. This settles the contradiction routed upward at
+   the end of the previous entry — the answer was neither of the two options that entry named.
+2. **Single coordinator** (above).
+3. **Legacy compose excluded**: the root `compose/` tree is out of scope entirely. The framework's own
+   `semio.compose` cold-job path stays in scope.
+4. **External sync deps**: literal reimplementation where no async version exists; async-native
+   replacement where one does — always behind a first-party interface.
+
+## 📏️ Ground truth re-measured before planning — the log was stale in three ways
+
+- The **fleet asyncify is COMMITTED** (`09c3cf6df6`, 9,291 files). The **framework asyncify is STAGED
+  and uncommitted** — 388 files incl. the WIT. The previous entry's claim that "`🧰️framework/**` was
+  deliberately NOT converted — it was green before this and still is" is **false as of now**. It is
+  kept, not reverted: under ruling 1 its direction is correct.
+- **The wall moved from E0053 to E0038.** The fleet's ~56.7k `async fn` bodies now MATCH the AFIT
+  traits; what breaks is that ~88 async methods sit behind trait objects. Counted:
+  `PluginApp` 49 methods / 26 dyn uses · `SpaceMember` 25/16 · `GuestRuntime` 9/15 ·
+  `HostAsyncRuntime` 3/10 · `Backbone`+`BackbonePort` 5/3 · the db storage family.
+  **The fleet contains ZERO first-party `dyn`** — de-dyn is framework-only surgery.
+- **The WIT already flipped**: 37 `async func`, 0 plain `func` (staged). Both worlds still exist even
+  though the sync/async distinction that justified two of them is gone.
+
+## 🩹️ Mechanical damage inventory (what "get it compiling" actually means)
+
+| damage | count | repair |
+|---|---:|---|
+| `#[test] async fn` (cannot compile) | **16,427** in 2,897 files | `#[async_test]` proc-macro + rewrite script (`macros-blockon`, dispatched) |
+| external-trait impls wrongly asyncified in the fleet (Default 548, serde 600, From 53, fmt 31) | **~1,232** | S1 `deasyncify-external-impls.py` (reverse of the 236-trait census) |
+| `const fn` / `extern "abi" fn` qualifiers dropped by the blind fleet codemod | 19 + 2 | S2 `restore-qualifiers.py`, byte-equality-guarded |
+| boxed-future prior art DOUBLE-FUTURED (`async fn … -> DbFuture/HostFuture/ComposeFuture/PluginAppMediaFuture`) | ~300 | S4 unwrap; the aliases contradict their own module docs today |
+| `ComposerEntry`/`IoEntry` fn-pointer rows whose targets became `async fn` (uncoercible) | 163 | S6 `compose_thunk!` macro-generated E4 thunks |
+| missing `.await` after signature flips | tens of thousands | S5 span-keyed fixpoint loop off `--message-format=json` (db-trait-flip precedent) |
+
+## 🧭️ Two exception classes ADDED to the async-literal rule (language-fixed, not judgement calls)
+
+- **E4 — fn-pointer slots.** An `async fn` item's pointer type is unnameable, so any fn whose VALUE is
+  stored in a fn-pointer-typed slot (`AsyncComposeFn`, `IoEntry.run/sniff`, `SurfaceDeclaration.factory`,
+  `OnceLock<fn()>` installers, `RawWakerVTable`) CANNOT be async. Same class as `extern "C"`.
+  E4 fns are macro-generated (invisible in source) or tagged `// 🚫️async: E4`.
+- **E5 — executor bridges.** `block_on`, `LocalExecutor` internals, `resolve_ready`. ≤1 per crate, tagged.
+
+Both are ratified in `📌️important.md` alongside R1 (dyn scope), R2 (exception classes) and R3 (the
+Send boundary: guest futures are ?Send; host Send-ness is obtained STRUCTURALLY by enums at every
+former dyn seam, never by adding `+ Send` bounds).
+
+## ▶️ U1 dispatched — 5 packets, all read-mostly or new-directory, zero contention
+
+| packet | owns | question it answers |
+|---|---|---|
+| `jco-spike` | `💻️os/🧫️fixtures/🔌️jcoprobe/**` (new) | **The single biggest external risk**: can jco 1.27 transpile and drive a P3 async-export component in a Worker, without JSPI? Verdicts GO-callback / GO-jspi / NO-GO. |
+| `async-harness-spike` | `💻️os/🧫️fixtures/🔌️asyncprobe/**` | Re-prove `⏳️runtime.rs`'s claims on the REAL turn shape: cancel-needs-Store-drop, cross-Store preemption, jobs-during-suspended-poll, epoch delta semantics, tokio-Handle injection. Produces the correction list for the rewrite. |
+| `brep-probe` | `💻️os/🧫️fixtures/🔌️brepprobe/**` | The never-run probe from `📓️luna-brep-await-spec.md`. Does a guest `.await` of the in-process async BrepKernel get driven inside a turn and inside a job step? Gates the 134-site sweep. |
+| `macros-blockon` | `⏳️async/✨️macros/**` (new crate), `⏳️async/🦀️component.rs` block_on region | Unblocks 16,427 test fns. Also lands the E5 `block_on`. **Critical path.** |
+| `luna dyn-census` | read-only → `📓️luna-dyn-census.md` | Proves the six-family list COMPLETE over all 236 first-party traits, or finds what it misses. A missed family blows a packet's scope mid-flight. |
+
+## 🗺️ Wave DAG (slugs reserved; audited against this log — no collisions)
+
+```
+U1  jco-spike ∥ async-harness-spike ∥ brep-probe ∥ macros-blockon ∥ luna dyn-census
+U2  vocab-repair → { io-thunks ∥ store-dedyn ∥ db-dedyn } → sdk-dedyn (ATOMIC)
+    → world-collapse (sol, ATOMIC) → host-dedyn → os-ripple(∥) → framework-tests
+    → fleet-codemods (offline) → asyncfleet-stdio → asyncfleet-a..f (≤6 ∥) → GATE C
+U3  async-plugin-runtime ∥ describe-async → fleet-wasm-descriptors → GATE R
+U4  web-bridges → { wgpu-native-async ∥ winit-unblock ∥ wgpu-web-shard ∥ run-through-kernel
+    ∥ extension-activation } → exchange-removal → GATE W
+U5  http-hyper ∥ pack-waker · adopt-stdio → adopt-a..f → GATE F
+U6  parity-rebaseline ∥ bench-web-rows → exit checklist
+```
+
+**GATE C** workspace compiles + tests run + dyn census 0 · **GATE R** async runtime executes a real
+`🗒️note` turn, 33/33 descriptors · **GATE W** dev boot round-trips a turn, native smoke through the
+kernel, extension install→activate · **GATE F** census `block_on` 0 (minus the sanctioned allow-list),
+`pending_effects` 0, job kinds registered · **EXIT** 58/58 parity on a RE-BASELINED harness (it
+currently compares new-react against old-wgpu — an invalid cross-architecture diff), 8 bench budgets ×
+3 renderers, census zero, the full end-to-end `s` scenario web AND native.
+
+## 📌️ Absorbed in-flight state from the two stood-down coordinators
+
+- **`io-async-signatures` never reported**, but its symbols landed and are re-exported
+  (`ComposeFuture`/`AsyncComposeFn`/`resolve_ready`/`io_compose_via` at `🚪️io/🦀️component.rs:751,756,766,1077`,
+  re-exported at `🧰️framework/📦️packages/🦀️rust/📦️glue.rs:97,103`). **Declared ABSORBED; its path scope is
+  released.** Rule 25's hold on the fleet-editing tranche is lifted — the universal-async codemod
+  overtook it. Its `ComposerEntry` fn-pointer work is what S6 now completes.
+- `sdk-async` delivered; its acceptance block (9 errors, all in `🔌️plugin/🦀️component.rs`) is resolved by
+  the same absorption. Its `host_for_instance`/`host()` split still needs reconciling with `cold-kinds`
+  at `sdk-dedyn` time — carried forward as a named item.
+- `async-runtime` delivered `⏳️runtime.rs` **unmounted, never compiled, against predicted binding names
+  that were never created**. `async-harness-spike` produces its correction list; `async-plugin-runtime`
+  rewrites and mounts it.
+- The papert plan's `fleet-*` tranche was never dispatched (it was holding on the io sweep). Superseded
+  by `asyncfleet-*` (compile) + `adopt-*` (census targets).
+- `describe-scripts` stays dropped (proven no-op: 33/33 crates already carry the target).
+  `dialect-arbitration` verdict (d) stands: nothing was broken.
+
+
+## 🔴️ SCOPE CORRECTION — the de-dyn surface is **93 trait families / 957 uses**, not 6 families / ~88 methods
+
+`luna dyn-census` came back claiming the design's six-family list was "severely incomplete". A claim
+that large reshapes the program, so I did **not** take it on trust — I measured it myself with an
+independent script (`sol-dyn-families.json` in this folder holds the full machine-readable table).
+**The census was right, and my own numbers are the ones now binding:**
+
+| | |
+|---|---:|
+| first-party `.rs` files scanned (`🧰️framework`, `✏️s`, `🌎️hub`; ticket archives excluded) | 10,522 |
+| distinct first-party traits declared | 234 |
+| **first-party traits used as `dyn`** | **97** |
+| **total `dyn <first-party trait>` occurrences** | **985** |
+| of those, traits whose methods are now `async` ⇒ MUST be de-dyn'd | **93 traits / 957 uses** |
+| still fully-sync traits (`Operator`, `HttpBody`, `RouterEffectHandler`) | 3 / 26 uses — they still need asyncifying, so effectively 96 |
+| std/lang `dyn` residue (LEGAL under R1) | 133 — `Fn` 56, `FnMut` 23, `Future` 18, `Any` 12, `FnOnce` 12, `Error` 8, `Iterator` 4 |
+
+**Two prior claims are now retired as false.** (a) "The fleet contains ZERO first-party dyn" — it does
+not: `Sobject` **131 uses** (semio-s-plugin-animate, the single most-used trait object in the repo),
+`BrepKernel` 34 (stdio), `Animation` 22, `Constraint` 20, `Element` 20, `MachineCatalog` 11 are all
+fleet traits. (b) The per-family counts the design carried were low across the board — `SpaceMember`
+101 (not 16), `HostAsyncRuntime` 47 (not 10) — while `PluginApp` was *over*-stated at 19 (not 26).
+
+### 🟢️ The good news, and it is what makes this tractable
+**81 of the 93 have every impl inside a SINGLE crate**, so the erased enum can be generated in place.
+Only **12** span crates and need generics or a closing enum in an aggregating crate.
+
+### ⛔️ Why hand-writing was never going to work
+Method counts: `BrepKernel` **92**, `PluginApp` **51**, `Sobject` **37**, `SpaceMember` 25. Impl counts:
+`Animation` **43 impls**, `LogitsProcessor` **34**. Hand-written match-delegation across 93 traits is
+several thousand lines of mechanical code plus permanent drift risk — every trait method added later
+silently breaks one enum somewhere.
+
+### ▶️ Decision: ONE mechanism, applied 93 times — packet `dyn-enum-macro` dispatched
+A new proc-macro crate `semio-framework-dispatch-macros` at `🧰️framework/🔨️modules/🔀️dispatch/`
+(sibling-module pattern, precedents `🧬️schema/✨️derive` and draw's `🔄️fsm/✨️macros`; it is deliberately
+NOT put in `⏳️async/✨️macros`, which `macros-blockon` owns — rule 17):
+
+- `#[dyn_enum]` on a trait re-emits it unchanged and captures its signatures in a `#[macro_export]`ed
+  hidden `macro_rules!` — this is what makes it work **across crate boundaries**, which matters because
+  traits are routinely declared in one crate and closed in another.
+- `dyn_enum! { pub enum SpaceMembers: SpaceMember { Text(..), Sketch(..) } }` generates the enum, the
+  `From` impls (`From` is external ⇒ E1 ⇒ stays sync) and the match-delegating `impl SpaceMember`, with
+  `.await` present exactly on the async methods.
+- Required to handle at our scale: mixed async/sync methods, all receiver forms, default bodies,
+  generics/where-clauses/lifetimes, and to FAIL LOUDLY (clear compile error) on receiver-less
+  associated functions, associated types/consts and supertraits rather than emit broken code.
+- **Must add no `Send`/`Sync` bounds** (R3): guest futures are deliberately `?Send`.
+- Must generate the uninhabited case (`enum NoMembers {}` with `match *self {}` bodies) — that is the
+  default type parameter for every plugin that composes nothing.
+- Acceptance includes a **≥40-method** trait test, precisely because `BrepKernel` is 92.
+
+`store-dedyn` is mid-flight and hand-writing a local 25-arm `space_members!` decl-macro. Per rule 25 it
+is **not** being interrupted — 25 arms is affordable, and its work is a useful independent check on the
+macro's generated shape. Everything after it uses `dyn_enum!`.
+
+## 🧰️ Shared tool landed: `insert-await.py` (coordinator-owned, in this folder)
+
+Every packet needs the same thing — tens of thousands of missing `.await`s — so it is built ONCE here
+rather than reinvented per agent (the `asyncify-universal.py` precedent).
+
+It applies **rustc's own suggestions** parsed from `cargo check --message-format=json`, never a
+source-text heuristic. **The safety property that distinguishes it from `cargo fix`:** rustc frequently
+offers MORE THAN ONE candidate `.await` position for a single error — e.g. in the `compare_exchange`
+line of `⏳️async` it offered to await either argument. Applying both is wrong; picking one is a coin
+flip. **The tool therefore applies an edit only when a diagnostic yields exactly ONE distinct
+candidate**, and writes everything ambiguous to a review list untouched. Also: byte-offset keyed (not
+line/column — this repo is full of multi-byte emoji), edits applied per file in descending offset order,
+a guard set so no span is ever edited twice (no `.await.await`), overlapping edits deferred to the next
+pass, `--scope` to confine edits to a packet's owned paths, and a fixpoint loop with `--max-passes`.
+
+Validated in `--dry-run` against `semio-framework`: **2 errors, 2 unambiguous edits, 0 ambiguous**
+(`sol-awaittool-dryrun-framework.txt`).
+
+## 📊️ Coordinator-measured compile baselines (these supersede the stale ones above)
+
+| target | result | note |
+|---|---|---|
+| `semio-framework-async --lib` | **exit 101, 18 errors** (`sol-baseline-async.txt`) | ALL in one cluster, `⏳️async/🦀️component.rs:127–341` (the `CancelToken` atomics region): E0605 casts, E0308 arg mismatches, E0369 `==` on a future, E0599 on opaque futures — i.e. pure missing-`.await`. **One is different and important**: E0277 at :175, `impl Debug for CancelToken` calls the now-async `state()` inside `write!`. `Debug::fmt` is an **E1** exception — it cannot be async and cannot `.await`. Folded into `macros-blockon` (same file — rule 17) with instructions to make its resolution the **repo-wide recipe** for "external-trait impl needs a value that is now behind `async fn`", because this pattern will recur hundreds of times. |
+| `semio-framework --lib` | **2 errors** | Both in `🖱️ui/🎨️styling/📦️packages/🦀️rust/📦️glue.rs`, both plain missing-`.await`. The io crate is in far better shape than assumed — `io-thunks` is a much smaller packet than planned. |
+
+`vocab-repair` is **merged into `macros-blockon`** (one file, rule 17). Its `Arc<dyn HostAsyncRuntime>`
+→ generics ripple stays OUT of that packet and belongs to `db-dedyn`/`os-ripple`.
+
+
+## 🌐️ `jco-spike` VERDICT: **GO-jspi** — the web path works, and it costs us a browser-support constraint
+
+The single biggest external risk in the program is answered, by a real running experiment across four
+environments rather than from documentation. Full evidence: `📓️terra-jco-spike-report.md`.
+
+**jco 1.27.0 does transpile and drive a wasip2 `wit_bindgen::generate!({ async: true })` component in
+which every WIT function is `async func`.** All four success criteria PASS with measured evidence,
+not assertions:
+
+| | result |
+|---|---|
+| **S1** async export callable, returns a promise of the right value | PASS |
+| **S2** guest awaits a real 50 ms host import **without blocking the event loop** | PASS — a concurrent `setInterval` fired **13–17 times** while the guest was suspended |
+| **S3** `spawn`-ed detached guest task survives past the export's return | PASS — export returned in ~1 ms, its detached task finished ~80 ms later |
+| **S4** `stream<u8>` read chunk-by-chunk from JS | PASS |
+| **S5** works with JSPI unavailable | **FAIL — and this is the finding** |
+
+### ⛔️ The plan's central assumption about jco was WRONG, and it was wrong in the expensive direction
+
+The brief (and the design behind it) assumed the P3 **callback ABI** is event-loop-driven and therefore
+would not need JSPI, with `--async-mode jspi` being merely a legacy path. **Measured: jco's generated JS
+uses `WebAssembly.Suspending`/`WebAssembly.promising` UNCONDITIONALLY.** `--async-mode jspi` produces a
+byte-identical file to the default — there is no flag that yields JSPI-free output.
+
+**I verified this myself rather than taking the packet's word for it**, since it determines the product's
+browser matrix: both transpiles contain **21 `WebAssembly.Suspending` + 7 `WebAssembly.promising`**
+(341,919 vs 341,958 bytes — identical but for a path string). The fallback the brief proposed ("verify
+the generated JS contains no JSPI references") is therefore not a fallback at all; it can never pass.
+
+Failure mode without JSPI is **hard and early**: plain Node 24 throws
+`TypeError: WebAssembly.Suspending is not a constructor` at module top level, before any call — not a
+graceful per-call degradation. So there is no partial-capability story either.
+
+### 📱️ Consequence: the web renderer requires a JSPI-capable browser
+Chrome/Edge ship JSPI on by default; bun and Node-with-`--experimental-wasm-jspi` work. Firefox has it
+behind a flag; Safari is implementing. **Firefox could NOT be tested** — the Browser pane is
+Chromium-only — and the report is explicit about that gap rather than papering over it.
+
+This does not block the program: the plan anticipated GO-jspi and it is Chrome-first by default. But it
+is a genuine product constraint, and **fallback F2 (a hand-rolled callback-ABI driver in the bridge
+generator) is now the only route to non-JSPI browsers** — it is NOT free, and it should only be built if
+the owner requires Firefox/Safari before those ship JSPI. **Flagged to the owner as a scope decision.**
+
+Concrete required changes to `🌐plugin-web-materialize.ts` (`transpilePluginComponent`,
+`pluginComponentBridgeSource`) are itemised in the report; `web-bridges` consumes them.
+
+
+## 🧊️ `brep-probe` VERDICT: **GO-with-constraints** — and it found something that makes the 134-site sweep SAFE
+
+Full evidence: `📓️terra-brep-probe-report.md`. Q1/Q2/Q3 all PASS on a real native probe crate: the
+`LocalExecutor` genuinely drives a multi-`Pending` guest await across pumps (Q1); a `JobCtx::tick()`-sliced
+job body completes across ≥3 `step_job` calls (Q2); a never-ready guest-internal future does **not** hang
+the host — the stall guard reclaims it and every call returns in microseconds (Q3).
+
+### 🎁 The finding that changes the risk profile of the whole fleet sweep
+**The real BrepKernel contains ZERO `.await`.** I verified this independently rather than accepting it:
+the `✳️brep/🧬️schema` tree is **82 files carrying 1,600 `async fn` and exactly 0 `.await`**. Every kernel
+future therefore resolves on its first poll, which means `block_on(kernel.op())` → `kernel.op().await` is
+**behaviourally identical today**. The 134-site conversion is a mechanical signature change, not a
+semantic risk — which is the opposite of what the plan assumed when it gated the sweep behind this probe.
+
+### ☠️ `pollster::block_on` in the guest is a live landmine, not a style problem
+Measured: on `wasm32-wasip2` a genuinely-`Pending` future with no synchronous self-wake **abort-traps the
+entire wasm instance** — `condvar wait not supported`, exit 134, in 0.01 s. Not a hang; an instant crash.
+It compiles, and it only appears to "work" today because that path is dead code. So removing guest
+`block_on` is a **correctness requirement**, not cleanup. This retroactively justifies R4's rule that no
+wasm host path is ever a sanctioned `block_on` site.
+
+### 🕳️ A production file that does not compile, found by accident
+`⚛️reactor/🧵️executor/🦀️component.rs` — the guest executor itself — is broken by the same mechanical
+conversion (2 missing `.await`, plus raw-waker vtable functions turned into `async fn`, which
+`core::task::RawWakerVTable` can never accept). A patched copy + exact diff is in the probe fixture.
+Assigned to `sdk-dedyn`.
+
+## 🔁 That last defect is SYSTEMIC — I swept for it repo-wide
+
+`async fn` cannot be stored in a `RawWakerVTable` (**E4**: an `async fn` item's pointer type is
+unnameable). Four PRODUCTION files carry exactly this break:
+
+| file | async helpers wrongly created | owner |
+|---|---|---|
+| `🧰️framework/🔨️modules/🚪️io/🦀️component.rs` | `noop`, `clone_raw` | `io-thunks` (already briefed) |
+| `🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs` | `futures_test_waker`, `noop`, `clone` | `sdk-dedyn` |
+| `🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs` | `wake`, `waker_for`, `raw_waker`, `waker_clone`, `waker_wake`, `waker_wake_by_ref`, `waker_drop` | `sdk-dedyn` |
+| `🔌️plugin/🌐host/📖️body/🦀️component.rs` | `noop`, `clone` | `sdk-dedyn` |
+
+All four take the same fix: revert those helpers to sync (**E4**, tagged `// 🚫️async: E4 fn-pointer slot`)
+or replace the hand-rolled vtable with `std::task::Waker::noop()`. **This is now a named checklist item on
+`sdk-dedyn`, not a discovery to be made mid-packet.**
+
+## 📉 CENSUS CORRECTION: `block_on` is **766** repo-wide, not 134
+
+The long-quoted "block_on 134 → 0" target counted **the fleet only**. Measured across all first-party code:
+
+| area | `block_on(` sites |
+|---|---:|
+| `🧰️framework/🛍️products/💻️os` | **619** |
+| `✏️s/🔌️plugins/🌊️flow` | 59 |
+| `✏️s/🔌️plugins/📐️cad` | 45 |
+| `✏️s/🔌️plugins/🗄️stdio` | 15 |
+| `✏️s/🔌️plugins/🏭️process` | 13 |
+| `🧰️framework/🔨️modules/🎒️pack` | 12 |
+| `✏️s/🔌️plugins/🎞️animate` | 2 (and these two are **not** BrepKernel at all — they are wgpu `request_adapter`/`request_device`, a different risk class) |
+| `🧰️framework/🔨️modules/◻2d` | 1 |
+| **total** | **766** |
+
+The 619 in `💻️os` include the db `postgres`/`neo4j` dedicated-thread bridges, which **R4 explicitly
+sanctions** — so the exit target is not "766 → 0" but "766 → the R4 allow-list, enumerated by name".
+`census-zero` must therefore report *classified* counts, never a bare total; a bare total here would be
+either a false alarm or a false all-clear. The fleet's own 134 remain a true 134 → 0.
+
+
+## ⚙️ `async-harness-spike` VERDICT: **GO on all six questions** — the native async runtime design is validated
+
+Full evidence + code shapes: `📓️terra-async-harness-report.md`. Built a reduced turn-shaped world
+(`semio:turnharness@0.1.0`, records matching the real `reactor`/`jobs`/`checkpoint` field-for-field) plus
+a wasmtime 47.0.3 host harness under `🧫️fixtures/🔌️asyncprobe/{👽️guest-turn,🖥️host-turn}`.
+
+| Q | question | verdict |
+|---|---|---|
+| Q1 | turn shape: async `poll` on a Store owned by a spawned task, guest awaits a host import mid-turn | **GO** |
+| Q2 | cancellation requires dropping the **Store**, not just the call future | **GO** — re-confirmed on the poll shape |
+| Q3 | epoch **and** fuel preempt CPU-bound guests across separate Stores | **GO** |
+| Q4 | `step-job` against an instance whose `poll` is suspended | **GO — and it needs no dedicated instance**, the existing `accessor.spawn` pattern works |
+| Q5 | `set_epoch_deadline` delta semantics | **GO** — reproduced the overflow trap decisively, plus both epoch and fuel cutoffs with exact trap text |
+| Q6 | `tokio::runtime::Handle` injection + `abort()` tears down the Store | **GO** |
+
+**Q4 is the valuable one**: jobs do NOT need their own instance, which removes a whole branch from the
+`async-plugin-runtime` design. The packet also found and fixed two bugs in its own harness rather than
+hiding them (fuel armed before `instantiate_async` gets eaten by instantiation; an unconditional-Yield
+epoch callback masks the delta-overflow signal) — both are traps the real runtime would have hit.
+
+⚠️ **It correctly flagged that the target world I described does not exist verbatim yet**: today `world
+actor` imports only `pure`, while `world actor-async` imports `host-async` but exports stream-based
+`runner::run` rather than `poll`. That is exactly what the `world-collapse` packet is for; the harness
+proves the *destination* is sound. Its "corrections required to `⏳️runtime.rs`" list is now the spec for
+`async-plugin-runtime`: drop `GrantWindow`/`StreamProducer` for a command channel, interface names carry
+**no `-async` suffix**, tokio-handle injection is mechanical, and `DeadlineCell`/`install_epoch_budget`
+are confirmed correct as written.
+
+## 🧱️ THE REAL COMPILE SPINE — measured, and it is much narrower than feared
+
+`cargo check -p semio-framework-plugin --lib` does not even reach the SDK: it dies upstream. I ran it
+with `--keep-going` to enumerate the whole closure (`sol-spine-keepgoing.txt`). **In the guest SDK's
+entire dependency closure, exactly FOUR crates fail:**
+
+| crate | module | errors |
+|---|---|---:|
+| `semio-framework-schema-derive` | `🧬️schema/✨️derive` | **1** |
+| `semio-framework-os-kernel-dsl-derive` | `🗣️dsl/✨️derive` | **8** |
+| `semio-framework-mesh-engine` | `🔺️mesh-engine` | 29 |
+| `semio-framework-replication` | `📡️replication` | **~481** |
+
+(plus `⏳️async`'s 6, already owned by `macros-blockon`.)
+
+**Two of the four are proc-macro crates, and that is the whole bottleneck.** A `#[proc_macro]` /
+`#[proc_macro_derive]` / `#[proc_macro_attribute]` entry point must be exactly
+`fn(TokenStream) -> TokenStream` — **E3** — and the codemod made them `async`. Nine errors in two tiny
+crates are blocking every crate in the repo that uses a derive. Dispatched as packet **`spine-upstream`**,
+with the standing ruling that **proc-macro crates stay entirely sync** (a proc-macro runs inside rustc at
+compile time, where async is meaningless) — that reasoning generalises to every `✨️derive`/`✨️macros`
+crate in the repo.
+
+Closure-wide error profile: **E0277 219 · E0308 171 · E0053 34 · E0599 32 · E0369 8 · E0605 6 · E0600 3 ·
+E0271 2 · E0608 1** — overwhelmingly missing-`.await`, which is exactly what the shared tool automates.
+The 34 E0053 are the judgement cases (trait and impl disagree); the standing rule given to the packet is:
+**never resolve an E0053 by making a first-party trait sync to match a stale impl.**
+
+## 🧹 Second shared tool landed and VALIDATED: `deasyncify-external-impls.py` (repair codemod S1)
+
+The blind fleet codemod wrote `async fn` into impls of traits this repo does not own; those can never
+compile (**E1**). The reverse tool reuses `asyncify-universal.py`'s own local-trait census — so "external"
+means exactly what it meant when the damage was done — and adds three safeguards the original lacked:
+a `FORCE_EXTERNAL` set that overrides the census (so a first-party trait coincidentally named `Default`
+cannot shield uncompilable code), **real brace-depth tracking** instead of the original's
+`line.startswith('}')` pop heuristic (a false negative is harmless when *adding* a keyword but corrupts
+meaning when *removing* one), and string/comment stripping before brace counting.
+
+Scanned over `✏️s`: **890 methods in 626 files** — `Default` 571, serde `Deserializer` 59 / `Serializer`
+59 / `Serialize` 7 / `Deserialize` 7 / `Visitor` 13, `From` 53, `Display` 43, `Sub` 10, `Add` 9,
+`PartialEq` 7, plus a long tail of operator traits.
+
+**I checked its five most suspicious trait names before trusting it** — `GltfSemanticMutation`, `World`,
+`Parse`, `ApplicationHandler`, `Visitor` all *look* like they could be first-party. Measured: **none of
+them is declared anywhere in first-party code** (0 hits each), so they are genuinely external
+(winit/syn/gltf/serde) and reverting them is correct. The tool is cleared for use; the fleet-wide `--apply`
+belongs to `fleet-codemods`, not to any crate packet.
+
+
+## ✅️ `macros-blockon` ACCEPTED — the first crate in the program is GREEN
+
+Coordinator-run acceptance (not the packet's own figures — rule 23):
+
+```
+cargo check -p semio-framework-async --lib          LIB_EXIT=0
+cargo check -p semio-framework-async --all-targets  ALLT_EXIT=0
+cargo test  -p semio-framework-async                TEST_EXIT=0   17 passed / 0 failed / 0 ignored
+cargo check -p semio-framework-async-macros --all-targets  MACRO_EXIT=0
+```
+(First capture attempt lost the exit codes to a `${PIPESTATUS}`/brace-group interaction and was re-run
+clean rather than reported from the "Finished" lines — rule 7 demands the real code, including from me.)
+
+Landed: the proc-macro crate `semio-framework-async-macros` (`⏳️async/✨️macros/`) with `#[async_test]`,
+which **keeps the literal `async fn` in source** and expands to a `#[test] fn` driving the body through an
+inline, dependency-free thread-park executor — so 65+ crates gain a dev-dependency and nothing else, no
+tokio, no futures-lite. Plus `block_on` in `⏳️async/🦀️component.rs` as a tagged **E5** bridge (native
+thread-park, wasm32 spin fallback), the R1 de-double-futuring of `HostAsyncRuntime`, and the 18 baseline
+errors + 1 more that only `--all-targets` revealed (rule 26 earning its place again).
+
+**Nice confirmation of the E3 ruling from the field**: the packet found empirically that a
+`#[proc_macro_attribute]` entry cannot be `async`, and that **the two precedent macro crates in the repo
+do not currently compile for exactly that reason** — which is independent corroboration of the
+`spine-upstream` diagnosis that the two `✨️derive` crates are broken proc-macro entry points.
+
+### 📉 Correction to my own figure
+`async-test-attr.py --scan` (the real tool, over the real tree) reports **13,294 sites in 2,718 files**,
+not the 16,427/2,897 I recorded earlier from a coarser grep. **The tool's number is the binding one**; my
+earlier estimate over-counted. Same class of error this ticket has logged repeatedly — a grep is not a
+census.
+
+### ⚠️ Anomaly recorded, not swallowed
+Mid-session the packet found `⏳️async/🦀️component.rs` reverted to its pristine pre-session state, with git
+evidence, and judged it tooling/sync trouble rather than a peer edit. It redid the work and flagged it
+instead of quietly absorbing it — correct behaviour. **I verified the end state on disk myself**: `block_on`
+present, E5 tag present, **zero** `async fn … -> HostFuture` double-futures remaining, 19 `async_test` uses,
+and all five macro-crate files present. The work is real and survived.
+
+### 🔀 Follow-up handed on (not dropped)
+Three crates still implement `HostAsyncRuntime` with the pre-R1 signatures: `🛢️db/🗄️storage` (assigned to
+`db-dedyn`, briefed), `🛎️services` and `🌎️hub/…/📦️bin.rs` (assigned to `os-ripple`, recorded here so it
+cannot be forgotten).
+
+## 📏️ NEW RULING **R7** — `async_fn_in_trait` is ALLOWED crate-wide; never "fix" it with `+ Send`
+
+All 6 warnings on the first green crate were the same lint:
+`use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified`.
+Under universal async it fires on **every public trait with an async method** — ~93 families, so
+potentially hundreds of warnings against an exit bar that demands zero. One central ruling now, rather
+than 93 packets each improvising:
+
+- ✅ `#![allow(async_fn_in_trait)]` at crate root with a comment citing R3/R7.
+- ⛔ **Never** silence it with rustc's own suggested `-> impl Future<Output = T> + Send`. The compiler
+  prints that suggestion in the warning text and it is the WRONG fix here: it re-imposes `Send` on guest
+  traits whose futures cannot be `Send` (single-threaded wasm, `LocalExecutor`, thread_local state) and
+  contradicts R3 in the letter. **This is a case where following the compiler's advice breaks the
+  architecture** — the lint's concern is answered structurally by concrete enums at every former dyn seam,
+  which is exactly what O1 is building.
+- ⛔ Never resolve it by making a trait method sync.
+- Every other warning class still counts toward the zero-warning exit bar.
+
+Broadcast immediately to the four in-flight packets most likely to hit it (`dyn-enum-macro` above all —
+a macro that emitted `+ Send` would inject the defect 93 times), rather than left in a report for them to
+find. Rule W4-8: a cross-packet finding must be lifted the moment it is read.
+
+## ▶️ `db-dedyn` dispatched
+`semio-framework-async` going green unblocked it. Owns `🛢️db/**`: un-double-future the 7 storage traits
+(~233 `DbFuture` lines), `DbBackend<R>` + per-facet ref enums replacing `-> &dyn WalStorage`,
+`Arc<dyn HostAsyncRuntime>` → generic `Arc<R>`, the R1 fix to its own `InlineRuntime`, and the R4
+classification of its `block_on` sites (clause 2 sanctions the postgres/neo4j dedicated-thread bridges).
+Briefed to USE `dyn_enum!` if `dyn-enum-macro` has landed by the time it gets there, and to hand-write in
+the same shape if not — never to block on it.
+
+
+## 🎒️ `pack-waker` delivered — accepted on substance, acceptance BUILD deferred (blocked upstream, verified not its own)
+
+Both headline correctness defects are fixed in `semio-framework-pack`:
+- `CancelWatch::poll` no longer busy-waits with a 200 µs sleep inside `Future::poll`; it uses a
+  `CancellationToken` over `Arc<Mutex<{cancelled, wakers}>>` with an atomic check-and-register.
+- `http`'s `Sleep::poll` no longer sleeps inside `poll`; it spawns one timer thread on first poll that
+  calls `Waker::wake` at the deadline.
+- A poll-counting regression test for each asserts **≤4 polls** where the old busy-poll shape logged
+  ~75–100. That is the right kind of test: it fails if anyone reintroduces the defect, rather than merely
+  asserting the future eventually completes.
+
+**Its compile acceptance could not run**, and the packet said so plainly instead of claiming green: the
+crate's dependency `semio-framework-replication` was failing with **209 errors, then 350 errors twenty
+minutes later** — a moving count, which here is not flakiness but the live `spine-upstream` packet
+refactoring that very crate. Correct diagnosis, correct restraint. Re-verification is queued behind
+`spine-upstream`.
+
+### 🕵️ Its provenance inference was WRONG, and checking cost one command
+The packet observed its file change between two reads and concluded that "another session's repair
+codemod (`deasyncify-external-impls.py`) plus a broader companion pass had already reverted most of the
+mechanical async damage." That script is **mine**, and it was dispatched to exactly two packets under
+tight `--scan`-then-`--apply` scoping. If it had genuinely been run repo-wide, 890 fleet sites would have
+been rewritten without review — a serious scope violation.
+
+**Measured instead of assumed: the fleet is INTACT.** Re-running the scan over `✏️s` still reports
+**892 pending sites in 627 files** (vs 890/626 earlier — the drift is ordinary churn, and `local traits
+known` moved 233 → 239 because sibling packets are adding traits). Nothing was swept. This is the second
+packet this session to report a file mutating under it; the pattern is recorded, but it is **not** a rogue
+codemod. Standing reminder that just earned its keep: *a file changing under you is evidence of churn,
+never evidence of what changed it* — settle attribution by measuring, not by inferring.
+
+### ✅️ Its cross-packet finding was RIGHT, and is now ruling **R8**
+`#[async_trait]` desugars to exactly the `Pin<Box<dyn Future>>` trait-method return shape that **R1 bans
+and O1 rejects**. The packet flagged it rather than acting outside scope — correct. I measured the whole
+surface so it can be closed rather than discovered piecemeal: **12 attribute sites in 6 files**, 5
+`Cargo.toml` declarations — `🎒️pack/🌐️http` 5, `🎒️pack/⏳️async` 3, `🌎️hub/📇️directory` 4. Small, bounded,
+and now assigned by name in `📌️important.md`.
+
+### ⚖️ Ruling clarification it correctly asked for → **R4 clause 5**
+All 14 of its `block_on` sites live in `#[cfg(test)]`, and it noted R4 never literally names `#[test] fn`.
+Fair question, ruled: **a test harness is a `main`-equivalent thread root, so `block_on` in `#[cfg(test)]`
+is sanctioned and is not counted against the census target.** Preferred form remains `#[async_test]`.
+Consequence for `census-zero`: it must report **production** and **test** `block_on` as separate numbers —
+a blended total would be simultaneously a false alarm and a false all-clear.
+
+It also found the crate had **zero** `#[test] async fn` breakage, contrary to the brief's expectation —
+noted, because it means the 13,294 sites are unevenly distributed and per-crate expectations should be
+measured, not assumed.
+
+
+# 🚨️ INCIDENT — the staged framework asyncify was REVERTED out of the working tree (index intact, fully recoverable)
+
+Three packets in a row reported "my file changed under me" (`macros-blockon`: reverted to pristine;
+`pack-waker`: damage already undone between two reads; `store-dedyn`: **overwritten twice**, its
+`async fn` count collapsing 739 → 2). Two of the three misattributed it — one guessed a peer session, one
+guessed a rogue codemod. **Neither guess was right, and guessing is what this ticket keeps paying for.**
+I measured it instead.
+
+## What is actually true
+
+| file | HEAD | git INDEX | WORKING TREE |
+|---|---:|---:|---:|
+| `🔌️plugin/🦀️component.rs` (guest SDK) | 19 | **1,489** | **19** |
+| `🔌️plugin/🖥️host/🦀️component.rs` | 1 | **238** | **1** |
+| `🏪️store/🦀️component.rs` | 0 | **739** | 208 (store-dedyn rebuilt part on the reverted base) |
+| `🎭️actor/🦀️component.rs` | — | — | 224 ✅ untouched |
+| `🚪️io/🦀️component.rs` | — | — | 192 ✅ untouched (live packet) |
+
+(counts = `async fn`.) **The working tree was restored from HEAD; the index still holds the conversion.**
+388 files remain staged. Framework-wide the tree is now only **34.2% async** (6,785 async vs 13,044 plain).
+
+**Mechanism, from mtimes**: `🔌️plugin/🦀️component.rs` and `🖥️host/🦀️component.rs` were both rewritten at
+**14:41:32 — the same second**. That is a bulk operation, not editing. It happened ~30 min into this
+session. `.git/index` was touched later (15:03:47), consistent with the auto-commit bot continuing to
+stage. Cause is NOT established and I am not going to invent one; what is established is the shape:
+*something restored working-tree files from HEAD while leaving the index alone.* Flagged to the owner —
+it is their environment and the cadence may be recognisable to them.
+
+## Why I did NOT "just restore it from the index"
+
+`git restore --source=:0 <paths>` would recover the asyncify **and destroy `store-dedyn`'s entire de-dyn
+refactor**, because the index predates it. It is also a git-modifying command, which rule 1 forbids
+outright precisely because several sessions share this tree. Recovering one packet's work by silently
+deleting another's is not a recovery.
+
+**The correct route is the idempotent codemod**, which composes with the current tree instead of
+replacing it: it re-adds `async` while leaving `store-dedyn`'s enums, `MemberFactory` and `space_members!`
+in place. Verified intact after the revert: **zero live first-party `dyn` in `🏪️store`** (11 residual hits
+are all comments), `MemberFactory` ×14, `space_members!` ×6, `Backbones` enum, `NoMembers` ×8.
+
+## 🔒️ The codemod is now SAFE TO RE-RUN — tag awareness added (this was the real gap)
+
+`asyncify-universal.py` skipped external-trait impls, `const fn`, `extern` and `main`. It knew **nothing**
+about the E3/E4/E5 exception classes this program has since established, so re-running it over a repaired
+tree would have silently re-broken **every** raw-waker vtable helper, fn-pointer thunk and `block_on` that
+packets have just fixed — converting a recovery into a regression, at scale.
+
+Patched: it now skips any fn carrying a `// 🚫️async: E<n>` tag in the attribute/comment block directly
+above its signature, and any `#[proc_macro*]` entry point, and reports them as `tagged_exempt`.
+**This makes the tag convention load-bearing rather than decorative** — a tag is now the only thing
+standing between a hand-made repair and the next codemod run.
+
+Verified on two corpora:
+- `⏳️async` (repaired + accepted): `tagged_exempt: 2`, `external_trait: 7`, `already: 58` — the E5
+  `block_on` is correctly protected.
+- The reverted SDK file: `converted: 1,470`, `external_trait: 41`, `const: 3`, `extern: 6` — which
+  reconciles with the index's 1,489, confirming a re-run reproduces the lost conversion.
+
+## ⛔️ Deliberately NOT blanket re-applying now
+The `⏳️async` scan shows **11** would-be conversions in a crate that is already green and accepted —
+i.e. a blanket `--apply` would regress accepted work. Re-asyncify is therefore folded into the packet that
+**owns** each file, as its first step, rather than run centrally across files five packets are live in:
+`sdk-dedyn` re-asyncifies `🔌️plugin/**` before its de-dyn work; `host-dedyn` does `🖥️host/**`;
+`store-dedyn`'s remainder is picked up at re-acceptance.
+
+## 📋️ Standing consequences
+1. **Verify the end state on disk, never from your own earlier read** — three packets were fooled today.
+2. **`git diff HEAD` is not the whole story here.** Index and working tree have diverged; compare
+   `git show :<path>` (index) against the file when a count looks wrong.
+3. A file changing under you is evidence of churn, never evidence of *what* changed it. Settle
+   attribution by measuring index/HEAD/worktree, not by naming a suspect.
+
+## `dyn-enum-macro` delivered — `#[dyn_enum]` / `dyn_enum_close!`, full findings in `📓️terra-dyn-enum-macro-report.md`
+
+`semio-framework-dispatch-macros` (`🧰️framework/🔨️modules/🔀️dispatch/**`) is written, 28/28 tests green,
+zero clippy/rustfmt warnings — proven via a scratchpad standalone build (root `Cargo.toml` lease pending,
+see the report's `lease-request`). Five findings worth knowing before the next 90 applications:
+
+1. **`use crate::__semio_dispatch_X;` (an absolute path) to a macro-expanded `#[macro_export]` macro,
+   from the SAME crate, hits `error: macro-expanded 'macro_export' macros … cannot be referred to by
+   absolute paths` (rust-lang/rust#52234) — downgraded to `warn` here by `future_incompatible = "warn"`,
+   but this ticket's gates run `-D warnings`.** Fix: `dyn_enum_close!` emits a BARE (unqualified)
+   invocation, never a `use` — works with zero warnings whenever the trait is declared before its closing
+   enum in the same module (true everywhere in this program). Cross-module/cross-crate call sites must
+   write their own `use …__semio_dispatch_<Trait>;` — the macro cannot inject that without retriggering
+   the lint.
+2. An attribute macro and a function-like macro **cannot share one name** in one crate (`E0428`) — the
+   closing macro is `dyn_enum_close!`, not `dyn_enum!`.
+3. **`sol-dyn-families.json`'s census looks stale** for at least `AuditSink` and `Decider` — both are
+   fully SYNC in the live tree today (no `async fn` anywhere), contradicting the census's
+   `async_methods: 1`/`3`. Recommend re-measuring before the next wave trusts it. This is also why
+   neither became the required worked-application family — a sync `dyn Trait` isn't actually broken by
+   E0038 yet.
+4. `Migration` (`🔄️machine/🦀️component.rs:1303`) IS genuinely async but its only 2 uses are
+   `&[&dyn Migration]` (an open, caller-supplied list per `Machine::restore`/`step`) — a materially
+   harder shape than a `Box`/`Arc<dyn T>` field; `dyn_enum` doesn't apply to it mechanically.
+5. **The sibling proc-macro crates this task was told to copy the shape of are currently BROKEN** by the
+   blind asyncify tooling: `semio-framework-schema-derive` and `draw-fsm-macros` both have
+   `#[proc_macro_derive]`/`#[proc_macro]`/`#[proc_macro_attribute]` entry functions marked `async fn`,
+   which is a hard rustc error (`expected fn(TokenStream) -> TokenStream, found fn(..) -> impl Future`).
+   Proc-macro entry points are E3 — plain `fn`, always. Not fixed (out of path scope); whoever owns those
+   two files next has a one-line-per-entry mechanical fix.
+
+No family was converted live this turn (`GuestRuntime`'s file was contended per this session's own
+`cold-kinds`/`macros-blockon` activity; `AuditSink`/`Decider` aren't actually broken yet per finding 3;
+`Migration`'s call-site shape needs real design). The exact `AuditSink` before/after diff is ready in the
+report, proven end-to-end against the real macro via a standalone scratch crate, pending the two
+Cargo.toml leases (root workspace member + `semio-framework-os-mcp`'s own dependency line) named there.
+
+
+## ✅️ `dyn-enum-macro` ACCEPTED — the force multiplier for 50 remaining families is live
+
+Coordinator-run acceptance after I applied its lease to the root `Cargo.toml`:
+```
+cargo check -p semio-framework-dispatch-macros --all-targets   EXIT=0
+cargo test  -p semio-framework-dispatch-macros                 EXIT=0   28 passed / 0 failed (5 targets)
+cargo check -p semio-framework-async-macros    --all-targets   EXIT=0   (unaffected by the change)
+cargo metadata --no-deps                                       EXIT=0   (workspace still parses)
+```
+Registrar action: added **both** new proc-macro crates as workspace members
+(`🔀️dispatch/📦️packages/🦀️rust` and `⏳️async/✨️macros/📦️packages/🦀️rust`) — the latter had been working
+only as a transitive path dev-dependency, which is fragile and would have surprised the first packet to
+run `cargo check -p` on it.
+
+Coverage that matters: a **45-method** trait test (so `BrepKernel`'s 92 is not a leap of faith), the
+zero-variant `match *self {}` case for all four receiver kinds, and mixed async/sync + `&self`/`&mut self`
++ default bodies + generics/where-clauses verified at runtime, not just compiled.
+
+Three real constraints it discovered, now part of the recipe: the closing macro must be invoked **bare**
+(macro-expanded `#[macro_export]` macros cannot be referenced by absolute path from the same crate,
+rustc#52234); it had to be named **`dyn_enum_close!`** because a function-like and an attribute macro
+cannot share a name (E0428); and cross-module use needs an explicit `use crate::__semio_dispatch_<Trait>;`.
+
+It also **independently confirmed the `spine-upstream` diagnosis**: the two sibling `✨️` macro crates it
+was told to copy are themselves broken by the blind codemod marking proc-macro entries `async fn`.
+
+## 📊️ Post-revert de-dyn census — the scope moved, and the old table is now WRONG
+
+The `dyn-enum-macro` packet flagged that `sol-dyn-families.json` was stale for two families. It was right,
+and the cause is the revert: that census was taken at ~14:30, the bulk revert landed at 14:41, and a trait
+whose methods reverted to sync **no longer needs de-dyn at all**. Re-measured into
+`sol-dyn-families-postrevert.json`:
+
+| | traits | dyn uses |
+|---|---:|---:|
+| used as `dyn` (first-party) | 92 | 783 |
+| **still need de-dyn (async methods today)** | **50** | **571** |
+| currently fully sync — de-dyn deferred until re-asyncified | 41 | 210 |
+
+`SpaceMember` fell **101 → 17**, which is `store-dedyn`'s work showing up in the census — an independent
+confirmation that its refactor survived the revert. `PluginApp` now reads 51 methods / **2 async**, which
+is the reverted SDK exactly as expected.
+
+**Binding consequence: de-dyn scope must be re-measured AFTER each file is re-asyncified, never before.**
+Scoping a packet off the pre-revert table would send it hunting for trait objects that are not currently
+broken, and miss ones that will be. `sol-dyn-families-postrevert.json` supersedes the original.
+
+## 🐛 `io-thunks` found a REAL BUG IN MY OWN TOOL — and caught it itself
+
+`insert-await.py --apply --scope '🧰️framework'` reached into **314 files**, far outside the packet's
+grant. The packet noticed, unwound it correctly (restoring 203 out-of-scope files via `git show` + Write,
+**never** `git checkout` — exactly right under rule 1), and reported it plainly instead of quietly keeping
+the wider diff.
+
+**The defect was mine.** `--scope` was a bare substring test, so `🧰️framework` matched every file in the
+framework tree — including `🛍️products/**`, which belongs to other packets. **I had told four packets that
+passing `--scope` would confine their edits.** A scope argument that silently means "almost the whole repo"
+is worse than none, because it is trusted.
+
+Fixed, with the incident written into the function's own docstring so the reason cannot be lost:
+- `--scope` now matches on **path segments**, not substrings (`in_scope()`), verified against six cases
+  including the exact failure (`🧰️framework/🔨️modules` must NOT match a `🛍️products/**` file) — **all 6 pass**.
+- New **`--max-files` blast-radius guard** (default 60): a pass that would edit more files than the cap
+  aborts and prints what it would have touched, because an over-broad scope looks exactly like this in
+  practice. The 314-file pass would have been stopped dead.
+
+Standing lesson: **a safety rail nobody has tested is not a safety rail.** I shipped `--scope` on
+reasoning and it was wrong on first contact; it now has test cases.
+
+## 📦️ `io-thunks` delivered
+`compose_thunk!` / `io_run_thunk!` / `io_sniff_thunk!` (E4 fn-pointer-slot thunks), `resolve_ready`'s
+broken `RawWakerVTable` internals replaced with `std::task::Waker::noop()` and demoted to a tagged **E5**
+plain fn, plus ~40 cascading `.await`/sync-closure repairs. It fixed `SubsetValidatorEntry.validate` —
+**the same defect class, not named in its brief, found by reading rather than by waiting to be told**.
+10 tagged sites verified by grep.
+
+It **declined to run `compose-thunk-rewrite.py --apply`** despite the literal instruction, having verified
+concretely that it would double-wrap already-correct thunks. Correct call: an instruction that would
+corrupt the tree is not followed, it is reported. The script is written, bug-fixed and idempotency-checked
+on a fixture, ready for `fleet-codemods` to point at `✏️s/**`.
+
+Acceptance blocked upstream by `📡️replication` (77 errors and shrinking as `spine-upstream` works it),
+with **zero errors attributed to its own file at every measurement** — stated plainly rather than glossed.
+One `lease-request` for a guest-SDK call site (`🔌️plugin/🦀️component.rs:3739`), folded into `sdk-dedyn`.
+
+
+## ✅️ `spine-upstream` ACCEPTED — and the upstream blocker is now fully CLEARED
+
+The packet took 3 of its 4 crates to green and, more usefully, **isolated the fourth precisely instead of
+grinding on it**: `semio-framework-replication` had **zero errors of its own**; it was blocked entirely by
+two files its crate root `#[path]`-mounts but does not own — `⚠️diagnostic/**` (11 errors) and
+`🌱️value/**` (55, a hand-rolled `Serializer`/`Deserializer`). It filed a lease rather than reaching
+across the boundary. That is exactly the behaviour rule 3 exists to produce.
+
+- `semio-framework-schema-derive`, `semio-framework-os-kernel-dsl-derive` — **green**, whole crate kept
+  sync, tagged `// 🚫️async: E3 proc-macro entry`. Its written reasoning ("a proc-macro runs inside rustc
+  at compile time, where async is meaningless") is now the standing recipe for every `✨️derive`/`✨️macros`
+  crate in the repo.
+- `semio-framework-mesh-engine` — **green**, `cargo test` **20/20 passed** (runtime, not just compile).
+
+### 🕳️ A real pre-existing bug it surfaced by accident
+`⚙️codec/🦀️component.rs` and `🚰️source/🦀️component.rs` had **lost their `#[cfg(test)] mod tests {}`
+wrapper entirely** — braces still balanced, so nothing ever caught it, and their test code was compiling
+into the plain `--lib` build. Restored. Found only because the `#[async_test]` rewrite walked those files;
+a whole class of "tests silently in the production build" that no gate was checking.
+
+## 🔧️ I took the lease myself and cleared it — replication is GREEN
+
+`⚠️diagnostic` and `🌱️value` are unowned, and this was the critical path, so I did it as registrar rather
+than spending a dispatch round.
+
+1. `deasyncify-external-impls.py --scan` on `🌱️value` → **34 sites** (`Serializer` 28, `Deserializer` 6);
+   `⚠️diagnostic` → **0**. Applied to `🌱️value`. **66 → 36 errors.**
+2. The residue was the interesting half: **5 × E0728 `await is only allowed inside async functions`** —
+   removing `async` from a serde impl leaves its `.await`s orphaned. The failing calls were
+   `self.get(key).await`, `key.as_str().await`, `self.take().await`, and `TextError::expected(..).await`
+   — i.e. **pure in-memory accessors on a data enum, made async for nothing, consumed by impls that can
+   never be async.**
+3. Verified both modules contain **zero I/O markers** (`std::fs`/`tokio`/`reqwest`/`ureq`/`File::`/
+   `TcpStream`/`spawn`/`sleep`/`SystemTime`) before deciding, then de-asyncified them wholesale and
+   removed the orphaned `.await`s in the same edit: `🌱️value` 11+8 fns, `⚠️diagnostic` 39+2 fns, 25
+   `.await`s.
+
+**Result: `semio-framework-replication` `--lib` EXIT=0 and `--all-targets` EXIT=0, zero errors.**
+
+This is now ruling **R9** in `📌️important.md` — *E1 is transitive*: a pure computation whose consumers are
+language-barred from being async stays sync, tagged, with **both halves of the test shown in the report**
+(no suspension point exists AND a consumer cannot be async). Explicitly guarded against misuse: R9 is a
+fallback, never a shortcut for avoiding await-insertion work — if the consumer *can* be async, make the
+consumer async.
+
+## 🎯 The critical-path number, at last — and the next blocker
+
+`cargo check -p semio-framework-plugin --lib` now gets **past** replication and stops at
+**`semio-framework-pack`: exit 101, 68 errors** (E0277 35 · E0308 15 · E0369 9 · E0728 3).
+
+I ran the shared await fixpoint over it first (`--scope '🎒️pack'`, now segment-matched): **3 edits
+applied, 0 ambiguous, fixpoint reached.** So the mechanical part is done and the remaining 65 need
+judgement — which is precisely when a packet, not a tool, is the right instrument. Two root causes, both
+repo-wide patterns:
+
+1. **Pure computation made async, called from sync code** — a CRC helper in `🎒️pack/📐️format` is now
+   `async` while `fn encode_segment(..)` calls `crc.await`. **93 diagnostics in one file.** Textbook R9,
+   and `pack-finish` is briefed to work it as a *pattern* and write the recipe, since this is the second
+   worked instance today.
+2. **`#[async_trait]`** in `🎒️pack/🔌️io` — `error: method should be async or return a future, but it is
+   synchronous` on `len`/`write_all`/`position`. That is ruling **R8** landing in practice; the 8 `🎒️pack`
+   sites are `pack-finish`'s, the 4 `🌎️hub/📇️directory` sites stay with `os-ripple`.
+
+Dispatched **`pack-finish`** with both, plus an instruction to explain a measurement oddity rather than
+ignore it: pack's build cites `📡️replication` files that were green minutes earlier in isolation —
+most likely **feature unification** (pack enabling a different feature set), which this ticket has been
+bitten by before ("acceptance must run the command the CONSUMER runs, feature flags included").
+
+
+## 📦️ `db-dedyn` DELIVERED — held UNACCEPTED until I compile it myself
+
+The whole conversion is done: `DbFuture` alias deleted and every storage signature converted to direct
+`async fn -> Result<T, DbError>` via a purpose-built brace-matching script (zero `Box::pin` left in real
+code); `DbBackend<R>` plus six facet-ref enums (`WalRef`/`SnapshotRef`/`PayloadRef`/`CatalogRef`/
+`IndexRef`/`LeaseRef`) replacing `-> &dyn WalStorage`; the `DbStorage` trait deleted; the ripple pushed
+through every consumer (db_index's 13 structs, db_snapshot, db_wal, db_cluster, db_sync, db_compact,
+db_projection, db_query, `ArtifactEngine<R>`, `Database`, db_cli, `FaultStorage<R>`); `FsStorage`/
+`SqliteStorage` generic over `R: HostAsyncRuntime`; `InlineRuntime` rewritten against the R1-corrected
+trait — **read from the source rather than from my brief's paraphrase**, which is the right instinct.
+
+**It could not run acceptance**, and said so instead of claiming green: every attempt was blocked one
+crate short by sibling work outside its scope — first `🌱️value` (which I cleared mid-session), then
+`🎒️pack` (still red, `pack-finish` is on it). Correct restraint.
+
+### ⚠️ Why this stays UNACCEPTED rather than "accepted pending build"
+**A whole-crate refactor verified only by source review is exactly the shape that left this very crate
+with 84 errors once before** (ruling R6 exists because of it). `db-trait-flip` also "looked right".
+I will run `--lib`, `--all-targets` and the **424-passed** test baseline myself the moment `🎒️pack` is
+green, and only then accept. Queued, not forgotten.
+
+### 🔁 It hand-wrote the enums, and that is a useful accident
+`dyn_enum_close!` did not exist yet when it got there (the macro crate was still an empty skeleton at that
+moment; it went green ~20 minutes later). So `db-dedyn`'s six facet-ref enums are an **independent
+implementation of the same shape** the macro generates — a free cross-check on the macro's design. Worth
+diffing the two shapes at acceptance; if they disagree, one of them is wrong.
+
+### ✅️ Two judgement calls it made correctly
+- Left `ErasedProjection` and `Emit` as sync `dyn` traits rather than converting them. Correct under my own
+  ruling: those are sync **today** (post-revert), and de-dyn scope must be measured **after** re-asyncify,
+  never before. Converting them now would have been work against a stale census.
+- Left test-module `block_on` untouched and flagged it as a judgement call. Already ruled — **R4 clause 5**:
+  a `#[test] fn` is a `main`-equivalent thread root, so `block_on` there is sanctioned and is not counted
+  against the census target.
+
+## ▶️ `sdk-dedyn` DISPATCHED — the program's bottleneck, started before its dependency is green
+
+Deliberately started while `🎒️pack` is still red, because this is the longest pole (20,700 lines, 51-method
+`PluginApp`, 63 fleet crates downstream) and its first two steps need no compiler:
+
+1. **Re-asyncify its own file first** — it is one of the reverted files (**19 `async fn` in the tree vs
+   1,489 in the index**). Via the now tag-aware codemod, never via git: `git restore` would recover the
+   conversion and destroy sibling packets' completed work in the same stroke.
+2. **Fix the three E4 waker files it owns** (`⚛️reactor/🧵️executor`, `⚛️reactor/📮️requests`,
+   `🌐host/📖️body`) — handed over as a **checklist from my earlier repo-wide sweep**, not left to be
+   rediscovered mid-packet. The executor's exact patch already exists in the brep probe fixture.
+3. Then `PluginApp` de-dyn with the shared macro, plus the three leases filed against its file by
+   `io-thunks` and `store-dedyn`.
+
+Briefed with a STOP condition on the one genuinely open design question (if the `A: PluginApp` type
+parameter threads through far more public types than the design anticipates, that is my call, not the
+executor's) and with explicit permission to report acceptance UNRUN while `🎒️pack` is red — **and an
+explicit prohibition on editing `🎒️pack` to unblock itself**, which is how packets historically start
+trampling each other.
+
+
+## ✅️ `wgpu-web-shard` ACCEPTED — with the first genuine RUNTIME evidence of the new path
+
+This packet did the thing this ticket has repeatedly failed to do: it **proved the code runs**, not that
+it compiles. Driving the live `s-react` dev server through the Browser pane, it imported the new bridge,
+called `loadPluginModule("note", ...)` and captured the network log:
+
+- **4 real `GET /plugin-modules/_shard/🟨️shard-worker.js`** — the pooled shard worker actually spawning.
+- **ZERO requests to `🟨️plugin-worker.js`** — the one-worker-per-plugin path is genuinely dead, not merely
+  unreferenced in source.
+- The call then failed with the **expected stale-bridge error** (`does not provide an export named 'plugin'`)
+  **deep inside the real activation pipeline** — not an import error, not a `PluginWorkerClient` error.
+  A failure in the right place, for the right reason, is strong evidence; a green compile would have been none.
+
+It also **lifted shared logic instead of copying it** — `🧵️shard-runtime.ts` and `🖼️wire-turn.ts` now live in
+`🎭️actor/📦️packages/🟦️typescript/` and serve both renderers. A third divergent copy of worker management is
+precisely the defect this ticket exists to delete, so this was the deciding requirement, and it was met.
+It also fixed a pre-existing `TS2502` self-reference that only became visible once the dead imports resolved.
+
+Honest gaps it declared rather than buried: render granularity, `windowEngagements`/`windowMeasures` not
+carried over, simplified turn serialization. The `nx` pipeline build is unrun because it also builds the
+Rust wgpu crate, which a sibling packet has mid-rewrite (`MM` on `🎠️runtime.rs`/`📦️bin.rs`/`📦️glue.rs`) —
+reported as unrun rather than faked.
+
+Verification: scoped `tsc --noEmit` clean on every touched file; wgpu vitest **4/4 by name** (up from 1);
+`🎭️actor` **40/40** unchanged.
+
+## 🧹 BANNED-SYMBOL SWEEP — I ran it myself; source is clean, and the residue is GENERATED
+
+| symbol | live in source | tombstone comments |
+|---|---:|---:|
+| **`PluginWorkerClient`** | **0** | 8 |
+| `pluginWorkerUrl`, `loadPluginModuleViaWorker`, `PLUGIN_WORKER_UNRESPONSIVE_MS`, `loadPluginModuleUncached` | 0 | — |
+| `WasmPluginRuntime`, `ExtensionRuntime`, `ProgramSupervisorState`, `PLUGIN_FUEL_BUDGET`, `INSTANCE_GUARD`, `install_io_fallback_dispatcher`, `set_host_backbone_channel` | 0 | 52 total |
+
+**Both `PluginWorkerClient` copies are gone.** The "Replace, never wrap" list is now clear in first-party
+source for 11 of 13 entries.
+
+### ⚠️ The two apparent survivors are NOT source — and this becomes a census rule
+- `pluginWorkerUrl` ×1 in `🌎️hub/…/📤️dist/assets/🌐️index-*.js` — a **built dist bundle**.
+- `runSerialized` ×390 in `🧑️‍💻️dev/🔌️extension-modules/**/*.js` — the **stale generated jco bridges**,
+  the same artifacts that made the wgpu probe fail above. They are build output of
+  `🌐plugin-web-materialize.ts` and are regenerated by `web-bridges`, not hand-edited.
+
+**Binding for `census-zero`: the banned-symbol census MUST classify source vs generated/dist output.**
+A flat repo-wide grep reports 391 "violations" that no human should ever fix by hand, and would keep the
+exit gate red forever for the wrong reason — the same false-positive class as the `TransactionCoordinator::exchange`
+trap already recorded on this ticket. Generated output is cleared by regenerating it, and the real check on
+it is that the regenerator no longer *emits* the symbol.

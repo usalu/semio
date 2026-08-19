@@ -1,0 +1,53 @@
+[guest:info] poll: wait-signal(7) resolved = 70
+[host] Q1: PASS — turn-result = TurnResult { status: TurnStatus::MoreWork, fuel-used: 0 }, guest observed resolved value via pure::log = true
+[host] hang(99) started, awaiting pending forever until dropped
+[host] Q2: done — dropped_future_only=false dropped_after_store=true
+[guest:info] poll: burn(40000000) acc=14718178062326620928
+[guest:info] poll: burn(40000000) acc=14718178062326620928
+[host] Q3-epoch-sym: t_a=219.166417ms t_b=219.407333ms ratio=1.00 hits_a=88 hits_b=90
+[guest:info] poll: burn(5000000) acc=13194531880823694432
+[guest:info] poll: burn(300000000) acc=4993793574344992384
+[host] Q3-epoch-asym: huge(a) t_a=842.250208ms, tiny(b) t_b=27.49ms, tiny-before-huge=true hits_a=656 hits_b=11
+[guest:info] poll: burn(40000000) acc=14718178062326620928
+[guest:info] poll: burn(40000000) acc=14718178062326620928
+[host] Q3-fuel-sym: t_a=234.49875ms t_b=234.391042ms ratio=1.00
+[guest:info] poll: burn(5000000) acc=13194531880823694432
+[guest:info] poll: burn(300000000) acc=4993793574344992384
+[host] Q3-fuel-asym: huge(a) t_a=951.733375ms, tiny(b) t_b=29.623167ms, tiny-before-huge=true
+[host] hang(42) started, awaiting pending forever until dropped
+[guest:info] step-job(5) called
+[guest:info] step-job(6) called
+[host] Q4: GO — step-job on the SAME instance succeeded while poll() was suspended awaiting hostasync::hang: JobStep::Done(5); different-actor (idle instance) step-job: Ok(JobStep::Done(6))
+[host] Q5: Q5a epoch-deadline cutoff: yields-before-cutoff=16 error=error while executing at wasm backtrace:
+    0:   0x4445 - semio_turnharness_guest.wasm!semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi::<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}
+    1:   0x6eb8 - semio_turnharness_guest.wasm!<wit_bindgen[b8c30d1ce014ef89]::rt::async_support::FutureState>::callback
+    2:   0x74ff - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::callback
+    3:   0x3679 - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::start_task::<semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}>
+    4:   0x15d1 - semio_turnharness_guest.wasm![async-lift]semio:turnharness/reactor@0.1.0#poll: wasm trap: interrupt | Q5b fuel exhaustion (fuel=5000 armed inside the accessor, no yield interval): error=error while executing at wasm backtrace:
+    0:   0x4445 - semio_turnharness_guest.wasm!semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi::<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}
+    1:   0x6eb8 - semio_turnharness_guest.wasm!<wit_bindgen[b8c30d1ce014ef89]::rt::async_support::FutureState>::callback
+    2:   0x74ff - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::callback
+    3:   0x3679 - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::start_task::<semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}>
+    4:   0x15d1 - semio_turnharness_guest.wasm![async-lift]semio:turnharness/reactor@0.1.0#poll: wasm trap: all fuel consumed by WebAssembly | Q5c delta-not-absolute: set_epoch_deadline(u64::MAX) trapped during instantiate_async itself (no callback registered, default = trap on deadline reached): wasm trap: interrupt
+[host] hang(11) started, awaiting pending forever until dropped
+[host] Q6: started=true dropped_before_abort=false dropped_after_abort=true
+[host] ==== VERDICTS ====
+[host] Q1-turn-shape: PASS — turn-result = TurnResult { status: TurnStatus::MoreWork, fuel-used: 0 }, guest observed resolved value via pure::log = true
+[host] Q2-cancellation: done — dropped_future_only=false dropped_after_store=true
+[host] Q3-epoch-sym: t_a=219.166417ms t_b=219.407333ms ratio=1.00 hits_a=88 hits_b=90
+[host] Q3-epoch-asym: huge(a) t_a=842.250208ms, tiny(b) t_b=27.49ms, tiny-before-huge=true hits_a=656 hits_b=11
+[host] Q3-fuel-sym: t_a=234.49875ms t_b=234.391042ms ratio=1.00
+[host] Q3-fuel-asym: huge(a) t_a=951.733375ms, tiny(b) t_b=29.623167ms, tiny-before-huge=true
+[host] Q4-jobs-while-live: GO — step-job on the SAME instance succeeded while poll() was suspended awaiting hostasync::hang: JobStep::Done(5); different-actor (idle instance) step-job: Ok(JobStep::Done(6))
+[host] Q5-budgets: Q5a epoch-deadline cutoff: yields-before-cutoff=16 error=error while executing at wasm backtrace:
+    0:   0x4445 - semio_turnharness_guest.wasm!semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi::<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}
+    1:   0x6eb8 - semio_turnharness_guest.wasm!<wit_bindgen[b8c30d1ce014ef89]::rt::async_support::FutureState>::callback
+    2:   0x74ff - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::callback
+    3:   0x3679 - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::start_task::<semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}>
+    4:   0x15d1 - semio_turnharness_guest.wasm![async-lift]semio:turnharness/reactor@0.1.0#poll: wasm trap: interrupt | Q5b fuel exhaustion (fuel=5000 armed inside the accessor, no yield interval): error=error while executing at wasm backtrace:
+    0:   0x4445 - semio_turnharness_guest.wasm!semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi::<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}
+    1:   0x6eb8 - semio_turnharness_guest.wasm!<wit_bindgen[b8c30d1ce014ef89]::rt::async_support::FutureState>::callback
+    2:   0x74ff - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::callback
+    3:   0x3679 - semio_turnharness_guest.wasm!wit_bindgen[b8c30d1ce014ef89]::rt::async_support::start_task::<semio_turnharness_guest[2adf3bb24375c427]::exports::semio::turnharness::reactor::_export_poll_cabi<semio_turnharness_guest[2adf3bb24375c427]::Component>::{closure#0}>
+    4:   0x15d1 - semio_turnharness_guest.wasm![async-lift]semio:turnharness/reactor@0.1.0#poll: wasm trap: all fuel consumed by WebAssembly | Q5c delta-not-absolute: set_epoch_deadline(u64::MAX) trapped during instantiate_async itself (no callback registered, default = trap on deadline reached): wasm trap: interrupt
+[host] Q6-tokio-handle: started=true dropped_before_abort=false dropped_after_abort=true

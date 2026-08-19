@@ -471,12 +471,12 @@ impl SnapshotPolicy {
 /// @emoji 🧑️‍💼️ Orchestrates `db_snapshot`'s pack-encoding logic on top of a
 /// `db_storage::SnapshotStorage` backend: publish (`build_generation` + `write_generation`), load,
 /// chain materialization, retention, and verification.
-pub struct SnapshotManager<'storage> {
-    storage: &'storage dyn SnapshotStorage,
+pub struct SnapshotManager<'storage, S: SnapshotStorage> {
+    storage: &'storage S,
 }
 
-impl<'storage> SnapshotManager<'storage> {
-    pub fn new(storage: &'storage dyn SnapshotStorage) -> SnapshotManager<'storage> {
+impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
+    pub fn new(storage: &'storage S) -> SnapshotManager<'storage, S> {
         SnapshotManager { storage }
     }
 
@@ -622,25 +622,25 @@ impl SnapshotLease {
     }
 
     /// @emoji 🤝️ Acquires (or idempotently re-acquires) the snapshot-builder lease for `document`.
-    pub async fn acquire(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+    pub async fn acquire(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
     /// @emoji ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
     /// `materialize_chain` + `publish` sequence for a deep incremental chain.
-    pub async fn renew(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub async fn renew(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
     /// @emoji 🕊️ Releases `holder`'s lease for `document` once its `publish`/`retain_from` call
     /// has completed.
-    pub async fn release(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+    pub async fn release(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence).await
     }
 
     /// @emoji 👀️ The lease's current holder/fence for `document`, or `None` if unheld — lets a
     /// caller check whether it's safe to `retain_from` without blindly racing another builder.
-    pub async fn current(storage: &dyn LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+    pub async fn current(storage: &impl LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         storage.current(&Self::resource(document), now_ms).await
     }
 }

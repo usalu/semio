@@ -1,0 +1,47 @@
+package semio:jcoprobe@0.1.0;
+
+/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jco-spike). Standalone WIT world, NOT the
+/// production `semio:framework` package — a REDUCED COPY of the real
+/// `🔌️plugin/🧬️schema/📜️component.wit` shapes (the `pure` interface verbatim, plus a synthetic
+/// `probe-host`/`probe` pair standing in for a host-async import and a reactor-shaped export), used
+/// ONLY to answer: does jco 1.27.0 actually drive a wasip2 `async func`-everywhere component from
+/// JS well enough for our web renderer's Worker bridge?
+
+interface pure {
+  log: async func(level: string, message: string);
+  now-ms: async func() -> s64;
+  trace-span: async func(name: string);
+}
+
+interface probe-host {
+  /// 🧪️ S2/S3: host-implemented async import with a real (JS-side `setTimeout`) delay — used both
+  /// to prove the worker's event loop isn't blocked while the guest awaits it (S2), and as the
+  /// background work a detached spawned task awaits after its export has already returned (S3).
+  slow-echo: async func(ms: u32, v: u32) -> u32;
+  /// 🧪️ S4: host-implemented byte stream — JS supplies chunks, the guest reads them one at a time.
+  fetch-body: async func() -> stream<u8>;
+}
+
+interface probe {
+  /// 🧪️ S1: trivial async export, callable from JS, Promise resolves to n*2.
+  poll: async func(n: u32) -> u32;
+  /// 🧪️ S2: directly `.await`s `probe-host.slow-echo(ms, v)` before returning — the export's own
+  /// Promise stays pending for the full `ms` delay. Used to prove a concurrent JS `setInterval`
+  /// keeps firing while this is in flight (i.e. the worker/event loop is not blocked).
+  await-echo: async func(ms: u32, v: u32) -> u32;
+  /// 🧪️ S3: spawns a detached background task (via `wit_bindgen::spawn`) that awaits
+  /// `probe-host.slow-echo(ms, ..)`, then returns WITHOUT awaiting it — per wit-bindgen 0.57's
+  /// `AsyncTaskReturn` codegen, `task.return` fires as soon as this function's own root future
+  /// resolves, before any spawned sibling task drains, so the JS Promise should resolve before the
+  /// spawned `slow-echo` call completes.
+  spawn-detached: async func(ms: u32) -> u32;
+  /// 🧪️ S4: reads `probe-host.fetch-body()`'s stream to completion chunk-by-chunk, returns the
+  /// total byte count read.
+  read-body: async func() -> u32;
+}
+
+world jcoprobe {
+  import pure;
+  import probe-host;
+  export probe;
+}

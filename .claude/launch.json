@@ -18,6 +18,12 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["./📜️script.ts", "dev", "dag"],
       "port": 6017
+    },
+    {
+      "name": "terra-jco-spike-static",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/serve.ts"],
+      "port": 8846
     }
   ]
 }

@@ -43,7 +43,7 @@ type Cdt = ConstrainedDelaunayTriangulation<Point2<f64>>;
 
 /// 🧵️ Inserts one closed loop's points as constrained CDT vertices, then constrains consecutive
 /// pairs (wrapping around) so the loop's edges survive triangulation/refinement unbroken-in-shape.
-fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshError> {
+async fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshError> {
     let mut handles = Vec::with_capacity(loop_pts.len());
     for p in loop_pts {
         let handle = cdt.insert(Point2::new(p[0], p[1])).map_err(|e| MeshError::TriangulationFailed(format!("{e:?}")))?;
@@ -60,7 +60,7 @@ fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshError> {
 }
 
 /// 🎯️ Ray-casting point-in-polygon test (standard even-odd rule; polygon need not be convex).
-fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
+async fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
     if polygon.len() < 3 {
         return false;
     }
@@ -87,7 +87,7 @@ fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
 /// `<= 0.0`). Triangle inside/outside classification happens AFTER refinement, by a local
 /// point-in-polygon centroid test — `spade`'s own outer-face exclusion is not relied upon, since a
 /// domain with holes has several disjoint constrained loops that classification must handle directly.
-pub fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2, MeshError> {
+pub async fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2, MeshError> {
     if domain.outer.len() < 3 {
         return Err(MeshError::DegenerateDomain);
     }
@@ -159,7 +159,7 @@ pub struct QuadMesh2 {
 
 /// 🔲️ An `nx` x `ny` structured grid of quads over an axis-aligned rectangle `[x0,x1] x [y0,y1]`,
 /// row-major point numbering, each quad wound `[bottom-left, bottom-right, top-right, top-left]`.
-pub fn quad_grid(x0: f64, y0: f64, x1: f64, y1: f64, nx: usize, ny: usize) -> QuadMesh2 {
+pub async fn quad_grid(x0: f64, y0: f64, x1: f64, y1: f64, nx: usize, ny: usize) -> QuadMesh2 {
     let mut points = Vec::with_capacity((nx + 1) * (ny + 1));
     for j in 0..=ny {
         for i in 0..=nx {
@@ -190,7 +190,7 @@ pub struct TriMesh2Quadratic {
 
 /// 🔗️ Looks up (or creates, welding shared edges to exactly one mid-node) the mid-edge point index
 /// for edge `(a,b)`, keyed by the sorted `(min,max)` index pair.
-fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut HashMap<(u32, u32), u32>) -> u32 {
+async fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut HashMap<(u32, u32), u32>) -> u32 {
     let key = if a < b { (a, b) } else { (b, a) };
     if let Some(&idx) = edge_mid.get(&key) {
         return idx;
@@ -209,7 +209,7 @@ fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut HashMap<
 /// triangle's 6 node indices follow `[n0,n1,n2, mid(n0,n1), mid(n1,n2), mid(n2,n0)]` — the standard
 /// Tri6 convention (matches `elements2d.rs`'s `shape_tri6` node ordering, documented here since that
 /// function may land concurrently with this module).
-pub fn to_quadratic(mesh: &TriMesh2) -> TriMesh2Quadratic {
+pub async fn to_quadratic(mesh: &TriMesh2) -> TriMesh2Quadratic {
     let mut points = mesh.points.clone();
     let mut edge_mid: HashMap<(u32, u32), u32> = HashMap::new();
     let mut tris6 = Vec::with_capacity(mesh.tris.len());
@@ -246,7 +246,7 @@ pub struct VolumeMesh {
 /// equal-height layers, producing one `Wedge6` per (triangle, layer) — node order
 /// `[bottom0,bottom1,bottom2, top0,top1,top2]` (bottom face matches the triangle's own `[n0,n1,n2]`
 /// winding, top face directly above).
-pub fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> VolumeMesh {
+pub async fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> VolumeMesh {
     let layers = layers.max(1);
     let n = mesh.points.len();
     let mut points = Vec::with_capacity(n * (layers + 1));
@@ -270,7 +270,7 @@ pub fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> VolumeMe
 
 /// 🧱️ Extrudes a flat `QuadMesh2` along +z by `height` into `layers` layers of `Hex8` cells — node
 /// order `[bottom0,bottom1,bottom2,bottom3, top0,top1,top2,top3]` matching the quad's own winding.
-pub fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> VolumeMesh {
+pub async fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> VolumeMesh {
     let layers = layers.max(1);
     let n = mesh.points.len();
     let mut points = Vec::with_capacity(n * (layers + 1));
@@ -296,7 +296,7 @@ pub fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> Volume
 /// into 2 triangles, choosing the diagonal FROM the corner with the smallest global point index. This
 /// depends only on the face's own 4 global indices (not on cell/apex choice), so two cells sharing a
 /// quad face always agree — the parity-consistency guarantee `split_to_tets` relies on.
-fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
+async fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
     let min = a.min(b).min(c).min(d);
     if min == a || min == c {
         [[a, b, c], [a, c, d]]
@@ -311,7 +311,7 @@ fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
 /// — the standard star/cone decomposition of a convex polyhedron, valid since convexity guarantees no
 /// overlap/gaps. Faces touching `apex` need no explicit tet: their volume is degenerate (zero) from
 /// `apex`'s own cone and is instead captured as internal faces of tets from adjacent, non-apex faces.
-fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], apex: u32) -> Vec<[u32; 4]> {
+async fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], apex: u32) -> Vec<[u32; 4]> {
     let mut tets = Vec::new();
     for &[a, b, c, d] in quad_faces {
         for tri in split_quad_face(a, b, c, d) {
@@ -331,7 +331,7 @@ fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], apex: u32
 /// 🔪️ Splits every `Wedge6`/`Hex8` cell into `Tet4` cells (`Wedge6` → 3 tets, `Hex8` → 6 tets), using
 /// the minimum-global-node-index apex + face-diagonal rule so adjacent cells split their SHARED quad
 /// faces identically (see [`split_quad_face`]). `Tet4` cells in the input pass through unchanged.
-pub fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
+pub async fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
     let mut cells = Vec::with_capacity(mesh.cells.len());
     for cell in &mesh.cells {
         match cell {
@@ -360,7 +360,7 @@ pub fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
 
 /// 🧭️ The average of `mesh.points` at `idxs` — shared by `boundary_faces`'s per-tet and per-face
 /// centroid computations.
-fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
+async fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
     let mut c = [0.0; 3];
     for &i in idxs {
         let p = mesh.points[i as usize];
@@ -377,7 +377,7 @@ fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
 /// Each returned triangle is independently wound so its `cross(edge0,edge1)` normal points AWAY from
 /// its own tet's centroid (outward) — determined per-tet via a centroid side-test, so the result
 /// doesn't depend on any input node-order convention. Used by `fem_3d`'s solid mesh preview/rendering.
-pub fn boundary_faces(mesh: &VolumeMesh) -> Vec<[u32; 3]> {
+pub async fn boundary_faces(mesh: &VolumeMesh) -> Vec<[u32; 3]> {
     let mut counts: HashMap<[u32; 3], usize> = HashMap::new();
     let mut oriented: HashMap<[u32; 3], [u32; 3]> = HashMap::new();
 
@@ -419,7 +419,7 @@ pub struct QualityReport {
 }
 
 /// 📐️ Interior angle at `p`, between the edges to `prev` and `next`, in degrees.
-fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
+async fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
     let v1 = [prev[0] - p[0], prev[1] - p[1]];
     let v2 = [next[0] - p[0], next[1] - p[1]];
     let dot = v1[0] * v2[0] + v1[1] * v2[1];
@@ -432,7 +432,7 @@ fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
 /// 📊️ Min/max interior angle across all triangles; `min_jacobian_sign_positive` mirrors the 2D
 /// analogue of the 3D check — true iff every triangle's signed area (shoelace, `[n0,n1,n2]` order) is
 /// positive, i.e. consistently wound.
-pub fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
+pub async fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
     let mut min_angle = f64::INFINITY;
     let mut max_angle = f64::NEG_INFINITY;
     let mut all_positive = true;
@@ -456,7 +456,7 @@ pub fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
 }
 
 /// 🧮️ Signed tet volume via the scalar triple product of edge vectors from `p0`.
-fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
+async fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
     let a = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
     let b = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
     let c = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
@@ -469,7 +469,7 @@ fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> 
 /// documented local node order (`extrude_tri_mesh`/`extrude_quad_mesh`'s convention) is right-handed,
 /// independent of the cell's global point indices. Verified by hand against a unit right prism and a
 /// unit cube (both give the expected positive volume for correctly-ordered nodes).
-fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
+async fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
     let p = |i: u32| points[i as usize];
     match cell {
         Cell::Tet4([a, b, c, d]) => tet_signed_volume(p(*a), p(*b), p(*c), p(*d)),
@@ -488,7 +488,7 @@ fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
 /// 📊️ `min_jacobian_sign_positive` is true iff every cell's signed volume is positive — a negative
 /// signed volume flags inverted/degenerate connectivity. Angle bounds are a 2D-only concept and are
 /// left at `0.0` here.
-pub fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
+pub async fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
     let all_positive = mesh.cells.iter().all(|cell| cell_signed_volume(&mesh.points, cell) > 0.0);
     QualityReport { min_angle_deg: 0.0, max_angle_deg: 0.0, min_jacobian_sign_positive: all_positive, element_count: mesh.cells.len() }
 }
@@ -500,7 +500,7 @@ mod tests {
     use super::*;
     use std::collections::HashSet;
 
-    fn shoelace_area(points: &[[f64; 2]]) -> f64 {
+    async fn shoelace_area(points: &[[f64; 2]]) -> f64 {
         let mut sum = 0.0;
         for i in 0..points.len() {
             let a = points[i];
@@ -510,24 +510,24 @@ mod tests {
         (sum * 0.5).abs()
     }
 
-    fn tri_area(mesh: &TriMesh2, tri: &[u32; 3]) -> f64 {
+    async fn tri_area(mesh: &TriMesh2, tri: &[u32; 3]) -> f64 {
         shoelace_area(&[mesh.points[tri[0] as usize], mesh.points[tri[1] as usize], mesh.points[tri[2] as usize]])
     }
 
-    fn total_area(mesh: &TriMesh2) -> f64 {
+    async fn total_area(mesh: &TriMesh2) -> f64 {
         mesh.tris.iter().map(|t| tri_area(mesh, t)).sum()
     }
 
-    fn no_refine() -> MeshOpts {
+    async fn no_refine() -> MeshOpts {
         MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }
     }
 
-    fn square(side: f64) -> Vec<[f64; 2]> {
+    async fn square(side: f64) -> Vec<[f64; 2]> {
         vec![[0.0, 0.0], [side, 0.0], [side, side], [0.0, side]]
     }
 
     #[test]
-    fn triangulate_square_area_matches_input() {
+    async fn triangulate_square_area_matches_input() {
         let outer = square(10.0);
         let expected = shoelace_area(&outer);
         let domain = PlanarDomain { outer, holes: vec![] };
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn triangulate_respects_hole_area() {
+    async fn triangulate_respects_hole_area() {
         let outer = square(10.0);
         let hole = vec![[3.0, 3.0], [7.0, 3.0], [7.0, 7.0], [3.0, 7.0]];
         let domain = PlanarDomain { outer, holes: vec![hole.clone()] };
@@ -554,7 +554,7 @@ mod tests {
     }
 
     #[test]
-    fn triangulate_honors_constrained_boundary_edges() {
+    async fn triangulate_honors_constrained_boundary_edges() {
         // L-shape: non-convex outer boundary.
         let outer = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]];
         let domain = PlanarDomain { outer: outer.clone(), holes: vec![] };
@@ -581,7 +581,7 @@ mod tests {
     }
 
     #[test]
-    fn refined_mesh_respects_min_angle() {
+    async fn refined_mesh_respects_min_angle() {
         // A long thin rectangle: all INPUT corners are 90 degrees (refinable), but the single
         // diagonal edge spade's initial CDT picks to fill it naturally produces slivers absent
         // refinement — Ruppert refinement can freely add Steiner points to fix that, unlike a sharp
@@ -596,7 +596,7 @@ mod tests {
     }
 
     #[test]
-    fn quad_grid_has_expected_topology() {
+    async fn quad_grid_has_expected_topology() {
         let mesh = quad_grid(0.0, 0.0, 3.0, 2.0, 3, 2);
         assert_eq!(mesh.quads.len(), 6);
         assert_eq!(mesh.points.len(), 12);
@@ -608,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn to_quadratic_welds_shared_edges() {
+    async fn to_quadratic_welds_shared_edges() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
         assert!(mesh.tris.len() >= 2);
@@ -626,7 +626,7 @@ mod tests {
     }
 
     #[test]
-    fn extrude_tri_mesh_volume_matches_area_times_height() {
+    async fn extrude_tri_mesh_volume_matches_area_times_height() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
         let area = total_area(&mesh);
@@ -638,7 +638,7 @@ mod tests {
     }
 
     #[test]
-    fn extrude_quad_mesh_volume_matches_area_times_height() {
+    async fn extrude_quad_mesh_volume_matches_area_times_height() {
         let mesh = quad_grid(0.0, 0.0, 4.0, 3.0, 4, 3);
         let area = 12.0;
         let height = 2.5;
@@ -649,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    fn split_to_tets_preserves_volume() {
+    async fn split_to_tets_preserves_volume() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
         let wedge_mesh = extrude_tri_mesh(&mesh, 2.0, 2);
@@ -667,7 +667,7 @@ mod tests {
     }
 
     #[test]
-    fn split_to_tets_shared_faces_are_parity_consistent() {
+    async fn split_to_tets_shared_faces_are_parity_consistent() {
         // Two Hex8 cells sharing the quad face [1,2,6,5] (cell A's +x face / cell B's -x face).
         let points = vec![
             [0.0, 0.0, 0.0], // 0
@@ -715,7 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn volume_mesh_quality_detects_inverted_cell() {
+    async fn volume_mesh_quality_detects_inverted_cell() {
         let points = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let good = VolumeMesh { points: points.clone(), cells: vec![Cell::Tet4([0, 1, 2, 3])] };
         assert!(volume_mesh_quality(&good).min_jacobian_sign_positive);
@@ -729,7 +729,7 @@ mod tests {
     /// total triangle area must equal the analytic box surface `2*side² + 4*side*height` (top + bottom
     /// + 4 sides), which also confirms every internal (shared, appears-twice) face was excluded.
     #[test]
-    fn boundary_faces_area_matches_extruded_box_surface() {
+    async fn boundary_faces_area_matches_extruded_box_surface() {
         let side = 4.0;
         let height = 3.0;
         let domain = PlanarDomain { outer: square(side), holes: vec![] };
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn triangulate_rejects_degenerate_outer_boundary() {
+    async fn triangulate_rejects_degenerate_outer_boundary() {
         let domain = PlanarDomain { outer: vec![[0.0, 0.0], [1.0, 0.0]], holes: vec![] };
         match triangulate(&domain, &no_refine()) {
             Err(MeshError::DegenerateDomain) => {}
@@ -772,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn triangulate_rejects_degenerate_hole() {
+    async fn triangulate_rejects_degenerate_hole() {
         let domain = PlanarDomain { outer: square(10.0), holes: vec![vec![[3.0, 3.0], [4.0, 4.0]]] };
         match triangulate(&domain, &no_refine()) {
             Err(MeshError::DegenerateDomain) => {}
@@ -781,7 +781,7 @@ mod tests {
     }
 
     #[test]
-    fn point_in_polygon_returns_false_for_degenerate_polygon() {
+    async fn point_in_polygon_returns_false_for_degenerate_polygon() {
         assert!(!point_in_polygon([0.0, 0.0], &[]));
         assert!(!point_in_polygon([0.0, 0.0], &[[0.0, 0.0], [1.0, 0.0]]));
     }
@@ -790,7 +790,7 @@ mod tests {
     /// `min_jacobian_sign_positive`, and reports `0.0` angle bounds for an empty mesh instead of the
     /// unhelpful `f64::INFINITY`/`NEG_INFINITY` an empty min/max fold would otherwise leave behind.
     #[test]
-    fn tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh() {
+    async fn tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh() {
         let ccw = TriMesh2 { points: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], tris: vec![[0, 1, 2]] };
         assert!(tri_mesh_quality(&ccw).min_jacobian_sign_positive);
 
@@ -807,7 +807,7 @@ mod tests {
     /// 🔺️ A `Cell::Tet4` already present in the input `VolumeMesh` passes through `split_to_tets`
     /// completely unchanged — the only cell kind besides `Wedge6`/`Hex8` `split_to_tets` accepts.
     #[test]
-    fn split_to_tets_passes_through_existing_tet4_cells() {
+    async fn split_to_tets_passes_through_existing_tet4_cells() {
         let points = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let tet = Cell::Tet4([0, 1, 2, 3]);
         let mesh = VolumeMesh { points, cells: vec![tet] };

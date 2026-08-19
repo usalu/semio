@@ -9,7 +9,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Surface, Theme};
 use crate::tui::widget::{Align, LabelState};
 
-pub(crate) fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));
     let fg = theme.role(l.role);
     let (text, width) = truncate_to(&l.text, rect.width);

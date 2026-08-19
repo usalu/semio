@@ -22,7 +22,7 @@ pub use std::sync::Arc;
 use canvas::lod::{Lod, LodScale};
 
 // #region 🔖️MapPalette
-fn map_color(rgba: [f32; 4]) -> Color {
+async fn map_color(rgba: [f32; 4]) -> Color {
     Color::new(rgba)
 }
 
@@ -44,7 +44,7 @@ pub struct MapPalette {
 
 impl MapPalette {
     /// @emoji 🎨️ Builds a map palette from centralized theme tokens.
-    pub fn from_map_palette(t: &ui_styling::MapPalette) -> Self {
+    pub async fn from_map_palette(t: &ui_styling::MapPalette) -> Self {
         Self {
             surface_clear: map_color(t.surface_clear),
             land_fill: map_color(t.land_fill),
@@ -98,7 +98,7 @@ const MAX_VISIBLE_TILE_REQUESTS: usize = 256;
 /// @emoji 📶️ Window LOD select value: camera zoom picks the tile band.
 pub const GIS_MAP_LOD_MODE_AUTOMATIC: &str = "automatic";
 
-pub fn gis_map_lod_scale_json() -> String {
+pub async fn gis_map_lod_scale_json() -> String {
     let rows: Vec<serde_json::Value> = GIS_MAP_LODS
         .iter()
         .enumerate()
@@ -116,7 +116,7 @@ pub fn gis_map_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &camera::Viewport) -> f64 {
+async fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &camera::Viewport) -> f64 {
     let cy = viewport.height as f64 * 0.5;
     let left = map_viewport::screen_to_world(camera, viewport, Point::new(0.0, cy));
     let right = map_viewport::screen_to_world(camera, viewport, Point::new(viewport.width as f64, cy));
@@ -129,7 +129,7 @@ fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &camera::Viewpor
     span.min(360.0)
 }
 
-fn resolve_map_lod_index_from_span(span_deg: f64) -> usize {
+async fn resolve_map_lod_index_from_span(span_deg: f64) -> usize {
     for (i, threshold) in GIS_MAP_LOD_MAX_SPAN_DEG.iter().enumerate() {
         if span_deg > *threshold {
             return i;
@@ -138,7 +138,7 @@ fn resolve_map_lod_index_from_span(span_deg: f64) -> usize {
     GIS_MAP_LODS.len().saturating_sub(1)
 }
 
-fn resolve_detail_lod_index(span_deg: f64, forced_lod_id: Option<&str>) -> usize {
+async fn resolve_detail_lod_index(span_deg: f64, forced_lod_id: Option<&str>) -> usize {
     if let Some(id) = forced_lod_id {
         if let Some(idx) = GIS_MAP_LOD_SCALE.index_of(id) {
             return idx;
@@ -148,7 +148,7 @@ fn resolve_detail_lod_index(span_deg: f64, forced_lod_id: Option<&str>) -> usize
 }
 
 /// @emoji 🔭️ Representative viewport longitude span (degrees) for a pinned LOD band.
-pub fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
+pub async fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
     match lod_idx {
         0 => 180.0,
         1 => 50.0,
@@ -161,25 +161,25 @@ pub fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
     }
 }
 
-fn current_map_lod(camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+async fn current_map_lod(camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     let idx = resolve_map_lod_index_from_span(viewport_lon_span_degrees(camera, viewport));
     &GIS_MAP_LODS[idx]
 }
 
-fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &camera::Viewport) -> u32 {
+async fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &camera::Viewport) -> u32 {
     let span = viewport_lon_span_degrees(camera, viewport).max(1e-6);
     let w = viewport.width.max(1) as f64;
     let z = ((360.0 / span) * (w / 256.0)).log2();
     z.round().clamp(0.0, f64::from(MAP_RASTER_TILE_Z_MAX)) as u32
 }
 
-fn forced_lod_tile_z(id: &str) -> Option<u32> {
+async fn forced_lod_tile_z(id: &str) -> Option<u32> {
     let idx = GIS_MAP_LOD_SCALE.index_of(id)?;
     GIS_MAP_LOD_TILE_Z.get(idx).copied()
 }
 
 /// @emoji 🧷️ Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
-fn pick_tile_z_target(camera: &camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+async fn pick_tile_z_target(camera: &camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     let ideal = ideal_tile_z_for_viewport(camera, viewport);
     let span = viewport_lon_span_degrees(camera, viewport);
     let lod_idx = resolve_map_lod_index_from_span(span);
@@ -197,7 +197,7 @@ fn pick_tile_z_target(camera: &camera::Camera, viewport: &camera::Viewport, forc
     ideal.min(vector_tiles::max_tile_z_for_span(span))
 }
 
-fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+async fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     if let Some(id) = forced_lod_id {
         if let Some(idx) = GIS_MAP_LOD_SCALE.index_of(id) {
             return &GIS_MAP_LODS[idx];
@@ -211,11 +211,11 @@ pub const MAP_CAMERA_ZOOM_MIN: f64 = 8.0;
 /// @emoji 🔭️ ~100M yields ~1.4e-3° longitude across 800px (~150 m), i.e. street scale (see `viewport_lon_span_degrees`).
 pub const MAP_CAMERA_ZOOM_MAX: f64 = 100_000_000.0;
 
-pub fn gis_map_camera_limits_json() -> String {
+pub async fn gis_map_camera_limits_json() -> String {
     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
 }
 
-pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+pub async fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
     serde_json::json!({
         "min": projection::cover_zoom_for_viewport(viewport).max(MAP_CAMERA_ZOOM_MIN),
         "max": MAP_CAMERA_ZOOM_MAX,
@@ -223,16 +223,16 @@ pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> S
     .to_string()
 }
 
-fn clamp_map_zoom(zoom: f64) -> f64 {
+async fn clamp_map_zoom(zoom: f64) -> f64 {
     zoom.clamp(MAP_CAMERA_ZOOM_MIN, MAP_CAMERA_ZOOM_MAX)
 }
 
-fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+async fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
     zoom.max(projection::cover_zoom_for_viewport(viewport)).min(MAP_CAMERA_ZOOM_MAX)
 }
 
 /// @emoji 🧷️ Keeps the viewport filled by the world map with no empty margins or outscroll.
-fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &camera::Viewport) {
+async fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &camera::Viewport) {
     camera.zoom = clamp_map_zoom_for_viewport(camera.zoom, viewport);
     let half_w = viewport.width as f64 / (2.0 * camera.zoom);
     let half_h = viewport.height as f64 / (2.0 * camera.zoom);
@@ -246,17 +246,17 @@ mod map_viewport {
     use super::Point;
     use super::canvas::camera::{screen_to_world as canvas_screen_to_world, world_to_screen as canvas_world_to_screen, Camera, Viewport};
 
-    pub fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    pub async fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
         canvas_world_to_screen(camera, viewport, Point::new(p.x, -p.y))
     }
 
-    pub fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    pub async fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
         let w = canvas_screen_to_world(camera, viewport, p);
         Point::new(w.x, -w.y)
     }
 }
 
-fn map_wheel_screen(camera: &mut camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+async fn map_wheel_screen(camera: &mut camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     let zoom_factor = if delta_y < 0.0 {
         1.12
     } else if delta_y > 0.0 {
@@ -283,7 +283,7 @@ pub mod projection {
     pub const MAX_LAT: f64 = 85.051_128_78;
     pub const WORLD_HALF: f64 = 1.0;
 
-    pub fn lonlat_to_world(lon: f64, lat: f64) -> Point {
+    pub async fn lonlat_to_world(lon: f64, lat: f64) -> Point {
         let lon = lon.clamp(-180.0, 180.0);
         let lat = lat.clamp(-MAX_LAT, MAX_LAT);
         let x = lon / 180.0 * WORLD_HALF;
@@ -292,7 +292,7 @@ pub mod projection {
         Point::new(x, y)
     }
 
-    pub fn world_to_lonlat(x: f64, y: f64) -> (f64, f64) {
+    pub async fn world_to_lonlat(x: f64, y: f64) -> (f64, f64) {
         let lon = (x / WORLD_HALF) * 180.0;
         let lat_rad = 2.0 * (y / WORLD_HALF * std::f64::consts::PI).exp().atan() - std::f64::consts::FRAC_PI_2;
         let lat = lat_rad.to_degrees();
@@ -303,18 +303,18 @@ pub mod projection {
     pub const WORLD_VISIBLE_SPAN: f64 = WORLD_HALF * 2.0;
 
     /// @emoji 📐️ Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
-    pub fn cover_zoom_for_viewport(viewport: &super::canvas::camera::Viewport) -> f64 {
+    pub async fn cover_zoom_for_viewport(viewport: &super::canvas::camera::Viewport) -> f64 {
         let vw = viewport.width.max(1) as f64;
         let vh = viewport.height.max(1) as f64;
         vw.max(vh) / WORLD_VISIBLE_SPAN
     }
 
-    pub fn default_world_camera(viewport: &super::canvas::camera::Viewport) -> super::canvas::camera::Camera {
+    pub async fn default_world_camera(viewport: &super::canvas::camera::Viewport) -> super::canvas::camera::Camera {
         let zoom = cover_zoom_for_viewport(viewport).max(super::MAP_CAMERA_ZOOM_MIN);
         super::canvas::camera::Camera { x: 0.0, y: 0.0, zoom }
     }
 
-    pub fn tile_world_rect(z: u32, x: u32, y: u32) -> Rect {
+    pub async fn tile_world_rect(z: u32, x: u32, y: u32) -> Rect {
         let n = 2.0_f64.powi(z as i32);
         let step = (WORLD_HALF * 2.0) / n;
         let min_x = -WORLD_HALF + x as f64 * step;
@@ -331,7 +331,7 @@ pub mod tiles {
     use super::{pick_tile_z_target, Point, MAX_VISIBLE_TILE_REQUESTS};
     use super::canvas::camera::{Camera, Viewport};
 
-    pub fn pick_zoom(camera: &Camera, viewport: &Viewport, forced_lod_id: Option<&str>) -> u32 {
+    pub async fn pick_zoom(camera: &Camera, viewport: &Viewport, forced_lod_id: Option<&str>) -> u32 {
         let mut z = pick_tile_z_target(camera, viewport, forced_lod_id);
         while z > 0 && visible_tiles(camera, viewport, z).len() > MAX_VISIBLE_TILE_REQUESTS {
             z -= 1;
@@ -339,7 +339,7 @@ pub mod tiles {
         z
     }
 
-    pub fn visible_tiles(camera: &Camera, viewport: &Viewport, z: u32) -> Vec<(u32, u32, u32)> {
+    pub async fn visible_tiles(camera: &Camera, viewport: &Viewport, z: u32) -> Vec<(u32, u32, u32)> {
         let corners = [
             map_viewport::screen_to_world(camera, viewport, Point::new(0.0, 0.0)),
             map_viewport::screen_to_world(camera, viewport, Point::new(viewport.width as f64, 0.0)),
@@ -371,11 +371,11 @@ pub mod tiles {
         out
     }
 
-    pub fn tile_key(z: u32, x: u32, y: u32) -> String {
+    pub async fn tile_key(z: u32, x: u32, y: u32) -> String {
         format!("{z}/{x}/{y}")
     }
 
-    pub fn parse_tile_key(key: &str) -> Option<(u32, u32, u32)> {
+    pub async fn parse_tile_key(key: &str) -> Option<(u32, u32, u32)> {
         let mut parts = key.split('/');
         let z: u32 = parts.next()?.parse().ok()?;
         let x: u32 = parts.next()?.parse().ok()?;
@@ -386,7 +386,7 @@ pub mod tiles {
         Some((z, x, y))
     }
 
-    pub fn tile_key_ancestors(z: u32, x: u32, y: u32) -> Vec<String> {
+    pub async fn tile_key_ancestors(z: u32, x: u32, y: u32) -> Vec<String> {
         let mut out = Vec::new();
         let mut cz = z;
         let mut cx = x;
@@ -403,7 +403,7 @@ pub mod tiles {
         out
     }
 
-    pub fn tile_retention_keys(visible: &[(u32, u32, u32)], previous: &std::collections::BTreeSet<String>) -> std::collections::BTreeSet<String> {
+    pub async fn tile_retention_keys(visible: &[(u32, u32, u32)], previous: &std::collections::BTreeSet<String>) -> std::collections::BTreeSet<String> {
         let mut keys = std::collections::BTreeSet::new();
         for &(z, x, y) in visible {
             for k in tile_key_ancestors(z, x, y) {
@@ -516,11 +516,11 @@ pub mod vector_tiles {
         bool_value: Option<bool>,
     }
 
-    fn zigzag_decode(n: u32) -> i32 {
+    async fn zigzag_decode(n: u32) -> i32 {
         ((n >> 1) as i32) ^ (-((n & 1) as i32))
     }
 
-    fn decode_properties(tags: &[u64], keys: &[String], values: &[RawValue]) -> std::collections::BTreeMap<String, String> {
+    async fn decode_properties(tags: &[u64], keys: &[String], values: &[RawValue]) -> std::collections::BTreeMap<String, String> {
         let mut out = std::collections::BTreeMap::new();
         let mut i = 0usize;
         while i + 1 < tags.len() {
@@ -541,7 +541,7 @@ pub mod vector_tiles {
         out
     }
 
-    fn raw_value_string(v: &RawValue) -> String {
+    async fn raw_value_string(v: &RawValue) -> String {
         if let Some(s) = &v.string_value {
             return s.clone();
         }
@@ -563,7 +563,7 @@ pub mod vector_tiles {
         String::new()
     }
 
-    fn decode_geometry(geometry: &[u32], geom_type: GeomType) -> (Vec<Vec<(f64, f64)>>, Vec<Vec<(f64, f64)>>, Vec<(f64, f64)>) {
+    async fn decode_geometry(geometry: &[u32], geom_type: GeomType) -> (Vec<Vec<(f64, f64)>>, Vec<Vec<(f64, f64)>>, Vec<(f64, f64)>) {
         let mut rings = Vec::new();
         let mut lines = Vec::new();
         let mut points = Vec::new();
@@ -642,12 +642,12 @@ pub mod vector_tiles {
     mod decode_geometry_tests {
         use super::{decode_geometry, GeomType};
 
-        fn zigzag(n: i32) -> u32 {
+        async fn zigzag(n: i32) -> u32 {
             ((n << 1) ^ (n >> 31)) as u32
         }
 
         #[test]
-        fn mvt_segment_is_tile_seam_on_extent_bbox() {
+        async fn mvt_segment_is_tile_seam_on_extent_bbox() {
             let extent = 4096;
             assert!(super::mvt_segment_is_tile_seam(extent, (0.0, 0.0), (4096.0, 0.0)));
             assert!(super::mvt_segment_is_tile_seam(extent, (4096.0, 100.0), (4096.0, 900.0)));
@@ -659,7 +659,7 @@ pub mod vector_tiles {
         }
 
         #[test]
-        fn continent_water_filter_drops_inland_polygons() {
+        async fn continent_water_filter_drops_inland_polygons() {
             let mut props = std::collections::BTreeMap::new();
             props.insert("class".to_string(), "lake".to_string());
             assert!(super::water_polygon_visible_for_lod(0, &props));
@@ -675,13 +675,13 @@ pub mod vector_tiles {
         }
 
         #[test]
-        fn weighted_opaque_fill_keeps_alpha_solid() {
+        async fn weighted_opaque_fill_keeps_alpha_solid() {
             let c = super::weighted_opaque_fill(super::Color::from_rgba8(40, 50, 60, 128), 1.0);
             assert_eq!(c.to_rgba8().a, 255);
         }
 
         #[test]
-        fn linestring_moveto_starts_new_part() {
+        async fn linestring_moveto_starts_new_part() {
             let geometry = vec![(1 << 3) | 1, zigzag(0), zigzag(0), (1 << 3) | 2, zigzag(10), zigzag(0), (1 << 3) | 1, zigzag(90), zigzag(100), (1 << 3) | 2, zigzag(10), zigzag(0)];
             let (_, lines, _) = decode_geometry(&geometry, GeomType::LineString);
             assert_eq!(lines.len(), 2, "each MoveTo must start a new line part");
@@ -690,7 +690,7 @@ pub mod vector_tiles {
         }
     }
 
-    pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, super::FrameworkSurfaceTiledMapError> {
+    pub async fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, super::FrameworkSurfaceTiledMapError> {
         let raw = RawTile::decode(bytes)?;
         let mut layers = Vec::new();
         for layer in raw.layers {
@@ -713,19 +713,19 @@ pub mod vector_tiles {
         Ok(VectorTile { layers })
     }
 
-    pub fn property_str<'a>(properties: &'a std::collections::BTreeMap<String, String>, key: &str) -> Option<&'a str> {
+    pub async fn property_str<'a>(properties: &'a std::collections::BTreeMap<String, String>, key: &str) -> Option<&'a str> {
         properties.get(key).map(|s| s.as_str()).filter(|s| !s.is_empty())
     }
 
-    pub fn property_class(properties: &std::collections::BTreeMap<String, String>) -> &str {
+    pub async fn property_class(properties: &std::collections::BTreeMap<String, String>) -> &str {
         property_str(properties, "class").unwrap_or("")
     }
 
-    pub fn property_u64(properties: &std::collections::BTreeMap<String, String>, key: &str) -> Option<u64> {
+    pub async fn property_u64(properties: &std::collections::BTreeMap<String, String>, key: &str) -> Option<u64> {
         properties.get(key)?.parse().ok()
     }
 
-    pub fn feature_label(properties: &std::collections::BTreeMap<String, String>) -> Option<String> {
+    pub async fn feature_label(properties: &std::collections::BTreeMap<String, String>) -> Option<String> {
         for key in ["name:en", "name_en", "name_int", "name", "name:latin", "NAME", "Name", "title", "TITLE", "ref"] {
             if let Some(v) = properties.get(key) {
                 let t = v.trim();
@@ -737,7 +737,7 @@ pub mod vector_tiles {
         None
     }
 
-    pub fn layer_draw_rank(layer: &str) -> u8 {
+    pub async fn layer_draw_rank(layer: &str) -> u8 {
         match layer {
             "water" => 0,
             "landcover" => 1,
@@ -773,7 +773,7 @@ pub mod vector_tiles {
     }
 
     /// @emoji 🗺️ Vector tile z cap from viewport span (finer than raster LOD floor so oceans stay separated).
-    pub fn max_tile_z_for_span(span_deg: f64) -> u32 {
+    pub async fn max_tile_z_for_span(span_deg: f64) -> u32 {
         let z = if span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[0] {
             3
         } else if span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[1] {
@@ -788,12 +788,12 @@ pub mod vector_tiles {
         z.min(MAP_VECTOR_TILE_MAX_Z)
     }
 
-    pub fn vector_detail_profile(span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> VectorDetailProfile {
+    pub async fn vector_detail_profile(span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> VectorDetailProfile {
         let lod_idx = super::resolve_detail_lod_index(span_deg, forced_lod_id);
         vector_detail_profile_for_lod(lod_idx, span_deg, tile_z)
     }
 
-    fn vector_detail_profile_for_lod(lod_idx: usize, span_deg: f64, tile_z: u32) -> VectorDetailProfile {
+    async fn vector_detail_profile_for_lod(lod_idx: usize, span_deg: f64, tile_z: u32) -> VectorDetailProfile {
         match lod_idx {
             0 | 1 => VectorDetailProfile { draw_water: true, draw_land_backdrop: false, draw_landcover: true, draw_transportation: false, draw_buildings: false, draw_boundary: false, draw_coastline: true, max_admin_level: 0 },
             2 => VectorDetailProfile { draw_water: true, draw_land_backdrop: true, draw_landcover: false, draw_transportation: false, draw_buildings: false, draw_boundary: true, draw_coastline: false, max_admin_level: 2 },
@@ -813,7 +813,7 @@ pub mod vector_tiles {
         }
     }
 
-    fn boundary_visible_for_lod(admin_level: u64, lod_idx: usize) -> bool {
+    async fn boundary_visible_for_lod(admin_level: u64, lod_idx: usize) -> bool {
         match lod_idx {
             0 | 1 => false,
             2 => admin_level == 2,
@@ -822,11 +822,11 @@ pub mod vector_tiles {
         }
     }
 
-    pub fn property_flag(properties: &std::collections::BTreeMap<String, String>, key: &str) -> bool {
+    pub async fn property_flag(properties: &std::collections::BTreeMap<String, String>, key: &str) -> bool {
         property_str(properties, key).is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
     }
 
-    pub fn transportation_visible(class: &str, span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> bool {
+    pub async fn transportation_visible(class: &str, span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> bool {
         if !vector_detail_profile(span_deg, tile_z, forced_lod_id).draw_transportation {
             return false;
         }
@@ -849,7 +849,7 @@ pub mod vector_tiles {
     }
 
     /// @emoji 📏️ Per-LOD road stroke multiplier (city 30% of prior default).
-    pub fn transportation_stroke_lod_scale(span_deg: f64, forced_lod_id: Option<&str>) -> f64 {
+    pub async fn transportation_stroke_lod_scale(span_deg: f64, forced_lod_id: Option<&str>) -> f64 {
         match super::resolve_detail_lod_index(span_deg, forced_lod_id) {
             3 => ui_styling::strokes::MAP_ROAD_LOD_REGION,
             4 => ui_styling::strokes::MAP_ROAD_LOD_CITY,
@@ -858,7 +858,7 @@ pub mod vector_tiles {
     }
 
     /// @emoji 📏️ Screen stroke scale from viewport longitude span; damped in region/city bands.
-    pub fn vector_line_scale(span_deg: f64) -> f64 {
+    pub async fn vector_line_scale(span_deg: f64) -> f64 {
         let cap = ui_styling::strokes::MAP_LINE_SCALE_CAP;
         let span = span_deg.max(0.08);
         let raw = ui_styling::strokes::MAP_LINE_SCALE_RAW / span.max(0.25);
@@ -888,7 +888,7 @@ pub mod vector_tiles {
         (raw * damp).clamp(0.5, cap)
     }
 
-    pub fn transportation_stroke_width(class: &str, line_scale: f64) -> f64 {
+    pub async fn transportation_stroke_width(class: &str, line_scale: f64) -> f64 {
         let base = match class {
             "motorway" => ui_styling::strokes::MAP_ROAD_MOTORWAY,
             "trunk" => 2.1,
@@ -903,7 +903,7 @@ pub mod vector_tiles {
         (base * line_scale).clamp(ui_styling::strokes::MAP_ROAD_CLAMP_MIN, ui_styling::strokes::MAP_ROAD_CLAMP_MAX)
     }
 
-    pub fn boundary_visible(admin_level: u64, span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> bool {
+    pub async fn boundary_visible(admin_level: u64, span_deg: f64, tile_z: u32, forced_lod_id: Option<&str>) -> bool {
         let profile = vector_detail_profile(span_deg, tile_z, forced_lod_id);
         if !profile.draw_boundary || admin_level > profile.max_admin_level {
             return false;
@@ -912,7 +912,7 @@ pub mod vector_tiles {
         boundary_visible_for_lod(admin_level, lod_idx)
     }
 
-    pub fn boundary_stroke_width(admin_level: u64, line_scale: f64) -> f64 {
+    pub async fn boundary_stroke_width(admin_level: u64, line_scale: f64) -> f64 {
         let base = match admin_level {
             2 => ui_styling::strokes::MAP_BOUNDARY_ADMIN2,
             3 | 4 => 1.3,
@@ -922,11 +922,11 @@ pub mod vector_tiles {
         (base * line_scale).clamp(ui_styling::strokes::MAP_BOUNDARY_CLAMP_MIN, ui_styling::strokes::MAP_BOUNDARY_CLAMP_MAX)
     }
 
-    pub fn coastline_stroke_width(line_scale: f64) -> f64 {
+    pub async fn coastline_stroke_width(line_scale: f64) -> f64 {
         (ui_styling::strokes::MAP_COASTLINE_MULT * line_scale).clamp(ui_styling::strokes::MAP_COASTLINE_CLAMP_MIN, ui_styling::strokes::MAP_COASTLINE_CLAMP_MAX)
     }
 
-    pub fn place_label_visible(class: &str, span_deg: f64) -> bool {
+    pub async fn place_label_visible(class: &str, span_deg: f64) -> bool {
         let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
         match class {
             "" => span_deg <= caps[1] && span_deg > caps[2],
@@ -942,7 +942,7 @@ pub mod vector_tiles {
     }
 
     /// @emoji 🛣️ Street-name labels use a stricter span gate than road geometry to avoid city-band overload.
-    pub fn transportation_name_visible(class: &str, span_deg: f64) -> bool {
+    pub async fn transportation_name_visible(class: &str, span_deg: f64) -> bool {
         let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
         match class {
             "motorway" | "trunk" => span_deg < caps[1],
@@ -956,13 +956,13 @@ pub mod vector_tiles {
     }
 
     /// @emoji 📍️ POI captions only appear from district zoom inward.
-    pub fn poi_label_visible(span_deg: f64) -> bool {
+    pub async fn poi_label_visible(span_deg: f64) -> bool {
         span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[5]
     }
 
     const GIS_MAP_LABEL_BAND_SCREEN_PX: &[f64] = ui_styling::metrics::map::LABEL_PX_BANDS;
 
-    fn map_lod_band_floor_span_deg(lod_idx: usize) -> f64 {
+    async fn map_lod_band_floor_span_deg(lod_idx: usize) -> f64 {
         if lod_idx == 0 {
             return 180.0;
         }
@@ -970,7 +970,7 @@ pub mod vector_tiles {
     }
 
     /// @emoji 🔤️ Label screen px scaled with viewport span inside one map LOD band.
-    pub fn vector_label_px_for_lod(lod_idx: usize, span_deg: f64, weight: f64) -> f64 {
+    pub async fn vector_label_px_for_lod(lod_idx: usize, span_deg: f64, weight: f64) -> f64 {
         let base = GIS_MAP_LABEL_BAND_SCREEN_PX.get(lod_idx).copied().unwrap_or(10.5);
         let span = span_deg.max(0.05);
         let floor = map_lod_band_floor_span_deg(lod_idx);
@@ -978,12 +978,12 @@ pub mod vector_tiles {
     }
 
     /// @emoji 🔤️ Resolves the active map LOD band from viewport span, then returns its zoom-scaled label px.
-    pub fn vector_label_px(span_deg: f64, weight: f64) -> f64 {
+    pub async fn vector_label_px(span_deg: f64, weight: f64) -> f64 {
         let lod_idx = super::resolve_map_lod_index_from_span(span_deg);
         vector_label_px_for_lod(lod_idx, span_deg, weight)
     }
 
-    pub fn place_label_rank(class: &str, layer: &str) -> u16 {
+    pub async fn place_label_rank(class: &str, layer: &str) -> u16 {
         if layer == "poi" {
             return 48;
         }
@@ -1005,7 +1005,7 @@ pub mod vector_tiles {
         }
     }
 
-    pub fn transportation_name_rank(class: &str) -> u16 {
+    pub async fn transportation_name_rank(class: &str) -> u16 {
         match class {
             "motorway" => 30,
             "trunk" => 31,
@@ -1016,13 +1016,13 @@ pub mod vector_tiles {
         }
     }
 
-    pub fn color_with_alpha(color: Color, alpha: u8) -> Color {
+    pub async fn color_with_alpha(color: Color, alpha: u8) -> Color {
         let rgba = color.to_rgba8();
         Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
     }
 
     /// @emoji 🎨️ Opaque land/water base fill; weight scales RGB only so tile composites do not seam.
-    pub fn weighted_opaque_fill(color: Color, weight: f64) -> Color {
+    pub async fn weighted_opaque_fill(color: Color, weight: f64) -> Color {
         let w = super::clamp_map_layer_weight(weight).clamp(0.25, 1.0);
         let rgba = color.to_rgba8();
         let scale = |c: u8| ((f64::from(c) * w).round() as u8).min(255);
@@ -1031,13 +1031,13 @@ pub mod vector_tiles {
 
     const TILE_BBOX_EPS: f64 = 1.0;
 
-    pub fn mvt_point_on_tile_bbox_edge(extent: u32, x: f64, y: f64) -> bool {
+    pub async fn mvt_point_on_tile_bbox_edge(extent: u32, x: f64, y: f64) -> bool {
         let eps = TILE_BBOX_EPS;
         let e = f64::from(extent);
         x <= eps || y <= eps || x >= e - eps || y >= e - eps
     }
 
-    pub fn mvt_segment_is_tile_seam(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
+    pub async fn mvt_segment_is_tile_seam(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
         if !mvt_point_on_tile_bbox_edge(extent, a.0, a.1) || !mvt_point_on_tile_bbox_edge(extent, b.0, b.1) {
             return false;
         }
@@ -1046,33 +1046,33 @@ pub mod vector_tiles {
         (a.1 <= eps && b.1 <= eps) || (a.1 >= e - eps && b.1 >= e - eps) || (a.0 <= eps && b.0 <= eps) || (a.0 >= e - eps && b.0 >= e - eps)
     }
 
-    pub fn mvt_segment_touches_tile_bbox(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
+    pub async fn mvt_segment_touches_tile_bbox(extent: u32, a: (f64, f64), b: (f64, f64)) -> bool {
         mvt_point_on_tile_bbox_edge(extent, a.0, a.1) || mvt_point_on_tile_bbox_edge(extent, b.0, b.1)
     }
 
-    pub fn mvt_polyline_is_tile_bbox_artifact(extent: u32, line: &[(f64, f64)]) -> bool {
+    pub async fn mvt_polyline_is_tile_bbox_artifact(extent: u32, line: &[(f64, f64)]) -> bool {
         line.len() >= 2 && line.iter().all(|&(x, y)| mvt_point_on_tile_bbox_edge(extent, x, y))
     }
 
-    fn water_class_is_open_sea(class: &str) -> bool {
+    async fn water_class_is_open_sea(class: &str) -> bool {
         matches!(class, "ocean" | "sea" | "bay" | "strait" | "fjord" | "lagoon" | "sound" | "gulf")
     }
 
     /// @emoji 🌊️ Keep continent zoom free of inland water while preserving adjacent LODs.
-    pub fn water_polygon_visible_for_lod(lod_idx: usize, properties: &std::collections::BTreeMap<String, String>) -> bool {
+    pub async fn water_polygon_visible_for_lod(lod_idx: usize, properties: &std::collections::BTreeMap<String, String>) -> bool {
         lod_idx != 1 || water_class_is_open_sea(property_class(properties))
     }
 
-    pub fn waterway_visible_for_lod(lod_idx: usize) -> bool {
+    pub async fn waterway_visible_for_lod(lod_idx: usize) -> bool {
         lod_idx >= 2
     }
 
     /// @emoji 🗺️ Suppress country-polygon lake holes only at continent zoom.
-    pub fn country_polygon_holes_visible_for_lod(lod_idx: usize) -> bool {
+    pub async fn country_polygon_holes_visible_for_lod(lod_idx: usize) -> bool {
         lod_idx != 1
     }
 
-    pub fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
+    pub async fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
         if ring.len() < 4 {
             return false;
         }
@@ -1095,20 +1095,20 @@ pub mod vector_tiles {
 
 // #region 🔖️MapExtension
 pub trait MapExtension: CanvasExtension {
-    fn map_crs(&self) -> &str;
+    async fn map_crs(&self) -> &str;
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct DefaultMapExtension;
 
 impl CanvasExtension for DefaultMapExtension {
-    fn extension_id(&self) -> &str {
+    async fn extension_id(&self) -> &str {
         "gis.map/default"
     }
 }
 
 impl MapExtension for DefaultMapExtension {
-    fn map_crs(&self) -> &str {
+    async fn map_crs(&self) -> &str {
         "EPSG:3857"
     }
 }
@@ -1140,7 +1140,7 @@ pub struct RouteData {
     pub stroke_width: f64,
 }
 
-fn default_route_stroke() -> f64 {
+async fn default_route_stroke() -> f64 {
     ui_styling::strokes::MAP_ROUTE_DEFAULT
 }
 
@@ -1169,7 +1169,7 @@ pub enum MapTileMode {
 }
 
 impl MapTileMode {
-    pub fn from_str(mode: &str) -> Self {
+    pub async fn from_str(mode: &str) -> Self {
         match mode {
             "image" => Self::Image,
             "vector" => Self::Vector,
@@ -1187,7 +1187,7 @@ pub enum MapVectorStyle {
 }
 
 impl MapVectorStyle {
-    pub fn from_str(style: &str) -> Self {
+    pub async fn from_str(style: &str) -> Self {
         match style {
             "figureGround" => Self::FigureGround,
             "invertedFigure" => Self::InvertedFigure,
@@ -1195,7 +1195,7 @@ impl MapVectorStyle {
         }
     }
 
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         match self {
             Self::Colored => "colored",
             Self::FigureGround => "figureGround",
@@ -1205,7 +1205,7 @@ impl MapVectorStyle {
 }
 
 /// @emoji 🎚️ Layer ids that accept a weight slider at the given LOD and tile render mode.
-pub fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> Vec<&'static str> {
+pub async fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> Vec<&'static str> {
     let lod_idx = GIS_MAP_LOD_SCALE.index_of(lod_id).unwrap_or(0);
     let span = representative_viewport_span_for_lod(lod_idx);
     let mut tile_z = GIS_MAP_LOD_TILE_Z.get(lod_idx).copied().unwrap_or(0);
@@ -1247,17 +1247,17 @@ pub fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> V
 }
 
 /// @emoji 🎚️ JSON array of layer ids with weight sliders for window options at a LOD.
-pub fn gis_map_layer_weight_slider_ids_json(lod_id: &str, render_mode: &str) -> String {
+pub async fn gis_map_layer_weight_slider_ids_json(lod_id: &str, render_mode: &str) -> String {
     let keys = map_layer_weight_slider_keys_at_lod(lod_id, render_mode);
     serde_json::to_string(&keys).unwrap_or_else(|_| "[]".into())
 }
 
 /// OpenFreeMap OSM vector tiles (OpenMapTiles schema) track viewport zoom up to z14.
-pub fn vector_tiles_available_at_camera_zoom(camera_zoom: f64) -> bool {
+pub async fn vector_tiles_available_at_camera_zoom(camera_zoom: f64) -> bool {
     camera_zoom > 0.0
 }
 
-fn map_layer_default_true() -> bool {
+async fn map_layer_default_true() -> bool {
     true
 }
 
@@ -1267,12 +1267,12 @@ pub const MAP_LAYER_WEIGHT_MIN: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MIN
 /// @emoji 🎚️ Maximum layer line/label weight multiplier from window sliders.
 pub const MAP_LAYER_WEIGHT_MAX: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MAX;
 
-fn map_layer_default_weight() -> f64 {
+async fn map_layer_default_weight() -> f64 {
     1.0
 }
 
 /// @emoji 🎚️ Clamps a layer weight slider value to the supported multiplier range.
-pub fn clamp_map_layer_weight(value: f64) -> f64 {
+pub async fn clamp_map_layer_weight(value: f64) -> f64 {
     if value.is_finite() {
         value.clamp(MAP_LAYER_WEIGHT_MIN, MAP_LAYER_WEIGHT_MAX)
     } else {
@@ -1315,7 +1315,7 @@ impl Default for MapLayerStrokeScale {
 }
 
 impl MapLayerStrokeScale {
-    pub fn sanitized(self) -> Self {
+    pub async fn sanitized(self) -> Self {
         Self {
             raster: clamp_map_layer_weight(self.raster),
             water: clamp_map_layer_weight(self.water),
@@ -1433,7 +1433,7 @@ enum MapInteraction {
     },
 }
 
-fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
+async fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
     let dx = x1 - x0;
     let dy = y1 - y0;
     let len2 = dx * dx + dy * dy;
@@ -1447,7 +1447,7 @@ fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f
     ((px - qx).powi(2) + (py - qy).powi(2)).sqrt()
 }
 
-fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
+async fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
     if (x0 >= min_x && x0 <= max_x && y0 >= min_y && y0 <= max_y) || (x1 >= min_x && x1 <= max_x && y1 >= min_y && y1 <= max_y) {
         return true;
     }
@@ -1460,11 +1460,11 @@ fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, m
     false
 }
 
-fn map_segments_intersect(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, dx: f64, dy: f64) -> bool {
-    fn orient(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> f64 {
+async fn map_segments_intersect(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, dx: f64, dy: f64) -> bool {
+    async fn orient(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> f64 {
         (qy - py) * (rx - qx) - (qx - px) * (ry - qy)
     }
-    fn on_segment(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> bool {
+    async fn on_segment(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> bool {
         rx <= px.max(qx) + 1e-9 && rx + 1e-9 >= px.min(qx) && ry <= py.max(qy) + 1e-9 && ry + 1e-9 >= py.min(qy)
     }
     let o1 = orient(ax, ay, bx, by, cx, cy);
@@ -1489,7 +1489,7 @@ fn map_segments_intersect(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, 
     false
 }
 
-fn map_polyline_intersects_rect(points: &[Point], min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
+async fn map_polyline_intersects_rect(points: &[Point], min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
     for p in points {
         if p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y {
             return true;
@@ -1505,7 +1505,7 @@ fn map_polyline_intersects_rect(points: &[Point], min_x: f64, min_y: f64, max_x:
     false
 }
 
-fn map_point_in_polygon(px: f64, py: f64, polygon: &[Point]) -> bool {
+async fn map_point_in_polygon(px: f64, py: f64, polygon: &[Point]) -> bool {
     let mut inside = false;
     let n = polygon.len();
     if n < 3 {
@@ -1524,7 +1524,7 @@ fn map_point_in_polygon(px: f64, py: f64, polygon: &[Point]) -> bool {
     inside
 }
 
-fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool {
+async fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool {
     for p in points {
         if map_point_in_polygon(p.x, p.y, polygon) {
             return true;
@@ -1582,7 +1582,7 @@ struct LabelDeclutter {
 }
 
 impl LabelDeclutter {
-    fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+    async fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
         let width = viewport.width.max(1) as f64;
         let height = viewport.height.max(1) as f64;
         let cell = cell_px.max(12.0);
@@ -1591,7 +1591,7 @@ impl LabelDeclutter {
         Self { cell, cols, rows, mask: vec![false; cols * rows], count: 0, max_count: max_count.max(1), width, height }
     }
 
-    fn estimate_box(label: &str, px: f64, origin: Point) -> (f64, f64, f64, f64) {
+    async fn estimate_box(label: &str, px: f64, origin: Point) -> (f64, f64, f64, f64) {
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
         let w = (label.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO + pad * 2.0).clamp(ui_styling::metrics::label::MAP_WIDTH_MIN, ui_styling::metrics::label::MAP_WIDTH_MAX);
         let h = (px * 1.6 + pad * 2.0).clamp(14.0, 96.0);
@@ -1600,7 +1600,7 @@ impl LabelDeclutter {
         (x, y, w, h)
     }
 
-    fn try_place(&mut self, label: &str, origin: Point, px: f64) -> bool {
+    async fn try_place(&mut self, label: &str, origin: Point, px: f64) -> bool {
         if self.count >= self.max_count {
             return false;
         }
@@ -1646,11 +1646,11 @@ pub enum FrameworkSurfaceTiledMapError {
 //#endregion ⚠️ Errors
 
 impl MapHost {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+    async fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
         let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
         let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
         let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
@@ -1658,7 +1658,7 @@ impl MapHost {
         Some(Color::from_rgba8(r, g, b, a))
     }
 
-    fn apply_theme_field(next: &mut MapPalette, v: &serde_json::Value, key: &str, assign: impl FnOnce(&mut MapPalette, Color)) {
+    async fn apply_theme_field(next: &mut MapPalette, v: &serde_json::Value, key: &str, assign: impl FnOnce(&mut MapPalette, Color)) {
         if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
             if let Some(c) = Self::color_from_json_rgba8(arr) {
                 assign(next, c);
@@ -1666,7 +1666,7 @@ impl MapHost {
         }
     }
 
-    pub fn set_map_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn set_map_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         let v: serde_json::Value = serde_json::from_str(json)?;
         let mut next = self.theme;
         Self::apply_theme_field(&mut next, &v, "surfaceClear", |t, c| t.surface_clear = c);
@@ -1688,20 +1688,20 @@ impl MapHost {
         Ok(())
     }
 
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.set_size(width, height, dpr);
         self.clamp_camera_to_world();
     }
 
-    pub fn fit_world_camera(&mut self) {
+    pub async fn fit_world_camera(&mut self) {
         self.camera = projection::default_world_camera(&self.viewport);
     }
 
-    pub fn clamp_camera_to_world(&mut self) {
+    pub async fn clamp_camera_to_world(&mut self) {
         clamp_camera_to_world_bounds(&mut self.camera, &self.viewport);
     }
 
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         serde_json::json!({
             "x": self.camera.x,
             "y": self.camera.y,
@@ -1710,7 +1710,7 @@ impl MapHost {
         .to_string()
     }
 
-    pub fn current_lod_json(&self) -> String {
+    pub async fn current_lod_json(&self) -> String {
         let lod = active_map_lod(self.forced_lod_id.as_deref(), &self.camera, &self.viewport);
         let tile_z = self.pick_raster_tile_zoom();
         let span_deg = viewport_lon_span_degrees(&self.camera, &self.viewport);
@@ -1725,14 +1725,14 @@ impl MapHost {
         .to_string()
     }
 
-    pub fn visible_tiles_json(&self) -> String {
+    pub async fn visible_tiles_json(&self) -> String {
         let z = self.pick_raster_tile_zoom();
         let list = tiles::visible_tiles(&self.camera, &self.viewport, z);
         let rows: Vec<serde_json::Value> = list.iter().map(|(tz, tx, ty)| serde_json::json!({ "z": tz, "x": tx, "y": ty, "key": tiles::tile_key(*tz, *tx, *ty) })).collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn visible_vector_tiles_json(&self) -> String {
+    pub async fn visible_vector_tiles_json(&self) -> String {
         if !vector_tiles_available_at_camera_zoom(self.camera.zoom) {
             return "[]".into();
         }
@@ -1742,15 +1742,15 @@ impl MapHost {
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn set_render_mode(&mut self, mode: &str) {
+    pub async fn set_render_mode(&mut self, mode: &str) {
         self.render_mode = MapTileMode::from_str(mode);
     }
 
-    pub fn set_vector_style(&mut self, style: &str) {
+    pub async fn set_vector_style(&mut self, style: &str) {
         self.vector_style = MapVectorStyle::from_str(style);
     }
 
-    pub fn set_lod_mode(&mut self, mode: &str) {
+    pub async fn set_lod_mode(&mut self, mode: &str) {
         if mode == GIS_MAP_LOD_MODE_AUTOMATIC {
             self.forced_lod_id = None;
             return;
@@ -1760,30 +1760,30 @@ impl MapHost {
         }
     }
 
-    pub fn set_layer_visibility_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn set_layer_visibility_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         self.layer_visibility = serde_json::from_str(json)?;
         Ok(())
     }
 
-    pub fn layer_visibility_json(&self) -> String {
+    pub async fn layer_visibility_json(&self) -> String {
         serde_json::to_string(&self.layer_visibility).unwrap_or_else(|_| "{}".into())
     }
 
-    pub fn set_layer_stroke_scale_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn set_layer_stroke_scale_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         let parsed: MapLayerStrokeScale = serde_json::from_str(json)?;
         self.layer_stroke_scale = parsed.sanitized();
         Ok(())
     }
 
-    pub fn layer_stroke_scale_json(&self) -> String {
+    pub async fn layer_stroke_scale_json(&self) -> String {
         serde_json::to_string(&self.layer_stroke_scale).unwrap_or_else(|_| "{}".into())
     }
 
-    pub fn pick_raster_tile_zoom(&self) -> u32 {
+    pub async fn pick_raster_tile_zoom(&self) -> u32 {
         tiles::pick_zoom(&self.camera, &self.viewport, self.forced_lod_id.as_deref())
     }
 
-    pub fn pick_vector_tile_zoom(&self) -> u32 {
+    pub async fn pick_vector_tile_zoom(&self) -> u32 {
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
         let span_cap = vector_tiles::max_tile_z_for_span(span);
         let lod_idx = resolve_map_lod_index_from_span(span);
@@ -1795,7 +1795,7 @@ impl MapHost {
         z
     }
 
-    pub fn render_mode_str(&self) -> &'static str {
+    pub async fn render_mode_str(&self) -> &'static str {
         match self.render_mode {
             MapTileMode::Image => "image",
             MapTileMode::Vector => "vector",
@@ -1803,11 +1803,11 @@ impl MapHost {
         }
     }
 
-    pub fn vector_style_str(&self) -> &'static str {
+    pub async fn vector_style_str(&self) -> &'static str {
         self.vector_style.as_str()
     }
 
-    fn retain_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
+    async fn retain_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
         self.tiles.tile_images.retain(|k, _| keys.contains(k));
         while self.tiles.tile_images.len() > MAX_MAP_TILE_CACHE_ENTRIES {
             if self.tiles.tile_images.pop_first().is_none() {
@@ -1816,7 +1816,7 @@ impl MapHost {
         }
     }
 
-    fn retain_vector_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
+    async fn retain_vector_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
         self.tiles.vector_tiles.retain(|k, _| keys.contains(k));
         while self.tiles.vector_tiles.len() > MAX_MAP_TILE_CACHE_ENTRIES {
             if self.tiles.vector_tiles.pop_first().is_none() {
@@ -1825,7 +1825,7 @@ impl MapHost {
         }
     }
 
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
         self.camera.zoom = zoom;
@@ -1833,13 +1833,13 @@ impl MapHost {
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
     }
 
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         map_wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
         self.clamp_camera_to_world();
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
     }
 
-    pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
         let img = image::load_from_memory(png_bytes)?;
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
@@ -1848,13 +1848,13 @@ impl MapHost {
         Ok(())
     }
 
-    pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
         let tile = vector_tiles::decode_mvt(pbf_bytes)?;
         self.tiles.vector_tiles.insert(tiles::tile_key(z, x, y), tile);
         Ok(())
     }
 
-    pub fn sync_map_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+    pub async fn sync_map_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         let desc: MapDescriptorJson = serde_json::from_str(json)?;
         self.features.positions.clear();
         self.features.routes.clear();
@@ -1871,19 +1871,19 @@ impl MapHost {
         Ok(())
     }
 
-    pub fn drain_events_json(&mut self) -> String {
+    pub async fn drain_events_json(&mut self) -> String {
         let out = std::mem::take(&mut self.events);
         serde_json::to_string(&out).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
         if button != 1 {
             return;
         }
         self.interaction = MapInteraction::Pan { origin: self.camera.clone(), start_screen: Point::new(sx, sy) };
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
         let MapInteraction::Pan { origin, start_screen } = self.interaction.clone() else {
             return;
         };
@@ -1894,7 +1894,7 @@ impl MapHost {
         self.clamp_camera_to_world();
     }
 
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         if matches!(self.interaction, MapInteraction::Pan { .. }) {
             let click = if let MapInteraction::Pan { start_screen, .. } = &self.interaction {
                 let dx = sx - start_screen.x;
@@ -1910,7 +1910,7 @@ impl MapHost {
         self.interaction = MapInteraction::None;
     }
 
-    fn hit_test_position(&self, sx: f64, sy: f64) -> Option<String> {
+    async fn hit_test_position(&self, sx: f64, sy: f64) -> Option<String> {
         let hit_r = 14.0;
         let hit_r2 = hit_r * hit_r;
         let mut best: Option<(String, f64)> = None;
@@ -1927,7 +1927,7 @@ impl MapHost {
         best.map(|(id, _)| id)
     }
 
-    fn hit_test_route(&self, sx: f64, sy: f64) -> Option<String> {
+    async fn hit_test_route(&self, sx: f64, sy: f64) -> Option<String> {
         let hit_r = ui_styling::strokes::MAP_ROUTE_DEFAULT * 4.0 + 6.0;
         let mut best: Option<(String, f64)> = None;
         for route in self.features.routes.values() {
@@ -1951,7 +1951,7 @@ impl MapHost {
         best.map(|(id, _)| id)
     }
 
-    pub fn hit_test_feature_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn hit_test_feature_json(&self, sx: f64, sy: f64) -> String {
         let pos_hit = self.hit_test_position(sx, sy);
         let route_hit = self.hit_test_route(sx, sy);
         match (pos_hit, route_hit) {
@@ -1970,14 +1970,14 @@ impl MapHost {
         }
     }
 
-    fn position_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
+    async fn position_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
         let pos = self.features.positions.get(id)?;
         let w = projection::lonlat_to_world(pos.lon, pos.lat);
         let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
         Some(((s.x - sx).powi(2) + (s.y - sy).powi(2)).sqrt())
     }
 
-    fn route_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
+    async fn route_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
         let route = self.features.routes.get(id)?;
         if route.points.len() < 2 {
             return None;
@@ -1995,7 +1995,7 @@ impl MapHost {
         Some(min_d)
     }
 
-    pub fn features_in_rect_json(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
+    pub async fn features_in_rect_json(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
         let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
         let mut positions: Vec<String> = Vec::new();
@@ -2028,7 +2028,7 @@ impl MapHost {
         serde_json::json!({ "positions": positions, "routes": routes }).to_string()
     }
 
-    pub fn features_in_polygon_json(&self, points_json: &str, crossing: bool) -> String {
+    pub async fn features_in_polygon_json(&self, points_json: &str, crossing: bool) -> String {
         let points: Vec<Point> = match serde_json::from_str::<Vec<[f64; 2]>>(points_json) {
             Ok(rows) => rows.into_iter().map(|[x, y]| Point::new(x, y)).collect(),
             Err(_) => return serde_json::json!({ "positions": [], "routes": [] }).to_string(),
@@ -2070,7 +2070,7 @@ impl MapHost {
         serde_json::json!({ "positions": positions, "routes": routes }).to_string()
     }
 
-    pub fn feature_screen_json(&self, kind: &str, id: &str) -> String {
+    pub async fn feature_screen_json(&self, kind: &str, id: &str) -> String {
         match kind {
             "position" => self.position_screen_json(id),
             "route" => {
@@ -2101,7 +2101,7 @@ impl MapHost {
     /// one flat id list each, scoped to that granularity, so it clears the other kind's ids and tags
     /// the hover accordingly. Called at render time with the framework's `InteractionState`, not
     /// pushed arbitrarily by app code.
-    pub fn sync_interaction(&mut self, granularity: &str, selected_ids: &[String], hovered_id: Option<&str>) {
+    pub async fn sync_interaction(&mut self, granularity: &str, selected_ids: &[String], hovered_id: Option<&str>) {
         self.selected_positions.clear();
         self.selected_routes.clear();
         match granularity {
@@ -2112,7 +2112,7 @@ impl MapHost {
         self.hovered_id = hovered_id.map(str::to_string);
     }
 
-    pub fn position_screen_json(&self, id: &str) -> String {
+    pub async fn position_screen_json(&self, id: &str) -> String {
         let Some(pos) = self.features.positions.get(id) else {
             return "null".into();
         };
@@ -2121,7 +2121,7 @@ impl MapHost {
         serde_json::to_string(&serde_json::json!({ "x": s.x, "y": s.y })).unwrap_or_else(|_| "null".into())
     }
 
-    pub fn focus_feature(&mut self, kind: &str, id: &str) -> bool {
+    pub async fn focus_feature(&mut self, kind: &str, id: &str) -> bool {
         let limits: serde_json::Value = serde_json::from_str(&gis_map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
         let min_zoom = limits.get("min").and_then(|value| value.as_f64()).unwrap_or(0.05);
         let max_zoom = limits.get("max").and_then(|value| value.as_f64()).unwrap_or(64.0);
@@ -2169,35 +2169,35 @@ impl MapHost {
         }
     }
 
-    pub fn has_tile(&self, key: &str) -> bool {
+    pub async fn has_tile(&self, key: &str) -> bool {
         self.tiles.tile_images.contains_key(key)
     }
 
-    pub fn has_vector_tile(&self, key: &str) -> bool {
+    pub async fn has_vector_tile(&self, key: &str) -> bool {
         self.tiles.vector_tiles.contains_key(key)
     }
 
-    pub fn selected_positions_json(&self) -> Vec<String> {
+    pub async fn selected_positions_json(&self) -> Vec<String> {
         self.selected_positions.iter().cloned().collect()
     }
 
-    pub fn selected_routes_json(&self) -> Vec<String> {
+    pub async fn selected_routes_json(&self) -> Vec<String> {
         self.selected_routes.iter().cloned().collect()
     }
 
-    pub fn hovered_kind(&self) -> Option<&str> {
+    pub async fn hovered_kind(&self) -> Option<&str> {
         self.hovered_kind.as_deref()
     }
 
-    pub fn hovered_id(&self) -> Option<&str> {
+    pub async fn hovered_id(&self) -> Option<&str> {
         self.hovered_id.as_deref()
     }
 
-    fn push_event(&mut self, kind: &str, payload: serde_json::Value) {
+    async fn push_event(&mut self, kind: &str, payload: serde_json::Value) {
         self.events.push(serde_json::json!({ "type": kind, "payload": payload }));
     }
 
-    pub fn prepare_visible_tiles(&mut self) {
+    pub async fn prepare_visible_tiles(&mut self) {
         let z = self.pick_raster_tile_zoom();
         let visible = tiles::visible_tiles(&self.camera, &self.viewport, z);
         let keys = tiles::tile_retention_keys(&visible, &self.tiles.last_raster_visible);
@@ -2217,7 +2217,7 @@ impl MapHost {
         }
     }
 
-    fn tile_local_to_screen(&self, z: u32, x: u32, y: u32, extent: u32, tx: f64, ty: f64) -> Point {
+    async fn tile_local_to_screen(&self, z: u32, x: u32, y: u32, extent: u32, tx: f64, ty: f64) -> Point {
         let rect = projection::tile_world_rect(z, x, y);
         let step = rect.width() / extent as f64;
         let wx = rect.x0() + tx * step;
@@ -2225,7 +2225,7 @@ impl MapHost {
         map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy))
     }
 
-    fn tile_rect_intersects_viewport(&self, rect: Rect) -> bool {
+    async fn tile_rect_intersects_viewport(&self, rect: Rect) -> bool {
         let w = self.viewport.width as f64;
         let h = self.viewport.height as f64;
         let corners = [
@@ -2247,7 +2247,7 @@ impl MapHost {
         min_x < w && max_x > 0.0 && min_y < h && max_y > 0.0
     }
 
-    fn tile_raster_affine(&self, rect: Rect, img_w: u32, img_h: u32) -> Affine {
+    async fn tile_raster_affine(&self, rect: Rect, img_w: u32, img_h: u32) -> Affine {
         let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1()));
         let ne = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y1()));
         let sw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y0()));
@@ -2256,20 +2256,20 @@ impl MapHost {
         Affine::new([(ne.x - nw.x) / w, (ne.y - nw.y) / w, (sw.x - nw.x) / h, (sw.y - nw.y) / h, nw.x, nw.y])
     }
 
-    fn screen_segment_jump_limit(&self) -> f64 {
+    async fn screen_segment_jump_limit(&self) -> f64 {
         let w = self.viewport.width as f64;
         let h = self.viewport.height as f64;
         (w * w + h * h).sqrt() * 0.45
     }
 
-    fn tile_screen_segment_jump_limit(&self, z: u32, x: u32, y: u32) -> f64 {
+    async fn tile_screen_segment_jump_limit(&self, z: u32, x: u32, y: u32) -> f64 {
         let rect = projection::tile_world_rect(z, x, y);
         let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1()));
         let se = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y0()));
         nw.distance(se) * 1.2
     }
 
-    fn bleed_screen_quad_corners(corners: [Point; 4], bleed: f64) -> [Point; 4] {
+    async fn bleed_screen_quad_corners(corners: [Point; 4], bleed: f64) -> [Point; 4] {
         let cx = corners.iter().map(|p| p.x).sum::<f64>() / 4.0;
         let cy = corners.iter().map(|p| p.y).sum::<f64>() / 4.0;
         std::array::from_fn(|i| {
@@ -2285,7 +2285,7 @@ impl MapHost {
         })
     }
 
-    fn append_viewport_fill(&self, scene: &mut Scene, fill: Color) {
+    async fn append_viewport_fill(&self, scene: &mut Scene, fill: Color) {
         let w = self.viewport.width as f64;
         let h = self.viewport.height as f64;
         if w <= 0.0 || h <= 0.0 {
@@ -2302,7 +2302,7 @@ impl MapHost {
         scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
     }
 
-    fn append_vector_tile_quad_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
+    async fn append_vector_tile_quad_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         let rect = projection::tile_world_rect(z, x, y);
         let corners = Self::bleed_screen_quad_corners(
             [
@@ -2322,11 +2322,11 @@ impl MapHost {
         scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
     }
 
-    fn append_vector_tile_land_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
+    async fn append_vector_tile_land_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         self.append_vector_tile_quad_backdrop(scene, z, x, y, fill);
     }
 
-    fn append_screen_polyline(path: &mut BezPath, pts: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
+    async fn append_screen_polyline(path: &mut BezPath, pts: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
         if pts.len() < 2 {
             return;
         }
@@ -2343,7 +2343,7 @@ impl MapHost {
         }
     }
 
-    fn append_screen_ring(path: &mut BezPath, ring: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
+    async fn append_screen_ring(path: &mut BezPath, ring: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
         if ring.len() < 3 {
             return;
         }
@@ -2351,7 +2351,7 @@ impl MapHost {
         path.close_path();
     }
 
-    fn append_vector_tile_polygon(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color, stroke: Color, stroke_width: f64) {
+    async fn append_vector_tile_polygon(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color, stroke: Color, stroke_width: f64) {
         if rings.is_empty() {
             return;
         }
@@ -2374,17 +2374,17 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tile_polygon_rings_nonzero(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
+    async fn append_vector_tile_polygon_rings_nonzero(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
         self.append_vector_tile_polygon(scene, tz, tx, ty, extent, rings, fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
     }
 
-    fn append_vector_tile_polygon_filled_rings(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
+    async fn append_vector_tile_polygon_filled_rings(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
         for ring in rings {
             self.append_vector_tile_polygon(scene, tz, tx, ty, extent, std::slice::from_ref(ring), fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
         }
     }
 
-    fn append_vector_tile_lines(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, lines: &[Vec<(f64, f64)>], stroke: Color, width: f64) {
+    async fn append_vector_tile_lines(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, lines: &[Vec<(f64, f64)>], stroke: Color, width: f64) {
         if lines.is_empty() || stroke.to_rgba8().a <= 5 || width <= 0.0 {
             return;
         }
@@ -2422,7 +2422,7 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tiles(&self, scene: &mut Scene) {
+    async fn append_vector_tiles(&self, scene: &mut Scene) {
         if !vector_tiles_available_at_camera_zoom(self.camera.zoom) {
             return;
         }
@@ -2470,7 +2470,7 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tile_labels(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], span: f64, _forced_lod: Option<&str>, label_fill: Color, label_halo: Color) {
+    async fn append_vector_tile_labels(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], span: f64, _forced_lod: Option<&str>, label_fill: Color, label_halo: Color) {
         struct LabelCandidate {
             label: String,
             screen: Point,
@@ -2526,7 +2526,7 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tiles_colored(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>) {
+    async fn append_vector_tiles_colored(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>) {
         let weights = self.layer_stroke_scale;
         let land_fill = vector_tiles::weighted_opaque_fill(self.theme.land_fill, weights.land);
         let border_stroke = self.theme.land_stroke;
@@ -2638,7 +2638,7 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>, ink: Color, paper: Color) {
+    async fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>, ink: Color, paper: Color) {
         let vis = self.layer_visibility;
         let transparent_stroke = Color::from_rgba8(0, 0, 0, 0);
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
@@ -2716,7 +2716,7 @@ impl MapHost {
         }
     }
 
-    fn append_tiles(&self, scene: &mut Scene) {
+    async fn append_tiles(&self, scene: &mut Scene) {
         if !self.layer_visibility.raster {
             return;
         }
@@ -2739,7 +2739,7 @@ impl MapHost {
         }
     }
 
-    fn append_regions(&self, scene: &mut Scene) {
+    async fn append_regions(&self, scene: &mut Scene) {
         if !self.layer_visibility.regions {
             return;
         }
@@ -2765,7 +2765,7 @@ impl MapHost {
         }
     }
 
-    fn append_routes(&self, scene: &mut Scene) {
+    async fn append_routes(&self, scene: &mut Scene) {
         if !self.layer_visibility.routes {
             return;
         }
@@ -2804,7 +2804,7 @@ impl MapHost {
         }
     }
 
-    fn append_positions(&self, scene: &mut Scene) {
+    async fn append_positions(&self, scene: &mut Scene) {
         if !self.layer_visibility.positions {
             return;
         }
@@ -2851,7 +2851,7 @@ impl MapHost {
         }
     }
 
-    pub fn build_vector_scene(&self) -> Scene {
+    pub async fn build_vector_scene(&self) -> Scene {
         let mut scene = Scene::new();
         match self.render_mode {
             MapTileMode::Image | MapTileMode::Combined => self.append_tiles(&mut scene),
@@ -2868,7 +2868,7 @@ impl MapHost {
     }
 
     /// @emoji 📐️ Scales the logical viewport scene to the physical GPU surface (matches puzzle2d dpr handling).
-    pub fn build_render_scene(&self) -> Scene {
+    pub async fn build_render_scene(&self) -> Scene {
         let inner = self.build_vector_scene();
         let scale = self.viewport.dpr.max(1.0);
         if (scale - 1.0).abs() < f64::EPSILON {
@@ -2881,11 +2881,11 @@ impl MapHost {
 }
 
 impl canvas_content::CanvasContent for MapHost {
-    fn build_scene(&self) -> Scene {
+    async fn build_scene(&self) -> Scene {
         self.build_render_scene()
     }
 
-    fn clear_color(&self) -> Color {
+    async fn clear_color(&self) -> Color {
         self.theme.surface_clear
     }
 }
@@ -2911,12 +2911,12 @@ struct MapSessionInner {
 
 #[cfg(target_arch = "wasm32")]
 impl MapSessionInner {
-    fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
+    async fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
     }
 
-    fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
+    async fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.prepare_visible_tiles();
         let scene = self.host.build_render_scene();
         self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
@@ -2933,17 +2933,17 @@ pub struct MapSession {
 #[wasm_bindgen]
 impl MapSession {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
-    pub fn gpu_ready(&self) -> bool {
+    pub async fn gpu_ready(&self) -> bool {
         self.state.borrow().gpu.gpu_ready()
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
-    pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+    pub async fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
         if inner.borrow().gpu.gpu_ready() {
             return future_to_promise(async move { Err(JsValue::from_str("canvas surface already attached")) });
@@ -2967,7 +2967,7 @@ impl MapSession {
     }
 
     #[wasm_bindgen(js_name = setSize)]
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         let lw = width.max(1);
         let lh = height.max(1);
         let dpr = dpr.max(1.0);
@@ -2977,132 +2977,132 @@ impl MapSession {
     }
 
     #[wasm_bindgen(js_name = fitWorldCamera)]
-    pub fn fit_world_camera(&mut self) {
+    pub async fn fit_world_camera(&mut self) {
         self.state.borrow_mut().host.fit_world_camera();
     }
 
     #[wasm_bindgen(js_name = setCamera)]
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
     #[wasm_bindgen(js_name = wheelScreen)]
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
         self.state.borrow_mut().host.pointer_down_screen(sx, sy, button);
     }
 
     #[wasm_bindgen(js_name = pointerMoveScreen)]
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy);
     }
 
     #[wasm_bindgen(js_name = pointerUpScreen)]
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy);
     }
 
     #[wasm_bindgen(js_name = syncMapJson)]
-    pub fn sync_map_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn sync_map_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.sync_map_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadTile)]
-    pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn upload_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
         self.state.borrow_mut().host.upload_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadVectorTile)]
-    pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
         self.state.borrow_mut().host.upload_vector_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setRenderMode)]
-    pub fn set_render_mode(&mut self, mode: &str) {
+    pub async fn set_render_mode(&mut self, mode: &str) {
         self.state.borrow_mut().host.set_render_mode(mode);
     }
 
     #[wasm_bindgen(js_name = setVectorStyle)]
-    pub fn set_vector_style(&mut self, style: &str) {
+    pub async fn set_vector_style(&mut self, style: &str) {
         self.state.borrow_mut().host.set_vector_style(style);
     }
 
     #[wasm_bindgen(js_name = vectorStyleStr)]
-    pub fn vector_style_str(&self) -> String {
+    pub async fn vector_style_str(&self) -> String {
         self.state.borrow().host.vector_style_str().to_string()
     }
 
     #[wasm_bindgen(js_name = setLodMode)]
-    pub fn set_lod_mode(&mut self, mode: &str) {
+    pub async fn set_lod_mode(&mut self, mode: &str) {
         self.state.borrow_mut().host.set_lod_mode(mode);
     }
 
     #[wasm_bindgen(js_name = setLayerVisibilityJson)]
-    pub fn set_layer_visibility_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn set_layer_visibility_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_layer_visibility_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = layerVisibilityJson)]
-    pub fn layer_visibility_json_wasm(&self) -> String {
+    pub async fn layer_visibility_json_wasm(&self) -> String {
         self.state.borrow().host.layer_visibility_json()
     }
 
     #[wasm_bindgen(js_name = setLayerStrokeScaleJson)]
-    pub fn set_layer_stroke_scale_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn set_layer_stroke_scale_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_layer_stroke_scale_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = layerStrokeScaleJson)]
-    pub fn layer_stroke_scale_json_wasm(&self) -> String {
+    pub async fn layer_stroke_scale_json_wasm(&self) -> String {
         self.state.borrow().host.layer_stroke_scale_json()
     }
 
     #[wasm_bindgen(js_name = layerWeightSliderIdsJson)]
-    pub fn layer_weight_slider_ids_json(&self, lod_id: &str, render_mode: &str) -> String {
+    pub async fn layer_weight_slider_ids_json(&self, lod_id: &str, render_mode: &str) -> String {
         gis_map_layer_weight_slider_ids_json(lod_id, render_mode)
     }
 
     #[wasm_bindgen(js_name = setMapThemeJson)]
-    pub fn set_map_theme_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn set_map_theme_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_map_theme_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = visibleVectorTilesJson)]
-    pub fn visible_vector_tiles_json_wasm(&self) -> String {
+    pub async fn visible_vector_tiles_json_wasm(&self) -> String {
         self.state.borrow().host.visible_vector_tiles_json()
     }
 
     #[wasm_bindgen(js_name = drainEventsJson)]
-    pub fn drain_events_json(&mut self) -> String {
+    pub async fn drain_events_json(&mut self) -> String {
         self.state.borrow_mut().host.drain_events_json()
     }
 
     #[wasm_bindgen(js_name = positionScreenJson)]
-    pub fn position_screen_json_wasm(&self, id: &str) -> String {
+    pub async fn position_screen_json_wasm(&self, id: &str) -> String {
         self.state.borrow().host.position_screen_json(id)
     }
 
     #[wasm_bindgen(js_name = hitTestFeatureJson)]
-    pub fn hit_test_feature_json_wasm(&self, sx: f64, sy: f64) -> String {
+    pub async fn hit_test_feature_json_wasm(&self, sx: f64, sy: f64) -> String {
         self.state.borrow().host.hit_test_feature_json(sx, sy)
     }
 
     #[wasm_bindgen(js_name = featuresInRectJson)]
-    pub fn features_in_rect_json_wasm(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
+    pub async fn features_in_rect_json_wasm(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
         self.state.borrow().host.features_in_rect_json(x0, y0, x1, y1, crossing)
     }
 
     #[wasm_bindgen(js_name = featuresInPolygonJson)]
-    pub fn features_in_polygon_json_wasm(&self, points_json: &str, crossing: bool) -> String {
+    pub async fn features_in_polygon_json_wasm(&self, points_json: &str, crossing: bool) -> String {
         self.state.borrow().host.features_in_polygon_json(points_json, crossing)
     }
 
     #[wasm_bindgen(js_name = featureScreenJson)]
-    pub fn feature_screen_json_wasm(&self, kind: &str, id: &str) -> String {
+    pub async fn feature_screen_json_wasm(&self, kind: &str, id: &str) -> String {
         self.state.borrow().host.feature_screen_json(kind, id)
     }
 
@@ -3110,44 +3110,44 @@ impl MapSession {
     /// granularity (`"position"`|`"route"`), `selectedIdsJson`/`hoveredId` the caller's resolved
     /// `DomainSelection.ids`/`DomainHover.ids.first()`, read from `InteractionState` at render time.
     #[wasm_bindgen(js_name = syncInteraction)]
-    pub fn sync_interaction_wasm(&mut self, granularity: &str, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+    pub async fn sync_interaction_wasm(&mut self, granularity: &str, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
         let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
         self.state.borrow_mut().host.sync_interaction(granularity, &ids, hovered_id.as_deref());
         Ok(())
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
-    pub fn camera_json_wasm(&self) -> String {
+    pub async fn camera_json_wasm(&self) -> String {
         self.state.borrow().host.camera_json()
     }
 
     #[wasm_bindgen(js_name = visibleTilesJson)]
-    pub fn visible_tiles_json_wasm(&self) -> String {
+    pub async fn visible_tiles_json_wasm(&self) -> String {
         self.state.borrow().host.visible_tiles_json()
     }
 
     #[wasm_bindgen(js_name = currentLodJson)]
-    pub fn current_lod_json_wasm(&self) -> String {
+    pub async fn current_lod_json_wasm(&self) -> String {
         self.state.borrow().host.current_lod_json()
     }
 
     #[wasm_bindgen(js_name = lodScaleJson)]
-    pub fn lod_scale_json_wasm(&self) -> String {
+    pub async fn lod_scale_json_wasm(&self) -> String {
         gis_map_lod_scale_json()
     }
 
     #[wasm_bindgen(js_name = cameraLimitsJson)]
-    pub fn camera_limits_json_wasm(&self) -> String {
+    pub async fn camera_limits_json_wasm(&self) -> String {
         gis_map_camera_limits_json_for_viewport(&self.state.borrow().host.viewport)
     }
 
     #[wasm_bindgen(js_name = reclampCamera)]
-    pub fn reclamp_camera(&mut self) {
+    pub async fn reclamp_camera(&mut self) {
         self.state.borrow_mut().host.clamp_camera_to_world();
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
-    pub fn render_frame(&mut self) -> Result<(), JsValue> {
+    pub async fn render_frame(&mut self) -> Result<(), JsValue> {
         self.state.borrow_mut().render_frame_gpu()
     }
 }
@@ -3161,7 +3161,7 @@ mod tests {
     use super::MAX_VISIBLE_TILE_REQUESTS;
     use super::canvas::camera::{Camera, Viewport};
 
-    fn test_png_1x1() -> Vec<u8> {
+    async fn test_png_1x1() -> Vec<u8> {
         use image::codecs::png::PngEncoder;
         use image::{ColorType, ImageEncoder};
         let mut buf = Vec::new();
@@ -3171,7 +3171,7 @@ mod tests {
     }
 
     #[test]
-    fn lonlat_world_round_trip() {
+    async fn lonlat_world_round_trip() {
         let w = lonlat_to_world(8.5, 47.4);
         let (lon, lat) = world_to_lonlat(w.x, w.y);
         assert!((lon - 8.5).abs() < 0.01);
@@ -3179,7 +3179,7 @@ mod tests {
     }
 
     #[test]
-    fn default_world_camera_fits_extent() {
+    async fn default_world_camera_fits_extent() {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let cam = default_world_camera(&viewport);
         assert!(cam.zoom > 0.0);
@@ -3188,7 +3188,7 @@ mod tests {
     }
 
     #[test]
-    fn visible_tiles_at_world_view() {
+    async fn visible_tiles_at_world_view() {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 200.0 };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let tiles = visible_tiles(&camera, &viewport, 2);
@@ -3198,7 +3198,7 @@ mod tests {
     }
 
     #[test]
-    fn map_set_size_reclamps_cover_zoom_when_viewport_grows() {
+    async fn map_set_size_reclamps_cover_zoom_when_viewport_grows() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3209,7 +3209,7 @@ mod tests {
     }
 
     #[test]
-    fn map_pan_and_zoom_stay_inside_world() {
+    async fn map_pan_and_zoom_stay_inside_world() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3223,7 +3223,7 @@ mod tests {
         assert_viewport_corners_inside_world(&host);
     }
 
-    fn assert_viewport_corners_inside_world(host: &super::MapHost) {
+    async fn assert_viewport_corners_inside_world(host: &super::MapHost) {
         let w = host.viewport.width as f64;
         let h = host.viewport.height as f64;
         for (sx, sy) in [(0.0, 0.0), (w, 0.0), (w, h), (0.0, h)] {
@@ -3234,7 +3234,7 @@ mod tests {
     }
 
     #[test]
-    fn map_camera_zoom_not_clamped_to_puzzle_scale() {
+    async fn map_camera_zoom_not_clamped_to_puzzle_scale() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3245,7 +3245,7 @@ mod tests {
     }
 
     #[test]
-    fn map_camera_max_zoom_reaches_street_longitude_span() {
+    async fn map_camera_max_zoom_reaches_street_longitude_span() {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let camera = Camera { x: 0.0, y: 0.0, zoom: super::MAP_CAMERA_ZOOM_MAX };
         let span = super::viewport_lon_span_degrees(&camera, &viewport);
@@ -3254,7 +3254,7 @@ mod tests {
     }
 
     #[test]
-    fn map_lod_picks_bounded_tile_zoom_at_world_fit() {
+    async fn map_lod_picks_bounded_tile_zoom_at_world_fit() {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let camera = default_world_camera(&viewport);
         let z = tiles::pick_zoom(&camera, &viewport, None);
@@ -3264,7 +3264,7 @@ mod tests {
     }
 
     #[test]
-    fn visible_tiles_json_bounded_for_default_host() {
+    async fn visible_tiles_json_bounded_for_default_host() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3274,7 +3274,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_vector_tile_zoom_clamped_to_openfreemap_max() {
+    async fn pick_vector_tile_zoom_clamped_to_openfreemap_max() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_camera(0.0, 0.0, super::MAP_CAMERA_ZOOM_MAX);
@@ -3282,7 +3282,7 @@ mod tests {
     }
 
     #[test]
-    fn visible_vector_tiles_overzoom_at_max_camera_zoom() {
+    async fn visible_vector_tiles_overzoom_at_max_camera_zoom() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_camera(0.0, 0.0, super::MAP_CAMERA_ZOOM_MAX);
@@ -3297,7 +3297,7 @@ mod tests {
     }
 
     #[test]
-    fn map_lod_resolves_from_visible_longitude_span() {
+    async fn map_lod_resolves_from_visible_longitude_span() {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let camera = default_world_camera(&viewport);
         assert_eq!(super::resolve_map_lod_index_from_span(super::viewport_lon_span_degrees(&camera, &viewport)), 0, "default world fit should be world LOD");
@@ -3310,7 +3310,7 @@ mod tests {
     }
 
     #[test]
-    fn ideal_tile_z_rises_when_viewport_span_shrinks() {
+    async fn ideal_tile_z_rises_when_viewport_span_shrinks() {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let world = default_world_camera(&viewport);
         let zoomed = Camera { x: 0.0, y: 0.0, zoom: 1800.0 };
@@ -3318,7 +3318,7 @@ mod tests {
     }
 
     #[test]
-    fn region_and_city_road_strokes_stay_thin() {
+    async fn region_and_city_road_strokes_stay_thin() {
         let region_scale = super::vector_tiles::vector_line_scale(8.0);
         let city_scale = super::vector_tiles::vector_line_scale(2.5);
         let district_scale = super::vector_tiles::vector_line_scale(0.2);
@@ -3339,7 +3339,7 @@ mod tests {
     }
 
     #[test]
-    fn continental_span_hides_roads_and_caps_tile_z() {
+    async fn continental_span_hides_roads_and_caps_tile_z() {
         assert!(!super::vector_tiles::transportation_visible("motorway", 42.0, 4, None));
         assert!(super::vector_tiles::vector_detail_profile(42.0, 4, None).draw_landcover);
         assert_eq!(super::vector_tiles::max_tile_z_for_span(42.0), 5);
@@ -3356,7 +3356,7 @@ mod tests {
     }
 
     #[test]
-    fn country_lod_hides_regional_boundaries() {
+    async fn country_lod_hides_regional_boundaries() {
         let span = 20.0;
         assert_eq!(super::resolve_map_lod_index_from_span(span), 2);
         let profile = super::vector_tiles::vector_detail_profile(span, 7, None);
@@ -3375,7 +3375,7 @@ mod tests {
     }
 
     #[test]
-    fn region_lod_includes_country_and_state_boundaries() {
+    async fn region_lod_includes_country_and_state_boundaries() {
         let span = 8.0;
         assert_eq!(super::resolve_map_lod_index_from_span(span), 3);
         let profile = super::vector_tiles::vector_detail_profile(span, 10, None);
@@ -3392,7 +3392,7 @@ mod tests {
     }
 
     #[test]
-    fn city_lod_fills_tile_backdrop_to_hide_seams() {
+    async fn city_lod_fills_tile_backdrop_to_hide_seams() {
         let span = 2.0;
         assert_eq!(super::resolve_map_lod_index_from_span(span), 4);
         let profile = super::vector_tiles::vector_detail_profile(span, 10, None);
@@ -3402,7 +3402,7 @@ mod tests {
     }
 
     #[test]
-    fn region_lod_exceeds_country_detail() {
+    async fn region_lod_exceeds_country_detail() {
         let span = 8.0;
         let country = super::vector_tiles::vector_detail_profile(span, 10, Some("country"));
         let region = super::vector_tiles::vector_detail_profile(span, 10, Some("region"));
@@ -3420,7 +3420,7 @@ mod tests {
     }
 
     #[test]
-    fn country_span_vector_profile_matches_lod_band() {
+    async fn country_span_vector_profile_matches_lod_band() {
         let span = 20.0;
         assert_eq!(super::resolve_map_lod_index_from_span(span), 2);
         let profile = super::vector_tiles::vector_detail_profile(span, 2, None);
@@ -3431,7 +3431,7 @@ mod tests {
     }
 
     #[test]
-    fn layer_visibility_json_round_trip() {
+    async fn layer_visibility_json_round_trip() {
         let mut host = super::MapHost::new();
         assert!(host.layer_visibility.positions);
         host.set_layer_visibility_from_json(r#"{"positions":false,"routes":true}"#).expect("parse");
@@ -3442,7 +3442,7 @@ mod tests {
     }
 
     #[test]
-    fn weight_slider_keys_follow_lod_and_render_mode() {
+    async fn weight_slider_keys_follow_lod_and_render_mode() {
         let world_combined = super::map_layer_weight_slider_keys_at_lod("world", "combined");
         assert!(world_combined.contains(&"raster"));
         assert!(world_combined.contains(&"water"));
@@ -3461,7 +3461,7 @@ mod tests {
     }
 
     #[test]
-    fn layer_stroke_scale_json_clamps_weights() {
+    async fn layer_stroke_scale_json_clamps_weights() {
         let mut host = super::MapHost::new();
         host.set_layer_stroke_scale_from_json(r#"{"roads":9,"water":0.1}"#).expect("parse");
         assert!((host.layer_stroke_scale.roads - super::MAP_LAYER_WEIGHT_MAX).abs() < f64::EPSILON);
@@ -3469,7 +3469,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_vector_tile_zoom_tracks_viewport_not_camera_lod_steps() {
+    async fn pick_vector_tile_zoom_tracks_viewport_not_camera_lod_steps() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3480,7 +3480,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_vector_tile_zoom_uses_span_cap_at_world_lod_while_raster_stays_coarse() {
+    async fn pick_vector_tile_zoom_uses_span_cap_at_world_lod_while_raster_stays_coarse() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3489,7 +3489,7 @@ mod tests {
     }
 
     #[test]
-    fn forced_building_lod_bounds_tile_requests_at_world_zoom() {
+    async fn forced_building_lod_bounds_tile_requests_at_world_zoom() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3501,7 +3501,7 @@ mod tests {
     }
 
     #[test]
-    fn forced_country_lod_allows_finer_tiles_when_zoomed_in() {
+    async fn forced_country_lod_allows_finer_tiles_when_zoomed_in() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_lod_mode("country");
@@ -3514,7 +3514,7 @@ mod tests {
     }
 
     #[test]
-    fn visible_vector_tiles_at_world_zoom() {
+    async fn visible_vector_tiles_at_world_zoom() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3524,7 +3524,7 @@ mod tests {
     }
 
     #[test]
-    fn map_wheel_screen_keeps_world_under_cursor_with_flipped_y() {
+    async fn map_wheel_screen_keeps_world_under_cursor_with_flipped_y() {
         use super::canvas::camera::{Camera, Viewport};
         let mut camera = Camera { x: 0.15, y: -0.25, zoom: 320.0 };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
@@ -3539,7 +3539,7 @@ mod tests {
     }
 
     #[test]
-    fn tile_raster_affine_maps_image_north_up() {
+    async fn tile_raster_affine_maps_image_north_up() {
         let mut host = super::MapHost::new();
         host.set_size(256, 256, 1.0);
         host.fit_world_camera();
@@ -3554,14 +3554,14 @@ mod tests {
     }
 
     #[test]
-    fn map_render_mode_from_str() {
+    async fn map_render_mode_from_str() {
         assert_eq!(super::MapTileMode::from_str("image"), super::MapTileMode::Image);
         assert_eq!(super::MapTileMode::from_str("vector"), super::MapTileMode::Vector);
         assert_eq!(super::MapTileMode::from_str("combined"), super::MapTileMode::Combined);
     }
 
     #[test]
-    fn map_vector_style_from_str() {
+    async fn map_vector_style_from_str() {
         assert_eq!(super::MapVectorStyle::from_str("colored"), super::MapVectorStyle::Colored);
         assert_eq!(super::MapVectorStyle::from_str("figureGround"), super::MapVectorStyle::FigureGround);
         assert_eq!(super::MapVectorStyle::from_str("invertedFigure"), super::MapVectorStyle::InvertedFigure);
@@ -3569,7 +3569,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_map_json_keeps_position_labels() {
+    async fn sync_map_json_keeps_position_labels() {
         let mut host = super::MapHost::new();
         let json = r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#;
         host.sync_map_json(json).expect("descriptor");
@@ -3578,7 +3578,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_map_json_parses_rich_position_metadata() {
+    async fn sync_map_json_parses_rich_position_metadata() {
         let mut host = super::MapHost::new();
         let json = r#"{"positions":[{"id":"donor-1","lon":8.54,"lat":47.37,"name":"Donor site","kind":"donor","icon":"package","sourceUrl":"https://example.test/donor"}],"routes":[],"regions":[]}"#;
         host.sync_map_json(json).expect("descriptor");
@@ -3590,7 +3590,7 @@ mod tests {
     }
 
     #[test]
-    fn position_screen_json_projects_known_position() {
+    async fn position_screen_json_projects_known_position() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3602,7 +3602,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_feature_prefers_closest_target() {
+    async fn hit_test_feature_prefers_closest_target() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3616,7 +3616,7 @@ mod tests {
     }
 
     #[test]
-    fn features_in_rect_crossing_includes_intersecting_route() {
+    async fn features_in_rect_crossing_includes_intersecting_route() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3627,7 +3627,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_interaction_updates_host_state_scoped_to_active_granularity() {
+    async fn sync_interaction_updates_host_state_scoped_to_active_granularity() {
         let mut host = super::MapHost::new();
         host.sync_interaction("position", &["a".to_string()], Some("a"));
         assert!(host.selected_positions.contains("a"));
@@ -3643,7 +3643,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_up_emits_camera_after_middle_button_pan() {
+    async fn pointer_up_emits_camera_after_middle_button_pan() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3655,7 +3655,7 @@ mod tests {
     }
 
     #[test]
-    fn position_labels_build_non_empty_scene() {
+    async fn position_labels_build_non_empty_scene() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3665,7 +3665,7 @@ mod tests {
     }
 
     #[test]
-    fn set_map_theme_from_json_updates_surface_clear() {
+    async fn set_map_theme_from_json_updates_surface_clear() {
         let mut host = super::MapHost::new();
         let json = r#"{"surfaceClear":[1,2,3,255]}"#;
         host.set_map_theme_from_json(json).expect("theme json");
@@ -3673,14 +3673,14 @@ mod tests {
     }
 
     #[test]
-    fn set_map_theme_from_json_zeros_land_stroke_alpha() {
+    async fn set_map_theme_from_json_zeros_land_stroke_alpha() {
         let mut host = super::MapHost::new();
         host.set_map_theme_from_json(r#"{"landStroke":[51,64,65,107]}"#).expect("theme json");
         assert_eq!(host.theme.land_stroke.to_rgba8().a, 0);
     }
 
     #[test]
-    fn build_render_scene_scales_for_device_pixel_ratio() {
+    async fn build_render_scene_scales_for_device_pixel_ratio() {
         let mut host = super::MapHost::new();
         host.set_size(400, 300, 2.0);
         host.fit_world_camera();
@@ -3690,7 +3690,7 @@ mod tests {
     }
 
     #[test]
-    fn build_vector_scene_respects_render_mode() {
+    async fn build_vector_scene_respects_render_mode() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_render_mode("vector");
@@ -3700,7 +3700,7 @@ mod tests {
     }
 
     #[test]
-    fn build_vector_scene_respects_vector_style() {
+    async fn build_vector_scene_respects_vector_style() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_render_mode("vector");
@@ -3712,7 +3712,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_tile_key_round_trips_tile_key() {
+    async fn parse_tile_key_round_trips_tile_key() {
         let key = tiles::tile_key(3, 5, 7);
         assert_eq!(tiles::parse_tile_key(&key), Some((3, 5, 7)));
         assert_eq!(tiles::parse_tile_key("bad"), None);
@@ -3720,7 +3720,7 @@ mod tests {
     }
 
     #[test]
-    fn tile_retention_keeps_raster_ancestor_after_zoom_in() {
+    async fn tile_retention_keeps_raster_ancestor_after_zoom_in() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3735,7 +3735,7 @@ mod tests {
     }
 
     #[test]
-    fn tile_rect_intersects_viewport_for_on_and_off_screen_tiles() {
+    async fn tile_rect_intersects_viewport_for_on_and_off_screen_tiles() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.set_camera(0.0, 0.0, 3200.0);
@@ -3749,7 +3749,7 @@ mod tests {
     }
 
     #[test]
-    fn tile_retention_keeps_vector_ancestor_after_zoom_in() {
+    async fn tile_retention_keeps_vector_ancestor_after_zoom_in() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
@@ -3763,14 +3763,14 @@ mod tests {
     }
 
     #[test]
-    fn decode_mvt_empty_bytes_yields_empty_tile() {
+    async fn decode_mvt_empty_bytes_yields_empty_tile() {
         let tile = super::vector_tiles::decode_mvt(&[]).expect("empty pbf");
         assert!(tile.layers.is_empty());
     }
 
     #[test]
     #[ignore = "requires .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
-    fn decode_demotile_fixture_has_named_layers() {
+    async fn decode_demotile_fixture_has_named_layers() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
@@ -3782,7 +3782,7 @@ mod tests {
     }
 
     #[test]
-    fn demotile_fixture_countries_use_multi_ring_polygons() {
+    async fn demotile_fixture_countries_use_multi_ring_polygons() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
@@ -3792,7 +3792,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_linestrings_split_at_moveto() {
+    async fn fixture_linestrings_split_at_moveto() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES");
         let mut found = false;
         for entry in std::fs::read_dir(&dir).expect("fixture dir") {
@@ -3816,7 +3816,7 @@ mod tests {
     }
 
     #[test]
-    fn demotile_z5_has_countries_and_centroids() {
+    async fn demotile_z5_has_countries_and_centroids() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
@@ -3828,7 +3828,7 @@ mod tests {
     }
 
     #[test]
-    fn demotile_z0_has_many_country_features() {
+    async fn demotile_z0_has_many_country_features() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
@@ -3837,7 +3837,7 @@ mod tests {
     }
 
     #[test]
-    fn figure_world_tile_paints_many_countries() {
+    async fn figure_world_tile_paints_many_countries() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -3852,7 +3852,7 @@ mod tests {
     }
 
     #[test]
-    fn colored_world_tile_paints_land_over_water_backdrop() {
+    async fn colored_world_tile_paints_land_over_water_backdrop() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -3866,7 +3866,7 @@ mod tests {
     }
 
     #[test]
-    fn figure_country_lod_uses_land_mass_backdrop() {
+    async fn figure_country_lod_uses_land_mass_backdrop() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -3880,7 +3880,7 @@ mod tests {
         assert!(!scene.encoding().is_empty());
     }
 
-    fn zoom_host_to_representative_lod(host: &mut super::MapHost, lod_id: &str) {
+    async fn zoom_host_to_representative_lod(host: &mut super::MapHost, lod_id: &str) {
         let idx = super::GIS_MAP_LOD_SCALE.index_of(lod_id).expect("lod id");
         let target = super::representative_viewport_span_for_lod(idx);
         host.fit_world_camera();
@@ -3899,7 +3899,7 @@ mod tests {
         host.set_camera(0.0, 0.0, hi);
     }
 
-    fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
+    async fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
         zoom_host_to_representative_lod(host, lod_id);
         let rect = tile_world_rect(tz, tx, ty);
         let cx = (rect.x0() + rect.x1()) * 0.5;
@@ -3908,7 +3908,7 @@ mod tests {
     }
 
     #[test]
-    fn transportation_name_visible_is_stricter_than_road_geometry_at_city_span() {
+    async fn transportation_name_visible_is_stricter_than_road_geometry_at_city_span() {
         let v = super::vector_tiles::transportation_name_visible;
         assert!(v("primary", 2.0));
         assert!(!v("secondary", 2.0));
@@ -3917,7 +3917,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_label_px_scales_with_span_inside_city_band() {
+    async fn vector_label_px_scales_with_span_inside_city_band() {
         let wide = super::vector_tiles::vector_label_px(2.0, 1.0);
         let narrow = super::vector_tiles::vector_label_px(1.3, 1.0);
         assert!(narrow > wide, "labels should grow when zooming in (span shrinks): {wide} vs {narrow}");
@@ -3925,14 +3925,14 @@ mod tests {
     }
 
     #[test]
-    fn poi_labels_hidden_until_district_span() {
+    async fn poi_labels_hidden_until_district_span() {
         let v = super::vector_tiles::poi_label_visible;
         assert!(!v(2.0));
         assert!(v(0.3));
     }
 
     #[test]
-    fn place_label_visible_covers_admin_document() {
+    async fn place_label_visible_covers_admin_document() {
         let v = super::vector_tiles::place_label_visible;
         assert!(v("", 20.0));
         assert!(!v("", 8.0));
@@ -3951,7 +3951,7 @@ mod tests {
     }
 
     #[test]
-    fn label_camera_setup_intersects_fixture_tile() {
+    async fn label_camera_setup_intersects_fixture_tile() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -3967,7 +3967,7 @@ mod tests {
     }
 
     #[test]
-    fn figure_ground_labels_increase_scene_when_enabled() {
+    async fn figure_ground_labels_increase_scene_when_enabled() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -3985,7 +3985,7 @@ mod tests {
     }
 
     #[test]
-    fn colored_vector_labels_increase_scene_when_enabled() {
+    async fn colored_vector_labels_increase_scene_when_enabled() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
@@ -4003,19 +4003,19 @@ mod tests {
     }
 
     #[test]
-    fn map_point_segment_distance_zero_length_segment_uses_point_distance() {
+    async fn map_point_segment_distance_zero_length_segment_uses_point_distance() {
         let d = super::map_point_segment_distance(3.0, 4.0, 0.0, 0.0, 0.0, 0.0);
         assert!((d - 5.0).abs() < 1e-9);
     }
 
     #[test]
-    fn map_point_in_polygon_rejects_degenerate_polygon() {
+    async fn map_point_in_polygon_rejects_degenerate_polygon() {
         assert!(!super::map_point_in_polygon(0.0, 0.0, &[]));
         assert!(!super::map_point_in_polygon(0.0, 0.0, &[super::Point::new(0.0, 0.0), super::Point::new(1.0, 1.0)]));
     }
 
     #[test]
-    fn map_polyline_intersects_rect_detects_edge_crossing_without_endpoints_inside() {
+    async fn map_polyline_intersects_rect_detects_edge_crossing_without_endpoints_inside() {
         let line = [super::Point::new(-10.0, 5.0), super::Point::new(10.0, 5.0)];
         assert!(super::map_polyline_intersects_rect(&line, 0.0, 0.0, 4.0, 10.0));
         let miss = [super::Point::new(-10.0, 50.0), super::Point::new(10.0, 50.0)];
@@ -4023,7 +4023,7 @@ mod tests {
     }
 
     #[test]
-    fn map_polyline_intersects_polygon_detects_crossing_edge() {
+    async fn map_polyline_intersects_polygon_detects_crossing_edge() {
         let square = [super::Point::new(0.0, 0.0), super::Point::new(10.0, 0.0), super::Point::new(10.0, 10.0), super::Point::new(0.0, 10.0)];
         let crossing = [super::Point::new(-5.0, 5.0), super::Point::new(15.0, 5.0)];
         assert!(super::map_polyline_intersects_polygon(&crossing, &square));
@@ -4032,7 +4032,7 @@ mod tests {
     }
 
     #[test]
-    fn features_in_polygon_json_invalid_json_returns_empty() {
+    async fn features_in_polygon_json_invalid_json_returns_empty() {
         let host = super::MapHost::new();
         let out = host.features_in_polygon_json("not json", true);
         let v: serde_json::Value = serde_json::from_str(&out).expect("json");
@@ -4041,7 +4041,7 @@ mod tests {
     }
 
     #[test]
-    fn features_in_polygon_json_requires_at_least_a_triangle() {
+    async fn features_in_polygon_json_requires_at_least_a_triangle() {
         let host = super::MapHost::new();
         let out = host.features_in_polygon_json("[[0.0,0.0],[1.0,1.0]]", true);
         let v: serde_json::Value = serde_json::from_str(&out).expect("json");
@@ -4049,7 +4049,7 @@ mod tests {
     }
 
     #[test]
-    fn features_in_polygon_json_finds_enclosed_position() {
+    async fn features_in_polygon_json_finds_enclosed_position() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.sync_map_json(r#"{"positions":[{"id":"p1","lon":0.0,"lat":0.0}]}"#).expect("sync");
@@ -4063,7 +4063,7 @@ mod tests {
     }
 
     #[test]
-    fn feature_screen_json_covers_route_missing_and_unknown_kind() {
+    async fn feature_screen_json_covers_route_missing_and_unknown_kind() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.sync_map_json(r#"{"routes":[{"id":"r1","points":[[0.0,0.0],[1.0,1.0]]}]}"#).expect("sync");
@@ -4076,7 +4076,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_interaction_replaces_previous_selection_within_active_granularity() {
+    async fn sync_interaction_replaces_previous_selection_within_active_granularity() {
         let mut host = super::MapHost::new();
         host.sync_interaction("position", &["p1".to_string(), "p2".to_string()], None);
         assert_eq!(host.selected_positions_json().len(), 2);
@@ -4088,7 +4088,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_interaction_none_clears_hover_and_some_sets_kind_and_id() {
+    async fn sync_interaction_none_clears_hover_and_some_sets_kind_and_id() {
         let mut host = super::MapHost::new();
         host.sync_interaction("position", &[], Some("p1"));
         assert_eq!(host.hovered_kind(), Some("position"));
@@ -4099,7 +4099,7 @@ mod tests {
     }
 
     #[test]
-    fn focus_feature_position_moves_camera_and_missing_id_returns_false() {
+    async fn focus_feature_position_moves_camera_and_missing_id_returns_false() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.sync_map_json(r#"{"positions":[{"id":"p1","lon":10.0,"lat":20.0}]}"#).expect("sync");
@@ -4111,7 +4111,7 @@ mod tests {
     }
 
     #[test]
-    fn focus_feature_route_requires_at_least_two_points_and_fits_bounds() {
+    async fn focus_feature_route_requires_at_least_two_points_and_fits_bounds() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.sync_map_json(r#"{"routes":[{"id":"short","points":[[0.0,0.0]]},{"id":"r1","points":[[0.0,0.0],[5.0,5.0]]}]}"#).expect("sync");
@@ -4121,13 +4121,13 @@ mod tests {
     }
 
     #[test]
-    fn focus_feature_unknown_kind_returns_false() {
+    async fn focus_feature_unknown_kind_returns_false() {
         let mut host = super::MapHost::new();
         assert!(!host.focus_feature("bogus", "anything"));
     }
 
     #[test]
-    fn has_tile_and_has_vector_tile_reflect_uploads() {
+    async fn has_tile_and_has_vector_tile_reflect_uploads() {
         let mut host = super::MapHost::new();
         assert!(!host.has_tile("0/0/0"));
         host.upload_tile(0, 0, 0, &test_png_1x1()).expect("upload png");
@@ -4137,25 +4137,25 @@ mod tests {
     }
 
     #[test]
-    fn upload_tile_invalid_png_bytes_returns_err() {
+    async fn upload_tile_invalid_png_bytes_returns_err() {
         let mut host = super::MapHost::new();
         assert!(host.upload_tile(0, 0, 0, b"not a png").is_err());
     }
 
     #[test]
-    fn upload_vector_tile_invalid_bytes_returns_err() {
+    async fn upload_vector_tile_invalid_bytes_returns_err() {
         let mut host = super::MapHost::new();
         assert!(host.upload_vector_tile(0, 0, 0, &[0x80]).is_err());
     }
 
     #[test]
-    fn set_map_theme_from_json_invalid_json_returns_err() {
+    async fn set_map_theme_from_json_invalid_json_returns_err() {
         let mut host = super::MapHost::new();
         assert!(host.set_map_theme_from_json("not json").is_err());
     }
 
     #[test]
-    fn set_layer_visibility_from_json_invalid_json_returns_err_and_partial_json_overrides_only_given_fields() {
+    async fn set_layer_visibility_from_json_invalid_json_returns_err_and_partial_json_overrides_only_given_fields() {
         let mut host = super::MapHost::new();
         assert!(host.set_layer_visibility_from_json("not json").is_err());
         host.set_layer_visibility_from_json(r#"{"roads":false}"#).expect("partial");
@@ -4165,7 +4165,7 @@ mod tests {
     }
 
     #[test]
-    fn set_layer_stroke_scale_from_json_sanitizes_out_of_range_weights() {
+    async fn set_layer_stroke_scale_from_json_sanitizes_out_of_range_weights() {
         let mut host = super::MapHost::new();
         assert!(host.set_layer_stroke_scale_from_json("not json").is_err());
         host.set_layer_stroke_scale_from_json(r#"{"roads":999.0,"water":-5.0}"#).expect("scale");
@@ -4175,7 +4175,7 @@ mod tests {
     }
 
     #[test]
-    fn clamp_map_layer_weight_handles_bounds_and_non_finite_values() {
+    async fn clamp_map_layer_weight_handles_bounds_and_non_finite_values() {
         assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MIN - 1.0), super::MAP_LAYER_WEIGHT_MIN);
         assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MAX + 1.0), super::MAP_LAYER_WEIGHT_MAX);
         assert_eq!(super::clamp_map_layer_weight(f64::NAN), 1.0);
@@ -4183,7 +4183,7 @@ mod tests {
     }
 
     #[test]
-    fn map_layer_stroke_scale_sanitized_clamps_every_field() {
+    async fn map_layer_stroke_scale_sanitized_clamps_every_field() {
         let scale = super::MapLayerStrokeScale { raster: 100.0, water: -1.0, land: 100.0, roads: 100.0, buildings: 100.0, borders: 100.0, labels: 100.0, positions: 100.0, position_labels: 100.0, routes: 100.0, regions: -1.0 };
         let s = scale.sanitized();
         assert_eq!(s.raster, super::MAP_LAYER_WEIGHT_MAX);
@@ -4192,7 +4192,7 @@ mod tests {
     }
 
     #[test]
-    fn gis_map_lod_scale_json_lists_all_lod_bands() {
+    async fn gis_map_lod_scale_json_lists_all_lod_bands() {
         let v: Vec<serde_json::Value> = serde_json::from_str(&super::gis_map_lod_scale_json()).expect("json");
         assert_eq!(v.len(), 8);
         assert_eq!(v[0]["id"], "world");
@@ -4200,13 +4200,13 @@ mod tests {
     }
 
     #[test]
-    fn gis_map_camera_limits_json_min_never_exceeds_max() {
+    async fn gis_map_camera_limits_json_min_never_exceeds_max() {
         let v: serde_json::Value = serde_json::from_str(&super::gis_map_camera_limits_json()).expect("json");
         assert!(v["min"].as_f64().unwrap() <= v["max"].as_f64().unwrap());
     }
 
     #[test]
-    fn map_layer_weight_slider_keys_respect_render_mode() {
+    async fn map_layer_weight_slider_keys_respect_render_mode() {
         let image_keys = super::map_layer_weight_slider_keys_at_lod("city", "image");
         assert!(image_keys.contains(&"raster"));
         assert!(!image_keys.contains(&"water"));
@@ -4218,14 +4218,14 @@ mod tests {
     }
 
     #[test]
-    fn resolve_detail_lod_index_falls_back_when_forced_lod_unknown() {
+    async fn resolve_detail_lod_index_falls_back_when_forced_lod_unknown() {
         let span = 50.0;
         assert_eq!(super::resolve_detail_lod_index(span, Some("bogus-lod")), super::resolve_map_lod_index_from_span(span));
         assert_eq!(super::resolve_detail_lod_index(span, Some("city")), super::GIS_MAP_LOD_SCALE.index_of("city").unwrap());
     }
 
     #[test]
-    fn parse_tile_key_rejects_malformed_keys() {
+    async fn parse_tile_key_rejects_malformed_keys() {
         assert_eq!(tiles::parse_tile_key("1/2/3"), Some((1, 2, 3)));
         assert_eq!(tiles::parse_tile_key("1/2"), None);
         assert_eq!(tiles::parse_tile_key("1/2/3/4"), None);
@@ -4233,7 +4233,7 @@ mod tests {
     }
 
     #[test]
-    fn map_vector_style_as_str_round_trips_all_variants() {
+    async fn map_vector_style_as_str_round_trips_all_variants() {
         for style in [super::MapVectorStyle::Colored, super::MapVectorStyle::FigureGround, super::MapVectorStyle::InvertedFigure] {
             assert_eq!(super::MapVectorStyle::from_str(style.as_str()), style);
         }
@@ -4241,7 +4241,7 @@ mod tests {
     }
 
     #[test]
-    fn label_declutter_rejects_when_over_capacity_or_offscreen() {
+    async fn label_declutter_rejects_when_over_capacity_or_offscreen() {
         let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
         let mut declutter = super::LabelDeclutter::for_viewport(&viewport, 20.0, 1);
         assert!(declutter.try_place("first", super::Point::new(50.0, 50.0), 12.0));
@@ -4251,7 +4251,7 @@ mod tests {
     }
 
     #[test]
-    fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
+    async fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
         assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MIN - 5.0), super::MAP_CAMERA_ZOOM_MIN);
         assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MAX + 5.0), super::MAP_CAMERA_ZOOM_MAX);
         let viewport = Viewport { width: 4000, height: 4000, dpr: 1.0 };

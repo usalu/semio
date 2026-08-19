@@ -475,7 +475,7 @@ pub struct WalRecoveryReport {
 /// expected fully trusted (a torn sealed segment is `DbError::Corrupt`, since `truncate_tail` only
 /// targets an unsealed segment); the last (possibly active, possibly unsealed) segment is
 /// recovered via `protocol::format::recover` first.
-pub async fn replay_document(storage: &dyn db_storage::WalStorage, document: &ArtifactId) -> Result<Vec<WalRecord>, DbError> {
+pub async fn replay_document(storage: &impl db_storage::WalStorage, document: &ArtifactId) -> Result<Vec<WalRecord>, DbError> {
     let mut indices = storage.list_segments(document).await?;
     indices.sort_unstable();
     let mut all = Vec::new();
@@ -511,7 +511,7 @@ impl SegmentWriter {
     /// @emoji 🆕️ Creates segment `index` in `storage`, writes its `WAL_SEGMENT_HEADER` record, and
     /// commits+flushes immediately (a segment's own identity/chain-link should never be lost to a
     /// crash before the segment records anything else).
-    async fn begin(storage: &dyn db_storage::WalStorage, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
+    async fn begin(storage: &impl db_storage::WalStorage, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
         storage.create_segment(&document, index).await?;
         let buf = SharedBuf::new();
         let writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).map_err(protocol_err)?;
@@ -546,7 +546,7 @@ impl SegmentWriter {
     /// flushes the newly-committed suffix to `WalStorage::append` + `sync(class)` — the group-
     /// commit primitive `ArtifactWal::submit`/`force_flush`/`rotate` all funnel through. A no-op
     /// (`Ok(None)`) if nothing is pending.
-    async fn commit_and_flush(&mut self, storage: &dyn db_storage::WalStorage, class: DurabilityClass) -> Result<Option<u64>, DbError> {
+    async fn commit_and_flush(&mut self, storage: &impl db_storage::WalStorage, class: DurabilityClass) -> Result<Option<u64>, DbError> {
         if self.pending_records == 0 {
             return Ok(None);
         }
@@ -616,7 +616,7 @@ pub struct ArtifactWal {
 impl ArtifactWal {
     /// @emoji 🌱️ Creates a brand new WAL for `document` (segment 0, genesis — no prior segment to
     /// chain from). Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub async fn create(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, DbError> {
+    pub async fn create(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, DbError> {
         let active = SegmentWriter::begin(storage, document.clone(), 0, None, now_ms).await?;
         Ok(Self { document, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: 1, active, next_tx_id: 1 })
     }
@@ -627,7 +627,7 @@ impl ArtifactWal {
     /// segment is treated as possibly-active and recovered via `protocol::format::recover`,
     /// discarding any torn tail. Creates a fresh WAL (equivalent to `create`) if `document` has no
     /// segments yet.
-    pub async fn open(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
+    pub async fn open(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
         let mut indices = storage.list_segments(&document).await?;
         indices.sort_unstable();
         if indices.is_empty() {
@@ -687,7 +687,7 @@ impl ArtifactWal {
     /// immediate commit, since deferring one can never satisfy a durability request stronger than
     /// what's already flushed. Rotates to a new segment (sealing this one first, which forces a
     /// commit if anything is still pending) once the active segment crosses `max_segment_bytes`.
-    pub async fn submit(&mut self, storage: &dyn db_storage::WalStorage, records: &[WalRecord], durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
+    pub async fn submit(&mut self, storage: &impl db_storage::WalStorage, records: &[WalRecord], durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
         let tx_id = self.next_tx_id;
         self.next_tx_id += 1;
         let segment_index = self.active.index;
@@ -714,14 +714,14 @@ impl ArtifactWal {
     /// @emoji 🚿️ Forces a commit+flush of whatever is currently pending, regardless of policy —
     /// the primitive a timer-driven group-commit loop or a clean-shutdown drain calls. Returns
     /// `true` iff there was anything to flush.
-    pub async fn force_flush(&mut self, storage: &dyn db_storage::WalStorage) -> Result<bool, DbError> {
+    pub async fn force_flush(&mut self, storage: &impl db_storage::WalStorage) -> Result<bool, DbError> {
         Ok(self.active.commit_and_flush(storage, DurabilityClass::Fsync).await?.is_some())
     }
 
     /// @emoji 🔄️ Seals the active segment (after a final commit+flush) and begins a fresh one,
     /// carrying the sealed segment's tip `chain_hash` forward as the new segment's
     /// `WAL_SEGMENT_HEADER.prev_chain_hash` — the cross-segment hash-chain link.
-    async fn rotate(&mut self, storage: &dyn db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
+    async fn rotate(&mut self, storage: &impl db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
         self.active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
         let chain_hash = self.active.tip_chain_hash()?;
         let sealed_index = self.active.index;

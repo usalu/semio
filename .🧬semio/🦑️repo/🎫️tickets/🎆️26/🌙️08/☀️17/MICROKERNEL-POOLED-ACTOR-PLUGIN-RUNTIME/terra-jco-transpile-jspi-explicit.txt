@@ -1,0 +1,23 @@
+
+  Transpiled JS Component Files:
+
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/semio-jcoprobe-probe-host.d.ts    0.18 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/semio-jcoprobe-probe.d.ts         0.27 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-environment.d.ts         0.11 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-exit.d.ts                0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-stderr.d.ts              0.16 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-stdin.d.ts               0.15 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-stdout.d.ts              0.16 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-terminal-input.d.ts      0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-terminal-output.d.ts     0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-terminal-stderr.d.ts      0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-terminal-stdin.d.ts       0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-cli-terminal-stdout.d.ts      0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-clocks-monotonic-clock.d.ts  0.21 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-io-error.d.ts                0.15 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-io-poll.d.ts                 0.23 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/interfaces/wasi-io-streams.d.ts              0.73 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/jcoprobe.core.wasm                            122 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/jcoprobe.d.ts                                1.85 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/🌐️harness/out-jspi-explicit/jcoprobe.js                                   334 KiB
+

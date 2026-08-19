@@ -12,7 +12,7 @@ use crate::wgpu::widgets::{RingMeta, WidgetContext};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 
-pub(crate) fn render_ring<E: Clone>(id: &str, t: f64, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) async fn render_ring<E: Clone>(id: &str, t: f64, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let cx = bounds.x + bounds.w * 0.5;
     let cy = bounds.y + bounds.h * 0.5;
     let radius = bounds.w.min(bounds.h) * 0.4;

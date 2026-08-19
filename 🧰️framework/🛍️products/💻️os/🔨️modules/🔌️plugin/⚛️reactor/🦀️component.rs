@@ -110,7 +110,7 @@ struct PendingResume {
 /// `instance` — `QuotaSchema.outstanding_requests`, defaulting to 16 when the instance never
 /// declared one (or hasn't opened yet, which should not happen in practice: `spawn_task` is only
 /// ever reachable from `dispatch_emit`, itself only reachable after `Event::InstanceOpen`).
-fn instance_task_quota(instance: u32) -> u64 {
+async fn instance_task_quota(instance: u32) -> u64 {
     INSTANCE_QUOTAS.with(|quotas| quotas.borrow().get(&instance).and_then(|schema| schema.outstanding_requests)).unwrap_or(16)
 }
 
@@ -118,7 +118,7 @@ fn instance_task_quota(instance: u32) -> u64 {
 /// `RequestRegistry`, scoped to `instance` (`RequestRegistry::for_instance` — design-abi.md §4's
 /// per-request instance tagging, so `Event::InstanceClose` can cancel exactly this instance's
 /// pending host round-trips and no other's) — see `host::Host::new`.
-pub fn host_for_instance(instance: u32) -> crate::host::Host {
+pub async fn host_for_instance(instance: u32) -> crate::host::Host {
     REGISTRY.with(|registry| crate::host::Host::new(registry.for_instance(instance)))
 }
 
@@ -127,7 +127,7 @@ pub fn host_for_instance(instance: u32) -> crate::host::Host {
 /// `RequestRegistry::for_instance`'s own doc names. `⚛️reactor/💼️jobs/🦀️component.rs::spawn_job`
 /// calls this (as `crate::reactor::host()`, zero args): a job is actor-global, not tied to one open
 /// instance the way an `AsyncTask` is, so it has no `instance: u32` to scope by in the first place.
-pub fn host() -> crate::host::Host {
+pub async fn host() -> crate::host::Host {
     REGISTRY.with(|registry| crate::host::Host::new(registry.clone()))
 }
 
@@ -142,7 +142,7 @@ pub fn host() -> crate::host::Host {
 /// on `TASK_RESUMES` — no `M`/`C`/`D` generic ever crosses into the executor or the resume queue,
 /// which is what lets ALL of this actor's apps (each with its own concrete `A`) share ONE
 /// `LocalExecutor`/`TASK_RESUMES` pair.
-pub fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+pub async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
@@ -224,7 +224,7 @@ where
 /// 🔀️ The exact wire shape `dispatch_emit`'s own `last_emit_wire` uses for one mutation lane —
 /// factored out so `spawn_task`'s `TaskResolution::Emit` erasure and `dispatch_emit` stay
 /// byte-identical without one calling the other across the crate's plugin/reactor split.
-fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
+async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
     protocol::encode_ops_vec(&ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>())
 }
 
@@ -237,7 +237,7 @@ fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// registry sweep is defense-in-depth for a pending request whose task somehow isn't tracked here
 /// (there should be none, by construction — every `RequestFuture` is created inside `TaskCtx.host`,
 /// itself only ever handed to a task by `spawn_task`).
-pub(crate) fn cancel_instance_tasks(instance: u32) {
+pub(crate) async fn cancel_instance_tasks(instance: u32) {
     let ids: Vec<executor::TaskId> = TASK_RECORDS.with(|records| records.borrow().iter().filter(|(_, record)| record.instance == instance).map(|(id, _)| *id).collect());
     for id in ids {
         EXECUTOR.with(|executor| executor.cancel(id));
@@ -252,7 +252,7 @@ pub(crate) fn cancel_instance_tasks(instance: u32) {
 
 /// 📸️ `checkpoint::checkpoint` body — unconditional (no WIT type in its signature, only
 /// `Vec<u8>`/kernel types), unlike `poll`/the `wit_*`/`kernel_*_to_wit` bridge below.
-pub fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
+pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = OPEN_INSTANCES.with(|open| open.borrow().clone());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().clone());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
@@ -277,7 +277,7 @@ pub fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
 /// `TASK_RESUMES` as an ordinary `Command` resume (the SAME resume path a live task's own
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
-pub fn restore_now(state: &[u8]) -> Result<(), semio_framework::Fault> {
+pub async fn restore_now(state: &[u8]) -> Result<(), semio_framework::Fault> {
     let pack = checkpoint::restore(state)?;
     OPEN_INSTANCES.with(|open| {
         *open.borrow_mut() = pack.instances();
@@ -333,7 +333,7 @@ mod wit_bridge {
 /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
 /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
 /// module's `TurnResult`.
-pub fn poll(events: Vec<crate::component::component::exports::semio::framework::reactor::Event>, budget: crate::component::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+pub async fn poll(events: Vec<crate::component::component::exports::semio::framework::reactor::Event>, budget: crate::component::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
     let mut app_commands: HashMap<u32, Vec<Vec<u8>>> = HashMap::new();
     let mut dirty_render: Vec<(u32, String)> = Vec::new();
 
@@ -488,7 +488,7 @@ thread_local! {
 /// 🪪️ Surfaces are named `"<instance>:<body-key>"` in this wave (no dedicated `surface-ref`
 /// bookkeeping table yet — `ui.wit`'s `surface-ref` record exists at the WIT boundary, but the
 /// Rust-side `kernel::UiPatch.surface` is still a plain `String` per A3's landed shape).
-fn parse_surface_instance(surface: &str) -> Option<u32> {
+async fn parse_surface_instance(surface: &str) -> Option<u32> {
     surface.split(':').next()?.parse().ok()
 }
 
@@ -499,7 +499,7 @@ fn parse_surface_instance(surface: &str) -> Option<u32> {
 /// `AppFrame::UiSnapshotEnd` has no consumer yet in this wave (patches apply incrementally, no
 /// snapshot-boundary bookkeeping); everything else → `Effect::SendMessage` to the shell, matching
 /// design-abi.md §2's table verbatim.
-fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
+async fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
     let Ok(frame) = protocol::decode_app_frame(frame_bytes) else {
         return;
     };
@@ -529,7 +529,7 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
 ///
 /// Returns whether entries remain queued (the round cap was hit) — folded into `poll`'s
 /// `turn-status::more-work` so a saturated resume queue is never silently dropped.
-pub fn drain_task_resumes(effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
+pub async fn drain_task_resumes(effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop_front()) else {
             return false;
@@ -560,12 +560,12 @@ pub fn drain_task_resumes(effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
     !TASK_RESUMES.with(|resumes| resumes.borrow().is_empty())
 }
 
-fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
+async fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
     dsl::from_dsl_value(value).map_err(|_| ())
 }
 
-fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
+async fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
     dsl::from_dsl_value(value).map_err(|_| ())
 }
@@ -575,13 +575,13 @@ fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEve
 /// back to `default()` (no field set — read as "no limit declared" by every reader, e.g.
 /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
 /// outright.
-fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
+async fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
     store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
 }
 
 /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
 /// mirrors the kernel shape (see `📓️design-abi.md` §2 / `events.wit`'s own doc comments).
-fn wit_event_to_kernel(event: crate::component::component::exports::semio::framework::reactor::Event) -> Event {
+async fn wit_event_to_kernel(event: crate::component::component::exports::semio::framework::reactor::Event) -> Event {
     use crate::component::component::exports::semio::framework::reactor::Event as W;
     match event {
         W::InstanceOpen(payload) => Event::InstanceOpen {
@@ -619,7 +619,7 @@ fn wit_event_to_kernel(event: crate::component::component::exports::semio::frame
     }
 }
 
-fn wit_activation_to_kernel(reason: wit_events::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+async fn wit_activation_to_kernel(reason: wit_events::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
     use wit_events::ActivationEvent as W;
     match reason {
         W::OnCommand(id) => semio_framework::kernel::ActivationEvent::OnCommand { id },
@@ -631,7 +631,7 @@ fn wit_activation_to_kernel(reason: wit_events::ActivationEvent) -> semio_framew
     }
 }
 
-fn wit_completion_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
+async fn wit_completion_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
     use wit_events::CompletionResult as W;
     match result {
         W::Ok(bytes) => RequestOutcome::Ok(bytes),
@@ -639,7 +639,7 @@ fn wit_completion_to_kernel(result: wit_events::CompletionResult) -> RequestOutc
     }
 }
 
-fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+async fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
     use wit_types::MessageEndpoint as W;
     match endpoint {
         W::Shell(instance) => MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
@@ -653,7 +653,7 @@ fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoi
 /// 🔀️ kernel `TurnResult` → WIT `turn-result`. `budget` is currently unused beyond documenting
 /// the seam — `max-effects`/`max-patch-bytes` capping is real, mechanical follow-up work (design-
 /// abi.md §4's "capped by `max-effects`, overflow carries over") not yet wired into this wave.
-fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
+async fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
     use crate::component::component::exports::semio::framework::reactor as wit;
     wit::TurnResult {
         ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
@@ -669,7 +669,7 @@ fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budge
     }
 }
 
-fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
+async fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
     use crate::component::component::exports::semio::framework::reactor as wit;
     let instance: u32 = patch.surface.split(':').next().and_then(|s| s.parse().ok()).unwrap_or(0);
     wit::UiPatch {
@@ -681,7 +681,7 @@ fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::export
     }
 }
 
-fn kernel_patch_op_to_wit(op: PatchOp) -> wit_ui::PatchOp {
+async fn kernel_patch_op_to_wit(op: PatchOp) -> wit_ui::PatchOp {
     let encode_node = |node: &ui_wgpu::wgpu::UiNode| store::pack_rt::encode_wire_value(&dsl::to_dsl_value(node).unwrap_or(dsl::DslValue::Null));
     match op {
         PatchOp::Replace { path, node } => wit_ui::PatchOp::Replace(wit_ui::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
@@ -695,7 +695,7 @@ fn kernel_patch_op_to_wit(op: PatchOp) -> wit_ui::PatchOp {
 /// node-identity index path. This wave's `📸️patches` only ever emits the ROOT path (`""`, full-
 /// body replace — see that module's scope note), so this always yields an empty list; a real
 /// index-path encoding is follow-up work alongside the real (non-full-body) differ.
-fn path_to_indices(_path: &str) -> Vec<u32> {
+async fn path_to_indices(_path: &str) -> Vec<u32> {
     Vec::new()
 }
 
@@ -703,9 +703,9 @@ fn path_to_indices(_path: &str) -> Vec<u32> {
 /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
 /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
 /// every existing host boundary in this crate already uses.
-fn kernel_effect_to_wit(effect: Effect) -> crate::component::component::exports::semio::framework::reactor::Effect {
+async fn kernel_effect_to_wit(effect: Effect) -> crate::component::component::exports::semio::framework::reactor::Effect {
     use crate::component::component::exports::semio::framework::reactor as wit;
-    fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
+    async fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
         store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
     }
     match effect {
@@ -762,7 +762,7 @@ fn kernel_effect_to_wit(effect: Effect) -> crate::component::component::exports:
     }
 }
 
-fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoint {
+async fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoint {
     match endpoint {
         MessageEndpoint::Shell { instance } => wit_types::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
         MessageEndpoint::Backbone { uri } => wit_types::MessageEndpoint::Backbone(uri),
@@ -772,7 +772,7 @@ fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoi
     }
 }
 
-fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> wit_effects::JobPlacement {
+async fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> wit_effects::JobPlacement {
     match placement {
         semio_framework::kernel::JobPlacement::Inline => wit_effects::JobPlacement::Inline,
         semio_framework::kernel::JobPlacement::Isolated => wit_effects::JobPlacement::Isolated,
@@ -780,7 +780,7 @@ fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> 
     }
 }
 
-fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> wit_effects::RespondResult {
+async fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> wit_effects::RespondResult {
     match result {
         RequestOutcome::Ok(bytes) => wit_effects::RespondResult::Ok(bytes),
         RequestOutcome::Err(bytes) => wit_effects::RespondResult::Fault(bytes),
@@ -802,13 +802,13 @@ pub(crate) mod test_support {
     use super::*;
 
     /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
-    pub(crate) fn run_until_idle(max_iterations: u32) -> bool {
+    pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
         EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
     }
 
     /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
     /// directly — the native stand-in for "an injected `Event::Completed`".
-    pub(crate) fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
+    pub(crate) async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
         REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(id), result));
     }
 
@@ -816,7 +816,7 @@ pub(crate) mod test_support {
     /// resolution surfaces as `Err` here instead — `drain_task_resumes` frames that straight to
     /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
     /// `plugin_resume_task` at all).
-    pub(crate) fn pop_task_resume() -> Option<(u32, crate::app::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
+    pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
         TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop_front()).map(|resume| {
             let input = match resume.outcome {
                 TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
@@ -827,28 +827,28 @@ pub(crate) mod test_support {
         })
     }
 
-    pub(crate) fn task_count_for_instance(instance: u32) -> usize {
+    pub(crate) async fn task_count_for_instance(instance: u32) -> usize {
         TASK_RECORDS.with(|records| records.borrow().values().filter(|record| record.instance == instance).count())
     }
 
-    pub(crate) fn task_key_is_live(instance: u32, key: &str) -> bool {
+    pub(crate) async fn task_key_is_live(instance: u32, key: &str) -> bool {
         TASK_KEYS.with(|keys| keys.borrow().contains_key(&(instance, key.to_string())))
     }
 
-    pub(crate) fn set_instance_quota(instance: u32, outstanding_requests: u64) {
+    pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
         INSTANCE_QUOTAS.with(|quotas| {
             quotas.borrow_mut().insert(instance, semio_framework::kernel::QuotaSchema { outstanding_requests: Some(outstanding_requests), ..Default::default() });
         });
     }
 
-    pub(crate) fn pending_request_count() -> usize {
+    pub(crate) async fn pending_request_count() -> usize {
         REGISTRY.with(|registry| registry.pending_ids().len())
     }
 
     /// 🚫️ The exact `RequestRegistry::cancel_instance` call `poll`'s `Event::InstanceClose` arm
     /// makes right after `cancel_instance_tasks`, exposed directly for a test to run the SAME
     /// two-step sequence natively.
-    pub(crate) fn cancel_instance_registry_requests(instance: u32) -> usize {
+    pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
         REGISTRY.with(|registry| registry.cancel_instance(instance))
     }
 }

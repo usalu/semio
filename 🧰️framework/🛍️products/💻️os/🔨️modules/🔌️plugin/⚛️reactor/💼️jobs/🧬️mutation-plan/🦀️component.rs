@@ -22,7 +22,7 @@ use super::{run_two_phase, JobCtx};
 use std::future::Future;
 use std::pin::Pin;
 
-pub(super) fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+pub(super) async fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
@@ -32,7 +32,7 @@ pub(super) fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Ve
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactMutationPlanRequest` and reports its
 /// `(artifact_kind, mutation_id)` identity as the first slice's progress bytes.
-fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let value = store::pack_rt::decode_wire_value(input).map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
     let request: crate::app::WireArtifactMutationPlanRequest = dsl::from_dsl_value(value).map_err(|error| super::fault("job.mutation-plan.decode", error))?;
     serde_json::to_vec(&(request.artifact_kind, request.mutation_id)).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))
@@ -48,10 +48,10 @@ mod tests {
         value: i32,
     }
     impl ArtifactPack for JobTestSnapshot {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
         }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
         }
     }
@@ -61,10 +61,10 @@ mod tests {
         delta: i32,
     }
     impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
-        fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
+        async fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
             Ok(JobTestSnapshot { value: base.value + self.delta })
         }
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -75,20 +75,20 @@ mod tests {
     }
     impl protocol::Mutation<JobTestSnapshot> for JobTestOp {
         type Diff = JobTestDiff;
-        fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
+        async fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
             let JobTestOp::Add(delta) = self;
             protocol::MutationOutcome::new(JobTestDiff { delta: *delta })
         }
-        fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
+        async fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
             let JobTestOp::Add(delta) = self;
             vec![JobTestOp::Add(-delta)]
         }
     }
     impl OpBinary for JobTestOp {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             Ok(serde_json::to_vec(self).expect("job test op always encodes"))
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
         }
     }
@@ -99,10 +99,10 @@ mod tests {
     }
     impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for JobTestMutationKind {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-        fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
+        async fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
             planner.call(JobTestOp::Add(self.delta))
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             format!("Add {} to value", self.delta)
         }
     }
@@ -111,7 +111,7 @@ mod tests {
     /// `job_mutation_plan`'s `execute` phase reads from, mirroring `🔌️plugin/🦀️component.rs`'s own
     /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
     /// private to its own test module, so this is a from-scratch copy, not a shared import).
-    fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
+    async fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
         let contribution = crate::app::ArtifactContribution::builder(artifact_kind).mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).build();
         let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
@@ -119,7 +119,7 @@ mod tests {
         mutation_id
     }
 
-    fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
+    async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
         let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
         store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue"))
     }
@@ -129,7 +129,7 @@ mod tests {
     /// really reaches `crate::plugin_runtime::wire_artifact_mutation_plan` and runs the registered
     /// `Planner`, not just `job.unknown-kind`.
     #[test]
-    fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
+    async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a");
         let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 5 });
         let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload);
@@ -168,7 +168,7 @@ mod tests {
     /// 📸️ Interrupts after slice 1 (decode only), checkpoints, cancels, restores, and confirms the
     /// resumed run reaches the SAME `Done` output as an uninterrupted run.
     #[test]
-    fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
+    async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b");
         let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 3 });
         let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload);
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
+    async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value");
         match step_job(303, JobBudget::default()) {
             JobStep::Failed(bytes) => {

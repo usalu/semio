@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/assets": "workspace:*"
   },
   "devDependencies": {

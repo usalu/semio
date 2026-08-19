@@ -37,13 +37,13 @@ struct UiWindow {
 }
 
 impl UiWindow {
-    fn new(window_id: &str) -> Self {
+    async fn new(window_id: &str) -> Self {
         Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0) }
     }
 
     /// 🚨️ Whether this window's root (and thus, transitively, anything below it per
     /// `UiTree::mark_dirty`'s bubbling) still needs a layout or paint pass.
-    fn is_dirty(&self) -> bool {
+    async fn is_dirty(&self) -> bool {
         self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
     }
 }
@@ -67,46 +67,46 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { windows: HashMap::new(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new() }
     }
 
-    pub fn set_theme(&mut self, theme: Theme) {
+    pub async fn set_theme(&mut self, theme: Theme) {
         self.theme = theme;
     }
 
-    fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
+    async fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
         self.windows.entry(window_id.to_string()).or_insert_with(|| UiWindow::new(window_id))
     }
 
     /// 📐️ Stores the viewport a later `frame` call lays out against for `window_id`, creating that
     /// window's retained state on first use.
-    pub fn set_viewport(&mut self, window_id: &str, width: f32, height: f32) {
+    pub async fn set_viewport(&mut self, window_id: &str, width: f32, height: f32) {
         self.window_mut(window_id).viewport = (width, height);
     }
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
     /// creating that window's tree/layout-engine/event-router on first use.
-    pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
+    pub async fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
         self.window_mut(window_id).tree.apply_tree(ui_node);
     }
 
-    pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+    pub async fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
         self.shell.set_window_kind_icons(icons);
     }
 
     /// 🪟️ Rebuilds the shared `Shell`'s retained dock/split/tab chrome from a declarative
     /// `WindowLayout` (independent of any window's `apply_tree`d content — see `shell`'s doc comment).
-    pub fn set_window_layout(&mut self, layout: WindowLayout) {
+    pub async fn set_window_layout(&mut self, layout: WindowLayout) {
         self.shell.set_window_layout(layout);
     }
 
     /// 🧭️ Forwards to `Shell::set_navbar` (stub — see that method's doc comment).
-    pub fn set_navbar(&mut self, items: Vec<String>) {
+    pub async fn set_navbar(&mut self, items: Vec<String>) {
         self.shell.set_navbar(items);
     }
 
-    pub fn shell(&self) -> &Shell {
+    pub async fn shell(&self) -> &Shell {
         &self.shell
     }
 
@@ -115,7 +115,7 @@ impl Ui {
     /// (nothing under `arena`/`tree`/`reconcile`/`flex`/`paint`/`events`/`scene_slots`/`shell`
     /// schedules a future wake), so this is purely dirty-flag-driven; wiring a real animation deadline
     /// is separate follow-up work, not this façade's job to invent.
-    pub fn needs_frame(&self) -> bool {
+    pub async fn needs_frame(&self) -> bool {
         self.windows.values().any(UiWindow::is_dirty)
     }
 
@@ -142,7 +142,7 @@ impl Ui {
     /// already knows (via `scene_host.is_some()`) whether to paint its own placeholder chrome for
     /// `ComponentScene`/`Image` leaves this tick or leave that rect for the host to fill in below —
     /// see `paint`'s own doc comment on that gate.
-    pub fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut dyn SceneHost>) -> Option<&DrawList> {
+    pub async fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut dyn SceneHost>) -> Option<&DrawList> {
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
         window.viewport = (viewport_width, viewport_height);
@@ -162,7 +162,7 @@ impl Ui {
     }
 
     /// 📤️ Direct access to `window_id`'s last-painted `DrawList` without re-running the pipeline.
-    pub fn draw_list(&self, window_id: &str) -> Option<&DrawList> {
+    pub async fn draw_list(&self, window_id: &str) -> Option<&DrawList> {
         self.windows.get(window_id).map(|window| &window.draw)
     }
 
@@ -170,7 +170,7 @@ impl Ui {
     /// updates), returning the `UiCommand`s it produced and also queuing them for a later
     /// `drain_commands` call — callers may use either.
     #[allow(clippy::needless_pass_by_value, reason = "changing to &UiEvent is a breaking public API change across ~30 downstream plugins, out of T1 scope")]
-    pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
+    pub async fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
         let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
         let Some(root) = window.tree.root else { return Vec::new() };
         let commands = window.router.dispatch(&mut window.tree, root, &event);
@@ -180,12 +180,12 @@ impl Ui {
 
     /// 🪟️ Routes `event` through the shared `Shell`'s own hit-testing, surfacing chrome-level
     /// `ShellEvent`s (tab activation today; drag/drop is `Shell::dispatch`'s own documented gap).
-    pub fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
+    pub async fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
         self.shell.dispatch(event)
     }
 
     /// 📥️ Drains every `UiCommand` queued by `dispatch_event` calls since the last drain.
-    pub fn drain_commands(&mut self) -> Vec<UiCommand> {
+    pub async fn drain_commands(&mut self) -> Vec<UiCommand> {
         std::mem::take(&mut self.pending_commands)
     }
 }
@@ -208,22 +208,22 @@ impl Default for Ui {
 impl Ui {
     /// 🪟️ Every window id this façade currently tracks retained state for (`HashMap` iteration
     /// order — not insertion order; a caller needing a deterministic pick must sort/filter itself).
-    pub fn window_ids(&self) -> impl Iterator<Item = &str> {
+    pub async fn window_ids(&self) -> impl Iterator<Item = &str> {
         self.windows.keys().map(String::as_str)
     }
 
     /// 📐️ `window_id`'s last `set_viewport`/`frame` viewport, if that window has any retained state.
-    pub fn viewport(&self, window_id: &str) -> Option<(f32, f32)> {
+    pub async fn viewport(&self, window_id: &str) -> Option<(f32, f32)> {
         self.windows.get(window_id).map(|window| window.viewport)
     }
 
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
-    pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
+    pub async fn tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| &window.tree)
     }
 
     /// 🎨️ The theme this façade last painted every window with (`Theme` is `Copy`).
-    pub fn theme(&self) -> Theme {
+    pub async fn theme(&self) -> Theme {
         self.theme
     }
 
@@ -233,7 +233,7 @@ impl Ui {
     /// keyboard/IME events belong to this window's content (route via `dispatch_event`) or should
     /// fall back to chrome-level shortcuts. Forwards to `EventRouter::is_focused`, itself added this
     /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
-    pub fn window_has_focus(&self, window_id: &str) -> bool {
+    pub async fn window_has_focus(&self, window_id: &str) -> bool {
         self.windows.get(window_id).is_some_and(|window| window.router.is_focused())
     }
 }
@@ -259,20 +259,20 @@ mod tests {
     use std::collections::HashMap as StdHashMap;
 
     //#region 🔖️FacadeTests
-    fn stack_ui(children: Vec<UiNode>) -> UiNode {
+    async fn stack_ui(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("root".into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
     }
 
-    fn action() -> ActionDescriptor {
+    async fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
     }
 
-    fn button_ui(id: &str, label: &str) -> UiNode {
+    async fn button_ui(id: &str, label: &str) -> UiNode {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(label), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
     #[test]
-    fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
+    async fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
@@ -284,14 +284,14 @@ mod tests {
     }
 
     #[test]
-    fn frame_before_any_apply_tree_returns_none() {
+    async fn frame_before_any_apply_tree_returns_none() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         assert!(ui.frame("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
     }
 
     #[test]
-    fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
+    async fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
@@ -304,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
+    async fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
@@ -320,7 +320,7 @@ mod tests {
     }
 
     #[test]
-    fn set_window_layout_wires_into_the_facades_shell() {
+    async fn set_window_layout_wires_into_the_facades_shell() {
         let mut ui = Ui::new();
         ui.set_window_layout(crate::wgpu::even_window_layout(&["app.viewport".to_string()]));
         assert!(ui.shell().window_layout().is_some());
@@ -328,7 +328,7 @@ mod tests {
     //#endregion 🔖️FacadeTests
 
     //#region 🔖️SceneHostTests
-    fn component_scene_ui(surface_id: &str) -> UiNode {
+    async fn component_scene_ui(surface_id: &str) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: surface_id.into(),
             controller_id: "ctrl".into(),
@@ -365,7 +365,7 @@ mod tests {
     }
 
     impl SceneHost for RecordingSceneHost {
-        fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) {
+        async fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) {
             self.paint_calls += 1;
             self.last_surface_id = slot.surface().map(|(surface_id, _)| surface_id.to_string());
             draw.push_rounded([slot.rect.x, slot.rect.y, slot.rect.w, slot.rect.h], Theme::default().accent, 0.0);
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
+    async fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
+    async fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.host-test")]));
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot() {
+    async fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot() {
         // 🌳️ Nests the ComponentScene under a Group (not just a bare Stack) — regression for the
         // shadow-walk gap this bridge replaces: `collect_scene_slots` must still find it, and the
         // Group's own header/frame chrome (unrelated to the scene leaf) must still paint normally.
@@ -431,7 +431,7 @@ mod tests {
     /// `framework/renderer/wgpu/rs/lib.rs`'s private `ui_node_to_widget` conversion; they're
     /// duplicated here (test-only) rather than shared because that crate depends on `ui_wgpu`, never
     /// the reverse — keeping the two in sync is this harness's job.
-    fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
+    async fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         match node {
             UiNode::Stack(stack) => WidgetNode::Stack { direction: stack.direction.clone(), gap: stack.gap.clone(), padding: stack.padding.clone(), children: stack.children.iter().map(to_widget_node).collect() },
             UiNode::Text(text) => WidgetNode::Text { value: text.value.clone(), emphasize: text.emphasize.unwrap_or(false) },
@@ -483,7 +483,7 @@ mod tests {
         }
     }
 
-    fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
+    async fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
         match control {
             UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
             UiControlNode::Input(n) => ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
@@ -506,7 +506,7 @@ mod tests {
     /// 🎛️ Same per-variant field mapping as `control_to_widget`, but into a `WidgetNode` instead of a
     /// `ControlNode` — needed for `TreeItem::control: Option<Box<WidgetNode<E>>>`, which (unlike
     /// `Field`'s `child: ControlNode<E>`) embeds a full widget, not a bare control payload.
-    fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
+    async fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
         match control {
             UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
             UiControlNode::Input(n) => WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
@@ -526,11 +526,11 @@ mod tests {
         }
     }
 
-    fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
+    async fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
         TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), placement: action.placement() }
     }
 
-    fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
+    async fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
         TreeItem {
             id: item.id.clone(),
             label: item.label.clone(),
@@ -553,21 +553,21 @@ mod tests {
         }
     }
 
-    fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
+    async fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
         TreeSection { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect() }
     }
 
     /// 📊️ Total (ui_instances incl. overlay, vector_vertices incl. overlay, raster_instances) across
     /// every layer of a `DrawList` — the "structurally equivalent" signal this harness compares,
     /// deliberately coarser than exact geometry per this ticket's tolerance allowance.
-    fn stats(draw: &DrawList) -> (usize, usize, usize) {
+    async fn stats(draw: &DrawList) -> (usize, usize, usize) {
         let instances = draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum();
         let vectors = draw.layers.iter().map(|layer| layer.vector_vertices.len() + layer.overlay_vector_vertices.len()).sum();
         let raster = draw.layers.iter().map(|layer| layer.raster_instances.len()).sum();
         (instances, vectors, raster)
     }
 
-    fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
+    async fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("golden", node);
@@ -575,7 +575,7 @@ mod tests {
         stats(draw)
     }
 
-    fn immediate_stats(node: &UiNode, bounds: Rect) -> (usize, usize, usize) {
+    async fn immediate_stats(node: &UiNode, bounds: Rect) -> (usize, usize, usize) {
         let widget = to_widget_node(node);
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
@@ -611,7 +611,7 @@ mod tests {
     /// full bounds. Wrapping every leaf fixture this way guarantees both pipelines paint it at
     /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
     /// instead of an artifact of divergent layout math.
-    fn leaf(child: UiNode) -> UiNode {
+    async fn leaf(child: UiNode) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: Some("none".into()),
@@ -626,7 +626,7 @@ mod tests {
         })
     }
 
-    fn assert_equivalent(kind: &str, node: &UiNode) {
+    async fn assert_equivalent(kind: &str, node: &UiNode) {
         let retained = retained_stats(node);
         let immediate = immediate_stats(node, VIEWPORT);
         assert_eq!(retained, immediate, "{kind}: retained (instances, vectors, raster) {retained:?} != immediate {immediate:?}");
@@ -635,7 +635,7 @@ mod tests {
     // `action()` is shared with 🔖️FacadeTests above — both sub-regions live in the same `mod tests`.
 
     #[test]
-    fn golden_stack() {
+    async fn golden_stack() {
         let node = UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: Some("none".into()),
@@ -655,22 +655,22 @@ mod tests {
     }
 
     #[test]
-    fn golden_text() {
+    async fn golden_text() {
         assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_button() {
+    async fn golden_button() {
         assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: Label::data("Go"), action: action(), style: None, presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_separator() {
+    async fn golden_separator() {
         assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_input() {
+    async fn golden_input() {
         assert_equivalent(
             "Input",
             &leaf(UiNode::Input(UiInputNode {
@@ -691,7 +691,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_select() {
+    async fn golden_select() {
         assert_equivalent(
             "Select",
             &leaf(UiNode::Select(UiSelectNode {
@@ -707,7 +707,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_toggle() {
+    async fn golden_toggle() {
         // 🚫️ `presence.selected` is intentionally NOT exercised here: the shared `presence_overlay`
         // now draws an outset accent ring for ANY selected element (see
         // `selected_presence_draws_an_outset_ring_on_any_element`, below) — a deliberate new
@@ -722,7 +722,7 @@ mod tests {
     /// grows vs. the unselected fixture (the extra `push_chrome_border` edges), confirming the ring
     /// is now a shared channel every element gets for free from `presence_overlay`.
     #[test]
-    fn selected_presence_draws_an_outset_ring_on_any_element() {
+    async fn selected_presence_draws_an_outset_ring_on_any_element() {
         let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(), menu: None });
         let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true), menu: None });
         let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
@@ -731,12 +731,12 @@ mod tests {
     }
 
     #[test]
-    fn golden_key_value() {
+    async fn golden_key_value() {
         assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("Name"), value: Label::data("Semio") }], presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_slider() {
+    async fn golden_slider() {
         assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })));
     }
 
@@ -752,7 +752,7 @@ mod tests {
     /// border is unintentional and should be dropped there instead — a product decision outside this
     /// façade's scope), not something to paper over here.
     #[test]
-    fn golden_number_stepper_known_gap() {
+    async fn golden_number_stepper_known_gap() {
         let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })));
         assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
     }
@@ -765,17 +765,17 @@ mod tests {
     /// fixture) and added this as a new, additive `assert_equivalent` case for `uniform: true`
     /// instead, per this workstream's "don't modify existing tests" rule.
     #[test]
-    fn golden_number_stepper() {
+    async fn golden_number_stepper() {
         assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_ring() {
+    async fn golden_ring() {
         assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, on_change: action(), presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
-    fn golden_icon_select() {
+    async fn golden_icon_select() {
         assert_equivalent(
             "IconSelect",
             &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles.to_string(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default(), menu: None })),
@@ -783,7 +783,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_tree() {
+    async fn golden_tree() {
         let item = |id: &str, label: &str| UiTreeItemNode {
             id: id.into(),
             label: Label::data(label),
@@ -823,7 +823,7 @@ mod tests {
     /// genuinely diverge here. This is real follow-up work for `flex`, not something this façade can
     /// paper over; these two tests verify the retained side alone produces sane, non-empty output.
     #[test]
-    fn golden_field_known_gap() {
+    async fn golden_field_known_gap() {
         let node = UiNode::Field(UiFieldNode {
             id: "f".into(),
             label: Label::data("Label"),
@@ -852,7 +852,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_section_known_gap() {
+    async fn golden_section_known_gap() {
         let node = UiNode::Section(UiSectionNode {
             id: "sec".into(),
             label: Some(Label::data("Section")),
@@ -873,14 +873,14 @@ mod tests {
     /// tests only verify the retained side produces the placeholder chrome its own doc comments
     /// promise, not equivalence with anything immediate-mode.
     #[test]
-    fn golden_image_known_gap() {
+    async fn golden_image_known_gap() {
         let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default(), menu: None });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "an empty-src Image should still paint its alt text");
     }
 
     #[test]
-    fn golden_component_scene_known_gap() {
+    async fn golden_component_scene_known_gap() {
         let node = UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: "surf".into(),
             controller_id: "ctrl".into(),
@@ -910,7 +910,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_external_slot_known_gap() {
+    async fn golden_external_slot_known_gap() {
         let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
@@ -919,7 +919,7 @@ mod tests {
 
     //#region 🔬️IntrospectionTests
     #[test]
-    fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
+    async fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
         let mut ui = Ui::new();
         assert_eq!(ui.window_ids().count(), 0);
         assert_eq!(ui.viewport("win"), None);
@@ -954,7 +954,7 @@ mod tests {
     }
 
     impl WidgetHarness {
-        fn new() -> Self {
+        async fn new() -> Self {
             Self {
                 draw: DrawList::default(),
                 atlas: FontAtlas::builtin(),
@@ -967,7 +967,7 @@ mod tests {
             }
         }
 
-        fn ctx(&mut self) -> WidgetContext<'_, ActionDescriptor> {
+        async fn ctx(&mut self) -> WidgetContext<'_, ActionDescriptor> {
             WidgetContext {
                 draw: &mut self.draw,
                 overlay: None,
@@ -985,7 +985,7 @@ mod tests {
     }
 
     #[test]
-    fn wrap_text_wraps_long_text_across_multiple_lines() {
+    async fn wrap_text_wraps_long_text_across_multiple_lines() {
         let mut atlas = FontAtlas::builtin();
         let long = "word ".repeat(40);
         let lines = wrap_text(&mut atlas, &long, 100.0, 16.0);
@@ -996,14 +996,14 @@ mod tests {
     }
 
     #[test]
-    fn wrap_text_of_empty_string_yields_one_empty_line() {
+    async fn wrap_text_of_empty_string_yields_one_empty_line() {
         let mut atlas = FontAtlas::builtin();
         let lines = wrap_text(&mut atlas, "", 200.0, 16.0);
         assert_eq!(lines, vec![String::new()], "an empty input must still produce a single (empty) line, never zero lines");
     }
 
     #[test]
-    fn measure_widget_stack_vertical_sums_child_heights_and_maxes_width() {
+    async fn measure_widget_stack_vertical_sums_child_heights_and_maxes_width() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let node = WidgetNode::<ActionDescriptor>::Stack { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), children: vec![WidgetNode::Separator, WidgetNode::Separator] };
@@ -1013,7 +1013,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_stack_horizontal_sums_child_widths() {
+    async fn measure_widget_stack_horizontal_sums_child_widths() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: Label::data("Go"), event: None };
@@ -1023,7 +1023,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_separator_uses_theme_control_height_floor() {
+    async fn measure_widget_separator_uses_theme_control_height_floor() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let (w, h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Separator);
@@ -1032,7 +1032,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_key_value_grows_with_entry_count() {
+    async fn measure_widget_key_value_grows_with_entry_count() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A"), value: "1".into() }] };
@@ -1043,7 +1043,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_ring_is_fixed_size() {
+    async fn measure_widget_ring_is_fixed_size() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let (w, h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Ring { id: "r".into(), t: 0.5, disabled: false, on_change: None });
@@ -1051,7 +1051,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_field_combines_label_and_child_height() {
+    async fn measure_widget_field_combines_label_and_child_height() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label"), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
@@ -1060,7 +1060,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_section_sums_header_and_children_plus_gap() {
+    async fn measure_widget_section_sums_header_and_children_plus_gap() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let empty = WidgetNode::<ActionDescriptor>::Section { id: "s".into(), label: None, default_open: true, children: vec![] };
@@ -1071,7 +1071,7 @@ mod tests {
     }
 
     #[test]
-    fn measure_widget_tree_skips_dimmed_items_in_height() {
+    async fn measure_widget_tree_skips_dimmed_items_in_height() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         let item = |id: &str, dimmed: bool| TreeItem {
@@ -1101,7 +1101,7 @@ mod tests {
     }
 
     #[test]
-    fn widget_interaction_maps_clear_frame_empties_every_map() {
+    async fn widget_interaction_maps_clear_frame_empties_every_map() {
         let mut maps = WidgetInteractionMaps::<ActionDescriptor>::default();
         maps.input_metas.insert("i".into(), InputMeta { on_change: action(), commit: None, value: "v".into() });
         maps.select_metas.insert("s".into(), action());
@@ -1131,7 +1131,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_input_registers_interaction_meta_when_maps_present() {
+    async fn render_widget_input_registers_interaction_meta_when_maps_present() {
         let mut h = WidgetHarness::new();
         let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: Some("blur".into()), on_change: Some(action()) };
         render_widget(&node, VIEWPORT, &mut h.ctx());
@@ -1141,7 +1141,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_input_with_no_on_change_does_not_register_meta() {
+    async fn render_widget_input_with_no_on_change_does_not_register_meta() {
         let mut h = WidgetHarness::new();
         let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: None, on_change: None };
         render_widget(&node, VIEWPORT, &mut h.ctx());
@@ -1149,7 +1149,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_select_and_toggle_register_interaction_metas() {
+    async fn render_widget_select_and_toggle_register_interaction_metas() {
         let mut h = WidgetHarness::new();
         let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: Label::data("Alpha") }], placeholder: None, on_change: Some(action()) };
         render_widget(&select, VIEWPORT, &mut h.ctx());
@@ -1162,7 +1162,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
+    async fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
         let mut h = WidgetHarness::new();
         let enabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: false, on_change: Some(action()) };
         render_widget(&enabled, VIEWPORT, &mut h.ctx());
@@ -1177,7 +1177,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_number_stepper_registers_stepper_meta() {
+    async fn render_widget_number_stepper_registers_stepper_meta() {
         let mut h = WidgetHarness::new();
         let node = WidgetNode::NumberStepper { id: "ns".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: Some(action()), on_delta: Some(action()) };
         render_widget(&node, VIEWPORT, &mut h.ctx());
@@ -1187,7 +1187,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_ring_registers_meta_and_live_value() {
+    async fn render_widget_ring_registers_meta_and_live_value() {
         let mut h = WidgetHarness::new();
         let node = WidgetNode::Ring { id: "r".into(), t: 0.25, disabled: false, on_change: Some(action()) };
         render_widget(&node, VIEWPORT, &mut h.ctx());
@@ -1196,7 +1196,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_field_draws_label_and_delegates_to_control() {
+    async fn render_widget_field_draws_label_and_delegates_to_control() {
         let mut h = WidgetHarness::new();
         let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name"), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
         render_widget(&node, VIEWPORT, &mut h.ctx());
@@ -1206,7 +1206,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_section_toggles_collapsed_state_from_default_open() {
+    async fn render_widget_section_toggles_collapsed_state_from_default_open() {
         let child = || WidgetNode::<ActionDescriptor>::Text { value: "child text".into(), emphasize: false };
         let mut h = WidgetHarness::new();
         let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec")), default_open: false, children: vec![child()] };
@@ -1223,7 +1223,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_tree_populates_hover_and_unhover_commands() {
+    async fn render_widget_tree_populates_hover_and_unhover_commands() {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
@@ -1256,7 +1256,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_tree_row_actions_register_hits_without_hover() {
+    async fn render_widget_tree_row_actions_register_hits_without_hover() {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
@@ -1283,7 +1283,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_tree_menu_placement_skips_row_action_hits() {
+    async fn render_widget_tree_menu_placement_skips_row_action_hits() {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
@@ -1310,7 +1310,7 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
+    async fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
@@ -1337,7 +1337,7 @@ mod tests {
     }
 
     #[test]
-    fn render_scroll_region_clamps_stale_offset_to_new_max_scroll() {
+    async fn render_scroll_region_clamps_stale_offset_to_new_max_scroll() {
         let mut h = WidgetHarness::new();
         h.scroll_offsets.insert("scroll".into(), 500.0);
         let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -1349,7 +1349,7 @@ mod tests {
     }
 
     #[test]
-    fn render_scroll_region_registers_a_scroll_region_hit_target() {
+    async fn render_scroll_region_registers_a_scroll_region_hit_target() {
         let mut h = WidgetHarness::new();
         let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
         {
@@ -1360,7 +1360,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_text_on_emits_one_glyph_instance_per_character() {
+    async fn draw_text_on_emits_one_glyph_instance_per_character() {
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
         draw_text_on(&mut draw, &mut atlas, "abc", 0.0, 0.0, 16.0, Theme::default().text);
@@ -1369,7 +1369,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
+    async fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
         let mut draw = DrawList::default();
         let mut atlas = FontAtlas::builtin();
         draw_text_overlay_on(&mut draw, &mut atlas, "hi", 0.0, 0.0, 16.0, Theme::default().text);

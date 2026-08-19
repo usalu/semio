@@ -1,4 +1,5 @@
 //! @emoji 🔀️ Serde serializer/deserializer over `DslValue` trees (no JSON text).
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 use super::DslValue;
 use serde::de::{self, DeserializeSeed, EnumAccess, MapAccess, SeqAccess, VariantAccess, Visitor};

@@ -42,26 +42,26 @@ pub mod force {
         }
     }
 
-    fn split_mix64(mut z: u64) -> u64 {
+    async fn split_mix64(mut z: u64) -> u64 {
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
         z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
         z ^ (z >> 31)
     }
 
-    fn rand_unit_interval(seed: &mut u64) -> f64 {
+    async fn rand_unit_interval(seed: &mut u64) -> f64 {
         *seed = split_mix64(*seed);
         (*seed as f64) / (u64::MAX as f64)
     }
 
     #[inline]
-    fn pairwise_repulsion_on_i_from_j(i: usize, j: usize, positions: &[Vec2], radii: &[f64], cool: f64, k_rep: f64) -> Vec2 {
+    async fn pairwise_repulsion_on_i_from_j(i: usize, j: usize, positions: &[Vec2], radii: &[f64], cool: f64, k_rep: f64) -> Vec2 {
         let delta = positions[j] - positions[i];
         let dist = delta.hypot().max(1e-4);
         let rep = k_rep * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
         (delta / dist) * (-rep)
     }
 
-    fn add_pairwise_repulsion(forces: &mut [Vec2], positions: &[Vec2], radii: &[f64], n: usize, cool: f64, k_rep: f64) {
+    async fn add_pairwise_repulsion(forces: &mut [Vec2], positions: &[Vec2], radii: &[f64], n: usize, cool: f64, k_rep: f64) {
         for i in 0..n {
             for j in (i + 1)..n {
                 let f = pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
@@ -72,7 +72,7 @@ pub mod force {
     }
 
     /// 🕸️ Run force-directed layout on abstract 2d positions.
-    pub fn run_force_layout(positions: &mut [Vec2], radii: &[f64], edge_pairs: &[(usize, usize)], pin: &[Option<Vec2>], opts: &ForceLayoutOptions) {
+    pub async fn run_force_layout(positions: &mut [Vec2], radii: &[f64], edge_pairs: &[(usize, usize)], pin: &[Option<Vec2>], opts: &ForceLayoutOptions) {
         let n = positions.len();
         if n == 0 {
             return;
@@ -128,7 +128,7 @@ pub mod force {
     }
 
     /// 🎲️ Scatter missing positions around anchor with deterministic jitter.
-    pub fn seed_positions(positions: &mut [Vec2], pin: &[Option<Vec2>], anchor: Vec2, seed: u64) {
+    pub async fn seed_positions(positions: &mut [Vec2], pin: &[Option<Vec2>], anchor: Vec2, seed: u64) {
         let mut rng = seed;
         for i in 0..positions.len() {
             if pin[i].is_some() {
@@ -146,7 +146,7 @@ pub mod force {
     }
 
     /// ⭕️ Deterministic circular layout: `n` points evenly spaced on a ring of `radius` around `center`.
-    pub fn circular_layout(n: usize, center: Vec2, radius: f64) -> Vec<Vec2> {
+    pub async fn circular_layout(n: usize, center: Vec2, radius: f64) -> Vec<Vec2> {
         if n == 0 {
             return Vec::new();
         }
@@ -159,7 +159,7 @@ pub mod force {
     }
 
     /// 🔲️ Deterministic grid layout: `n` points in row-major order, `cols` per row, spaced by `gap`.
-    pub fn grid_layout(n: usize, cols: usize, gap: f64) -> Vec<Vec2> {
+    pub async fn grid_layout(n: usize, cols: usize, gap: f64) -> Vec<Vec2> {
         if n == 0 || cols == 0 {
             return Vec::new();
         }
@@ -178,7 +178,7 @@ pub mod force {
         use super::*;
 
         #[test]
-        fn force_layout_moves_nodes() {
+        async fn force_layout_moves_nodes() {
             let mut positions = vec![Vec2::new(0.0, 0.0), Vec2::new(100.0, 0.0)];
             let radii = vec![32.0, 32.0];
             let edges = vec![(0, 1)];
@@ -191,7 +191,7 @@ pub mod force {
         }
 
         #[test]
-        fn circular_layout_places_points_on_ring() {
+        async fn circular_layout_places_points_on_ring() {
             let points = circular_layout(4, Vec2::ZERO, 10.0);
             assert_eq!(points.len(), 4);
             for p in &points {
@@ -200,7 +200,7 @@ pub mod force {
         }
 
         #[test]
-        fn grid_layout_places_points_in_rows() {
+        async fn grid_layout_places_points_in_rows() {
             let points = grid_layout(5, 2, 10.0);
             assert_eq!(points.len(), 5);
             assert_eq!((points[0].x, points[0].y), (0.0, 0.0));
@@ -218,7 +218,7 @@ pub mod routing {
     use crate::NodeShape;
 
     /// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
-    pub fn handle_outside_node_clip_path(handle_center: Point, handle_radius: f64, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> BezPath {
+    pub async fn handle_outside_node_clip_path(handle_center: Point, handle_radius: f64, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> BezPath {
         let margin = (handle_radius * 2.5).max(4.0);
         let outer = Rect::new(handle_center.x - margin, handle_center.y - margin, handle_center.x + margin, handle_center.y + margin);
         let mut path = BezPath::new();
@@ -237,7 +237,7 @@ pub mod routing {
     }
 
     /// 🧭️ Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
-    pub fn handle_outward_at_node_rim(handle: Point, node_center: Point, node_shape: NodeShape, _node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+    pub async fn handle_outward_at_node_rim(handle: Point, node_center: Point, node_shape: NodeShape, _node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
         match node_shape {
             NodeShape::Circle => {
                 let outward = normalize_or_zero(handle - node_center);
@@ -264,7 +264,7 @@ pub mod routing {
         }
     }
 
-    fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
+    async fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
         let out = normalize_or_zero(outward);
         let r = radius.max(1e-9);
         if out.hypot() < 1e-9 {
@@ -284,7 +284,7 @@ pub mod routing {
     }
 
     /// 🌗️ Closed fill path for the handle cap outside a node body (semicircle on the `outward` side).
-    pub fn handle_exterior_cap_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    pub async fn handle_exterior_cap_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
         let r = radius.max(1e-9);
         let mut path = BezPath::new();
         if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
@@ -297,7 +297,7 @@ pub mod routing {
     }
 
     /// 🌗️ Open arc path for stroking only the exterior handle cap (flat rim edge stays behind the node).
-    pub fn handle_exterior_cap_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    pub async fn handle_exterior_cap_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
         let r = radius.max(1e-9);
         let mut path = BezPath::new();
         if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
@@ -308,14 +308,14 @@ pub mod routing {
         path
     }
 
-    pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
+    pub async fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
         let ux = angle.cos();
         let uy = angle.sin();
         center + Vec2::new(ux * radius, uy * radius)
     }
 
     /// 🧭️ Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
-    pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
+    pub async fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
         let hw = width / 2.0;
         let hh = height / 2.0;
         let ux = -angle.sin();
@@ -325,19 +325,19 @@ pub mod routing {
     }
 
     /// 🧭️ East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
-    pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
+    pub async fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
         let d = toward - center;
         f64::atan2(d.y, d.x)
     }
 
     /// 🧭️ North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
-    pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
+    pub async fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
         let u = normalize_or_zero(toward - center);
         f64::atan2(-u.x, -u.y)
     }
 
     /// 🎯️ World point at the outer peak of a port handle cap (rim + outward × radius).
-    pub fn handle_exterior_cap_peak(center: Point, outward: Vec2, radius: f64) -> Point {
+    pub async fn handle_exterior_cap_peak(center: Point, outward: Vec2, radius: f64) -> Point {
         let out = normalize_or_zero(outward);
         let r = radius.max(0.0);
         if out.hypot() < 1e-9 || r <= 0.0 {
@@ -347,7 +347,7 @@ pub mod routing {
     }
 
     /// 🔺️ Closed fill path for a triangle handle cap pointing in the `outward` direction.
-    pub fn handle_exterior_cap_triangle_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    pub async fn handle_exterior_cap_triangle_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
         let out = normalize_or_zero(outward);
         let r = radius.max(1e-9);
         if out.hypot() < 1e-9 {
@@ -367,7 +367,7 @@ pub mod routing {
     }
 
     /// 🔺️ Open stroke path for a triangle handle cap.
-    pub fn handle_exterior_cap_triangle_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    pub async fn handle_exterior_cap_triangle_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
         let out = normalize_or_zero(outward);
         let r = radius.max(1e-9);
         if out.hypot() < 1e-9 {
@@ -386,12 +386,12 @@ pub mod routing {
     }
 
     /// 🔺️ Wire attachment peak for a triangle handle cap.
-    pub fn handle_exterior_cap_triangle_peak(center: Point, outward: Vec2, radius: f64) -> Point {
+    pub async fn handle_exterior_cap_triangle_peak(center: Point, outward: Vec2, radius: f64) -> Point {
         handle_exterior_cap_peak(center, outward, radius)
     }
 
     /// 📐️ Orthogonal S/Z polyline between two port cap peaks.
-    pub fn compute_edge_sharp_sz_path(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> BezPath {
+    pub async fn compute_edge_sharp_sz_path(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> BezPath {
         let out_s = normalize_or_zero(source_outward);
         let out_t = normalize_or_zero(target_outward);
         let stub = 20.0;
@@ -414,7 +414,7 @@ pub mod routing {
         path
     }
 
-    pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
+    pub async fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
         let chord = normalize_or_zero(target_point - source_point);
         let mut source_radial = normalize_or_zero(source_outward);
         if source_radial == Vec2::new(0.0, 0.0) {
@@ -431,7 +431,7 @@ pub mod routing {
         CubicBez::new(source_point, p1, p2, target_point)
     }
 
-    pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
+    pub async fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
         compute_edge_bezier_outward(source_point, target_point, source_point - source_center, target_point - target_center)
     }
 
@@ -441,7 +441,7 @@ pub mod routing {
         use super::*;
 
         #[test]
-        fn outside_node_clip_path_excludes_node_interior() {
+        async fn outside_node_clip_path_excludes_node_interior() {
             let node_center = Point::new(0.0, 0.0);
             let handle_center = Point::new(40.0, 0.0);
             let clip = handle_outside_node_clip_path(handle_center, 5.0, node_center, NodeShape::Circle, 40.0, 80.0, 80.0);
@@ -449,7 +449,7 @@ pub mod routing {
             assert!(node_center.distance(handle_center) > 39.0);
         }
 
-        fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
+        async fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
             let out = normalize_or_zero(outward);
             let peak = center + out * radius;
             let arc = handle_exterior_cap_arc(center, outward, radius).expect("exterior arc");
@@ -475,7 +475,7 @@ pub mod routing {
         }
 
         #[test]
-        fn edge_bezier_free_target_end_tangent_matches_incoming_chord() {
+        async fn edge_bezier_free_target_end_tangent_matches_incoming_chord() {
             let source = Point::new(0.0, 0.0);
             let target = Point::new(200.0, 40.0);
             let curve = compute_edge_bezier_points(source, target, Point::new(-50.0, 0.0), target);
@@ -486,7 +486,7 @@ pub mod routing {
         }
 
         #[test]
-        fn edge_bezier_starts_outside_handle_cap_peak() {
+        async fn edge_bezier_starts_outside_handle_cap_peak() {
             let node_center = Point::new(100.0, 50.0);
             let width = 160.0;
             let height = 72.0;
@@ -502,7 +502,7 @@ pub mod routing {
         }
 
         #[test]
-        fn edge_bezier_rectangle_port_uses_outward_normal() {
+        async fn edge_bezier_rectangle_port_uses_outward_normal() {
             let node_center = Point::new(100.0, 50.0);
             let width = 120.0;
             let height = 80.0;
@@ -516,7 +516,7 @@ pub mod routing {
         }
 
         #[test]
-        fn rectangle_rim_outward_uses_edge_normal_not_radial() {
+        async fn rectangle_rim_outward_uses_edge_normal_not_radial() {
             let node_center = Point::new(100.0, 50.0);
             let width = 120.0;
             let height = 80.0;
@@ -528,7 +528,7 @@ pub mod routing {
         }
 
         #[test]
-        fn exterior_cap_paths_bulge_outward_on_all_cardinals() {
+        async fn exterior_cap_paths_bulge_outward_on_all_cardinals() {
             let radius = 5.0;
             assert_cap_bulges_outward(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
             assert_cap_bulges_outward(Point::new(-40.0, 0.0), Vec2::new(-1.0, 0.0), radius);
@@ -539,7 +539,7 @@ pub mod routing {
         }
 
         #[test]
-        fn triangle_cap_peak_matches_outward_direction() {
+        async fn triangle_cap_peak_matches_outward_direction() {
             let center = Point::new(40.0, 0.0);
             let outward = Vec2::new(1.0, 0.0);
             let radius = 5.0;
@@ -550,7 +550,7 @@ pub mod routing {
         }
 
         #[test]
-        fn sharp_sz_path_is_orthogonal_between_peaks() {
+        async fn sharp_sz_path_is_orthogonal_between_peaks() {
             let source = Point::new(0.0, 0.0);
             let target = Point::new(120.0, 40.0);
             let path = compute_edge_sharp_sz_path(source, target, Vec2::new(1.0, 0.0), Vec2::new(-1.0, 0.0));

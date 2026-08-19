@@ -28,25 +28,25 @@ pub mod traits {
     /// expensive to move implicitly.
     pub trait Ring: Clone + PartialEq + std::fmt::Debug {
         /// 0⃣ Additive identity.
-        fn zero() -> Self;
+        async fn zero() -> Self;
         /// 1⃣ Multiplicative identity.
-        fn one() -> Self;
-        fn add(&self, rhs: &Self) -> Self;
-        fn neg(&self) -> Self;
-        fn mul(&self, rhs: &Self) -> Self;
+        async fn one() -> Self;
+        async fn add(&self, rhs: &Self) -> Self;
+        async fn neg(&self) -> Self;
+        async fn mul(&self, rhs: &Self) -> Self;
         /// ➖️ Default via `add(neg)`; override when direct subtraction avoids an allocation.
-        fn sub(&self, rhs: &Self) -> Self {
+        async fn sub(&self, rhs: &Self) -> Self {
             self.add(&rhs.neg())
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             *self == Self::zero()
         }
-        fn is_one(&self) -> bool {
+        async fn is_one(&self) -> bool {
             *self == Self::one()
         }
         /// 🔢️ Embeds a signed machine integer via repeated doubling; concrete types override with a direct
         /// constructor where one exists.
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             if value == 0 {
                 return Self::zero();
             }
@@ -68,7 +68,7 @@ pub mod traits {
             }
         }
         /// 🔋️ Square-and-multiply exponentiation; correct for any ring (including `exp == 0`, giving `one()`).
-        fn pow(&self, exp: u64) -> Self {
+        async fn pow(&self, exp: u64) -> Self {
             let mut result = Self::one();
             let mut base = self.clone();
             let mut e = exp;
@@ -83,7 +83,7 @@ pub mod traits {
         }
         /// 🧬️ Additive order of `one()` (0 in characteristic zero); an instance method — not a constant —
         /// because `ModInt`'s characteristic is a runtime modulus, not a compile-time property of the type.
-        fn characteristic(&self) -> u64;
+        async fn characteristic(&self) -> u64;
     }
 
     /// 💍️ Marker for rings whose multiplication commutes; nothing here relies on it structurally, but it
@@ -97,15 +97,15 @@ pub mod traits {
     /// when the result is provably exact.
     pub trait IntegralDomain: CommutativeRing {
         /// ➗️ `Some(self / rhs)` if `rhs` divides `self` exactly, else `None`. `rhs` must be nonzero.
-        fn exact_div(&self, rhs: &Self) -> Option<Self>;
+        async fn exact_div(&self, rhs: &Self) -> Option<Self>;
     }
     // #endregion 🔖️IntegralDomain
 
     // #region 🔖️GcdDomain
     pub trait GcdDomain: IntegralDomain {
-        fn gcd(&self, rhs: &Self) -> Self;
+        async fn gcd(&self, rhs: &Self) -> Self;
         /// ➗️ Default `self * rhs / gcd(self, rhs)`; degenerate (zero) inputs return `zero()`.
-        fn lcm(&self, rhs: &Self) -> Self {
+        async fn lcm(&self, rhs: &Self) -> Self {
             if self.is_zero() || rhs.is_zero() {
                 return Self::zero();
             }
@@ -118,7 +118,7 @@ pub mod traits {
     // #region 🔖️EuclideanDomain
     pub trait EuclideanDomain: GcdDomain {
         /// ➗️ `(quotient, remainder)` such that `self == quotient * rhs + remainder`. `rhs` must be nonzero.
-        fn div_rem(&self, rhs: &Self) -> (Self, Self)
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self)
         where
             Self: Sized;
     }
@@ -126,13 +126,13 @@ pub mod traits {
     /// ➗️ Trivial Euclidean-domain `div_rem` for any `Field`: remainder is always zero. Free function
     /// (not a default trait method) because a blanket `impl<T: Field> EuclideanDomain for T` would
     /// conflict with concrete manual impls under Rust's orphan/coherence rules.
-    pub fn field_div_rem<T: Field>(a: &T, b: &T) -> (T, T) {
+    pub async fn field_div_rem<T: Field>(a: &T, b: &T) -> (T, T) {
         (a.div(b).expect("field_div_rem: divisor must be nonzero"), T::zero())
     }
 
     /// 🚫️ Trivial GCD-domain `gcd` for any `Field`: every nonzero element is a unit, so the gcd of any two
     /// non-both-zero elements is `one()` (and `zero()` when both inputs are zero).
-    pub fn field_gcd<T: Field>(a: &T, b: &T) -> T {
+    pub async fn field_gcd<T: Field>(a: &T, b: &T) -> T {
         if a.is_zero() && b.is_zero() {
             T::zero()
         } else {
@@ -144,10 +144,10 @@ pub mod traits {
     // #region 🔖️Field
     pub trait Field: EuclideanDomain {
         /// ➗️ Multiplicative inverse; `None` only for zero.
-        fn inv(&self) -> Option<Self>
+        async fn inv(&self) -> Option<Self>
         where
             Self: Sized;
-        fn div(&self, rhs: &Self) -> Option<Self>
+        async fn div(&self, rhs: &Self) -> Option<Self>
         where
             Self: Sized,
         {
@@ -158,34 +158,34 @@ pub mod traits {
 
     // #region 🔖️PrimitiveImpls
     impl Ring for i64 {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             0
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             1
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             self + rhs
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             -self
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             self * rhs
         }
-        fn sub(&self, rhs: &Self) -> Self {
+        async fn sub(&self, rhs: &Self) -> Self {
             self - rhs
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             value
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             0
         }
     }
     impl CommutativeRing for i64 {}
     impl IntegralDomain for i64 {
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             if *rhs == 0 || self % rhs != 0 {
                 None
             } else {
@@ -194,7 +194,7 @@ pub mod traits {
         }
     }
     impl GcdDomain for i64 {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             let mut a = self.unsigned_abs();
             let mut b = rhs.unsigned_abs();
             while b != 0 {
@@ -204,7 +204,7 @@ pub mod traits {
         }
     }
     impl EuclideanDomain for i64 {
-        fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             (self / rhs, self % rhs)
         }
     }
@@ -213,40 +213,40 @@ pub mod traits {
     /// generic over `Field`, but law-violating in the strict sense (rounding breaks associativity/exactness) —
     /// never use this impl where exactness is required.
     impl Ring for f64 {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             0.0
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             1.0
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             self + rhs
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             -self
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             self * rhs
         }
-        fn sub(&self, rhs: &Self) -> Self {
+        async fn sub(&self, rhs: &Self) -> Self {
             self - rhs
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             *self == 0.0
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             value as f64
         }
-        fn pow(&self, exp: u64) -> Self {
+        async fn pow(&self, exp: u64) -> Self {
             self.powi(exp as i32)
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             0
         }
     }
     impl CommutativeRing for f64 {}
     impl IntegralDomain for f64 {
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             if *rhs == 0.0 {
                 None
             } else {
@@ -255,17 +255,17 @@ pub mod traits {
         }
     }
     impl GcdDomain for f64 {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             field_gcd(self, rhs)
         }
     }
     impl EuclideanDomain for f64 {
-        fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             field_div_rem(self, rhs)
         }
     }
     impl Field for f64 {
-        fn inv(&self) -> Option<Self> {
+        async fn inv(&self) -> Option<Self> {
             if *self == 0.0 {
                 None
             } else {
@@ -281,7 +281,7 @@ pub mod traits {
         use super::*;
 
         #[test]
-        fn i64_ring_axioms_hold_on_small_samples() {
+        async fn i64_ring_axioms_hold_on_small_samples() {
             for a in -5i64..=5 {
                 for b in -5i64..=5 {
                     assert_eq!(a.add(&b), a + b);
@@ -292,11 +292,11 @@ pub mod traits {
         }
 
         #[test]
-        fn i64_from_i64_via_default_matches_identity_for_positive_and_negative() {
+        async fn i64_from_i64_via_default_matches_identity_for_positive_and_negative() {
             // exercise the default doubling-based from_i64 through a type that overrides it trivially,
             // and separately validate the algorithm itself using f64 (which does NOT override from_i64
             // meaningfully differently, so cross-check against a hand-rolled doubling loop instead).
-            fn via_doubling(value: i64) -> i64 {
+            async fn via_doubling(value: i64) -> i64 {
                 <i64 as Ring>::from_i64(value)
             }
             for v in [-100i64, -1, 0, 1, 100, 12345] {
@@ -305,7 +305,7 @@ pub mod traits {
         }
 
         #[test]
-        fn i64_pow_matches_repeated_multiplication() {
+        async fn i64_pow_matches_repeated_multiplication() {
             for base in -4i64..=4 {
                 for exp in 0u64..6 {
                     let expected = base.pow(exp as u32);
@@ -315,7 +315,7 @@ pub mod traits {
         }
 
         #[test]
-        fn i64_gcd_matches_euclid_hand_cases() {
+        async fn i64_gcd_matches_euclid_hand_cases() {
             assert_eq!(GcdDomain::gcd(&12i64, &18i64), 6);
             assert_eq!(GcdDomain::gcd(&0i64, &5i64), 5);
             assert_eq!(GcdDomain::gcd(&(-12i64), &18i64), 6);
@@ -323,19 +323,19 @@ pub mod traits {
         }
 
         #[test]
-        fn i64_lcm_matches_hand_cases() {
+        async fn i64_lcm_matches_hand_cases() {
             assert_eq!(GcdDomain::lcm(&4i64, &6i64), 12);
             assert_eq!(GcdDomain::lcm(&0i64, &5i64), 0);
         }
 
         #[test]
-        fn i64_div_rem_matches_language_semantics() {
+        async fn i64_div_rem_matches_language_semantics() {
             assert_eq!(EuclideanDomain::div_rem(&7i64, &2i64), (3, 1));
             assert_eq!(EuclideanDomain::div_rem(&(-7i64), &2i64), (-3, -1));
         }
 
         #[test]
-        fn f64_field_inv_and_div() {
+        async fn f64_field_inv_and_div() {
             let a = 4.0f64;
             let inv = Field::inv(&a).expect("nonzero");
             assert!((inv - 0.25).abs() < 1e-12);
@@ -345,7 +345,7 @@ pub mod traits {
         }
 
         #[test]
-        fn field_gcd_helper_matches_unit_convention() {
+        async fn field_gcd_helper_matches_unit_convention() {
             assert_eq!(field_gcd(&0.0f64, &0.0f64), 0.0);
             assert_eq!(field_gcd(&3.0f64, &0.0f64), 1.0);
             assert_eq!(field_gcd(&3.0f64, &5.0f64), 1.0);
@@ -373,36 +373,36 @@ pub mod natural {
 
     impl Natural {
         /// 🧹️ Drops trailing zero limbs so the no-trailing-zero invariant holds after any mutation.
-        fn normalize(mut limbs: Vec<u64>) -> Self {
+        async fn normalize(mut limbs: Vec<u64>) -> Self {
             while limbs.last() == Some(&0) {
                 limbs.pop();
             }
             Self { limbs }
         }
 
-        pub fn zero() -> Self {
+        pub async fn zero() -> Self {
             Self { limbs: Vec::new() }
         }
 
-        pub fn one() -> Self {
+        pub async fn one() -> Self {
             Self { limbs: vec![1] }
         }
 
-        pub fn is_zero(&self) -> bool {
+        pub async fn is_zero(&self) -> bool {
             self.limbs.is_empty()
         }
 
-        pub fn from_u64(value: u64) -> Self {
+        pub async fn from_u64(value: u64) -> Self {
             Self::normalize(vec![value])
         }
 
-        pub fn from_u128(value: u128) -> Self {
+        pub async fn from_u128(value: u128) -> Self {
             let lo = value as u64;
             let hi = (value >> 64) as u64;
             Self::normalize(vec![lo, hi])
         }
 
-        pub fn to_u64(&self) -> Option<u64> {
+        pub async fn to_u64(&self) -> Option<u64> {
             match self.limbs.len() {
                 0 => Some(0),
                 1 => Some(self.limbs[0]),
@@ -410,7 +410,7 @@ pub mod natural {
             }
         }
 
-        pub fn to_u128(&self) -> Option<u128> {
+        pub async fn to_u128(&self) -> Option<u128> {
             match self.limbs.len() {
                 0 => Some(0),
                 1 => Some(self.limbs[0] as u128),
@@ -419,23 +419,23 @@ pub mod natural {
             }
         }
 
-        pub fn limbs(&self) -> &[u64] {
+        pub async fn limbs(&self) -> &[u64] {
             &self.limbs
         }
 
-        pub fn limb_len(&self) -> usize {
+        pub async fn limb_len(&self) -> usize {
             self.limbs.len()
         }
 
         /// 📏️ Number of bits needed to represent this value (`0` itself has bit-length `0`).
-        pub fn bit_length(&self) -> u64 {
+        pub async fn bit_length(&self) -> u64 {
             match self.limbs.last() {
                 None => 0,
                 Some(&top) => (self.limbs.len() as u64 - 1) * 64 + (64 - top.leading_zeros() as u64),
             }
         }
 
-        pub fn bit(&self, i: u64) -> bool {
+        pub async fn bit(&self, i: u64) -> bool {
             let limb = (i / 64) as usize;
             if limb >= self.limbs.len() {
                 return false;
@@ -444,7 +444,7 @@ pub mod natural {
         }
 
         // #region 🔖️Shifts
-        pub fn shl(&self, bits: u64) -> Self {
+        pub async fn shl(&self, bits: u64) -> Self {
             if self.is_zero() || bits == 0 {
                 return self.clone();
             }
@@ -463,7 +463,7 @@ pub mod natural {
             Self::normalize(out)
         }
 
-        pub fn shr(&self, bits: u64) -> Self {
+        pub async fn shr(&self, bits: u64) -> Self {
             let limb_shift = (bits / 64) as usize;
             if limb_shift >= self.limbs.len() {
                 return Self::zero();
@@ -479,7 +479,7 @@ pub mod natural {
             Self::normalize(out)
         }
 
-        pub fn trailing_zeros(&self) -> Option<u64> {
+        pub async fn trailing_zeros(&self) -> Option<u64> {
             if self.is_zero() {
                 return None;
             }
@@ -493,24 +493,24 @@ pub mod natural {
         // #endregion 🔖️Shifts
 
         // #region 🔖️BitOperations
-        pub fn bitand(&self, rhs: &Self) -> Self {
+        pub async fn bitand(&self, rhs: &Self) -> Self {
             let n = self.limbs.len().min(rhs.limbs.len());
             Self::normalize((0..n).map(|i| self.limbs[i] & rhs.limbs[i]).collect())
         }
 
-        pub fn bitor(&self, rhs: &Self) -> Self {
+        pub async fn bitor(&self, rhs: &Self) -> Self {
             let n = self.limbs.len().max(rhs.limbs.len());
             Self::normalize((0..n).map(|i| self.limbs.get(i).copied().unwrap_or(0) | rhs.limbs.get(i).copied().unwrap_or(0)).collect())
         }
 
-        pub fn bitxor(&self, rhs: &Self) -> Self {
+        pub async fn bitxor(&self, rhs: &Self) -> Self {
             let n = self.limbs.len().max(rhs.limbs.len());
             Self::normalize((0..n).map(|i| self.limbs.get(i).copied().unwrap_or(0) ^ rhs.limbs.get(i).copied().unwrap_or(0)).collect())
         }
         // #endregion 🔖️BitOperations
 
         // #region 🔖️AddSub
-        pub fn add(&self, rhs: &Self) -> Self {
+        pub async fn add(&self, rhs: &Self) -> Self {
             let n = self.limbs.len().max(rhs.limbs.len());
             let mut out = Vec::with_capacity(n + 1);
             let mut carry = 0u64;
@@ -529,7 +529,7 @@ pub mod natural {
         }
 
         /// ➖️ `Some(self - rhs)` if `self >= rhs`, else `None` (there is no signed `Natural`).
-        pub fn checked_sub(&self, rhs: &Self) -> Option<Self> {
+        pub async fn checked_sub(&self, rhs: &Self) -> Option<Self> {
             if *self < *rhs {
                 return None;
             }
@@ -552,7 +552,7 @@ pub mod natural {
         // #endregion 🔖️AddSub
 
         // #region 🔖️Mul
-        fn mul_schoolbook(a: &[u64], b: &[u64]) -> Vec<u64> {
+        async fn mul_schoolbook(a: &[u64], b: &[u64]) -> Vec<u64> {
             if a.is_empty() || b.is_empty() {
                 return Vec::new();
             }
@@ -581,7 +581,7 @@ pub mod natural {
         /// ✂️ Karatsuba: splits both operands at `n/2` limbs, forms three half-size products
         /// (`lo·lo`, `hi·hi`, `(lo+hi)·(lo+hi)`), and reassembles via `mid = combined - lo·lo - hi·hi` —
         /// which is provably non-negative, so the subtraction never needs signed limb arithmetic.
-        fn mul_karatsuba(a: &[u64], b: &[u64]) -> Vec<u64> {
+        async fn mul_karatsuba(a: &[u64], b: &[u64]) -> Vec<u64> {
             let n = a.len().max(b.len());
             if a.len().min(b.len()) <= KARATSUBA_THRESHOLD {
                 return Self::mul_schoolbook(a, b);
@@ -611,7 +611,7 @@ pub mod natural {
             out
         }
 
-        fn add_at_offset(out: &mut Vec<u64>, addend: &[u64], offset: usize) {
+        async fn add_at_offset(out: &mut Vec<u64>, addend: &[u64], offset: usize) {
             while out.len() < offset + addend.len() + 1 {
                 out.push(0);
             }
@@ -634,18 +634,18 @@ pub mod natural {
             }
         }
 
-        pub fn mul(&self, rhs: &Self) -> Self {
+        pub async fn mul(&self, rhs: &Self) -> Self {
             Self::normalize(Self::mul_karatsuba(&self.limbs, &rhs.limbs))
         }
 
         /// 🧵️ Test-only escape hatch to force the schoolbook path regardless of operand size, so
         /// differential tests can compare it against Karatsuba on the same inputs.
         #[cfg(test)]
-        pub(crate) fn mul_schoolbook_pub(&self, rhs: &Self) -> Self {
+        pub(crate) async fn mul_schoolbook_pub(&self, rhs: &Self) -> Self {
             Self::normalize(Self::mul_schoolbook(&self.limbs, &rhs.limbs))
         }
 
-        pub fn mul_u64(&self, rhs: u64) -> Self {
+        pub async fn mul_u64(&self, rhs: u64) -> Self {
             if rhs == 0 || self.is_zero() {
                 return Self::zero();
             }
@@ -665,7 +665,7 @@ pub mod natural {
 
         // #region 🔖️DivRem
         /// ➗️ Divide by a single `u64` limb via simple long division; returns `(quotient, remainder)`.
-        pub fn div_rem_u64(&self, divisor: u64) -> (Self, u64) {
+        pub async fn div_rem_u64(&self, divisor: u64) -> (Self, u64) {
             assert!(divisor != 0, "div_rem_u64: division by zero");
             let mut quotient = vec![0u64; self.limbs.len()];
             let mut rem: u128 = 0;
@@ -681,7 +681,7 @@ pub mod natural {
         /// bit set, forms a 2-limb-by-1-limb trial quotient digit with the standard two-step correction,
         /// multiplies-and-subtracts, and falls back to the rare add-back branch when the trial digit
         /// overshoots by one. `rhs` must be nonzero.
-        pub fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        pub async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             assert!(!rhs.is_zero(), "div_rem: division by zero");
             if *self < *rhs {
                 return (Self::zero(), self.clone());
@@ -756,7 +756,7 @@ pub mod natural {
         // #endregion 🔖️DivRem
 
         // #region 🔖️PowRoots
-        pub fn pow(&self, exp: u64) -> Self {
+        pub async fn pow(&self, exp: u64) -> Self {
             let mut result = Self::one();
             let mut base = self.clone();
             let mut e = exp;
@@ -772,12 +772,12 @@ pub mod natural {
 
         /// √ Integer square root via Newton's method seeded from `bit_length`, descending monotonically
         /// until it stabilizes (guaranteed to terminate since each step only decreases or holds).
-        pub fn isqrt(&self) -> Self {
+        pub async fn isqrt(&self) -> Self {
             self.nth_root(2)
         }
 
         /// √ⁿ Integer n-th root via Newton's method on `f(x) = x^n - self`; `n` must be >= 1.
-        pub fn nth_root(&self, n: u32) -> Self {
+        pub async fn nth_root(&self, n: u32) -> Self {
             assert!(n >= 1, "nth_root: n must be >= 1");
             if self.is_zero() || n == 1 {
                 return self.clone();
@@ -811,7 +811,7 @@ pub mod natural {
         // #region 🔖️Gcd
         /// 🤝️ Binary (Stein's) GCD: strips common factors of two, then alternates halving-the-even-operand
         /// with subtract-and-swap — avoids division entirely.
-        pub fn gcd(&self, rhs: &Self) -> Self {
+        pub async fn gcd(&self, rhs: &Self) -> Self {
             if self.is_zero() {
                 return rhs.clone();
             }
@@ -837,7 +837,7 @@ pub mod natural {
         // #endregion 🔖️Gcd
 
         // #region 🔖️StringIo
-        pub fn to_decimal(&self) -> String {
+        pub async fn to_decimal(&self) -> String {
             if self.is_zero() {
                 return "0".to_string();
             }
@@ -855,7 +855,7 @@ pub mod natural {
             s
         }
 
-        pub fn to_hex(&self) -> String {
+        pub async fn to_hex(&self) -> String {
             if self.is_zero() {
                 return "0".to_string();
             }
@@ -866,7 +866,7 @@ pub mod natural {
             s
         }
 
-        pub fn from_str_radix(s: &str, radix: u32) -> Option<Self> {
+        pub async fn from_str_radix(s: &str, radix: u32) -> Option<Self> {
             if s.is_empty() {
                 return None;
             }
@@ -910,7 +910,7 @@ pub mod natural {
     macro_rules! impl_from_uint {
     ($($t:ty),*) => {
         $(impl From<$t> for Natural {
-            fn from(value: $t) -> Self {
+            async fn from(value: $t) -> Self {
                 Natural::from_u64(value as u64)
             }
         })*
@@ -931,41 +931,41 @@ pub mod natural {
         use super::*;
         use std::str::FromStr;
 
-        fn n(s: &str) -> Natural {
+        async fn n(s: &str) -> Natural {
             Natural::from_str(s).unwrap()
         }
 
         // #region 🔖️FundamentalTests
         #[test]
-        fn decimal_string_roundtrip() {
+        async fn decimal_string_roundtrip() {
             let s = "123456789012345678901234567890";
             assert_eq!(n(s).to_decimal(), s);
         }
 
         #[test]
-        fn zero_roundtrips() {
+        async fn zero_roundtrips() {
             assert_eq!(n("0").to_decimal(), "0");
             assert!(n("0").is_zero());
         }
 
         #[test]
-        fn add_matches_hand_case() {
+        async fn add_matches_hand_case() {
             assert_eq!(n("999999999999999999999").add(&n("1")).to_decimal(), "1000000000000000000000");
         }
 
         #[test]
-        fn checked_sub_matches_hand_case_and_rejects_negative() {
+        async fn checked_sub_matches_hand_case_and_rejects_negative() {
             assert_eq!(n("1000000000000000000000").checked_sub(&n("1")).unwrap().to_decimal(), "999999999999999999999");
             assert!(n("1").checked_sub(&n("2")).is_none());
         }
 
         #[test]
-        fn mul_matches_hand_case() {
+        async fn mul_matches_hand_case() {
             assert_eq!(n("123456789").mul(&n("987654321")).to_decimal(), "121932631112635269");
         }
 
         #[test]
-        fn div_rem_self_check_invariant() {
+        async fn div_rem_self_check_invariant() {
             let u = n("123456789012345678901234567890");
             let v = n("98765432109876543210");
             let (q, r) = u.div_rem(&v);
@@ -974,14 +974,14 @@ pub mod natural {
         }
 
         #[test]
-        fn div_rem_by_larger_value_is_zero_quotient() {
+        async fn div_rem_by_larger_value_is_zero_quotient() {
             let (q, r) = n("5").div_rem(&n("100"));
             assert!(q.is_zero());
             assert_eq!(r, n("5"));
         }
 
         #[test]
-        fn isqrt_matches_known_squares() {
+        async fn isqrt_matches_known_squares() {
             assert_eq!(n("144").isqrt(), n("12"));
             assert_eq!(n("143").isqrt(), n("11"));
             assert_eq!(n("0").isqrt(), n("0"));
@@ -989,28 +989,28 @@ pub mod natural {
         }
 
         #[test]
-        fn nth_root_matches_known_cubes() {
+        async fn nth_root_matches_known_cubes() {
             assert_eq!(n("27").nth_root(3), n("3"));
             assert_eq!(n("26").nth_root(3), n("2"));
             assert_eq!(n("1000000").nth_root(3), n("100"));
         }
 
         #[test]
-        fn gcd_matches_euclid_hand_cases() {
+        async fn gcd_matches_euclid_hand_cases() {
             assert_eq!(n("48").gcd(&n("18")), n("6"));
             assert_eq!(n("0").gcd(&n("5")), n("5"));
             assert_eq!(n("17").gcd(&n("13")), n("1"));
         }
 
         #[test]
-        fn hex_roundtrip() {
+        async fn hex_roundtrip() {
             let value = n("4059231");
             let hex = value.to_hex();
             assert_eq!(Natural::from_str_radix(&hex, 16).unwrap(), value);
         }
 
         #[test]
-        fn bit_length_and_bit_access() {
+        async fn bit_length_and_bit_access() {
             let v = n("256"); // 2^8
             assert_eq!(v.bit_length(), 9);
             assert!(v.bit(8));
@@ -1018,13 +1018,13 @@ pub mod natural {
         }
 
         #[test]
-        fn shl_shr_roundtrip() {
+        async fn shl_shr_roundtrip() {
             let v = n("123456789");
             assert_eq!(v.shl(37).shr(37), v);
         }
 
         #[test]
-        fn ord_compares_by_magnitude() {
+        async fn ord_compares_by_magnitude() {
             assert!(n("9") < n("10"));
             assert!(n("100000000000000000000") > n("99999999999999999999"));
             assert_eq!(n("5"), n("5"));
@@ -1036,7 +1036,7 @@ pub mod natural {
             use super::*;
 
             #[test]
-            fn karatsuba_matches_schoolbook_across_threshold() {
+            async fn karatsuba_matches_schoolbook_across_threshold() {
                 let mut seed = 0x1234_5678_9abc_def1u64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -1057,7 +1057,7 @@ pub mod natural {
             }
 
             #[test]
-            fn div_rem_invariant_holds_on_random_shapes() {
+            async fn div_rem_invariant_holds_on_random_shapes() {
                 let mut seed = 0xdead_beef_cafe_babeu64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -1080,7 +1080,7 @@ pub mod natural {
             }
 
             #[test]
-            fn div_rem_add_back_branch_is_exercised_and_correct() {
+            async fn div_rem_add_back_branch_is_exercised_and_correct() {
                 // Crafted vectors known to trigger Knuth D's rare add-back correction: divisor with a
                 // near-max top limb paired with a dividend that makes the initial qhat estimate overshoot.
                 let u = Natural::normalize(vec![0, 0, 0x8000_0000_0000_0000, 1]);
@@ -1091,7 +1091,7 @@ pub mod natural {
             }
 
             #[test]
-            fn sieve_like_isqrt_matches_f64_for_moderate_values() {
+            async fn sieve_like_isqrt_matches_f64_for_moderate_values() {
                 for v in [2u64, 3, 99, 1_000_003, 999_999_999] {
                     let exact = Natural::from_u64(v).isqrt();
                     let approx = (v as f64).sqrt() as u64;
@@ -1107,7 +1107,7 @@ pub mod natural {
             use super::*;
 
             #[test]
-            fn stress_4096_bit_mul_div_gcd() {
+            async fn stress_4096_bit_mul_div_gcd() {
                 let mut seed = 0x0123_4567_89ab_cdefu64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -1139,7 +1139,7 @@ pub mod natural {
             use super::*;
 
             #[test]
-            fn stress_16384_bit_operations() {
+            async fn stress_16384_bit_operations() {
                 let mut seed = 0xfeed_face_dead_c0deu64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -1194,7 +1194,7 @@ pub mod integer {
     }
 
     impl Integer {
-        fn from_parts(sign: Sign, magnitude: Natural) -> Self {
+        async fn from_parts(sign: Sign, magnitude: Natural) -> Self {
             if magnitude.is_zero() {
                 Self { sign: Sign::Zero, magnitude }
             } else {
@@ -1202,15 +1202,15 @@ pub mod integer {
             }
         }
 
-        pub fn zero() -> Self {
+        pub async fn zero() -> Self {
             Self { sign: Sign::Zero, magnitude: Natural::zero() }
         }
 
-        pub fn one() -> Self {
+        pub async fn one() -> Self {
             Self { sign: Sign::Positive, magnitude: Natural::one() }
         }
 
-        pub fn from_i64(value: i64) -> Self {
+        pub async fn from_i64(value: i64) -> Self {
             if value == 0 {
                 return Self::zero();
             }
@@ -1218,7 +1218,7 @@ pub mod integer {
             Self::from_parts(sign, Natural::from_u64(value.unsigned_abs()))
         }
 
-        pub fn from_i128(value: i128) -> Self {
+        pub async fn from_i128(value: i128) -> Self {
             if value == 0 {
                 return Self::zero();
             }
@@ -1226,11 +1226,11 @@ pub mod integer {
             Self::from_parts(sign, Natural::from_u128(value.unsigned_abs()))
         }
 
-        pub fn from_natural(magnitude: Natural) -> Self {
+        pub async fn from_natural(magnitude: Natural) -> Self {
             Self::from_parts(Sign::Positive, magnitude)
         }
 
-        pub fn to_i64(&self) -> Option<i64> {
+        pub async fn to_i64(&self) -> Option<i64> {
             let mag = self.magnitude.to_u64()?;
             match self.sign {
                 Sign::Zero => Some(0),
@@ -1245,11 +1245,11 @@ pub mod integer {
             }
         }
 
-        pub fn sign(&self) -> Sign {
+        pub async fn sign(&self) -> Sign {
             self.sign
         }
 
-        pub fn signum(&self) -> i8 {
+        pub async fn signum(&self) -> i8 {
             match self.sign {
                 Sign::Negative => -1,
                 Sign::Zero => 0,
@@ -1257,31 +1257,31 @@ pub mod integer {
             }
         }
 
-        pub fn is_zero(&self) -> bool {
+        pub async fn is_zero(&self) -> bool {
             matches!(self.sign, Sign::Zero)
         }
 
-        pub fn is_positive(&self) -> bool {
+        pub async fn is_positive(&self) -> bool {
             matches!(self.sign, Sign::Positive)
         }
 
-        pub fn is_negative(&self) -> bool {
+        pub async fn is_negative(&self) -> bool {
             matches!(self.sign, Sign::Negative)
         }
 
-        pub fn magnitude(&self) -> &Natural {
+        pub async fn magnitude(&self) -> &Natural {
             &self.magnitude
         }
 
-        pub fn abs(&self) -> Natural {
+        pub async fn abs(&self) -> Natural {
             self.magnitude.clone()
         }
 
-        pub fn abs_integer(&self) -> Self {
+        pub async fn abs_integer(&self) -> Self {
             Self::from_parts(Sign::Positive, self.magnitude.clone())
         }
 
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             match self.sign {
                 Sign::Zero => Self::zero(),
                 Sign::Negative => Self::from_parts(Sign::Positive, self.magnitude.clone()),
@@ -1290,7 +1290,7 @@ pub mod integer {
         }
 
         // #region 🔖️AddSubMul
-        pub fn add(&self, rhs: &Self) -> Self {
+        pub async fn add(&self, rhs: &Self) -> Self {
             match (self.sign, rhs.sign) {
                 (Sign::Zero, _) => rhs.clone(),
                 (_, Sign::Zero) => self.clone(),
@@ -1305,11 +1305,11 @@ pub mod integer {
             }
         }
 
-        pub fn sub(&self, rhs: &Self) -> Self {
+        pub async fn sub(&self, rhs: &Self) -> Self {
             self.add(&rhs.neg())
         }
 
-        pub fn mul(&self, rhs: &Self) -> Self {
+        pub async fn mul(&self, rhs: &Self) -> Self {
             if self.is_zero() || rhs.is_zero() {
                 return Self::zero();
             }
@@ -1320,7 +1320,7 @@ pub mod integer {
 
         // #region 🔖️DivRem
         /// ➗️ Truncated toward zero (Rust/C convention): `q * rhs + r == self`, `sign(r) == sign(self)` or `r == 0`.
-        pub fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        pub async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             assert!(!rhs.is_zero(), "div_rem: division by zero");
             let (qm, rm) = self.magnitude.div_rem(&rhs.magnitude);
             let q_sign = if self.sign == rhs.sign { Sign::Positive } else { Sign::Negative };
@@ -1328,7 +1328,7 @@ pub mod integer {
         }
 
         /// ➗️ Floored: `q = floor(self / rhs)`, remainder has the same sign as `rhs` (or is zero).
-        pub fn div_rem_floor(&self, rhs: &Self) -> (Self, Self) {
+        pub async fn div_rem_floor(&self, rhs: &Self) -> (Self, Self) {
             let (q, r) = self.div_rem(rhs);
             if r.is_zero() || r.sign == rhs.sign {
                 (q, r)
@@ -1338,7 +1338,7 @@ pub mod integer {
         }
 
         /// ➗️ Euclidean: remainder is always non-negative (`0 <= r < |rhs|`).
-        pub fn div_rem_euclid(&self, rhs: &Self) -> (Self, Self) {
+        pub async fn div_rem_euclid(&self, rhs: &Self) -> (Self, Self) {
             let (q, r) = self.div_rem(rhs);
             if r.is_negative() {
                 if rhs.is_positive() {
@@ -1352,7 +1352,7 @@ pub mod integer {
         }
         // #endregion 🔖️DivRem
 
-        pub fn pow(&self, exp: u64) -> Self {
+        pub async fn pow(&self, exp: u64) -> Self {
             let mag = self.magnitude.pow(exp);
             let sign = if mag.is_zero() {
                 Sign::Zero
@@ -1365,7 +1365,7 @@ pub mod integer {
         }
 
         /// √ Integer square root of a non-negative `Integer`; `None` for negative inputs.
-        pub fn checked_isqrt(&self) -> Option<Self> {
+        pub async fn checked_isqrt(&self) -> Option<Self> {
             if self.is_negative() {
                 return None;
             }
@@ -1373,7 +1373,7 @@ pub mod integer {
         }
 
         /// √ⁿ Integer n-th root; even `n` rejects negative inputs, odd `n` accepts them.
-        pub fn nth_root(&self, n: u32) -> Option<Self> {
+        pub async fn nth_root(&self, n: u32) -> Option<Self> {
             if self.is_negative() && n.is_multiple_of(2) {
                 return None;
             }
@@ -1381,12 +1381,12 @@ pub mod integer {
             Some(Self::from_parts(self.sign, mag_root))
         }
 
-        pub fn gcd(&self, rhs: &Self) -> Natural {
+        pub async fn gcd(&self, rhs: &Self) -> Natural {
             self.magnitude.gcd(&rhs.magnitude)
         }
 
         /// 🤝️ Extended Euclidean algorithm: returns `(g, x, y)` with `g = x*self + y*rhs` and `g = gcd(self, rhs)`.
-        pub fn extended_gcd(&self, rhs: &Self) -> (Self, Self, Self) {
+        pub async fn extended_gcd(&self, rhs: &Self) -> (Self, Self, Self) {
             let (mut old_r, mut r) = (self.clone(), rhs.clone());
             let (mut old_s, mut s) = (Self::one(), Self::zero());
             let (mut old_t, mut t) = (Self::zero(), Self::one());
@@ -1406,7 +1406,7 @@ pub mod integer {
             }
         }
 
-        pub fn lcm(&self, rhs: &Self) -> Natural {
+        pub async fn lcm(&self, rhs: &Self) -> Natural {
             if self.is_zero() || rhs.is_zero() {
                 return Natural::zero();
             }
@@ -1415,7 +1415,7 @@ pub mod integer {
             prod
         }
 
-        pub fn to_decimal(&self) -> String {
+        pub async fn to_decimal(&self) -> String {
             if self.is_negative() {
                 format!("-{}", self.magnitude.to_decimal())
             } else {
@@ -1472,7 +1472,7 @@ pub mod integer {
     macro_rules! impl_from_int {
     ($($t:ty),*) => {
         $(impl From<$t> for Integer {
-            fn from(value: $t) -> Self {
+            async fn from(value: $t) -> Self {
                 Integer::from_i64(value as i64)
             }
         })*
@@ -1493,40 +1493,40 @@ pub mod integer {
     }
 
     impl Ring for Integer {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             Integer::zero()
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             Integer::one()
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             Integer::add(self, rhs)
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             Integer::neg(self)
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             Integer::mul(self, rhs)
         }
-        fn sub(&self, rhs: &Self) -> Self {
+        async fn sub(&self, rhs: &Self) -> Self {
             Integer::sub(self, rhs)
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             Integer::is_zero(self)
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             Integer::from_i64(value)
         }
-        fn pow(&self, exp: u64) -> Self {
+        async fn pow(&self, exp: u64) -> Self {
             Integer::pow(self, exp)
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             0
         }
     }
     impl CommutativeRing for Integer {}
     impl IntegralDomain for Integer {
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             if rhs.is_zero() {
                 return None;
             }
@@ -1539,15 +1539,15 @@ pub mod integer {
         }
     }
     impl GcdDomain for Integer {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             Self::from_natural(Integer::gcd(self, rhs))
         }
-        fn lcm(&self, rhs: &Self) -> Self {
+        async fn lcm(&self, rhs: &Self) -> Self {
             Self::from_natural(Integer::lcm(self, rhs))
         }
     }
     impl EuclideanDomain for Integer {
-        fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             Integer::div_rem(self, rhs)
         }
     }
@@ -1559,12 +1559,12 @@ pub mod integer {
         use super::*;
         use std::str::FromStr;
 
-        fn i(s: &str) -> Integer {
+        async fn i(s: &str) -> Integer {
             Integer::from_str(s).unwrap()
         }
 
         #[test]
-        fn string_roundtrip_positive_and_negative() {
+        async fn string_roundtrip_positive_and_negative() {
             assert_eq!(i("12345").to_decimal(), "12345");
             assert_eq!(i("-12345").to_decimal(), "-12345");
             assert_eq!(i("0").to_decimal(), "0");
@@ -1572,7 +1572,7 @@ pub mod integer {
         }
 
         #[test]
-        fn add_sub_sign_handling() {
+        async fn add_sub_sign_handling() {
             assert_eq!(i("5").add(&i("-3")), i("2"));
             assert_eq!(i("-5").add(&i("3")), i("-2"));
             assert_eq!(i("-5").add(&i("-3")), i("-8"));
@@ -1580,14 +1580,14 @@ pub mod integer {
         }
 
         #[test]
-        fn mul_sign_handling() {
+        async fn mul_sign_handling() {
             assert_eq!(i("-3").mul(&i("4")), i("-12"));
             assert_eq!(i("-3").mul(&i("-4")), i("12"));
             assert_eq!(i("0").mul(&i("-4")), i("0"));
         }
 
         #[test]
-        fn div_rem_truncated_matches_rust_semantics() {
+        async fn div_rem_truncated_matches_rust_semantics() {
             assert_eq!(i("7").div_rem(&i("2")), (i("3"), i("1")));
             assert_eq!(i("-7").div_rem(&i("2")), (i("-3"), i("-1")));
             assert_eq!(i("7").div_rem(&i("-2")), (i("-3"), i("1")));
@@ -1595,13 +1595,13 @@ pub mod integer {
         }
 
         #[test]
-        fn div_rem_floor_matches_math_floor_division() {
+        async fn div_rem_floor_matches_math_floor_division() {
             assert_eq!(i("-7").div_rem_floor(&i("2")), (i("-4"), i("1")));
             assert_eq!(i("7").div_rem_floor(&i("-2")), (i("-4"), i("-1")));
         }
 
         #[test]
-        fn div_rem_euclid_remainder_always_nonnegative() {
+        async fn div_rem_euclid_remainder_always_nonnegative() {
             for (a, b) in [("-7", "2"), ("7", "-2"), ("-7", "-2"), ("7", "2")] {
                 let (q, r) = i(a).div_rem_euclid(&i(b));
                 assert!(!r.is_negative());
@@ -1610,7 +1610,7 @@ pub mod integer {
         }
 
         #[test]
-        fn extended_gcd_satisfies_bezout_identity() {
+        async fn extended_gcd_satisfies_bezout_identity() {
             for (a, b) in [(240, 46), (-240, 46), (240, -46), (17, 5), (0, 5)] {
                 let ia = Integer::from_i64(a);
                 let ib = Integer::from_i64(b);
@@ -1621,7 +1621,7 @@ pub mod integer {
         }
 
         #[test]
-        fn ordering_across_signs() {
+        async fn ordering_across_signs() {
             assert!(i("-5") < i("-3"));
             assert!(i("-1") < i("0"));
             assert!(i("0") < i("1"));
@@ -1629,19 +1629,19 @@ pub mod integer {
         }
 
         #[test]
-        fn checked_isqrt_rejects_negative() {
+        async fn checked_isqrt_rejects_negative() {
             assert!(i("-4").checked_isqrt().is_none());
             assert_eq!(i("4").checked_isqrt().unwrap(), i("2"));
         }
 
         #[test]
-        fn nth_root_odd_accepts_negative() {
+        async fn nth_root_odd_accepts_negative() {
             assert_eq!(i("-27").nth_root(3).unwrap(), i("-3"));
             assert!(i("-4").nth_root(2).is_none());
         }
 
         #[test]
-        fn ring_trait_impl_matches_inherent_methods() {
+        async fn ring_trait_impl_matches_inherent_methods() {
             let a = i("7");
             let b = i("3");
             assert_eq!(Ring::add(&a, &b), a.add(&b));
@@ -1677,7 +1677,7 @@ pub mod rational {
             clippy::needless_pass_by_value,
             reason = "denom is only ever borrowed here, but the by-value signature is public API consumed by crate::cas outside this crate; changing it is a cross-crate breaking change out of scope for this lint pass"
         )]
-        pub fn new(numer: Integer, denom: Integer) -> Option<Self> {
+        pub async fn new(numer: Integer, denom: Integer) -> Option<Self> {
             if denom.is_zero() {
                 return None;
             }
@@ -1685,7 +1685,7 @@ pub mod rational {
             Some(Self::normalize(numer, denom_mag))
         }
 
-        fn normalize(numer: Integer, denom: Natural) -> Self {
+        async fn normalize(numer: Integer, denom: Natural) -> Self {
             if numer.is_zero() {
                 return Self { numer: Integer::zero(), denom: Natural::one() };
             }
@@ -1699,62 +1699,62 @@ pub mod rational {
             Self { numer, denom: denom_reduced }
         }
 
-        pub fn from_integer(value: Integer) -> Self {
+        pub async fn from_integer(value: Integer) -> Self {
             Self { numer: value, denom: Natural::one() }
         }
 
-        pub fn from_i64(n: i64, d: i64) -> Option<Self> {
+        pub async fn from_i64(n: i64, d: i64) -> Option<Self> {
             Self::new(Integer::from_i64(n), Integer::from_i64(d))
         }
 
-        pub fn zero() -> Self {
+        pub async fn zero() -> Self {
             Self { numer: Integer::zero(), denom: Natural::one() }
         }
 
-        pub fn one() -> Self {
+        pub async fn one() -> Self {
             Self { numer: Integer::one(), denom: Natural::one() }
         }
 
-        pub fn numer(&self) -> &Integer {
+        pub async fn numer(&self) -> &Integer {
             &self.numer
         }
 
-        pub fn denom(&self) -> &Natural {
+        pub async fn denom(&self) -> &Natural {
             &self.denom
         }
 
-        pub fn is_zero(&self) -> bool {
+        pub async fn is_zero(&self) -> bool {
             self.numer.is_zero()
         }
 
-        pub fn is_integer(&self) -> bool {
+        pub async fn is_integer(&self) -> bool {
             self.denom == Natural::one()
         }
 
-        pub fn abs(&self) -> Self {
+        pub async fn abs(&self) -> Self {
             Self { numer: self.numer.abs_integer(), denom: self.denom.clone() }
         }
 
         // #region 🔖️FieldOperations
-        pub fn add(&self, rhs: &Self) -> Self {
+        pub async fn add(&self, rhs: &Self) -> Self {
             let numer = self.numer.mul(&Integer::from_natural(rhs.denom.clone())).add(&rhs.numer.mul(&Integer::from_natural(self.denom.clone())));
             let denom = self.denom.mul(&rhs.denom);
             Self::normalize(numer, denom)
         }
 
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             Self { numer: self.numer.neg(), denom: self.denom.clone() }
         }
 
-        pub fn sub(&self, rhs: &Self) -> Self {
+        pub async fn sub(&self, rhs: &Self) -> Self {
             self.add(&rhs.neg())
         }
 
-        pub fn mul(&self, rhs: &Self) -> Self {
+        pub async fn mul(&self, rhs: &Self) -> Self {
             Self::normalize(self.numer.mul(&rhs.numer), self.denom.mul(&rhs.denom))
         }
 
-        pub fn inv(&self) -> Option<Self> {
+        pub async fn inv(&self) -> Option<Self> {
             if self.is_zero() {
                 return None;
             }
@@ -1765,11 +1765,11 @@ pub mod rational {
             }
         }
 
-        pub fn div(&self, rhs: &Self) -> Option<Self> {
+        pub async fn div(&self, rhs: &Self) -> Option<Self> {
             rhs.inv().map(|inv| self.mul(&inv))
         }
 
-        pub fn pow(&self, exp: i64) -> Option<Self> {
+        pub async fn pow(&self, exp: i64) -> Option<Self> {
             if exp >= 0 {
                 Some(Self::normalize(self.numer.pow(exp as u64), self.denom.pow(exp as u64)))
             } else {
@@ -1779,22 +1779,22 @@ pub mod rational {
         // #endregion 🔖️FieldOperations
 
         // #region 🔖️Rounding
-        pub fn floor(&self) -> Integer {
+        pub async fn floor(&self) -> Integer {
             let (q, _) = self.numer.div_rem_floor(&Integer::from_natural(self.denom.clone()));
             q
         }
 
-        pub fn ceil(&self) -> Integer {
+        pub async fn ceil(&self) -> Integer {
             self.floor().add(&if self.is_integer() { Integer::zero() } else { Integer::one() })
         }
 
-        pub fn trunc(&self) -> Integer {
+        pub async fn trunc(&self) -> Integer {
             let (q, _) = self.numer.div_rem(&Integer::from_natural(self.denom.clone()));
             q
         }
 
         /// 🎯️ Rounds to the nearest integer, ties to even.
-        pub fn round_half_even(&self) -> Integer {
+        pub async fn round_half_even(&self) -> Integer {
             let floor = self.floor();
             let frac = self.sub(&Self::from_integer(floor.clone()));
             let half = Self::from_i64(1, 2).unwrap();
@@ -1818,7 +1818,7 @@ pub mod rational {
         /// Rust's int-to-float cast itself rounds to nearest with ties to even, so once the quotient carries
         /// enough extra bits the truncation from the integer division is far below the cast's own rounding
         /// unit and the result is correctly rounded for all but deliberately adversarial inputs.
-        pub fn to_f64(&self) -> f64 {
+        pub async fn to_f64(&self) -> f64 {
             if self.is_zero() {
                 return 0.0;
             }
@@ -1835,7 +1835,7 @@ pub mod rational {
 
         /// 🎯️ Exact conversion from `f64` via its IEEE-754 bit decomposition (mantissa * 2^exponent);
         /// `None` for NaN/infinite input.
-        pub fn from_f64(value: f64) -> Option<Self> {
+        pub async fn from_f64(value: f64) -> Option<Self> {
             if !value.is_finite() {
                 return None;
             }
@@ -1862,7 +1862,7 @@ pub mod rational {
         // #endregion 🔖️FloatConversion
 
         // #region 🔖️ContinuedFraction
-        pub fn continued_fraction(&self) -> Vec<Integer> {
+        pub async fn continued_fraction(&self) -> Vec<Integer> {
             let mut terms = Vec::new();
             let mut numer = self.numer.clone();
             let mut denom = Integer::from_natural(self.denom.clone());
@@ -1875,7 +1875,7 @@ pub mod rational {
             terms
         }
 
-        pub fn convergents(&self) -> Vec<Self> {
+        pub async fn convergents(&self) -> Vec<Self> {
             let terms = self.continued_fraction();
             let mut result = Vec::with_capacity(terms.len());
             let (mut h_prev2, mut h_prev1) = (Integer::zero(), Integer::one());
@@ -1894,7 +1894,7 @@ pub mod rational {
 
         /// 🎯️ Best rational approximation with denominator `<= max_denom`, via the continued-fraction
         /// convergents/semiconvergents (the classical best-approximation algorithm).
-        pub fn best_approximation(&self, max_denom: &Natural) -> Self {
+        pub async fn best_approximation(&self, max_denom: &Natural) -> Self {
             let convergents = self.convergents();
             let mut best = Self::from_integer(self.trunc());
             for c in &convergents {
@@ -1949,52 +1949,52 @@ pub mod rational {
     }
 
     impl Ring for Rational {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             Rational::zero()
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             Rational::one()
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             Rational::add(self, rhs)
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             Rational::neg(self)
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             Rational::mul(self, rhs)
         }
-        fn sub(&self, rhs: &Self) -> Self {
+        async fn sub(&self, rhs: &Self) -> Self {
             Rational::sub(self, rhs)
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             Rational::is_zero(self)
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             Rational::from_integer(Integer::from_i64(value))
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             0
         }
     }
     impl CommutativeRing for Rational {}
     impl IntegralDomain for Rational {
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             Rational::div(self, rhs)
         }
     }
     impl GcdDomain for Rational {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             field_gcd(self, rhs)
         }
     }
     impl EuclideanDomain for Rational {
-        fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             field_div_rem(self, rhs)
         }
     }
     impl Field for Rational {
-        fn inv(&self) -> Option<Self> {
+        async fn inv(&self) -> Option<Self> {
             Rational::inv(self)
         }
     }
@@ -2005,24 +2005,24 @@ pub mod rational {
     mod tests {
         use super::*;
 
-        fn r(n: i64, d: i64) -> Rational {
+        async fn r(n: i64, d: i64) -> Rational {
             Rational::from_i64(n, d).unwrap()
         }
 
         #[test]
-        fn normalization_reduces_to_lowest_terms() {
+        async fn normalization_reduces_to_lowest_terms() {
             assert_eq!(r(4, 8), r(1, 2));
             assert_eq!(r(-4, 8), r(-1, 2));
             assert_eq!(r(4, -8), r(-1, 2));
         }
 
         #[test]
-        fn zero_denominator_is_rejected() {
+        async fn zero_denominator_is_rejected() {
             assert!(Rational::from_i64(1, 0).is_none());
         }
 
         #[test]
-        fn field_ops_hand_cases() {
+        async fn field_ops_hand_cases() {
             assert_eq!(r(1, 2).add(&r(1, 3)), r(5, 6));
             assert_eq!(r(1, 2).mul(&r(2, 3)), r(1, 3));
             assert_eq!(r(1, 2).sub(&r(1, 3)), r(1, 6));
@@ -2030,12 +2030,12 @@ pub mod rational {
         }
 
         #[test]
-        fn inv_of_zero_is_none() {
+        async fn inv_of_zero_is_none() {
             assert!(Rational::zero().inv().is_none());
         }
 
         #[test]
-        fn floor_ceil_trunc_hand_cases() {
+        async fn floor_ceil_trunc_hand_cases() {
             assert_eq!(r(7, 2).floor(), Integer::from_i64(3));
             assert_eq!(r(-7, 2).floor(), Integer::from_i64(-4));
             assert_eq!(r(7, 2).ceil(), Integer::from_i64(4));
@@ -2044,21 +2044,21 @@ pub mod rational {
         }
 
         #[test]
-        fn ordering_via_cross_multiplication() {
+        async fn ordering_via_cross_multiplication() {
             assert!(r(1, 3) < r(1, 2));
             assert!(r(-1, 2) < r(1, 3));
             assert_eq!(r(2, 4), r(1, 2));
         }
 
         #[test]
-        fn to_f64_matches_expected_for_simple_fractions() {
+        async fn to_f64_matches_expected_for_simple_fractions() {
             assert!((r(1, 2).to_f64() - 0.5).abs() < 1e-15);
             assert!((r(1, 3).to_f64() - (1.0 / 3.0)).abs() < 1e-15);
             assert!((r(-22, 7).to_f64() - (-22.0 / 7.0)).abs() < 1e-12);
         }
 
         #[test]
-        fn from_f64_roundtrips_exactly() {
+        async fn from_f64_roundtrips_exactly() {
             for v in [0.5, 0.25, 1.0 / 3.0, 2.0, -7.5, 123456.0] {
                 let rat = Rational::from_f64(v).unwrap();
                 assert!((rat.to_f64() - v).abs() < 1e-12, "roundtrip mismatch for {v}");
@@ -2066,7 +2066,7 @@ pub mod rational {
         }
 
         #[test]
-        fn continued_fraction_reconstructs_convergents() {
+        async fn continued_fraction_reconstructs_convergents() {
             let x = r(355, 113); // close approximation of pi
             let convergents = x.convergents();
             assert_eq!(*convergents.last().unwrap().numer(), *x.numer());
@@ -2074,7 +2074,7 @@ pub mod rational {
         }
 
         #[test]
-        fn best_approximation_respects_denominator_bound() {
+        async fn best_approximation_respects_denominator_bound() {
             let pi_ish = Rational::from_f64(std::f64::consts::PI).unwrap();
             let approx = pi_ish.best_approximation(&Natural::from_u64(1000));
             assert!(*approx.denom() <= Natural::from_u64(1000));
@@ -2082,7 +2082,7 @@ pub mod rational {
         }
 
         #[test]
-        fn field_trait_impl_matches_inherent_methods() {
+        async fn field_trait_impl_matches_inherent_methods() {
             let a = r(3, 4);
             let b = r(1, 2);
             assert_eq!(Ring::add(&a, &b), a.add(&b));
@@ -2101,11 +2101,11 @@ pub mod modular {
     use crate::traits::{CommutativeRing, EuclideanDomain, Field, GcdDomain, IntegralDomain, Ring};
 
     // #region 🔖️ModFns
-    pub fn mod_add(a: u64, b: u64, m: u64) -> u64 {
+    pub async fn mod_add(a: u64, b: u64, m: u64) -> u64 {
         ((a as u128 + b as u128) % m as u128) as u64
     }
 
-    pub fn mod_sub(a: u64, b: u64, m: u64) -> u64 {
+    pub async fn mod_sub(a: u64, b: u64, m: u64) -> u64 {
         let a = a % m;
         let b = b % m;
         if a >= b {
@@ -2115,11 +2115,11 @@ pub mod modular {
         }
     }
 
-    pub fn mod_mul(a: u64, b: u64, m: u64) -> u64 {
+    pub async fn mod_mul(a: u64, b: u64, m: u64) -> u64 {
         ((a as u128 * b as u128) % m as u128) as u64
     }
 
-    pub fn mod_pow(base: u64, exp: u64, m: u64) -> u64 {
+    pub async fn mod_pow(base: u64, exp: u64, m: u64) -> u64 {
         if m == 1 {
             return 0;
         }
@@ -2137,7 +2137,7 @@ pub mod modular {
     }
 
     /// 🤝️ Modular inverse via the extended Euclidean algorithm on `i128`; `None` if `gcd(a, m) != 1`.
-    pub fn mod_inv(a: u64, m: u64) -> Option<u64> {
+    pub async fn mod_inv(a: u64, m: u64) -> Option<u64> {
         if m == 0 {
             return None;
         }
@@ -2156,7 +2156,7 @@ pub mod modular {
     }
 
     /// 〽 Jacobi symbol `(a/n)` for odd `n > 0`, via the standard quadratic-reciprocity recursion.
-    pub fn jacobi(a: i64, n: u64) -> i8 {
+    pub async fn jacobi(a: i64, n: u64) -> i8 {
         assert!(n % 2 == 1 && n > 0, "jacobi: n must be odd and positive");
         let mut a = a.rem_euclid(n as i64) as u64;
         let mut n = n;
@@ -2182,7 +2182,7 @@ pub mod modular {
         }
     }
 
-    pub fn is_quadratic_residue(a: u64, p: u64) -> bool {
+    pub async fn is_quadratic_residue(a: u64, p: u64) -> bool {
         if p == 2 {
             return true;
         }
@@ -2190,7 +2190,7 @@ pub mod modular {
     }
 
     /// √ Tonelli–Shanks: a square root of `a` modulo prime `p`, or `None` if `a` is a non-residue.
-    pub fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
+    pub async fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
         let a = a % p;
         if a == 0 {
             return Some(0);
@@ -2242,7 +2242,7 @@ pub mod modular {
     }
 
     /// 🧩️ Solves `x = r1 (mod m1), x = r2 (mod m2)` for coprime `m1, m2`; returns `(x, m1*m2)`.
-    pub fn crt_pair(r1: u64, m1: u64, r2: u64, m2: u64) -> Option<(u64, u64)> {
+    pub async fn crt_pair(r1: u64, m1: u64, r2: u64, m2: u64) -> Option<(u64, u64)> {
         let inv = mod_inv(m1 % m2, m2)?;
         let diff = ((r2 as i128 - r1 as i128).rem_euclid(m2 as i128)) as u64;
         let k = mod_mul(diff, inv, m2);
@@ -2250,7 +2250,7 @@ pub mod modular {
         Some(((x % (m1 as u128 * m2 as u128)) as u64, m1 * m2))
     }
 
-    pub fn crt(congruences: &[(u64, u64)]) -> Option<(u64, u64)> {
+    pub async fn crt(congruences: &[(u64, u64)]) -> Option<(u64, u64)> {
         let mut iter = congruences.iter();
         let (mut r, mut m) = *iter.next()?;
         for &(ri, mi) in iter {
@@ -2260,7 +2260,7 @@ pub mod modular {
     }
 
     /// 🎯️ Multiplicative order of `a` modulo `m` (smallest `k > 0` with `a^k = 1`); `None` if `gcd(a, m) != 1`.
-    pub fn multiplicative_order(a: u64, m: u64) -> Option<u64> {
+    pub async fn multiplicative_order(a: u64, m: u64) -> Option<u64> {
         if crate::primes::gcd_u64(a % m, m) != 1 {
             return None;
         }
@@ -2277,7 +2277,7 @@ pub mod modular {
 
     /// 🌱️ Smallest primitive root modulo `m` (a generator of `(Z/mZ)*`); `None` if none exists (a
     /// primitive root exists only for `m` in {1, 2, 4, p^k, 2p^k} for odd prime `p`).
-    pub fn primitive_root(m: u64) -> Option<u64> {
+    pub async fn primitive_root(m: u64) -> Option<u64> {
         if m == 1 {
             return Some(0);
         }
@@ -2313,16 +2313,16 @@ pub mod modular {
     }
 
     impl ModInt {
-        pub fn new(value: u64, modulus: u64) -> Self {
+        pub async fn new(value: u64, modulus: u64) -> Self {
             assert!(modulus > 0, "ModInt::new: modulus must be positive");
             Self { value: value % modulus, modulus }
         }
 
-        pub fn value(self) -> u64 {
+        pub async fn value(self) -> u64 {
             self.value
         }
 
-        pub fn modulus(self) -> u64 {
+        pub async fn modulus(self) -> u64 {
             self.modulus
         }
 
@@ -2330,11 +2330,11 @@ pub mod modular {
         /// [`Ring::neg`]/[`Ring::from_i64`]) into a proper non-negative residue mod `m`. Distinct from
         /// `value % m`: a negative-signed bit pattern must go through signed `rem_euclid`, not unsigned
         /// remainder, or e.g. the bit pattern for `-1` (`u64::MAX`) would reduce to a value far from `m - 1`.
-        fn reduce_unbound(value: u64, m: u64) -> u64 {
+        async fn reduce_unbound(value: u64, m: u64) -> u64 {
             ((value as i64 as i128).rem_euclid(m as i128)) as u64
         }
 
-        fn unify(self, other: Self) -> (u64, u64, u64) {
+        async fn unify(self, other: Self) -> (u64, u64, u64) {
             if self.modulus == 0 && other.modulus == 0 {
                 (self.value, other.value, 0)
             } else if self.modulus == 0 {
@@ -2349,13 +2349,13 @@ pub mod modular {
     }
 
     impl Ring for ModInt {
-        fn zero() -> Self {
+        async fn zero() -> Self {
             Self { value: 0, modulus: 0 }
         }
-        fn one() -> Self {
+        async fn one() -> Self {
             Self { value: 1, modulus: 0 }
         }
-        fn add(&self, rhs: &Self) -> Self {
+        async fn add(&self, rhs: &Self) -> Self {
             let (a, b, m) = self.unify(*rhs);
             if m == 0 {
                 // 🧮️ Both unbound: defer reduction, so combine the signed bit patterns with wrapping add.
@@ -2364,7 +2364,7 @@ pub mod modular {
                 Self { value: mod_add(a, b, m), modulus: m }
             }
         }
-        fn neg(&self) -> Self {
+        async fn neg(&self) -> Self {
             if self.modulus == 0 {
                 // 🧮️ Unbound: negate the signed `i64` bit pattern (see `reduce_unbound`), not the raw `u64`.
                 Self { value: self.value.wrapping_neg(), modulus: 0 }
@@ -2374,7 +2374,7 @@ pub mod modular {
                 Self { value: self.modulus - self.value, modulus: self.modulus }
             }
         }
-        fn mul(&self, rhs: &Self) -> Self {
+        async fn mul(&self, rhs: &Self) -> Self {
             let (a, b, m) = self.unify(*rhs);
             if m == 0 {
                 // 🧮️ Both unbound: defer reduction, so combine the signed bit patterns with wrapping mul.
@@ -2383,29 +2383,29 @@ pub mod modular {
                 Self { value: mod_mul(a, b, m), modulus: m }
             }
         }
-        fn is_zero(&self) -> bool {
+        async fn is_zero(&self) -> bool {
             self.value == 0
         }
-        fn from_i64(value: i64) -> Self {
+        async fn from_i64(value: i64) -> Self {
             Self { value: value as u64, modulus: 0 }
         }
-        fn characteristic(&self) -> u64 {
+        async fn characteristic(&self) -> u64 {
             self.modulus
         }
     }
     impl CommutativeRing for ModInt {}
     impl IntegralDomain for ModInt {
-        fn exact_div(&self, rhs: &Self) -> Option<Self> {
+        async fn exact_div(&self, rhs: &Self) -> Option<Self> {
             Some(self.mul(&rhs.inv()?))
         }
     }
     impl GcdDomain for ModInt {
-        fn gcd(&self, rhs: &Self) -> Self {
+        async fn gcd(&self, rhs: &Self) -> Self {
             crate::traits::field_gcd(self, rhs)
         }
     }
     impl EuclideanDomain for ModInt {
-        fn div_rem(&self, rhs: &Self) -> (Self, Self) {
+        async fn div_rem(&self, rhs: &Self) -> (Self, Self) {
             crate::traits::field_div_rem(self, rhs)
         }
     }
@@ -2413,7 +2413,7 @@ pub mod modular {
         /// ➗️ Inverse via the extended Euclidean algorithm — valid for any unit, not only under a prime
         /// modulus (the caller is responsible for the "modulus is prime" contract when primality matters,
         /// e.g. for `PolyU<ModInt>` to behave as a field).
-        fn inv(&self) -> Option<Self> {
+        async fn inv(&self) -> Option<Self> {
             if self.modulus == 0 {
                 return None;
             }
@@ -2428,34 +2428,34 @@ pub mod modular {
         use super::*;
 
         #[test]
-        fn mod_add_sub_mul_hand_cases() {
+        async fn mod_add_sub_mul_hand_cases() {
             assert_eq!(mod_add(7, 5, 10), 2);
             assert_eq!(mod_sub(3, 7, 10), 6);
             assert_eq!(mod_mul(6, 7, 10), 2);
         }
 
         #[test]
-        fn mod_pow_hand_cases() {
+        async fn mod_pow_hand_cases() {
             assert_eq!(mod_pow(2, 10, 1000), 24);
             assert_eq!(mod_pow(5, 0, 7), 1);
         }
 
         #[test]
-        fn mod_inv_matches_bezout() {
+        async fn mod_inv_matches_bezout() {
             let inv = mod_inv(3, 11).unwrap();
             assert_eq!(mod_mul(3, inv, 11), 1);
             assert!(mod_inv(2, 4).is_none());
         }
 
         #[test]
-        fn jacobi_hand_cases() {
+        async fn jacobi_hand_cases() {
             assert_eq!(jacobi(1001, 9907), -1);
             assert_eq!(jacobi(19, 45), 1);
             assert_eq!(jacobi(8, 21), -1);
         }
 
         #[test]
-        fn sqrt_mod_hand_cases() {
+        async fn sqrt_mod_hand_cases() {
             // 4 mod 5 has sqrt 2 or 3
             let r = sqrt_mod(4, 5).unwrap();
             assert_eq!(mod_mul(r, r, 5), 4);
@@ -2464,7 +2464,7 @@ pub mod modular {
         }
 
         #[test]
-        fn crt_pair_matches_congruences() {
+        async fn crt_pair_matches_congruences() {
             let (x, m) = crt_pair(2, 3, 3, 5).unwrap();
             assert_eq!(m, 15);
             assert_eq!(x % 3, 2);
@@ -2472,7 +2472,7 @@ pub mod modular {
         }
 
         #[test]
-        fn modint_field_operations() {
+        async fn modint_field_operations() {
             let a = ModInt::new(7, 13);
             let b = ModInt::new(9, 13);
             assert_eq!(a.add(&b).value(), (7 + 9) % 13);
@@ -2481,7 +2481,7 @@ pub mod modular {
         }
 
         #[test]
-        fn modint_unbound_zero_unifies_with_bound_side() {
+        async fn modint_unbound_zero_unifies_with_bound_side() {
             let bound = ModInt::new(5, 13);
             let unbound_zero = ModInt::zero();
             let sum = bound.add(&unbound_zero);
@@ -2494,7 +2494,7 @@ pub mod modular {
             use super::*;
 
             #[test]
-            fn sqrt_mod_matches_brute_force_for_all_residues_small_primes() {
+            async fn sqrt_mod_matches_brute_force_for_all_residues_small_primes() {
                 for &p in &[3u64, 5, 7, 11, 13, 17, 19, 23, 29] {
                     for a in 0..p {
                         let brute = (0..p).find(|&x| mod_mul(x, x, p) == a);
@@ -2523,7 +2523,7 @@ pub mod primes {
 
     // #region 🔖️GcdU64
     /// 🤝️ Euclidean GCD on plain `u64`s — a small helper shared by `modular.rs`'s order/root functions.
-    pub fn gcd_u64(a: u64, b: u64) -> u64 {
+    pub async fn gcd_u64(a: u64, b: u64) -> u64 {
         let (mut a, mut b) = (a, b);
         while b != 0 {
             (a, b) = (b, a % b);
@@ -2535,7 +2535,7 @@ pub mod primes {
     // #region 🔖️MillerRabin
     /// 🎲️ Deterministic Miller-Rabin using the witness set `{2,3,5,7,11,13,17,19,23,29,31,37}`, proven
     /// sufficient to decide primality for every `u64` (in fact every 64-bit and much larger input).
-    pub fn is_prime_u64(n: u64) -> bool {
+    pub async fn is_prime_u64(n: u64) -> bool {
         if n < 2 {
             return false;
         }
@@ -2577,7 +2577,7 @@ pub mod primes {
     /// (this crate has zero dependencies).
     struct InlineSplitMix64(u64);
     impl InlineSplitMix64 {
-        fn next(&mut self) -> u64 {
+        async fn next(&mut self) -> u64 {
             self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
             let mut z = self.0;
             z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -2588,7 +2588,7 @@ pub mod primes {
     // #endregion 🔖️MillerRabin
 
     // #region 🔖️Bpsw
-    fn miller_rabin_natural(n: &Natural, base: &Natural) -> bool {
+    async fn miller_rabin_natural(n: &Natural, base: &Natural) -> bool {
         let one = Natural::one();
         let n_minus_1 = n.checked_sub(&one).unwrap();
         let mut d = n_minus_1.clone();
@@ -2610,12 +2610,12 @@ pub mod primes {
         false
     }
 
-    fn mulmod_natural(a: &Natural, b: &Natural, m: &Natural) -> Natural {
+    async fn mulmod_natural(a: &Natural, b: &Natural, m: &Natural) -> Natural {
         let (_, r) = a.mul(b).div_rem(m);
         r
     }
 
-    fn mod_pow_natural(base: &Natural, exp: &Natural, m: &Natural) -> Natural {
+    async fn mod_pow_natural(base: &Natural, exp: &Natural, m: &Natural) -> Natural {
         let mut result = Natural::one();
         let mut b = {
             let (_, r) = base.div_rem(m);
@@ -2636,7 +2636,7 @@ pub mod primes {
     /// deterministic splitmix64-derived witness bases. Reproducible across runs (same `n` always tests the
     /// same bases) with false-positive probability bounded by `4^-40` for adversarial composite inputs —
     /// astronomically small in practice, though (unlike true BPSW) not a proven zero-counterexample test.
-    pub fn is_prime(n: &Natural) -> bool {
+    pub async fn is_prime(n: &Natural) -> bool {
         if let Some(small) = n.to_u64() {
             return is_prime_u64(small);
         }
@@ -2664,7 +2664,7 @@ pub mod primes {
         true
     }
 
-    pub fn next_prime(n: &Natural) -> Natural {
+    pub async fn next_prime(n: &Natural) -> Natural {
         let mut candidate = n.add(&Natural::one());
         if !candidate.bit(0) && candidate > Natural::from_u64(2) {
             candidate = candidate.add(&Natural::one());
@@ -2687,7 +2687,7 @@ pub mod primes {
     }
 
     impl Sieve {
-        pub fn new(limit: usize) -> Self {
+        pub async fn new(limit: usize) -> Self {
             let words = limit / 64 + 1;
             let mut is_composite = vec![0u64; words];
             let set = |bits: &mut [u64], i: usize| bits[i / 64] |= 1 << (i % 64);
@@ -2712,18 +2712,18 @@ pub mod primes {
             Self { limit, is_composite }
         }
 
-        pub fn is_prime(&self, n: usize) -> bool {
+        pub async fn is_prime(&self, n: usize) -> bool {
             if n > self.limit {
                 return is_prime_u64(n as u64);
             }
             self.is_composite[n / 64] & (1 << (n % 64)) == 0
         }
 
-        pub fn primes(&self) -> impl Iterator<Item = usize> + '_ {
+        pub async fn primes(&self) -> impl Iterator<Item = usize> + '_ {
             (2..=self.limit).filter(move |&n| self.is_prime(n))
         }
 
-        pub fn count(&self) -> usize {
+        pub async fn count(&self) -> usize {
             self.primes().count()
         }
     }
@@ -2732,7 +2732,7 @@ pub mod primes {
     // #region 🔖️Factor
     /// 🔍️ Pollard's rho with Brent's cycle-detection improvement and batched GCDs; returns a nontrivial
     /// factor of composite `n` (never called on primes or `n <= 3` by [`factor_u64`]'s driver).
-    fn pollard_rho_u64(n: u64) -> u64 {
+    async fn pollard_rho_u64(n: u64) -> u64 {
         if n.is_multiple_of(2) {
             return 2;
         }
@@ -2773,7 +2773,7 @@ pub mod primes {
         }
     }
 
-    pub fn factor_u64(n: u64) -> Vec<(u64, u32)> {
+    pub async fn factor_u64(n: u64) -> Vec<(u64, u32)> {
         let mut factors = Vec::new();
         let mut n = n;
         for p in [2u64, 3, 5, 7, 11, 13].into_iter().chain((17..65536).step_by(2)) {
@@ -2789,7 +2789,7 @@ pub mod primes {
                 factors.push((p, count));
             }
         }
-        fn recurse(n: u64, factors: &mut Vec<(u64, u32)>) {
+        async fn recurse(n: u64, factors: &mut Vec<(u64, u32)>) {
             if n == 1 {
                 return;
             }
@@ -2822,7 +2822,7 @@ pub mod primes {
 
     /// 🔍️ Factorization over arbitrary-precision `Natural`, via a u64 fast path plus `Integer`-arithmetic
     /// Pollard-Brent for larger inputs. 60+-digit hard semiprimes are out of scope (no ECM/QS here).
-    pub fn factor(n: &Natural) -> Vec<(Natural, u32)> {
+    pub async fn factor(n: &Natural) -> Vec<(Natural, u32)> {
         if let Some(small) = n.to_u64() {
             return factor_u64(small).into_iter().map(|(p, c)| (Natural::from_u64(p), c)).collect();
         }
@@ -2848,7 +2848,7 @@ pub mod primes {
                 factors.push((p_nat, count));
             }
         }
-        fn recurse(n: &Natural, out: &mut Vec<(Natural, u32)>) {
+        async fn recurse(n: &Natural, out: &mut Vec<(Natural, u32)>) {
             if n == &Natural::one() {
                 return;
             }
@@ -2889,7 +2889,7 @@ pub mod primes {
         merged
     }
 
-    fn pollard_rho_natural(n: &Natural) -> Natural {
+    async fn pollard_rho_natural(n: &Natural) -> Natural {
         if !n.bit(0) {
             return Natural::from_u64(2);
         }
@@ -2948,7 +2948,7 @@ pub mod primes {
     // #endregion 🔖️Factor
 
     // #region 🔖️ArithmeticFns
-    pub fn euler_phi(n: u64) -> u64 {
+    pub async fn euler_phi(n: u64) -> u64 {
         if n == 0 {
             return 0;
         }
@@ -2959,7 +2959,7 @@ pub mod primes {
         result
     }
 
-    pub fn moebius(n: u64) -> i8 {
+    pub async fn moebius(n: u64) -> i8 {
         if n == 0 {
             return 0;
         }
@@ -2977,7 +2977,7 @@ pub mod primes {
         }
     }
 
-    pub fn divisors_u64(n: u64) -> Vec<u64> {
+    pub async fn divisors_u64(n: u64) -> Vec<u64> {
         if n == 0 {
             return Vec::new();
         }
@@ -2998,14 +2998,14 @@ pub mod primes {
         divisors
     }
 
-    pub fn divisor_count(n: u64) -> u64 {
+    pub async fn divisor_count(n: u64) -> u64 {
         if n == 0 {
             return 0;
         }
         factor_u64(n).into_iter().map(|(_, e)| e as u64 + 1).product()
     }
 
-    pub fn divisor_sum(n: u64) -> u64 {
+    pub async fn divisor_sum(n: u64) -> u64 {
         if n == 0 {
             return 0;
         }
@@ -3020,7 +3020,7 @@ pub mod primes {
         use std::str::FromStr;
 
         #[test]
-        fn is_prime_u64_hand_cases() {
+        async fn is_prime_u64_hand_cases() {
             for p in [2u64, 3, 5, 7, 11, 97, 7919, 999_983] {
                 assert!(is_prime_u64(p), "{p} should be prime");
             }
@@ -3030,7 +3030,7 @@ pub mod primes {
         }
 
         #[test]
-        fn carmichael_numbers_are_rejected() {
+        async fn carmichael_numbers_are_rejected() {
             for &carmichael in &[561u64, 41041, 825265] {
                 assert!(!is_prime_u64(carmichael), "{carmichael} is a Carmichael number, not prime");
                 assert!(!is_prime(&Natural::from_u64(carmichael)));
@@ -3038,14 +3038,14 @@ pub mod primes {
         }
 
         #[test]
-        fn is_prime_natural_matches_u64_path_for_small_values() {
+        async fn is_prime_natural_matches_u64_path_for_small_values() {
             for n in 2u64..200 {
                 assert_eq!(is_prime(&Natural::from_u64(n)), is_prime_u64(n), "mismatch at {n}");
             }
         }
 
         #[test]
-        fn is_prime_natural_handles_large_known_prime() {
+        async fn is_prime_natural_handles_large_known_prime() {
             // A 128-bit-ish prime candidate; validated via BPSW.
             let p = Natural::from_str("170141183460469231731687303715884105727").unwrap(); // 2^127 - 1, a Mersenne prime
             assert!(is_prime(&p));
@@ -3054,7 +3054,7 @@ pub mod primes {
         }
 
         #[test]
-        fn factor_u64_reconstructs_via_multiplication() {
+        async fn factor_u64_reconstructs_via_multiplication() {
             for n in [1u64, 2, 97, 360, 999_983, 1_000_000] {
                 let factors = factor_u64(n);
                 let product: u64 = factors.iter().map(|&(p, e)| p.pow(e)).product();
@@ -3066,14 +3066,14 @@ pub mod primes {
         }
 
         #[test]
-        fn euler_phi_hand_cases() {
+        async fn euler_phi_hand_cases() {
             assert_eq!(euler_phi(1), 1);
             assert_eq!(euler_phi(9), 6);
             assert_eq!(euler_phi(97), 96);
         }
 
         #[test]
-        fn moebius_hand_cases() {
+        async fn moebius_hand_cases() {
             assert_eq!(moebius(1), 1);
             assert_eq!(moebius(6), 1); // 2*3, two distinct primes -> +1
             assert_eq!(moebius(4), 0); // 2^2 -> 0
@@ -3081,7 +3081,7 @@ pub mod primes {
         }
 
         #[test]
-        fn divisors_hand_case() {
+        async fn divisors_hand_case() {
             let divs = divisors_u64(12);
             assert_eq!(divs, vec![1, 2, 3, 4, 6, 12]);
             assert_eq!(divisor_count(12), 6);
@@ -3089,7 +3089,7 @@ pub mod primes {
         }
 
         #[test]
-        fn sieve_matches_is_prime_u64() {
+        async fn sieve_matches_is_prime_u64() {
             let sieve = Sieve::new(1000);
             for n in 0..=1000 {
                 assert_eq!(sieve.is_prime(n), is_prime_u64(n as u64), "mismatch at {n}");
@@ -3097,7 +3097,7 @@ pub mod primes {
         }
 
         #[test]
-        fn next_prime_hand_cases() {
+        async fn next_prime_hand_cases() {
             assert_eq!(next_prime(&Natural::from_u64(10)), Natural::from_u64(11));
             assert_eq!(next_prime(&Natural::from_u64(1)), Natural::from_u64(2));
         }
@@ -3107,7 +3107,7 @@ pub mod primes {
             use super::*;
 
             #[test]
-            fn factor_random_64bit_semiprimes() {
+            async fn factor_random_64bit_semiprimes() {
                 // Products of two mid-size primes.
                 for &(p, q) in &[(65537u64, 65539u64), (999_983, 999_979), (7919, 104729)] {
                     let n = p * q;
@@ -3120,7 +3120,7 @@ pub mod primes {
             }
 
             #[test]
-            fn sieve_count_matches_known_pi_of_1e6() {
+            async fn sieve_count_matches_known_pi_of_1e6() {
                 let sieve = Sieve::new(1_000_000);
                 assert_eq!(sieve.count(), 78498);
             }
@@ -3132,7 +3132,7 @@ pub mod primes {
             use super::*;
 
             #[test]
-            fn factor_natural_random_semiprime() {
+            async fn factor_natural_random_semiprime() {
                 let p = Natural::from_str("1000000000000000003").unwrap(); // prime
                 assert!(is_prime(&p));
                 let q = Natural::from_u64(104_729); // prime, the 10,000th prime
@@ -3164,23 +3164,23 @@ pub mod interval {
     }
 
     impl Interval {
-        pub fn new(lo: f64, hi: f64) -> Self {
+        pub async fn new(lo: f64, hi: f64) -> Self {
             debug_assert!(lo <= hi, "Interval::new: lo must be <= hi");
             Self { lo, hi }
         }
 
-        pub fn point(v: f64) -> Self {
+        pub async fn point(v: f64) -> Self {
             Self { lo: v, hi: v }
         }
 
-        pub fn whole() -> Self {
+        pub async fn whole() -> Self {
             Self { lo: f64::NEG_INFINITY, hi: f64::INFINITY }
         }
 
         /// 🎯️ Certified conversion from an exact `Rational`: rounds `to_f64()` outward by successive ulps
         /// (via `next_down`/`next_up`) until the interval is verified — by exact cross-multiplied rational
         /// comparison — to actually contain the true value.
-        pub fn from_rational(r: &Rational) -> Self {
+        pub async fn from_rational(r: &Rational) -> Self {
             let approx = r.to_f64();
             if !approx.is_finite() {
                 return Self::whole();
@@ -3204,38 +3204,38 @@ pub mod interval {
             Self { lo, hi }
         }
 
-        fn rational_le_f64(r: &Rational, bound: f64) -> bool {
+        async fn rational_le_f64(r: &Rational, bound: f64) -> bool {
             match Rational::from_f64(bound) {
                 Some(bound_r) => *r <= bound_r,
                 None => bound == f64::INFINITY,
             }
         }
 
-        fn f64_le_rational(bound: f64, r: &Rational) -> bool {
+        async fn f64_le_rational(bound: f64, r: &Rational) -> bool {
             match Rational::from_f64(bound) {
                 Some(bound_r) => bound_r <= *r,
                 None => bound == f64::NEG_INFINITY,
             }
         }
 
-        pub fn contains(&self, x: f64) -> bool {
+        pub async fn contains(&self, x: f64) -> bool {
             self.lo <= x && x <= self.hi
         }
 
-        pub fn contains_zero(&self) -> bool {
+        pub async fn contains_zero(&self) -> bool {
             self.contains(0.0)
         }
 
-        pub fn width(&self) -> f64 {
+        pub async fn width(&self) -> f64 {
             self.hi - self.lo
         }
 
-        pub fn midpoint(&self) -> f64 {
+        pub async fn midpoint(&self) -> f64 {
             self.lo + (self.hi - self.lo) * 0.5
         }
 
         /// 〽 Sign of the whole interval if it doesn't straddle zero, else `None`.
-        pub fn sign(&self) -> Option<std::cmp::Ordering> {
+        pub async fn sign(&self) -> Option<std::cmp::Ordering> {
             if self.hi < 0.0 {
                 Some(std::cmp::Ordering::Less)
             } else if self.lo > 0.0 {
@@ -3247,7 +3247,7 @@ pub mod interval {
             }
         }
 
-        pub fn intersect(&self, other: &Self) -> Option<Self> {
+        pub async fn intersect(&self, other: &Self) -> Option<Self> {
             let lo = self.lo.max(other.lo);
             let hi = self.hi.min(other.hi);
             if lo <= hi {
@@ -3257,16 +3257,16 @@ pub mod interval {
             }
         }
 
-        pub fn hull(&self, other: &Self) -> Self {
+        pub async fn hull(&self, other: &Self) -> Self {
             Self { lo: self.lo.min(other.lo), hi: self.hi.max(other.hi) }
         }
 
         // #region 🔖️CertifiedOperations
-        pub fn neg(&self) -> Self {
+        pub async fn neg(&self) -> Self {
             Self { lo: -self.hi, hi: -self.lo }
         }
 
-        pub fn abs(&self) -> Self {
+        pub async fn abs(&self) -> Self {
             if self.lo >= 0.0 {
                 *self
             } else if self.hi <= 0.0 {
@@ -3276,22 +3276,22 @@ pub mod interval {
             }
         }
 
-        pub fn add(&self, rhs: &Self) -> Self {
+        pub async fn add(&self, rhs: &Self) -> Self {
             Self { lo: (self.lo + rhs.lo).next_down(), hi: (self.hi + rhs.hi).next_up() }
         }
 
-        pub fn sub(&self, rhs: &Self) -> Self {
+        pub async fn sub(&self, rhs: &Self) -> Self {
             self.add(&rhs.neg())
         }
 
-        pub fn mul(&self, rhs: &Self) -> Self {
+        pub async fn mul(&self, rhs: &Self) -> Self {
             let candidates = [self.lo * rhs.lo, self.lo * rhs.hi, self.hi * rhs.lo, self.hi * rhs.hi];
             let lo = candidates.iter().copied().fold(f64::INFINITY, f64::min).next_down();
             let hi = candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max).next_up();
             Self { lo, hi }
         }
 
-        pub fn recip(&self) -> Option<Self> {
+        pub async fn recip(&self) -> Option<Self> {
             if self.contains_zero() {
                 return None;
             }
@@ -3301,19 +3301,19 @@ pub mod interval {
             Some(Self { lo, hi })
         }
 
-        pub fn div(&self, rhs: &Self) -> Option<Self> {
+        pub async fn div(&self, rhs: &Self) -> Option<Self> {
             rhs.recip().map(|r| self.mul(&r))
         }
 
         /// √ Rigorous 1-ulp-widened square root; `None` if the interval dips below zero.
-        pub fn sqrt(&self) -> Option<Self> {
+        pub async fn sqrt(&self) -> Option<Self> {
             if self.lo < 0.0 {
                 return None;
             }
             Some(Self { lo: self.lo.sqrt().next_down(), hi: self.hi.sqrt().next_up() })
         }
 
-        pub fn powi(&self, n: i32) -> Self {
+        pub async fn powi(&self, n: i32) -> Self {
             if n == 0 {
                 return Self::point(1.0);
             }
@@ -3338,12 +3338,12 @@ pub mod interval {
         /// 🌊️ Heuristic (not certified): widens the libm result by 4 ulps per side. Platform libm is
         /// almost always <1 ulp but not guaranteed correctly-rounded, so callers needing certified bounds
         /// must stay on the `+ - * / sqrt` subset above.
-        pub fn exp(&self) -> Self {
+        pub async fn exp(&self) -> Self {
             Self { lo: widen_down(self.lo.exp(), 4), hi: widen_up(self.hi.exp(), 4) }
         }
 
         /// 🌊️ Heuristic natural log; `None` if the interval is entirely non-positive.
-        pub fn ln(&self) -> Option<Self> {
+        pub async fn ln(&self) -> Option<Self> {
             if self.hi <= 0.0 {
                 return None;
             }
@@ -3352,7 +3352,7 @@ pub mod interval {
         }
 
         /// 🌊️ Heuristic sine/cosine over a bounded-width interval; wide intervals conservatively widen to `[-1, 1]`.
-        pub fn sin(&self) -> Self {
+        pub async fn sin(&self) -> Self {
             if self.width() > std::f64::consts::PI {
                 return Self { lo: -1.0, hi: 1.0 };
             }
@@ -3362,7 +3362,7 @@ pub mod interval {
             Self { lo: widen_down(lo, 8), hi: widen_up(hi, 8) }
         }
 
-        pub fn cos(&self) -> Self {
+        pub async fn cos(&self) -> Self {
             if self.width() > std::f64::consts::PI {
                 return Self { lo: -1.0, hi: 1.0 };
             }
@@ -3372,13 +3372,13 @@ pub mod interval {
             Self { lo: widen_down(lo, 8), hi: widen_up(hi, 8) }
         }
 
-        pub fn atan(&self) -> Self {
+        pub async fn atan(&self) -> Self {
             Self { lo: widen_down(self.lo.atan(), 4), hi: widen_up(self.hi.atan(), 4) }
         }
         // #endregion 🔖️HeuristicTranscendental
     }
 
-    fn widen_down(x: f64, ulps: u32) -> f64 {
+    async fn widen_down(x: f64, ulps: u32) -> f64 {
         let mut v = x;
         for _ in 0..ulps {
             v = v.next_down();
@@ -3386,7 +3386,7 @@ pub mod interval {
         v
     }
 
-    fn widen_up(x: f64, ulps: u32) -> f64 {
+    async fn widen_up(x: f64, ulps: u32) -> f64 {
         let mut v = x;
         for _ in 0..ulps {
             v = v.next_up();
@@ -3401,7 +3401,7 @@ pub mod interval {
         use super::*;
 
         #[test]
-        fn from_rational_contains_the_exact_value() {
+        async fn from_rational_contains_the_exact_value() {
             let r = Rational::from_i64(1, 3).unwrap();
             let iv = Interval::from_rational(&r);
             assert!(iv.lo <= r.to_f64() && r.to_f64() <= iv.hi);
@@ -3412,7 +3412,7 @@ pub mod interval {
         }
 
         #[test]
-        fn arithmetic_hand_cases() {
+        async fn arithmetic_hand_cases() {
             let a = Interval::point(2.0);
             let b = Interval::point(3.0);
             let sum = a.add(&b);
@@ -3422,28 +3422,28 @@ pub mod interval {
         }
 
         #[test]
-        fn division_by_zero_straddling_interval_is_none() {
+        async fn division_by_zero_straddling_interval_is_none() {
             let a = Interval::new(-1.0, 1.0);
             let b = Interval::point(1.0);
             assert!(b.div(&a).is_none());
         }
 
         #[test]
-        fn sqrt_of_negative_is_none() {
+        async fn sqrt_of_negative_is_none() {
             assert!(Interval::point(-1.0).sqrt().is_none());
             let s = Interval::point(4.0).sqrt().unwrap();
             assert!(s.contains(2.0));
         }
 
         #[test]
-        fn sign_detection() {
+        async fn sign_detection() {
             assert_eq!(Interval::new(1.0, 2.0).sign(), Some(std::cmp::Ordering::Greater));
             assert_eq!(Interval::new(-2.0, -1.0).sign(), Some(std::cmp::Ordering::Less));
             assert_eq!(Interval::new(-1.0, 1.0).sign(), None);
         }
 
         #[test]
-        fn hull_and_intersect() {
+        async fn hull_and_intersect() {
             let a = Interval::new(0.0, 2.0);
             let b = Interval::new(1.0, 3.0);
             assert_eq!(a.hull(&b), Interval::new(0.0, 3.0));
@@ -3453,7 +3453,7 @@ pub mod interval {
         }
 
         #[test]
-        fn powi_matches_repeated_multiplication() {
+        async fn powi_matches_repeated_multiplication() {
             let a = Interval::point(2.0);
             let p = a.powi(10);
             assert!(p.contains(1024.0));
@@ -3491,43 +3491,43 @@ pub mod algebra {
     }
 
     impl<T: Ring> VecG<T> {
-        pub fn zeros(n: usize) -> Self {
+        pub async fn zeros(n: usize) -> Self {
             Self { data: (0..n).map(|_| T::zero()).collect() }
         }
 
-        pub fn from_vec(data: Vec<T>) -> Self {
+        pub async fn from_vec(data: Vec<T>) -> Self {
             Self { data }
         }
 
-        pub fn len(&self) -> usize {
+        pub async fn len(&self) -> usize {
             self.data.len()
         }
 
-        pub fn is_empty(&self) -> bool {
+        pub async fn is_empty(&self) -> bool {
             self.data.is_empty()
         }
 
-        pub fn get(&self, i: usize) -> &T {
+        pub async fn get(&self, i: usize) -> &T {
             &self.data[i]
         }
 
-        pub fn set(&mut self, i: usize, value: T) {
+        pub async fn set(&mut self, i: usize, value: T) {
             self.data[i] = value;
         }
 
-        pub fn add(&self, other: &Self) -> Self {
+        pub async fn add(&self, other: &Self) -> Self {
             Self { data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.add(b)).collect() }
         }
 
-        pub fn sub(&self, other: &Self) -> Self {
+        pub async fn sub(&self, other: &Self) -> Self {
             Self { data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.sub(b)).collect() }
         }
 
-        pub fn scale(&self, s: &T) -> Self {
+        pub async fn scale(&self, s: &T) -> Self {
             Self { data: self.data.iter().map(|v| v.mul(s)).collect() }
         }
 
-        pub fn dot(&self, other: &Self) -> T {
+        pub async fn dot(&self, other: &Self) -> T {
             self.data.iter().zip(other.data.iter()).fold(T::zero(), |acc, (a, b)| acc.add(&a.mul(b)))
         }
     }
@@ -3544,11 +3544,11 @@ pub mod algebra {
     }
 
     impl<T: Ring> MatG<T> {
-        pub fn zeros(rows: usize, cols: usize) -> Self {
+        pub async fn zeros(rows: usize, cols: usize) -> Self {
             Self { rows, cols, data: (0..rows * cols).map(|_| T::zero()).collect() }
         }
 
-        pub fn identity(n: usize) -> Self {
+        pub async fn identity(n: usize) -> Self {
             let mut m = Self::zeros(n, n);
             for i in 0..n {
                 m.set(i, i, T::one());
@@ -3556,22 +3556,22 @@ pub mod algebra {
             m
         }
 
-        pub fn from_rows(rows: Vec<Vec<T>>) -> Self {
+        pub async fn from_rows(rows: Vec<Vec<T>>) -> Self {
             let nrows = rows.len();
             let ncols = rows.first().map_or(0, |r| r.len());
             let data = rows.into_iter().flatten().collect();
             Self { rows: nrows, cols: ncols, data }
         }
 
-        pub fn get(&self, row: usize, col: usize) -> &T {
+        pub async fn get(&self, row: usize, col: usize) -> &T {
             &self.data[row * self.cols + col]
         }
 
-        pub fn set(&mut self, row: usize, col: usize, value: T) {
+        pub async fn set(&mut self, row: usize, col: usize, value: T) {
             self.data[row * self.cols + col] = value;
         }
 
-        pub fn transpose(&self) -> Self {
+        pub async fn transpose(&self) -> Self {
             let mut out = Self::zeros(self.cols, self.rows);
             for row in 0..self.rows {
                 for col in 0..self.cols {
@@ -3581,7 +3581,7 @@ pub mod algebra {
             out
         }
 
-        pub fn matmul(&self, other: &Self) -> Self {
+        pub async fn matmul(&self, other: &Self) -> Self {
             assert_eq!(self.cols, other.rows, "MatG::matmul: dimension mismatch");
             let mut out = Self::zeros(self.rows, other.cols);
             for row in 0..self.rows {
@@ -3596,7 +3596,7 @@ pub mod algebra {
             out
         }
 
-        pub fn mul_vec(&self, x: &VecG<T>) -> VecG<T> {
+        pub async fn mul_vec(&self, x: &VecG<T>) -> VecG<T> {
             assert_eq!(self.cols, x.len(), "MatG::mul_vec: dimension mismatch");
             let mut out = VecG::zeros(self.rows);
             for row in 0..self.rows {
@@ -3609,15 +3609,15 @@ pub mod algebra {
             out
         }
 
-        pub fn add(&self, other: &Self) -> Self {
+        pub async fn add(&self, other: &Self) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.add(b)).collect() }
         }
 
-        pub fn sub(&self, other: &Self) -> Self {
+        pub async fn sub(&self, other: &Self) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.sub(b)).collect() }
         }
 
-        pub fn scale(&self, s: &T) -> Self {
+        pub async fn scale(&self, s: &T) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().map(|v| v.mul(s)).collect() }
         }
     }
@@ -3628,7 +3628,7 @@ pub mod algebra {
         /// 🧮️ Reduced row-echelon form via Gauss-Jordan elimination with first-nonzero pivoting (exact
         /// rings have no notion of numerical stability, so there's no reason to pivot on magnitude).
         /// Returns `(rref, pivot_columns, rank)`.
-        pub fn rref(&self) -> (Self, Vec<usize>, usize) {
+        pub async fn rref(&self) -> (Self, Vec<usize>, usize) {
             let mut m = self.clone();
             let mut pivots = Vec::new();
             let mut pivot_row = 0;
@@ -3673,13 +3673,13 @@ pub mod algebra {
             (m, pivots, rank)
         }
 
-        pub fn rank(&self) -> usize {
+        pub async fn rank(&self) -> usize {
             self.rref().2
         }
 
         /// 🧮️ Determinant via Gauss-Jordan with first-nonzero pivoting, tracking the pivot product and
         /// row-swap sign (valid over any field; degenerates to `zero()` for a singular matrix).
-        pub fn det(&self) -> T {
+        pub async fn det(&self) -> T {
             assert_eq!(self.rows, self.cols, "MatG::det: requires a square matrix");
             let n = self.rows;
             let mut m = self.clone();
@@ -3715,7 +3715,7 @@ pub mod algebra {
             det.mul(&sign)
         }
 
-        pub fn inverse(&self) -> Option<Self> {
+        pub async fn inverse(&self) -> Option<Self> {
             assert_eq!(self.rows, self.cols, "MatG::inverse: requires a square matrix");
             let n = self.rows;
             // 🐛️ Rank must come from `self` alone: the augmented `[A | I]` matrix's own rref rank is
@@ -3742,7 +3742,7 @@ pub mod algebra {
             Some(inv)
         }
 
-        pub fn solve(&self, b: &VecG<T>) -> Option<VecG<T>> {
+        pub async fn solve(&self, b: &VecG<T>) -> Option<VecG<T>> {
             assert_eq!(self.rows, self.cols, "MatG::solve: requires a square matrix");
             let n = self.rows;
             // 🐛️ See `inverse`: rank must be checked on `self` alone, not on the `[A | b]` augmented
@@ -3762,7 +3762,7 @@ pub mod algebra {
         }
 
         /// 🕳️ Basis of the null space, read off the RREF's free columns.
-        pub fn nullspace(&self) -> Vec<VecG<T>> {
+        pub async fn nullspace(&self) -> Vec<VecG<T>> {
             let (rref, pivots, _) = self.rref();
             let pivot_set: std::collections::BTreeSet<usize> = pivots.iter().copied().collect();
             let free_cols: Vec<usize> = (0..self.cols).filter(|c| !pivot_set.contains(c)).collect();
@@ -3785,7 +3785,7 @@ pub mod algebra {
         /// 🧮️ Bareiss fraction-free elimination: every interior division is provably exact in any integral
         /// domain, so this computes an exact determinant over `Integer`/`ModInt`/polynomial coefficient
         /// rings without ever leaving the ring (no need for `Field`).
-        pub fn det_bareiss(&self) -> T {
+        pub async fn det_bareiss(&self) -> T {
             assert_eq!(self.rows, self.cols, "MatG::det_bareiss: requires a square matrix");
             let n = self.rows;
             if n == 0 {
@@ -3819,7 +3819,7 @@ pub mod algebra {
             m.get(n - 1, n - 1).mul(&sign)
         }
 
-        pub fn rank_bareiss(&self) -> usize
+        pub async fn rank_bareiss(&self) -> usize
         where
             T: GcdDomain,
         {
@@ -3866,7 +3866,7 @@ pub mod algebra {
         /// `1..=n` — true for `Rational` and for `ModInt` under a prime modulus larger than the matrix size.
         /// Returns `Vec<T>`, not a `PolyU`, because this crate must not depend on any plugin's polynomial
         /// type — the plugin wraps the result where a polynomial type is wanted.
-        pub fn charpoly(&self) -> Vec<T> {
+        pub async fn charpoly(&self) -> Vec<T> {
             assert_eq!(self.rows, self.cols, "MatG::charpoly: requires a square matrix");
             let n = self.rows;
             if n == 0 {
@@ -3907,7 +3907,7 @@ pub mod algebra {
         /// 🧮️ Smith normal form via repeated pivot-reduction: returns `(s, u, v)` with `u * self * v == s`
         /// and `s` diagonal with each entry dividing the next (the divisibility chain). Used for integer
         /// linear-system/Diophantine solving in a CAS plugin's `crate::cas`.
-        pub fn smith_normal_form(&self) -> (Self, Self, Self) {
+        pub async fn smith_normal_form(&self) -> (Self, Self, Self) {
             let mut s = self.clone();
             let mut u = Self::identity(self.rows);
             let mut v = Self::identity(self.cols);
@@ -3974,7 +3974,7 @@ pub mod algebra {
             (s, u, v)
         }
 
-        fn swap_rows(&mut self, r1: usize, r2: usize) {
+        async fn swap_rows(&mut self, r1: usize, r2: usize) {
             for c in 0..self.cols {
                 let tmp = self.get(r1, c).clone();
                 let cur = self.get(r2, c).clone();
@@ -3983,7 +3983,7 @@ pub mod algebra {
             }
         }
 
-        fn swap_cols(&mut self, c1: usize, c2: usize) {
+        async fn swap_cols(&mut self, c1: usize, c2: usize) {
             for r in 0..self.rows {
                 let tmp = self.get(r, c1).clone();
                 let cur = self.get(r, c2).clone();
@@ -3993,7 +3993,7 @@ pub mod algebra {
         }
 
         /// ➖️ `row[target] -= factor * row[source]`.
-        fn row_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
+        async fn row_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
             for c in 0..self.cols {
                 let sub = self.get(target, c).sub(&factor.mul(self.get(source, c)));
                 self.set(target, c, sub);
@@ -4001,7 +4001,7 @@ pub mod algebra {
         }
 
         /// ➖️ `col[target] -= factor * col[source]`.
-        fn col_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
+        async fn col_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
             for r in 0..self.rows {
                 let sub = self.get(r, target).sub(&factor.mul(self.get(r, source)));
                 self.set(r, target, sub);
@@ -4009,7 +4009,7 @@ pub mod algebra {
         }
 
         /// ➕️ `row[target] += row[source]`.
-        fn row_op_add(&mut self, source: usize, target: usize) {
+        async fn row_op_add(&mut self, source: usize, target: usize) {
             for c in 0..self.cols {
                 let sum = self.get(target, c).add(self.get(source, c));
                 self.set(target, c, sum);
@@ -4024,28 +4024,28 @@ pub mod algebra {
         use super::*;
         use crate::{integer::Integer, modular::ModInt, rational::Rational};
 
-        fn rat(n: i64, d: i64) -> Rational {
+        async fn rat(n: i64, d: i64) -> Rational {
             Rational::from_i64(n, d).unwrap()
         }
 
-        fn rat_mat(rows: Vec<Vec<i64>>) -> MatG<Rational> {
+        async fn rat_mat(rows: Vec<Vec<i64>>) -> MatG<Rational> {
             MatG::from_rows(rows.into_iter().map(|r| r.into_iter().map(Rational::from).collect()).collect())
         }
 
         #[test]
-        fn rref_and_rank_hand_case() {
+        async fn rref_and_rank_hand_case() {
             let m = rat_mat(vec![vec![1, 2, 1], vec![2, 4, 2], vec![1, 1, 1]]);
             assert_eq!(m.rank(), 2);
         }
 
         #[test]
-        fn det_matches_cofactor_hand_case() {
+        async fn det_matches_cofactor_hand_case() {
             let m = rat_mat(vec![vec![1, 2], vec![3, 4]]);
             assert_eq!(m.det(), rat(-2, 1));
         }
 
         #[test]
-        fn inverse_round_trips_to_identity() {
+        async fn inverse_round_trips_to_identity() {
             let m = rat_mat(vec![vec![2, 1], vec![1, 1]]);
             let inv = m.inverse().expect("invertible");
             let product = m.matmul(&inv);
@@ -4053,7 +4053,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn solve_matches_hand_solved_system() {
+        async fn solve_matches_hand_solved_system() {
             let m = rat_mat(vec![vec![2, 1], vec![1, 3]]);
             let b = VecG::from_vec(vec![rat(5, 1), rat(10, 1)]);
             let x = m.solve(&b).expect("solvable");
@@ -4062,7 +4062,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn nullspace_vectors_are_in_kernel() {
+        async fn nullspace_vectors_are_in_kernel() {
             let m = rat_mat(vec![vec![1, 2, 3], vec![2, 4, 6]]);
             let basis = m.nullspace();
             assert_eq!(basis.len(), 2);
@@ -4075,7 +4075,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn cayley_hamilton_holds_for_3x3() {
+        async fn cayley_hamilton_holds_for_3x3() {
             let m = rat_mat(vec![vec![2, 0, 0], vec![0, 3, 4], vec![0, 4, 9]]);
             let poly = m.charpoly(); // low-to-high coefficients, char(A)(x) = poly[0] + poly[1] x + ... + poly[n] x^n
                                      // Evaluate poly(M) = sum poly[i] * M^i and check it is the zero matrix.
@@ -4092,7 +4092,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn bareiss_det_matches_field_det() {
+        async fn bareiss_det_matches_field_det() {
             let m = rat_mat(vec![vec![4, 3, 2], vec![1, 5, 6], vec![7, 8, 9]]);
             let via_field = m.det();
             let via_bareiss = m.det_bareiss();
@@ -4100,13 +4100,13 @@ pub mod algebra {
         }
 
         #[test]
-        fn bareiss_det_over_integer_matches_hand_case() {
+        async fn bareiss_det_over_integer_matches_hand_case() {
             let m = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(3)], vec![Integer::from_i64(1), Integer::from_i64(4)]]);
             assert_eq!(m.det_bareiss(), Integer::from_i64(5));
         }
 
         #[test]
-        fn berkowitz_over_modint_matches_brute_force_2x2() {
+        async fn berkowitz_over_modint_matches_brute_force_2x2() {
             let p = 13u64;
             let a = ModInt::new(2, p);
             let b = ModInt::new(1, p);
@@ -4123,7 +4123,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn smith_normal_form_divisibility_chain() {
+        async fn smith_normal_form_divisibility_chain() {
             let m = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(4)], vec![Integer::from_i64(4), Integer::from_i64(2)]]);
             let (s, u, v) = m.smith_normal_form();
             let reconstructed = u.matmul(&m).matmul(&v);
@@ -4135,7 +4135,7 @@ pub mod algebra {
         }
 
         #[test]
-        fn vecg_basic_ops_match_hand_computation() {
+        async fn vecg_basic_ops_match_hand_computation() {
             let a = VecG::from_vec(vec![rat(1, 1), rat(2, 1)]);
             let b = VecG::from_vec(vec![rat(3, 1), rat(4, 1)]);
             assert_eq!(a.len(), 2);
@@ -4157,26 +4157,26 @@ pub mod algebra {
         }
 
         #[test]
-        fn det_of_singular_matrix_is_zero() {
+        async fn det_of_singular_matrix_is_zero() {
             let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
             assert_eq!(m.det(), Rational::zero());
         }
 
         #[test]
-        fn inverse_of_singular_matrix_is_none() {
+        async fn inverse_of_singular_matrix_is_none() {
             let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
             assert!(m.inverse().is_none());
         }
 
         #[test]
-        fn solve_of_singular_system_is_none() {
+        async fn solve_of_singular_system_is_none() {
             let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
             let b = VecG::from_vec(vec![rat(1, 1), rat(2, 1)]);
             assert!(m.solve(&b).is_none());
         }
 
         #[test]
-        fn rank_bareiss_hand_cases_full_and_deficient_rank() {
+        async fn rank_bareiss_hand_cases_full_and_deficient_rank() {
             let full = MatG::<Integer>::from_rows(vec![
                 vec![Integer::from_i64(2), Integer::from_i64(1), Integer::from_i64(1)],
                 vec![Integer::from_i64(1), Integer::from_i64(3), Integer::from_i64(2)],
@@ -4196,7 +4196,7 @@ pub mod algebra {
             use super::*;
 
             #[test]
-            fn random_rational_matrix_inverse_round_trips() {
+            async fn random_rational_matrix_inverse_round_trips() {
                 let mut seed = 0xABCD_EF01_2345_6789u64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -4222,7 +4222,7 @@ pub mod algebra {
             }
 
             #[test]
-            fn bareiss_matches_field_det_on_random_integer_matrices() {
+            async fn bareiss_matches_field_det_on_random_integer_matrices() {
                 let mut seed = 0x1122_3344_5566_7788u64;
                 let mut next = move || {
                     seed ^= seed << 13;
@@ -4250,7 +4250,7 @@ pub mod algebra {
             }
 
             #[test]
-            fn rank_bareiss_matches_field_rank_on_random_integer_matrices() {
+            async fn rank_bareiss_matches_field_rank_on_random_integer_matrices() {
                 let mut seed = 0x9988_7766_5544_3322u64;
                 let mut next = move || {
                     seed ^= seed << 13;

@@ -41,7 +41,7 @@ impl Default for EditorCanvasTheme {
 }
 
 impl EditorCanvasTheme {
-    fn from_board(t: &ui_styling::BoardPalette) -> Self {
+    async fn from_board(t: &ui_styling::BoardPalette) -> Self {
         Self {
             raster_clear: Color::new(t.raster_clear),
             grid_minor_stroke: Color::new(t.grid_minor_stroke),
@@ -53,11 +53,11 @@ impl EditorCanvasTheme {
         }
     }
 
-    fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+    async fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
         theme::merge_color_field(next, v, key);
     }
 
-    fn merge_from_json(&mut self, json: &str) -> Result<(), EditorError> {
+    async fn merge_from_json(&mut self, json: &str) -> Result<(), EditorError> {
         let v: serde_json::Value = serde_json::from_str(json)?;
         let mut next = *self;
         Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
@@ -81,15 +81,15 @@ const DEFAULT_FONT_PX: f64 = 14.0;
 const DEFAULT_LINE_HEIGHT: f64 = 22.0;
 const DEFAULT_TAB_SIZE: usize = 2;
 
-fn editor_screen_to_world(camera: &Camera, p: Point) -> Point {
+async fn editor_screen_to_world(camera: &Camera, p: Point) -> Point {
     Point::new(p.x + camera.x, p.y + camera.y)
 }
 
-fn editor_world_to_screen(camera: &Camera, p: Point) -> Point {
+async fn editor_world_to_screen(camera: &Camera, p: Point) -> Point {
     Point::new(p.x - camera.x, p.y - camera.y)
 }
 
-fn editor_content_affine(camera: &Camera) -> Affine {
+async fn editor_content_affine(camera: &Camera) -> Affine {
     Affine::new([1.0, 0.0, 0.0, 1.0, -camera.x, -camera.y])
 }
 // #endregion 🔖️EditorViewport
@@ -109,19 +109,19 @@ struct EditorSettingsJson {
     tab_size: usize,
 }
 
-fn default_font_px() -> f64 {
+async fn default_font_px() -> f64 {
     DEFAULT_FONT_PX
 }
 
-fn default_line_height() -> f64 {
+async fn default_line_height() -> f64 {
     DEFAULT_LINE_HEIGHT
 }
 
-fn default_show_line_numbers() -> bool {
+async fn default_show_line_numbers() -> bool {
     true
 }
 
-fn default_tab_size() -> usize {
+async fn default_tab_size() -> usize {
     DEFAULT_TAB_SIZE
 }
 
@@ -219,7 +219,7 @@ impl Default for EditorHost {
 }
 
 impl EditorHost {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self {
             text: String::new(),
             caret: 0,
@@ -247,25 +247,25 @@ impl EditorHost {
         }
     }
 
-    pub fn set_dead_line_y(&mut self, y: f64) {
+    pub async fn set_dead_line_y(&mut self, y: f64) {
         self.dead_line_y = y.max(0.0);
         self.clamp_camera();
     }
 
-    pub fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
+    pub async fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
         self.chrome_edgeless_scroll = enabled;
         self.clamp_camera();
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), EditorError> {
+    pub async fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), EditorError> {
         self.theme.merge_from_json(json)
     }
 
-    pub fn set_caret_visible(&mut self, visible: bool) {
+    pub async fn set_caret_visible(&mut self, visible: bool) {
         self.caret_visible = visible;
     }
 
-    pub fn set_editor_settings_json(&mut self, json: &str) {
+    pub async fn set_editor_settings_json(&mut self, json: &str) {
         let settings: EditorSettingsJson = serde_json::from_str(json).unwrap_or(EditorSettingsJson { font_px: DEFAULT_FONT_PX, line_height: DEFAULT_LINE_HEIGHT, show_line_numbers: true, tab_size: DEFAULT_TAB_SIZE });
         self.font_px = settings.font_px.clamp(10.0, 28.0);
         self.line_height = settings.line_height.clamp(16.0, 48.0);
@@ -274,11 +274,11 @@ impl EditorHost {
         self.clamp_camera();
     }
 
-    pub fn tab_insert_text(&self) -> String {
+    pub async fn tab_insert_text(&self) -> String {
         " ".repeat(self.tab_size)
     }
 
-    fn gutter_width(&self) -> f64 {
+    async fn gutter_width(&self) -> f64 {
         if self.show_line_numbers {
             DEFAULT_GUTTER_WIDTH
         } else {
@@ -286,11 +286,11 @@ impl EditorHost {
         }
     }
 
-    fn line_origin_x(&self) -> f64 {
+    async fn line_origin_x(&self) -> f64 {
         self.gutter_width() + PAD_X
     }
 
-    fn content_origin_y(&self) -> f64 {
+    async fn content_origin_y(&self) -> f64 {
         if self.chrome_edgeless_scroll || self.dead_line_y <= 0.0 {
             0.0
         } else {
@@ -298,38 +298,38 @@ impl EditorHost {
         }
     }
 
-    fn line_y(&self, line: usize) -> f64 {
+    async fn line_y(&self, line: usize) -> f64 {
         self.content_origin_y() + PAD_Y + line as f64 * self.line_height + self.line_height * 0.75
     }
 
-    fn line_top_y(&self, line: usize) -> f64 {
+    async fn line_top_y(&self, line: usize) -> f64 {
         self.content_origin_y() + PAD_Y + line as f64 * self.line_height
     }
 
-    fn content_height(&self, line_count: usize) -> f64 {
+    async fn content_height(&self, line_count: usize) -> f64 {
         self.content_origin_y() + PAD_Y * 2.0 + line_count as f64 * self.line_height
     }
 
-    fn rest_content_height(&self, line_count: usize) -> f64 {
+    async fn rest_content_height(&self, line_count: usize) -> f64 {
         let rest_origin = if self.dead_line_y > 0.0 { self.dead_line_y } else { 0.0 };
         rest_origin + PAD_Y * 2.0 + line_count as f64 * self.line_height
     }
 
-    fn scroll_overflows(&self) -> bool {
+    async fn scroll_overflows(&self) -> bool {
         let line_count = self.text.matches('\n').count() + 1;
         self.rest_content_height(line_count) > self.viewport.height as f64
     }
 
-    pub fn chrome_edgeless_scroll(&self) -> bool {
+    pub async fn chrome_edgeless_scroll(&self) -> bool {
         self.chrome_edgeless_scroll
     }
 
-    fn gutter_number_x(&self, label: &str) -> f64 {
+    async fn gutter_number_x(&self, label: &str) -> f64 {
         let advance = canvas_text::label_advance(label, self.font_px);
         (self.gutter_width() - PAD_X * 0.75 - advance).max(4.0)
     }
 
-    fn clamp_camera(&mut self) {
+    async fn clamp_camera(&mut self) {
         self.camera.x = 0.0;
         self.camera.zoom = 1.0;
         let line_count = self.text.matches('\n').count() + 1;
@@ -339,7 +339,7 @@ impl EditorHost {
         self.camera.y = self.camera.y.clamp(0.0, scroll_max);
     }
 
-    fn scroll_caret_into_view(&mut self) {
+    async fn scroll_caret_into_view(&mut self) {
         let (line, _) = offset_line_col(&self.text, self.caret);
         let caret_top = self.line_top_y(line);
         let view_h = self.viewport.height as f64;
@@ -353,26 +353,26 @@ impl EditorHost {
         self.clamp_camera();
     }
 
-    fn finish_caret_update(&mut self) {
+    async fn finish_caret_update(&mut self) {
         self.scroll_caret_into_view();
     }
 
-    pub fn anchor(&self) -> usize {
+    pub async fn anchor(&self) -> usize {
         self.anchor
     }
 
     #[cfg(test)]
-    fn set_caret_anchor(&mut self, offset: usize) {
+    async fn set_caret_anchor(&mut self, offset: usize) {
         self.caret = offset;
         self.anchor = offset;
     }
 
     #[cfg(test)]
-    fn set_selection(&mut self, anchor: usize, caret: usize) {
+    async fn set_selection(&mut self, anchor: usize, caret: usize) {
         self.set_selection_range(anchor, caret);
     }
 
-    pub fn set_selection_range(&mut self, anchor: usize, caret: usize) {
+    pub async fn set_selection_range(&mut self, anchor: usize, caret: usize) {
         self.anchor = anchor.min(self.text.len());
         self.caret = caret.min(self.text.len());
         if self.caret != self.anchor {
@@ -383,24 +383,24 @@ impl EditorHost {
         self.finish_caret_update();
     }
 
-    pub fn hover_token_range(&self) -> Option<(usize, usize)> {
+    pub async fn hover_token_range(&self) -> Option<(usize, usize)> {
         match (self.hover_token_start, self.hover_token_end) {
             (Some(start), Some(end)) => Some((start, end)),
             _ => None,
         }
     }
 
-    pub fn set_hover_range(&mut self, start: Option<usize>, end: Option<usize>) {
+    pub async fn set_hover_range(&mut self, start: Option<usize>, end: Option<usize>) {
         self.hover_token_start = start;
         self.hover_token_end = end;
     }
 
-    pub fn select_all(&mut self) {
+    pub async fn select_all(&mut self) {
         self.anchor = 0;
         self.caret = self.text.len();
     }
 
-    pub fn set_text(&mut self, text: String) {
+    pub async fn set_text(&mut self, text: String) {
         if self.text == text {
             return;
         }
@@ -409,23 +409,23 @@ impl EditorHost {
         self.anchor = self.anchor.min(self.text.len());
     }
 
-    pub fn text(&self) -> &str {
+    pub async fn text(&self) -> &str {
         &self.text
     }
 
-    pub fn caret(&self) -> usize {
+    pub async fn caret(&self) -> usize {
         self.caret
     }
 
-    pub fn set_semantic_tokens_json(&mut self, json: &str) {
+    pub async fn set_semantic_tokens_json(&mut self, json: &str) {
         self.semantic_tokens = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn set_selectable_spans_json(&mut self, json: &str) {
+    pub async fn set_selectable_spans_json(&mut self, json: &str) {
         self.selectable_spans = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn select_span_at(&mut self, offset: usize) {
+    pub async fn select_span_at(&mut self, offset: usize) {
         let offset = offset.min(self.text.len());
         if let Some(ch) = self.text[offset..].chars().next() {
             if ch == ':' || ch == '.' {
@@ -461,7 +461,7 @@ impl EditorHost {
         self.finish_caret_update();
     }
 
-    pub fn selection_text(&self) -> String {
+    pub async fn selection_text(&self) -> String {
         let (start, end) = self.selection_range();
         if start >= end {
             return String::new();
@@ -469,7 +469,7 @@ impl EditorHost {
         self.text[start..end].to_string()
     }
 
-    pub fn replace_selection(&mut self, next: &str) {
+    pub async fn replace_selection(&mut self, next: &str) {
         let (start, end) = self.selection_range();
         if start >= end {
             self.insert_text(next);
@@ -480,27 +480,27 @@ impl EditorHost {
         self.anchor = self.caret;
     }
 
-    pub fn set_diagnostics_json(&mut self, json: &str) {
+    pub async fn set_diagnostics_json(&mut self, json: &str) {
         self.diagnostics = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn set_placeholders_json(&mut self, json: &str) {
+    pub async fn set_placeholders_json(&mut self, json: &str) {
         self.placeholders = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn set_hover_occurrences_json(&mut self, json: &str) {
+    pub async fn set_hover_occurrences_json(&mut self, json: &str) {
         self.hover_occurrences = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn set_selection_occurrences_json(&mut self, json: &str) {
+    pub async fn set_selection_occurrences_json(&mut self, json: &str) {
         self.selection_occurrences = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn set_extra_carets_json(&mut self, json: &str) {
+    pub async fn set_extra_carets_json(&mut self, json: &str) {
         self.extra_carets = serde_json::from_str(json).unwrap_or_default();
     }
 
-    pub fn apply_text_edits_json(&mut self, json: &str) {
+    pub async fn apply_text_edits_json(&mut self, json: &str) {
         let edits: Vec<TextEditJson> = serde_json::from_str(json).unwrap_or_default();
         let mut text = self.text.clone();
         let mut sorted = edits;
@@ -513,30 +513,30 @@ impl EditorHost {
         self.set_text(text);
     }
 
-    pub fn set_camera(&mut self, _x: f64, y: f64, _zoom: f64) {
+    pub async fn set_camera(&mut self, _x: f64, y: f64, _zoom: f64) {
         self.camera.x = 0.0;
         self.camera.y = y;
         self.camera.zoom = 1.0;
         self.clamp_camera();
     }
 
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         serde_json::json!({ "x": 0, "y": self.camera.y, "zoom": 1 }).to_string()
     }
 
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.width = width.max(1);
         self.viewport.height = height.max(1);
         self.viewport.dpr = dpr.max(1.0);
         self.clamp_camera();
     }
 
-    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
+    pub async fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
         let value: serde_json::Value = serde_json::from_str(json)?;
         self.sync_from_scene_value(&value)
     }
 
-    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
+    pub async fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
         // 📦️ Host TS `encodePackValue` is the wire-body twin of `encode_wire_value` (no SPK shell);
         // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
         let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
@@ -544,11 +544,11 @@ impl EditorHost {
         self.sync_from_scene_value(&value)
     }
 
-    fn expand_scene_json_field(raw: &str) -> String {
+    async fn expand_scene_json_field(raw: &str) -> String {
         store::pack_rt::scene_field_json_text(raw).unwrap_or_else(|_| raw.to_string())
     }
 
-    fn sync_from_scene_value(&mut self, value: &serde_json::Value) -> Result<(), EditorError> {
+    async fn sync_from_scene_value(&mut self, value: &serde_json::Value) -> Result<(), EditorError> {
         if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
             self.set_text(buffer.to_string());
         }
@@ -618,7 +618,7 @@ impl EditorHost {
         Ok(())
     }
 
-    pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
+    pub async fn wheel_scroll_screen(&mut self, delta_y: f64) {
         if !self.scroll_overflows() {
             return;
         }
@@ -643,7 +643,7 @@ impl EditorHost {
     /// forcing `button` to `0` before calling in, since this fn used to no-op entirely for `button != 0`).
     /// Only a primary-button (`button == 0`) press also starts a drag-selection — a right/middle click
     /// must never extend the current selection.
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
         let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
         let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
         self.caret = offset;
@@ -654,7 +654,7 @@ impl EditorHost {
         }
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, _buttons: i32) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64, _buttons: i32) {
         if self.drag_selecting {
             let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
             self.caret = self.snap_offset_for_atomic(self.hit_test_offset(world));
@@ -664,7 +664,7 @@ impl EditorHost {
         self.set_hover_at_offset(self.hit_test_offset(world));
     }
 
-    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64, button: i32) {
+    pub async fn pointer_up_screen(&mut self, _sx: f64, _sy: f64, button: i32) {
         if button == 0 {
             self.drag_selecting = false;
             if self.caret != self.anchor {
@@ -676,7 +676,7 @@ impl EditorHost {
         }
     }
 
-    pub fn insert_text(&mut self, chunk: &str) {
+    pub async fn insert_text(&mut self, chunk: &str) {
         let mut start = self.caret.min(self.anchor);
         let mut end = self.caret.max(self.anchor);
         let collapsed = start == end;
@@ -706,7 +706,7 @@ impl EditorHost {
         self.finish_caret_update();
     }
 
-    fn should_prefix_auto_space(&self, offset: usize, chunk: &str) -> bool {
+    async fn should_prefix_auto_space(&self, offset: usize, chunk: &str) -> bool {
         let first = match chunk.chars().next() {
             Some(ch) => ch,
             None => return false,
@@ -729,11 +729,11 @@ impl EditorHost {
         true
     }
 
-    fn token_ending_at(&self, offset: usize) -> Option<&SemanticTokenJson> {
+    async fn token_ending_at(&self, offset: usize) -> Option<&SemanticTokenJson> {
         self.semantic_tokens.iter().find(|token| token.end == offset && token.start < offset)
     }
 
-    pub fn backspace(&mut self) {
+    pub async fn backspace(&mut self) {
         if self.caret != self.anchor {
             let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
             self.caret = start;
@@ -758,7 +758,7 @@ impl EditorHost {
         self.anchor = self.caret;
     }
 
-    pub fn delete_forward(&mut self) {
+    pub async fn delete_forward(&mut self) {
         if self.caret != self.anchor {
             let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
             self.caret = start;
@@ -781,7 +781,7 @@ impl EditorHost {
         self.anchor = self.caret;
     }
 
-    pub fn move_line_start(&mut self, extend: bool) {
+    pub async fn move_line_start(&mut self, extend: bool) {
         let (line, _) = offset_line_col(&self.text, self.caret);
         self.caret = offset_at_line_col(&self.text, line, 0);
         if !extend {
@@ -790,7 +790,7 @@ impl EditorHost {
         }
     }
 
-    pub fn move_line_end(&mut self, extend: bool) {
+    pub async fn move_line_end(&mut self, extend: bool) {
         let (line, _) = offset_line_col(&self.text, self.caret);
         let line_len = self.text.split('\n').nth(line).map(str::len).unwrap_or(0);
         self.caret = offset_at_line_col(&self.text, line, line_len);
@@ -800,7 +800,7 @@ impl EditorHost {
         }
     }
 
-    pub fn move_left(&mut self, extend: bool) {
+    pub async fn move_left(&mut self, extend: bool) {
         let next = self.token_left_boundary(self.caret).unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
@@ -809,7 +809,7 @@ impl EditorHost {
         }
     }
 
-    pub fn move_right(&mut self, extend: bool) {
+    pub async fn move_right(&mut self, extend: bool) {
         let next = self.token_right_boundary(self.caret).unwrap_or_else(|| if self.caret >= self.text.len() { self.text.len() } else { next_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
@@ -818,7 +818,7 @@ impl EditorHost {
         }
     }
 
-    pub fn move_up(&mut self, extend: bool) {
+    pub async fn move_up(&mut self, extend: bool) {
         let (line, col) = offset_line_col(&self.text, self.caret);
         if line == 0 {
             self.caret = 0;
@@ -831,7 +831,7 @@ impl EditorHost {
         }
     }
 
-    pub fn move_down(&mut self, extend: bool) {
+    pub async fn move_down(&mut self, extend: bool) {
         let (line, col) = offset_line_col(&self.text, self.caret);
         let max_line = self.text.matches('\n').count();
         self.caret = offset_at_line_col(&self.text, (line + 1).min(max_line), col);
@@ -841,17 +841,17 @@ impl EditorHost {
         }
     }
 
-    pub fn world_to_screen_json(&self, wx: f64, wy: f64) -> String {
+    pub async fn world_to_screen_json(&self, wx: f64, wy: f64) -> String {
         let p = editor_world_to_screen(&self.camera, Point::new(wx, wy));
         serde_json::json!({ "x": p.x, "y": p.y }).to_string()
     }
 
-    pub fn caret_world_json(&self) -> String {
+    pub async fn caret_world_json(&self) -> String {
         let (x, y) = offset_to_world(self, self.caret);
         serde_json::json!({ "x": x, "y": y }).to_string()
     }
 
-    fn set_hover_at_offset(&mut self, offset: usize) {
+    async fn set_hover_at_offset(&mut self, offset: usize) {
         self.hover_token_start = None;
         self.hover_token_end = None;
         if let Some(span) = self.token_span_at_offset(offset) {
@@ -860,7 +860,7 @@ impl EditorHost {
         }
     }
 
-    fn token_span_at_offset(&self, offset: usize) -> Option<(usize, usize)> {
+    async fn token_span_at_offset(&self, offset: usize) -> Option<(usize, usize)> {
         for token in &self.semantic_tokens {
             if offset >= token.start && offset < token.end {
                 return Some((token.start, token.end));
@@ -869,7 +869,7 @@ impl EditorHost {
         None
     }
 
-    fn snap_offset_for_atomic(&self, offset: usize) -> usize {
+    async fn snap_offset_for_atomic(&self, offset: usize) -> usize {
         for token in &self.semantic_tokens {
             if offset > token.start && offset < token.end {
                 let mid = token.start + (token.end - token.start) / 2;
@@ -879,7 +879,7 @@ impl EditorHost {
         offset
     }
 
-    fn normalize_edit_range(&self, start: usize, end: usize) -> (usize, usize) {
+    async fn normalize_edit_range(&self, start: usize, end: usize) -> (usize, usize) {
         let (mut s, mut e) = if start <= end { (start, end) } else { (end, start) };
         loop {
             let mut changed = false;
@@ -922,7 +922,7 @@ impl EditorHost {
         }
     }
 
-    fn allowed_composite_selection(&self, start: usize, end: usize, span: &SelectableSpanJson) -> bool {
+    async fn allowed_composite_selection(&self, start: usize, end: usize, span: &SelectableSpanJson) -> bool {
         if start == span.start && end == span.end {
             return true;
         }
@@ -940,7 +940,7 @@ impl EditorHost {
         }
     }
 
-    fn token_left_boundary(&self, offset: usize) -> Option<usize> {
+    async fn token_left_boundary(&self, offset: usize) -> Option<usize> {
         for token in &self.semantic_tokens {
             if offset > token.start && offset <= token.end {
                 return Some(token.start);
@@ -949,7 +949,7 @@ impl EditorHost {
         None
     }
 
-    fn token_right_boundary(&self, offset: usize) -> Option<usize> {
+    async fn token_right_boundary(&self, offset: usize) -> Option<usize> {
         for token in &self.semantic_tokens {
             if offset >= token.start && offset < token.end {
                 return Some(token.end);
@@ -958,11 +958,11 @@ impl EditorHost {
         None
     }
 
-    fn selection_range(&self) -> (usize, usize) {
+    async fn selection_range(&self) -> (usize, usize) {
         self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor))
     }
 
-    fn text_fill_for_abs_range(&self, start: usize, end: usize) -> Color {
+    async fn text_fill_for_abs_range(&self, start: usize, end: usize) -> Color {
         let (sel_s, sel_e) = self.selection_range();
         if sel_s != sel_e && ranges_overlap(start, end, sel_s, sel_e) {
             return self.theme.label_fill_hovered;
@@ -975,7 +975,7 @@ impl EditorHost {
         self.theme.label_fill
     }
 
-    fn render_abs_range_highlight(&self, scene: &mut Scene, start: usize, end: usize, color: Color) {
+    async fn render_abs_range_highlight(&self, scene: &mut Scene, start: usize, end: usize, color: Color) {
         if start >= end {
             return;
         }
@@ -1000,7 +1000,7 @@ impl EditorHost {
         }
     }
 
-    fn fill_highlight_rect(&self, scene: &mut Scene, x0: f64, x1: f64, y: f64, fill: Color) {
+    async fn fill_highlight_rect(&self, scene: &mut Scene, x0: f64, x1: f64, y: f64, fill: Color) {
         let left = x0.min(x1);
         let right = x0.max(x1);
         if right <= left {
@@ -1011,7 +1011,7 @@ impl EditorHost {
         scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &rect);
     }
 
-    fn hit_test_offset(&self, world: Point) -> usize {
+    async fn hit_test_offset(&self, world: Point) -> usize {
         let rel_x = world.x;
         let rel_y = world.y;
         let origin = self.content_origin_y();
@@ -1026,13 +1026,13 @@ impl EditorHost {
         offset_at_line_col(&self.text, line, col)
     }
 
-    pub fn hit_test_offset_screen(&self, sx: f64, sy: f64) -> usize {
+    pub async fn hit_test_offset_screen(&self, sx: f64, sy: f64) -> usize {
         let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
         self.hit_test_offset(world)
     }
 
     /// @emoji 🎯️ Returns pick-target rows at a screen point for DOM disambiguation menus.
-    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         let offset = self.hit_test_offset_screen(sx, sy);
         let (line, _col) = offset_line_col(&self.text, offset);
         let mut rows = Vec::new();
@@ -1053,12 +1053,12 @@ impl EditorHost {
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
-    pub fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
         let offset = self.hit_test_offset_screen(sx, sy);
         self.select_span_at(offset);
     }
 
-    pub fn build_scene(&self) -> Scene {
+    pub async fn build_scene(&self) -> Scene {
         let mut world_scene = Scene::new();
         let bg = self.theme.raster_clear;
         world_scene.fill(FillRule::NonZero, Affine::IDENTITY, bg, None, &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0));
@@ -1121,7 +1121,7 @@ impl EditorHost {
         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
     }
 
-    fn render_colored_line(&self, scene: &mut Scene, line: &str, line_index: usize, y: f64) {
+    async fn render_colored_line(&self, scene: &mut Scene, line: &str, line_index: usize, y: f64) {
         if line.is_empty() {
             return;
         }
@@ -1159,28 +1159,28 @@ impl EditorHost {
         canvas_text::append_label_tspans(scene, line, &color_spans, Point::new(self.line_origin_x(), y), self.font_px, self.theme.label_halo);
     }
 
-    fn render_placeholders(&self, scene: &mut Scene) {
+    async fn render_placeholders(&self, scene: &mut Scene) {
         for placeholder in &self.placeholders {
             let (x, y) = offset_to_world(self, placeholder.offset);
             canvas_text::append_label(scene, &placeholder.label, Point::new(x, y), self.font_px, self.theme.grid_minor_stroke, self.theme.label_halo);
         }
     }
 
-    fn render_caret_bar(&self, scene: &mut Scene, offset: usize) {
+    async fn render_caret_bar(&self, scene: &mut Scene, offset: usize) {
         let (x, y) = offset_to_world(self, offset);
         let lh = self.line_height;
         let rect = Rect::new(x, y - lh * 0.8, x + 1.5, y + lh * 0.2);
         scene.fill(FillRule::NonZero, Affine::IDENTITY, self.theme.label_fill, None, &rect);
     }
 
-    fn render_caret(&self, scene: &mut Scene, offset: usize) {
+    async fn render_caret(&self, scene: &mut Scene, offset: usize) {
         if self.caret == self.anchor && !self.caret_visible {
             return;
         }
         self.render_caret_bar(scene, offset);
     }
 
-    fn render_diagnostic(&self, scene: &mut Scene, diag: &DiagnosticJson) {
+    async fn render_diagnostic(&self, scene: &mut Scene, diag: &DiagnosticJson) {
         let (x, y) = offset_to_world(self, diag.start);
         let (x2, _) = offset_to_world(self, diag.end.max(diag.start + 1));
         let color = match diag.severity.as_deref() {
@@ -1192,15 +1192,15 @@ impl EditorHost {
     }
 }
 
-fn is_insert_whitespace(chunk: &str) -> bool {
+async fn is_insert_whitespace(chunk: &str) -> bool {
     !chunk.is_empty() && chunk.chars().all(|ch| matches!(ch, ' ' | '\t' | '\n' | '\r'))
 }
 
-fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
+async fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
     a_start < b_end && b_start < a_end
 }
 
-fn hit_byte_in_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) -> usize {
+async fn hit_byte_in_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) -> usize {
     if line.is_empty() {
         return 0;
     }
@@ -1225,7 +1225,7 @@ fn hit_byte_in_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) 
     line.len()
 }
 
-fn offset_line_col(text: &str, offset: usize) -> (usize, usize) {
+async fn offset_line_col(text: &str, offset: usize) -> (usize, usize) {
     let clamped = offset.min(text.len());
     let mut line = 0usize;
     let mut last = 0usize;
@@ -1241,7 +1241,7 @@ fn offset_line_col(text: &str, offset: usize) -> (usize, usize) {
     (line, clamped - last)
 }
 
-fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
+async fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
     let mut current_line = 0usize;
     let mut line_start = 0usize;
     for (i, ch) in text.char_indices() {
@@ -1260,7 +1260,7 @@ fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
     text.len()
 }
 
-fn offset_to_world(host: &EditorHost, offset: usize) -> (f64, f64) {
+async fn offset_to_world(host: &EditorHost, offset: usize) -> (f64, f64) {
     let (line, byte) = offset_line_col(&host.text, offset);
     let line_text = host.text.split('\n').nth(line).unwrap_or("");
     let x = canvas_text::label_byte_world_x(line_text, byte, host.line_origin_x(), host.font_px);
@@ -1268,15 +1268,15 @@ fn offset_to_world(host: &EditorHost, offset: usize) -> (f64, f64) {
     (x, y)
 }
 
-fn position_to_offset(text: &str, pos: &TextPosJson) -> usize {
+async fn position_to_offset(text: &str, pos: &TextPosJson) -> usize {
     offset_at_line_col(text, pos.line as usize, pos.character as usize)
 }
 
-fn prev_char_boundary(text: &str, index: usize) -> usize {
+async fn prev_char_boundary(text: &str, index: usize) -> usize {
     text[..index].char_indices().next_back().map(|(i, _)| i).unwrap_or(0)
 }
 
-fn next_char_boundary(text: &str, index: usize) -> usize {
+async fn next_char_boundary(text: &str, index: usize) -> usize {
     text[index..].char_indices().nth(1).map(|(i, _)| index + i).unwrap_or(text.len())
 }
 // #endregion 🔖️EditorState
@@ -1301,12 +1301,12 @@ struct EditorSessionInner {
 
 #[cfg(target_arch = "wasm32")]
 impl EditorSessionInner {
-    fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
+    async fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
     }
 
-    fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
+    async fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_scene();
         self.gpu.render_frame(&scene, self.host.theme.raster_clear)
     }
@@ -1322,22 +1322,22 @@ pub struct EditorSession {
 #[wasm_bindgen]
 impl EditorSession {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { state: Rc::new(RefCell::new(EditorSessionInner { host: EditorHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
-    pub fn gpu_ready(&self) -> bool {
+    pub async fn gpu_ready(&self) -> bool {
         self.state.borrow().gpu.gpu_ready()
     }
 
     #[wasm_bindgen(js_name = detachGpu)]
-    pub fn detach_gpu(&mut self) {
+    pub async fn detach_gpu(&mut self) {
         self.state.borrow_mut().gpu.detach();
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
-    pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+    pub async fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
         let lw = logical_w.max(1);
         let lh = logical_h.max(1);
@@ -1359,7 +1359,7 @@ impl EditorSession {
     }
 
     #[wasm_bindgen(js_name = setSize)]
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         let lw = width.max(1);
         let lh = height.max(1);
         let dpr = dpr.max(1.0);
@@ -1369,122 +1369,122 @@ impl EditorSession {
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
-    pub fn render_frame(&mut self) {
+    pub async fn render_frame(&mut self) {
         let _ = self.state.borrow_mut().render_frame_gpu();
     }
 
     #[wasm_bindgen(js_name = setText)]
-    pub fn set_text(&mut self, text: String) {
+    pub async fn set_text(&mut self, text: String) {
         self.state.borrow_mut().host.set_text(text);
     }
 
     #[wasm_bindgen(js_name = syncFromSceneJson)]
-    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn sync_from_scene_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.sync_from_scene_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = syncFromScenePack)]
-    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
         self.state.borrow_mut().host.sync_from_scene_pack(bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = text)]
-    pub fn text(&self) -> String {
+    pub async fn text(&self) -> String {
         self.state.borrow().host.text().to_string()
     }
 
     #[wasm_bindgen(js_name = caret)]
-    pub fn caret(&self) -> usize {
+    pub async fn caret(&self) -> usize {
         self.state.borrow().host.caret()
     }
 
     #[wasm_bindgen(js_name = setSelectableSpansJson)]
-    pub fn set_selectable_spans_json(&mut self, json: &str) {
+    pub async fn set_selectable_spans_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_selectable_spans_json(json);
     }
 
     #[wasm_bindgen(js_name = setSemanticTokensJson)]
-    pub fn set_semantic_tokens_json(&mut self, json: &str) {
+    pub async fn set_semantic_tokens_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_semantic_tokens_json(json);
     }
 
     #[wasm_bindgen(js_name = setDiagnosticsJson)]
-    pub fn set_diagnostics_json(&mut self, json: &str) {
+    pub async fn set_diagnostics_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_diagnostics_json(json);
     }
 
     #[wasm_bindgen(js_name = setPlaceholdersJson)]
-    pub fn set_placeholders_json(&mut self, json: &str) {
+    pub async fn set_placeholders_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_placeholders_json(json);
     }
 
     #[wasm_bindgen(js_name = setHoverOccurrencesJson)]
-    pub fn set_hover_occurrences_json(&mut self, json: &str) {
+    pub async fn set_hover_occurrences_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_hover_occurrences_json(json);
     }
 
     #[wasm_bindgen(js_name = setSelectionOccurrencesJson)]
-    pub fn set_selection_occurrences_json(&mut self, json: &str) {
+    pub async fn set_selection_occurrences_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_selection_occurrences_json(json);
     }
 
     #[wasm_bindgen(js_name = setExtraCaretsJson)]
-    pub fn set_extra_carets_json(&mut self, json: &str) {
+    pub async fn set_extra_carets_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_extra_carets_json(json);
     }
 
     #[wasm_bindgen(js_name = applyTextEditsJson)]
-    pub fn apply_text_edits_json(&mut self, json: &str) {
+    pub async fn apply_text_edits_json(&mut self, json: &str) {
         self.state.borrow_mut().host.apply_text_edits_json(json);
     }
 
     #[wasm_bindgen(js_name = setCamera)]
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         self.state.borrow().host.camera_json()
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
-    pub fn set_canvas_theme_json(&mut self, json: &str) {
+    pub async fn set_canvas_theme_json(&mut self, json: &str) {
         let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = setCaretVisible)]
-    pub fn set_caret_visible(&mut self, visible: bool) {
+    pub async fn set_caret_visible(&mut self, visible: bool) {
         self.state.borrow_mut().host.set_caret_visible(visible);
     }
 
     #[wasm_bindgen(js_name = anchor)]
-    pub fn anchor(&self) -> usize {
+    pub async fn anchor(&self) -> usize {
         self.state.borrow().host.anchor()
     }
 
     #[wasm_bindgen(js_name = selectSpanAtScreen)]
-    pub fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.select_span_at_screen(sx, sy);
     }
 
     #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
-    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
     }
 
     #[wasm_bindgen(js_name = selectSpanAt)]
-    pub fn select_span_at(&mut self, offset: usize) {
+    pub async fn select_span_at(&mut self, offset: usize) {
         self.state.borrow_mut().host.select_span_at(offset);
     }
 
     #[wasm_bindgen(js_name = setSelectionRange)]
-    pub fn set_selection_range(&mut self, anchor: usize, caret: usize) {
+    pub async fn set_selection_range(&mut self, anchor: usize, caret: usize) {
         self.state.borrow_mut().host.set_selection_range(anchor, caret);
     }
 
     #[wasm_bindgen(js_name = hoverTokenRangeJson)]
-    pub fn hover_token_range_json(&self) -> String {
+    pub async fn hover_token_range_json(&self) -> String {
         match self.state.borrow().host.hover_token_range() {
             Some((start, end)) => serde_json::json!({ "start": start, "end": end }).to_string(),
             None => "null".into(),
@@ -1492,7 +1492,7 @@ impl EditorSession {
     }
 
     #[wasm_bindgen(js_name = setHoverRange)]
-    pub fn set_hover_range(&mut self, start: usize, end: usize) {
+    pub async fn set_hover_range(&mut self, start: usize, end: usize) {
         if start >= end {
             self.state.borrow_mut().host.set_hover_range(None, None);
         } else {
@@ -1501,117 +1501,117 @@ impl EditorSession {
     }
 
     #[wasm_bindgen(js_name = selectionText)]
-    pub fn selection_text(&self) -> String {
+    pub async fn selection_text(&self) -> String {
         self.state.borrow().host.selection_text()
     }
 
     #[wasm_bindgen(js_name = replaceSelection)]
-    pub fn replace_selection(&mut self, next: &str) {
+    pub async fn replace_selection(&mut self, next: &str) {
         self.state.borrow_mut().host.replace_selection(next);
     }
 
     #[wasm_bindgen(js_name = selectAll)]
-    pub fn select_all(&mut self) {
+    pub async fn select_all(&mut self) {
         self.state.borrow_mut().host.select_all();
     }
 
     #[wasm_bindgen(js_name = tabInsertText)]
-    pub fn tab_insert_text(&self) -> String {
+    pub async fn tab_insert_text(&self) -> String {
         self.state.borrow().host.tab_insert_text()
     }
 
     #[wasm_bindgen(js_name = setEditorSettingsJson)]
-    pub fn set_editor_settings_json(&mut self, json: &str) {
+    pub async fn set_editor_settings_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_editor_settings_json(json);
     }
 
     #[wasm_bindgen(js_name = setDeadLineY)]
-    pub fn set_dead_line_y(&mut self, y: f64) {
+    pub async fn set_dead_line_y(&mut self, y: f64) {
         self.state.borrow_mut().host.set_dead_line_y(y);
     }
 
     #[wasm_bindgen(js_name = setChromeEdgelessScroll)]
-    pub fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
+    pub async fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
         self.state.borrow_mut().host.set_chrome_edgeless_scroll(enabled);
     }
 
     #[wasm_bindgen(js_name = chromeEdgelessScroll)]
-    pub fn chrome_edgeless_scroll(&self) -> bool {
+    pub async fn chrome_edgeless_scroll(&self) -> bool {
         self.state.borrow().host.chrome_edgeless_scroll()
     }
 
     #[wasm_bindgen(js_name = wheelScrollScreen)]
-    pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
+    pub async fn wheel_scroll_screen(&mut self, delta_y: f64) {
         self.state.borrow_mut().host.wheel_scroll_screen(delta_y);
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
         self.state.borrow_mut().host.pointer_down_screen(sx, sy, button);
     }
 
     #[wasm_bindgen(js_name = pointerMoveScreen)]
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, buttons: i32) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64, buttons: i32) {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy, buttons);
     }
 
     #[wasm_bindgen(js_name = pointerUpScreen)]
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, button: i32) {
+    pub async fn pointer_up_screen(&mut self, sx: f64, sy: f64, button: i32) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy, button);
     }
 
     #[wasm_bindgen(js_name = insertText)]
-    pub fn insert_text(&mut self, chunk: &str) {
+    pub async fn insert_text(&mut self, chunk: &str) {
         self.state.borrow_mut().host.insert_text(chunk);
     }
 
     #[wasm_bindgen(js_name = backspace)]
-    pub fn backspace(&mut self) {
+    pub async fn backspace(&mut self) {
         self.state.borrow_mut().host.backspace();
     }
 
     #[wasm_bindgen(js_name = deleteForward)]
-    pub fn delete_forward(&mut self) {
+    pub async fn delete_forward(&mut self) {
         self.state.borrow_mut().host.delete_forward();
     }
 
     #[wasm_bindgen(js_name = moveLineStart)]
-    pub fn move_line_start(&mut self, extend: bool) {
+    pub async fn move_line_start(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_line_start(extend);
     }
 
     #[wasm_bindgen(js_name = moveLineEnd)]
-    pub fn move_line_end(&mut self, extend: bool) {
+    pub async fn move_line_end(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_line_end(extend);
     }
 
     #[wasm_bindgen(js_name = moveLeft)]
-    pub fn move_left(&mut self, extend: bool) {
+    pub async fn move_left(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_left(extend);
     }
 
     #[wasm_bindgen(js_name = moveRight)]
-    pub fn move_right(&mut self, extend: bool) {
+    pub async fn move_right(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_right(extend);
     }
 
     #[wasm_bindgen(js_name = moveUp)]
-    pub fn move_up(&mut self, extend: bool) {
+    pub async fn move_up(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_up(extend);
     }
 
     #[wasm_bindgen(js_name = moveDown)]
-    pub fn move_down(&mut self, extend: bool) {
+    pub async fn move_down(&mut self, extend: bool) {
         self.state.borrow_mut().host.move_down(extend);
     }
 
     #[wasm_bindgen(js_name = caretWorldJson)]
-    pub fn caret_world_json(&self) -> String {
+    pub async fn caret_world_json(&self) -> String {
         self.state.borrow().host.caret_world_json()
     }
 
     #[wasm_bindgen(js_name = worldToScreenJson)]
-    pub fn world_to_screen_json(&self, wx: f64, wy: f64) -> String {
+    pub async fn world_to_screen_json(&self, wx: f64, wy: f64) -> String {
         self.state.borrow().host.world_to_screen_json(wx, wy)
     }
 }
@@ -1623,7 +1623,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn insert_space_inside_token_inserts_without_replacing() {
+    async fn insert_space_inside_token_inserts_without_replacing() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -1634,7 +1634,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_space_at_token_end_appends() {
+    async fn insert_space_at_token_end_appends() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -1645,7 +1645,7 @@ mod tests {
     }
 
     #[test]
-    fn auto_space_before_next_token_at_token_end() {
+    async fn auto_space_before_next_token_at_token_end() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -1655,7 +1655,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_and_caret() {
+    async fn insert_and_caret() {
         let mut host = EditorHost::new();
         host.insert_text("MATCH");
         assert_eq!(host.text(), "MATCH");
@@ -1663,7 +1663,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_from_scene_json_sets_and_clears_hover_range() {
+    async fn sync_from_scene_json_sets_and_clears_hover_range() {
         let mut host = EditorHost::new();
         host.sync_from_scene_json(r#"{"buffer":"abc","hoverJson":"{\"start\":1,\"end\":2}"}"#).unwrap();
         assert_eq!(host.hover_token_range(), Some((1, 2)));
@@ -1672,7 +1672,7 @@ mod tests {
     }
 
     #[test]
-    fn theme_merge_from_json_updates_clear() {
+    async fn theme_merge_from_json_updates_clear() {
         let mut host = EditorHost::new();
         let json = r#"{"rasterClear":[240,236,221,255],"labelFill":[0,17,23,255]}"#;
         host.set_canvas_theme_from_json(json).expect("theme json");
@@ -1681,7 +1681,7 @@ mod tests {
     }
 
     #[test]
-    fn select_all_sets_range() {
+    async fn select_all_sets_range() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         host.select_all();
@@ -1690,7 +1690,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_snaps_var_label_composite() {
+    async fn selection_snaps_var_label_composite() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a1:Piece)".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":15,"class":"ident"}]"#);
@@ -1701,7 +1701,7 @@ mod tests {
     }
 
     #[test]
-    fn select_span_at_picks_ident() {
+    async fn select_span_at_picks_ident() {
         let mut host = EditorHost::new();
         host.set_text("RETURN a1.name".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#);
@@ -1712,7 +1712,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_snaps_fixed_keywords() {
+    async fn selection_snaps_fixed_keywords() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -1722,7 +1722,7 @@ mod tests {
     }
 
     #[test]
-    fn dead_line_ignores_wheel_when_content_fits() {
+    async fn dead_line_ignores_wheel_when_content_fits() {
         let mut host = EditorHost::new();
         host.set_size(400, 300, 1.0);
         host.set_text("line one\nline two".into());
@@ -1733,7 +1733,7 @@ mod tests {
     }
 
     #[test]
-    fn dead_line_toggles_edgeless_and_restores_on_scroll_back() {
+    async fn dead_line_toggles_edgeless_and_restores_on_scroll_back() {
         let mut host = EditorHost::new();
         host.set_size(400, 120, 1.0);
         let lines: String = (0..20).map(|i| format!("line {i}")).collect::<Vec<_>>().join("\n");
@@ -1753,7 +1753,7 @@ mod tests {
     }
 
     #[test]
-    fn editor_viewport_maps_text_to_top_left() {
+    async fn editor_viewport_maps_text_to_top_left() {
         let mut host = EditorHost::new();
         host.set_size(400, 300, 1.0);
         host.set_text("hello".into());
@@ -1766,7 +1766,7 @@ mod tests {
     }
 
     #[test]
-    fn drag_select_extends_range() {
+    async fn drag_select_extends_range() {
         let mut host = EditorHost::new();
         host.set_size(800, 600, 1.0);
         host.set_text("hello world".into());
@@ -1779,7 +1779,7 @@ mod tests {
     }
 
     #[test]
-    fn punctuated_token_line_builds_scene() {
+    async fn punctuated_token_line_builds_scene() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a:Piece)".into());
         host.set_semantic_tokens_json(
@@ -1790,7 +1790,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_has_content() {
+    async fn build_scene_has_content() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a:Piece)\nRETURN a.name".into());
         let _scene = host.build_scene();
@@ -1798,7 +1798,7 @@ mod tests {
     }
 
     #[test]
-    fn backspace_deletes_fixed_keyword_tokenwise() {
+    async fn backspace_deletes_fixed_keyword_tokenwise() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a:Piece)".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"}]"#);
@@ -1809,7 +1809,7 @@ mod tests {
     }
 
     #[test]
-    fn label_span_world_x_matches_scaled_render() {
+    async fn label_span_world_x_matches_scaled_render() {
         let line = "MATCH (a:Piece)";
         let origin = DEFAULT_GUTTER_WIDTH + PAD_X;
         let (x0, x5) = canvas_text::label_span_world_x(line, 0, 5, origin, DEFAULT_FONT_PX);
@@ -1819,7 +1819,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_text_edits() {
+    async fn apply_text_edits() {
         let mut host = EditorHost::new();
         host.set_text("abc def".into());
         host.apply_text_edits_json(r#"[{"range":{"start":{"line":0,"character":4},"end":{"line":0,"character":7}},"newText":"xyz"}]"#);
@@ -1827,7 +1827,7 @@ mod tests {
     }
 
     #[test]
-    fn set_dead_line_y_clamps_negative_to_zero() {
+    async fn set_dead_line_y_clamps_negative_to_zero() {
         let mut host = EditorHost::new();
         host.set_text("a".into());
         host.set_dead_line_y(-50.0);
@@ -1836,7 +1836,7 @@ mod tests {
     }
 
     #[test]
-    fn set_chrome_edgeless_scroll_toggles_flag() {
+    async fn set_chrome_edgeless_scroll_toggles_flag() {
         let mut host = EditorHost::new();
         assert!(!host.chrome_edgeless_scroll());
         host.set_chrome_edgeless_scroll(true);
@@ -1844,7 +1844,7 @@ mod tests {
     }
 
     #[test]
-    fn editor_settings_json_clamps_and_updates_flags() {
+    async fn editor_settings_json_clamps_and_updates_flags() {
         let mut host = EditorHost::new();
         host.set_editor_settings_json(r#"{"fontPx":100,"lineHeight":100,"showLineNumbers":false,"tabSize":20}"#);
         assert_eq!(host.font_px, 28.0);
@@ -1855,7 +1855,7 @@ mod tests {
     }
 
     #[test]
-    fn editor_settings_json_invalid_falls_back_to_defaults() {
+    async fn editor_settings_json_invalid_falls_back_to_defaults() {
         let mut host = EditorHost::new();
         host.set_editor_settings_json("not json");
         assert_eq!(host.font_px, DEFAULT_FONT_PX);
@@ -1865,14 +1865,14 @@ mod tests {
     }
 
     #[test]
-    fn editor_settings_json_clamps_tab_size_minimum() {
+    async fn editor_settings_json_clamps_tab_size_minimum() {
         let mut host = EditorHost::new();
         host.set_editor_settings_json(r#"{"tabSize":0}"#);
         assert_eq!(host.tab_insert_text(), " ");
     }
 
     #[test]
-    fn set_selection_range_clamps_to_text_length() {
+    async fn set_selection_range_clamps_to_text_length() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         host.set_selection_range(0, 100);
@@ -1881,7 +1881,7 @@ mod tests {
     }
 
     #[test]
-    fn hover_token_range_reflects_set_hover_range() {
+    async fn hover_token_range_reflects_set_hover_range() {
         let mut host = EditorHost::new();
         assert_eq!(host.hover_token_range(), None);
         host.set_hover_range(Some(2), Some(5));
@@ -1891,7 +1891,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_text_returns_selected_substring() {
+    async fn selection_text_returns_selected_substring() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_selection(0, 5);
@@ -1899,7 +1899,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_text_empty_when_collapsed() {
+    async fn selection_text_empty_when_collapsed() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(2);
@@ -1907,7 +1907,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_selection_inserts_when_collapsed() {
+    async fn replace_selection_inserts_when_collapsed() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(5);
@@ -1916,7 +1916,7 @@ mod tests {
     }
 
     #[test]
-    fn replace_selection_replaces_range() {
+    async fn replace_selection_replaces_range() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_selection(0, 5);
@@ -1927,7 +1927,7 @@ mod tests {
     }
 
     #[test]
-    fn set_json_collections_parse_into_fields() {
+    async fn set_json_collections_parse_into_fields() {
         let mut host = EditorHost::new();
         host.set_diagnostics_json(r#"[{"start":0,"end":2,"severity":"warning","message":"x"}]"#);
         assert_eq!(host.diagnostics.len(), 1);
@@ -1942,14 +1942,14 @@ mod tests {
     }
 
     #[test]
-    fn set_json_collections_invalid_json_defaults_empty() {
+    async fn set_json_collections_invalid_json_defaults_empty() {
         let mut host = EditorHost::new();
         host.set_diagnostics_json("nope");
         assert!(host.diagnostics.is_empty());
     }
 
     #[test]
-    fn apply_text_edits_multiple_edits_apply_in_reverse_order() {
+    async fn apply_text_edits_multiple_edits_apply_in_reverse_order() {
         let mut host = EditorHost::new();
         host.set_text("one two three".into());
         let json = r#"[
@@ -1961,7 +1961,7 @@ mod tests {
     }
 
     #[test]
-    fn camera_json_reports_y_after_set_camera() {
+    async fn camera_json_reports_y_after_set_camera() {
         let mut host = EditorHost::new();
         host.set_size(400, 100, 1.0);
         host.set_text((0..50).map(|i| format!("line {i}")).collect::<Vec<_>>().join("\n"));
@@ -1973,7 +1973,7 @@ mod tests {
     }
 
     #[test]
-    fn set_size_clamps_to_minimum() {
+    async fn set_size_clamps_to_minimum() {
         let mut host = EditorHost::new();
         host.set_size(0, 0, 0.0);
         assert_eq!(host.viewport.width, 1);
@@ -1982,7 +1982,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_from_scene_json_applies_all_optional_fields() {
+    async fn sync_from_scene_json_applies_all_optional_fields() {
         let mut host = EditorHost::new();
         let occurrences_inner = serde_json::json!({
             "hover": serde_json::json!([{"start":0,"end":1}]).to_string(),
@@ -2018,7 +2018,7 @@ mod tests {
     }
 
     #[test]
-    fn wheel_scroll_moves_camera_when_overflowing_without_dead_line() {
+    async fn wheel_scroll_moves_camera_when_overflowing_without_dead_line() {
         let mut host = EditorHost::new();
         host.set_size(400, 60, 1.0);
         let lines: String = (0..20).map(|i| format!("line {i}")).collect::<Vec<_>>().join("\n");
@@ -2029,7 +2029,7 @@ mod tests {
     }
 
     #[test]
-    fn wheel_scroll_clamps_camera_to_zero() {
+    async fn wheel_scroll_clamps_camera_to_zero() {
         let mut host = EditorHost::new();
         host.set_size(400, 60, 1.0);
         let lines: String = (0..20).map(|i| format!("line {i}")).collect::<Vec<_>>().join("\n");
@@ -2043,7 +2043,7 @@ mod tests {
     /// still repositions the caret to the click point (matching left-click, for the right-click
     /// context-menu's "open where you clicked" UX) but must never start a drag-selection.
     #[test]
-    fn pointer_down_screen_repositions_caret_for_non_primary_button_but_does_not_start_a_drag_selection() {
+    async fn pointer_down_screen_repositions_caret_for_non_primary_button_but_does_not_start_a_drag_selection() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_caret_anchor(3);
@@ -2055,7 +2055,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_screen_primary_button_still_starts_a_drag_selection() {
+    async fn pointer_down_screen_primary_button_still_starts_a_drag_selection() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.pointer_down_screen(0.0, 0.0, 0);
@@ -2063,7 +2063,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_move_screen_sets_hover_without_drag() {
+    async fn pointer_move_screen_sets_hover_without_drag() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2072,7 +2072,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_up_screen_ignores_non_primary_button() {
+    async fn pointer_up_screen_ignores_non_primary_button() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.drag_selecting = true;
@@ -2081,7 +2081,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_text_no_auto_space_for_leading_punctuation() {
+    async fn insert_text_no_auto_space_for_leading_punctuation() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2091,7 +2091,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_text_no_auto_space_without_preceding_token() {
+    async fn insert_text_no_auto_space_without_preceding_token() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(5);
@@ -2100,7 +2100,7 @@ mod tests {
     }
 
     #[test]
-    fn insert_text_no_auto_space_when_next_char_is_whitespace() {
+    async fn insert_text_no_auto_space_when_next_char_is_whitespace() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2110,7 +2110,7 @@ mod tests {
     }
 
     #[test]
-    fn backspace_deletes_selection_when_not_collapsed() {
+    async fn backspace_deletes_selection_when_not_collapsed() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_selection(0, 5);
@@ -2120,7 +2120,7 @@ mod tests {
     }
 
     #[test]
-    fn backspace_at_start_is_noop() {
+    async fn backspace_at_start_is_noop() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(0);
@@ -2129,7 +2129,7 @@ mod tests {
     }
 
     #[test]
-    fn backspace_removes_single_char_without_token() {
+    async fn backspace_removes_single_char_without_token() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(5);
@@ -2139,7 +2139,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_forward_deletes_selection_when_not_collapsed() {
+    async fn delete_forward_deletes_selection_when_not_collapsed() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_selection(0, 5);
@@ -2148,7 +2148,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_forward_at_end_is_noop() {
+    async fn delete_forward_at_end_is_noop() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(5);
@@ -2157,7 +2157,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_forward_removes_token_wholly() {
+    async fn delete_forward_removes_token_wholly() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2169,7 +2169,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_forward_removes_single_char_without_token() {
+    async fn delete_forward_removes_single_char_without_token() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         host.set_caret_anchor(0);
@@ -2178,7 +2178,7 @@ mod tests {
     }
 
     #[test]
-    fn move_line_start_and_end_navigate_and_extend() {
+    async fn move_line_start_and_end_navigate_and_extend() {
         let mut host = EditorHost::new();
         host.set_text("hello\nworld".into());
         host.set_caret_anchor(8);
@@ -2192,7 +2192,7 @@ mod tests {
     }
 
     #[test]
-    fn move_left_jumps_token_boundary() {
+    async fn move_left_jumps_token_boundary() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2203,7 +2203,7 @@ mod tests {
     }
 
     #[test]
-    fn move_right_jumps_token_boundary_and_extends() {
+    async fn move_right_jumps_token_boundary_and_extends() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2214,7 +2214,7 @@ mod tests {
     }
 
     #[test]
-    fn move_left_at_start_stays_at_zero() {
+    async fn move_left_at_start_stays_at_zero() {
         let mut host = EditorHost::new();
         host.set_text("hi".into());
         host.set_caret_anchor(0);
@@ -2223,7 +2223,7 @@ mod tests {
     }
 
     #[test]
-    fn move_right_at_end_stays_at_end() {
+    async fn move_right_at_end_stays_at_end() {
         let mut host = EditorHost::new();
         host.set_text("hi".into());
         host.set_caret_anchor(2);
@@ -2232,7 +2232,7 @@ mod tests {
     }
 
     #[test]
-    fn move_up_at_first_line_goes_to_zero() {
+    async fn move_up_at_first_line_goes_to_zero() {
         let mut host = EditorHost::new();
         host.set_text("hello\nworld".into());
         host.set_caret_anchor(3);
@@ -2241,7 +2241,7 @@ mod tests {
     }
 
     #[test]
-    fn move_down_clamps_to_last_line() {
+    async fn move_down_clamps_to_last_line() {
         let mut host = EditorHost::new();
         host.set_text("a\nb".into());
         host.set_caret_anchor(0);
@@ -2252,7 +2252,7 @@ mod tests {
     }
 
     #[test]
-    fn caret_world_json_reports_position() {
+    async fn caret_world_json_reports_position() {
         let mut host = EditorHost::new();
         host.set_text("hi".into());
         host.set_caret_anchor(2);
@@ -2262,7 +2262,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_targets_reports_line_and_token() {
+    async fn pick_targets_reports_line_and_token() {
         let mut host = EditorHost::new();
         host.set_text("MATCH x".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
@@ -2276,7 +2276,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_targets_without_token_only_reports_line() {
+    async fn pick_targets_without_token_only_reports_line() {
         let mut host = EditorHost::new();
         host.set_text("hello".into());
         let (wx, wy) = offset_to_world(&host, 2);
@@ -2289,7 +2289,7 @@ mod tests {
     }
 
     #[test]
-    fn select_span_at_screen_selects_atomic_span() {
+    async fn select_span_at_screen_selects_atomic_span() {
         let mut host = EditorHost::new();
         host.set_text("RETURN a1.name".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#);
@@ -2302,7 +2302,7 @@ mod tests {
     }
 
     #[test]
-    fn selection_snaps_property_access_tail_allowed() {
+    async fn selection_snaps_property_access_tail_allowed() {
         let mut host = EditorHost::new();
         host.set_text("RETURN a1.name".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#);
@@ -2313,7 +2313,7 @@ mod tests {
     }
 
     #[test]
-    fn var_label_without_head_end_falls_back_to_span_end() {
+    async fn var_label_without_head_end_falls_back_to_span_end() {
         let mut host = EditorHost::new();
         host.set_text("RETURN a1".into());
         host.set_selectable_spans_json(r#"[{"start":7,"end":9,"kind":"varLabel"}]"#);
@@ -2323,7 +2323,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_multiline_selection_and_hover_render_without_panic() {
+    async fn build_scene_multiline_selection_and_hover_render_without_panic() {
         let mut host = EditorHost::new();
         host.set_text("line one\nline two\nline three".into());
         host.set_selection(2, 20);
@@ -2333,7 +2333,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_uses_occurrences_when_present() {
+    async fn build_scene_uses_occurrences_when_present() {
         let mut host = EditorHost::new();
         host.set_text("abc abc abc".into());
         host.set_selection_occurrences_json(r#"[{"start":0,"end":3},{"start":8,"end":11}]"#);
@@ -2343,7 +2343,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_renders_diagnostics_with_and_without_warning_severity() {
+    async fn build_scene_renders_diagnostics_with_and_without_warning_severity() {
         let mut host = EditorHost::new();
         host.set_text("abc def".into());
         host.set_diagnostics_json(r#"[{"start":0,"end":3,"severity":"warning","message":"w"},{"start":4,"end":7,"message":"e"}]"#);
@@ -2352,7 +2352,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_renders_placeholders() {
+    async fn build_scene_renders_placeholders() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         host.set_placeholders_json(r#"[{"offset":1,"label":"?"}]"#);
@@ -2361,7 +2361,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_renders_extra_carets() {
+    async fn build_scene_renders_extra_carets() {
         let mut host = EditorHost::new();
         host.set_text("abc def".into());
         host.set_extra_carets_json(r#"[1,3]"#);
@@ -2371,7 +2371,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_with_caret_hidden_does_not_panic() {
+    async fn build_scene_with_caret_hidden_does_not_panic() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         host.set_caret_visible(false);
@@ -2380,7 +2380,7 @@ mod tests {
     }
 
     #[test]
-    fn build_scene_without_line_numbers_skips_gutter() {
+    async fn build_scene_without_line_numbers_skips_gutter() {
         let mut host = EditorHost::new();
         host.set_editor_settings_json(r#"{"showLineNumbers":false}"#);
         host.set_text("abc".into());
@@ -2389,21 +2389,21 @@ mod tests {
     }
 
     #[test]
-    fn is_insert_whitespace_detects_whitespace_only() {
+    async fn is_insert_whitespace_detects_whitespace_only() {
         assert!(is_insert_whitespace("  \t\n"));
         assert!(!is_insert_whitespace("a "));
         assert!(!is_insert_whitespace(""));
     }
 
     #[test]
-    fn ranges_overlap_detects_overlap_and_disjoint() {
+    async fn ranges_overlap_detects_overlap_and_disjoint() {
         assert!(ranges_overlap(0, 5, 3, 8));
         assert!(!ranges_overlap(0, 5, 5, 8));
         assert!(!ranges_overlap(0, 5, 6, 8));
     }
 
     #[test]
-    fn offset_line_col_roundtrip() {
+    async fn offset_line_col_roundtrip() {
         let text = "abc\ndef\nghi";
         assert_eq!(offset_line_col(text, 5), (1, 1));
         assert_eq!(offset_at_line_col(text, 1, 1), 5);
@@ -2411,13 +2411,13 @@ mod tests {
     }
 
     #[test]
-    fn offset_at_line_col_beyond_last_line_clamps_to_end() {
+    async fn offset_at_line_col_beyond_last_line_clamps_to_end() {
         let text = "abc\ndef";
         assert_eq!(offset_at_line_col(text, 5, 0), text.len());
     }
 
     #[test]
-    fn char_boundary_helpers_handle_multibyte() {
+    async fn char_boundary_helpers_handle_multibyte() {
         let text = "a😀️b";
         let emoji_start = 1;
         let emoji_end = 1 + "😀️".len();
@@ -2428,19 +2428,19 @@ mod tests {
     }
 
     #[test]
-    fn position_to_offset_converts_line_and_character() {
+    async fn position_to_offset_converts_line_and_character() {
         let text = "abc\ndef";
         let pos = TextPosJson { line: 1, character: 2 };
         assert_eq!(position_to_offset(text, &pos), 6);
     }
 
     #[test]
-    fn hit_byte_in_line_empty_line_returns_zero() {
+    async fn hit_byte_in_line_empty_line_returns_zero() {
         assert_eq!(hit_byte_in_line("", 100.0, 0.0, DEFAULT_FONT_PX), 0);
     }
 
     #[test]
-    fn snap_offset_for_atomic_snaps_to_nearest_boundary() {
+    async fn snap_offset_for_atomic_snaps_to_nearest_boundary() {
         let mut host = EditorHost::new();
         host.set_text("MATCH".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"}]"#);
@@ -2450,7 +2450,7 @@ mod tests {
     }
 
     #[test]
-    fn token_span_at_offset_returns_none_outside_tokens() {
+    async fn token_span_at_offset_returns_none_outside_tokens() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":1,"class":"x"}]"#);
@@ -2459,7 +2459,7 @@ mod tests {
     }
 
     #[test]
-    fn token_boundaries_detect_adjacent_tokens() {
+    async fn token_boundaries_detect_adjacent_tokens() {
         let mut host = EditorHost::new();
         host.set_text("ab cd".into());
         host.set_semantic_tokens_json(r#"[{"start":0,"end":2,"class":"x"},{"start":3,"end":5,"class":"y"}]"#);
@@ -2471,7 +2471,7 @@ mod tests {
     }
 
     #[test]
-    fn allowed_composite_selection_matches_full_span_or_default_false() {
+    async fn allowed_composite_selection_matches_full_span_or_default_false() {
         let mut host = EditorHost::new();
         host.set_text("abc".into());
         let span = SelectableSpanJson { start: 0, end: 3, kind: "custom".into(), head_end: None, tail_start: None };

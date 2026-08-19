@@ -52,7 +52,11 @@ pub struct Header {
 impl Header {
     /// @emoji ✍️ Serializes to the exact 32-byte wire form, computing `header_crc32` over
     /// bytes `0..20` and zeroing the 8 reserved bytes.
-    fn write_bytes(&self) -> [u8; HEADER_SIZE] {
+    // 🧮️ Every helper this fn calls (`crc32c`, `PackSink::write_all`) is a first-party `async fn`
+    // one hop away in `semio-framework-replication`, which this packet does not own; R9 rule 3
+    // ("if every consumer can become async, make it async instead") applies, not R9 rule 2 — see
+    // 📓️terra-pack-finish-report.md §"pure-computation-made-async: the recipe".
+    async fn write_bytes(&self) -> [u8; HEADER_SIZE] {
         let mut buf = [0u8; HEADER_SIZE];
         buf[0..8].copy_from_slice(&MAGIC);
         buf[8..10].copy_from_slice(&self.version_major.to_le_bytes());
@@ -60,13 +64,13 @@ impl Header {
         buf[12..16].copy_from_slice(&self.required_flags.to_le_bytes());
         buf[16..20].copy_from_slice(&self.optional_flags.to_le_bytes());
         let crc = crc32c(&buf[0..20]);
-        buf[20..24].copy_from_slice(&crc.to_le_bytes());
+        buf[20..24].copy_from_slice(&crc.await.to_le_bytes());
         buf
     }
 
     /// @emoji 📖️ Parses and validates a 32-byte header: magic, self-CRC, and that
     /// `required_flags` sets no bit outside the known `0..=3` range.
-    fn parse(bytes: &[u8]) -> Result<Self, PackError> {
+    async fn parse(bytes: &[u8]) -> Result<Self, PackError> {
         if bytes.len() < HEADER_SIZE {
             return Err(PackError::Truncated(bytes.len() as u64));
         }
@@ -78,7 +82,7 @@ impl Header {
         let required_flags = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
         let optional_flags = u32::from_le_bytes(bytes[16..20].try_into().unwrap());
         let stored_crc = u32::from_le_bytes(bytes[20..24].try_into().unwrap());
-        let computed_crc = crc32c(&bytes[0..20]);
+        let computed_crc = crc32c(&bytes[0..20]).await;
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "header", offset: 20 });
         }
@@ -119,7 +123,9 @@ pub struct Footer {
 impl Footer {
     /// @emoji ✍️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
     /// preceding 80 bytes.
-    fn write_bytes(&self) -> Vec<u8> {
+    // 🧮️ Same R9-rule-3 reasoning as `Header::write_bytes` above — `crc32c` is a pure but
+    // externally-owned `async fn`, so this fn propagates `async` rather than fighting it.
+    async fn write_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(FOOTER_SIZE);
         buf.extend_from_slice(&FOOTER_MAGIC);
         buf.extend_from_slice(&self.version_major.to_le_bytes());
@@ -131,14 +137,14 @@ impl Footer {
         buf.extend_from_slice(&self.content_hash.0);
         buf.extend_from_slice(&self.prev_footer_offset.to_le_bytes());
         let crc = crc32c(&buf);
-        buf.extend_from_slice(&crc.to_le_bytes());
+        buf.extend_from_slice(&crc.await.to_le_bytes());
         buf
     }
 
     /// @emoji 📖️ Parses and validates an 84-byte footer: magic and self-CRC over the first 80
     /// bytes. Does not cross-check `file_len` against an actual source — callers that have one
     /// should do so themselves (see `PackFile::open_superblock`).
-    fn parse(bytes: &[u8]) -> Result<Self, PackError> {
+    async fn parse(bytes: &[u8]) -> Result<Self, PackError> {
         if bytes.len() < FOOTER_SIZE {
             return Err(PackError::Truncated(bytes.len() as u64));
         }
@@ -155,7 +161,7 @@ impl Footer {
         hash.copy_from_slice(&bytes[40..72]);
         let prev_footer_offset = u64::from_le_bytes(bytes[72..80].try_into().unwrap());
         let stored_crc = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
-        let computed_crc = crc32c(&bytes[0..80]);
+        let computed_crc = crc32c(&bytes[0..80]).await;
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "footer", offset: 80 });
         }
@@ -174,40 +180,40 @@ struct EncodedSegment {
 }
 
 /// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for compression.
-fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
+async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => Ok(raw.to_vec()),
-        1 => crate::codec::deflate_compress(raw),
+        1 => crate::codec::deflate_compress(raw).await,
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
 
 /// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for decompression.
-fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
+async fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
     match codec.0 {
-        0 => NoCompression.decompress(stored, raw_len, limit),
-        1 => crate::codec::deflate_decompress(stored, raw_len, limit),
+        0 => NoCompression.decompress(stored, raw_len, limit).await,
+        1 => crate::codec::deflate_decompress(stored, raw_len, limit).await,
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
 
 /// @emoji 🖇️ Frames `payload` as a segment per the contract's byte layout: `kind, flags,
 /// seg_len, [raw_len], payload, crc32`. Compresses first when `codec` is non-identity.
-fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<EncodedSegment, PackError> {
+async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<EncodedSegment, PackError> {
     let compressed = codec.0 != 0;
-    let stored = if compressed { codec_compress(codec, payload)? } else { payload.to_vec() };
+    let stored = if compressed { codec_compress(codec, payload).await? } else { payload.to_vec() };
     let flags: u8 = if compressed { 1 | (codec.0 << 1) } else { 0 };
     let mut buf = Vec::with_capacity(stored.len() + 24);
     buf.push(kind);
     buf.push(flags);
-    write_varint_u64(&mut buf, stored.len() as u64);
+    write_varint_u64(&mut buf, stored.len() as u64).await;
     if compressed {
-        write_varint_u64(&mut buf, payload.len() as u64);
+        write_varint_u64(&mut buf, payload.len() as u64).await;
     }
     let header_len = buf.len();
     buf.extend_from_slice(&stored);
     let crc = crc32c(&buf);
-    buf.extend_from_slice(&crc.to_le_bytes());
+    buf.extend_from_slice(&crc.await.to_le_bytes());
     Ok(EncodedSegment { bytes: buf, header_len, stored_len: stored.len() })
 }
 
@@ -221,19 +227,19 @@ struct DecodedSegment {
 }
 
 /// @emoji 1⃣ Bounds-checked single-byte read at an absolute file offset.
-fn read_u8_at<S: PackSource>(source: &S, offset: u64) -> Result<u8, PackError> {
+async fn read_u8_at<S: PackSource>(source: &S, offset: u64) -> Result<u8, PackError> {
     let mut buf = [0u8; 1];
-    source.read_exact_at(offset, &mut buf)?;
+    source.read_exact_at(offset, &mut buf).await?;
     Ok(buf[0])
 }
 
 /// @emoji 🔢️ Reads one LEB128 varint starting at an absolute file offset, one byte at a time so
 /// it never over-reads past a legitimately short remaining file. Returns `(value, bytes_consumed)`.
-fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u64), PackError> {
+async fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u64), PackError> {
     let mut tmp: Vec<u8> = Vec::with_capacity(10);
     let mut i = 0u64;
     loop {
-        let byte = read_u8_at(source, offset + i)?;
+        let byte = read_u8_at(source, offset + i).await?;
         tmp.push(byte);
         i += 1;
         if byte & 0x80 == 0 {
@@ -244,7 +250,7 @@ fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u6
         }
     }
     let mut pos = 0usize;
-    let value = read_varint_u64(&tmp, &mut pos)?;
+    let value = read_varint_u64(&tmp, &mut pos).await?;
     Ok((value, i))
 }
 
@@ -254,19 +260,19 @@ fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u6
 /// the frame's CRC-32C and decompresses. Unknown `kind` values are decoded and returned as-is —
 /// callers that only want known kinds are responsible for skipping/rejecting them, this function
 /// never errors on an unrecognized kind.
-fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits, verify_crc: bool) -> Result<DecodedSegment, PackError> {
-    let total_len = source.len();
+async fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits, verify_crc: bool) -> Result<DecodedSegment, PackError> {
+    let total_len = source.len().await;
     if offset >= total_len {
         return Err(PackError::Truncated(offset));
     }
-    let kind = read_u8_at(source, offset)?;
-    let flags = read_u8_at(source, offset + 1)?;
+    let kind = read_u8_at(source, offset).await?;
+    let flags = read_u8_at(source, offset + 1).await?;
     let compressed = flags & 0x01 != 0;
     let codec = CodecId((flags >> 1) & 0x07);
-    let (stored_len, n1) = read_varint_u64_at(source, offset + 2)?;
+    let (stored_len, n1) = read_varint_u64_at(source, offset + 2).await?;
     let mut cursor = offset + 2 + n1;
     let raw_len = if compressed {
-        let (v, n2) = read_varint_u64_at(source, cursor)?;
+        let (v, n2) = read_varint_u64_at(source, cursor).await?;
         cursor += n2;
         v
     } else {
@@ -282,22 +288,22 @@ fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits
     }
     let header_len = (payload_offset - offset) as usize;
     let mut frame = vec![0u8; header_len + stored_len as usize];
-    source.read_exact_at(offset, &mut frame)?;
+    source.read_exact_at(offset, &mut frame).await?;
     let crc_offset = payload_end;
     if crc_offset + 4 > total_len {
         return Err(PackError::Truncated(crc_offset));
     }
     let mut crc_bytes = [0u8; 4];
-    source.read_exact_at(crc_offset, &mut crc_bytes)?;
+    source.read_exact_at(crc_offset, &mut crc_bytes).await?;
     if verify_crc {
         let stored_crc = u32::from_le_bytes(crc_bytes);
-        let computed_crc = crc32c(&frame);
+        let computed_crc = crc32c(&frame).await;
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "segment", offset: crc_offset });
         }
     }
     let stored_payload = &frame[header_len..];
-    let payload = if compressed { codec_decompress(codec, stored_payload, raw_len, limits.max_segment_len)? } else { stored_payload.to_vec() };
+    let payload = if compressed { codec_decompress(codec, stored_payload, raw_len, limits.max_segment_len).await? } else { stored_payload.to_vec() };
     let consumed = (crc_offset + 4) - offset;
     Ok(DecodedSegment { kind, payload, consumed })
 }
@@ -307,12 +313,12 @@ fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits
 /// @emoji ✍️ Serializes a symbol table: `count varint, then count × (len varint, utf8 bytes)`.
 /// Exposed so callers (e.g. `pack_value`) can build a `KIND_SYMBOLS` segment payload for
 /// `PackWriter::write_segment` without re-implementing this crate's wire format.
-pub fn encode_symbols(symbols: &[String]) -> Vec<u8> {
+pub async fn encode_symbols(symbols: &[String]) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, symbols.len() as u64);
+    write_varint_u64(&mut buf, symbols.len() as u64).await;
     for symbol in symbols {
         let bytes = symbol.as_bytes();
-        write_varint_u64(&mut buf, bytes.len() as u64);
+        write_varint_u64(&mut buf, bytes.len() as u64).await;
         buf.extend_from_slice(bytes);
     }
     buf
@@ -320,15 +326,15 @@ pub fn encode_symbols(symbols: &[String]) -> Vec<u8> {
 
 /// @emoji 📖️ Parses a symbol table, rejecting a count over `limits.max_symbols` before
 /// allocating the output `Vec`.
-fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
+async fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
     let mut pos = 0usize;
-    let count = read_varint_u64(payload, &mut pos)?;
+    let count = read_varint_u64(payload, &mut pos).await?;
     if count > limits.max_symbols as u64 {
         return Err(PackError::LimitExceeded("symbol count exceeds max_symbols"));
     }
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let len = read_varint_u64(payload, &mut pos)? as usize;
+        let len = read_varint_u64(payload, &mut pos).await? as usize;
         if pos + len > payload.len() {
             return Err(PackError::Truncated(pos as u64));
         }
@@ -356,13 +362,13 @@ struct ChunkTableEntry {
 
 /// @emoji ✍️ Serializes the chunk table: `count varint, then count × (offset, stored_len,
 /// raw_len varints, crc32 u32 LE, blake3 [u8;32])`.
-fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
+async fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, entries.len() as u64);
+    write_varint_u64(&mut buf, entries.len() as u64).await;
     for entry in entries {
-        write_varint_u64(&mut buf, entry.offset);
-        write_varint_u64(&mut buf, entry.stored_len);
-        write_varint_u64(&mut buf, entry.raw_len);
+        write_varint_u64(&mut buf, entry.offset).await;
+        write_varint_u64(&mut buf, entry.stored_len).await;
+        write_varint_u64(&mut buf, entry.raw_len).await;
         buf.extend_from_slice(&entry.crc32.to_le_bytes());
         buf.extend_from_slice(&entry.blake3);
     }
@@ -371,17 +377,17 @@ fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
 
 /// @emoji 📖️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
 /// length over `limits.max_segment_len` before allocating.
-fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
+async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
     let mut pos = 0usize;
-    let count = read_varint_u64(payload, &mut pos)?;
+    let count = read_varint_u64(payload, &mut pos).await?;
     if count > limits.max_items {
         return Err(PackError::LimitExceeded("chunk_table count exceeds max_items"));
     }
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let offset = read_varint_u64(payload, &mut pos)?;
-        let stored_len = read_varint_u64(payload, &mut pos)?;
-        let raw_len = read_varint_u64(payload, &mut pos)?;
+        let offset = read_varint_u64(payload, &mut pos).await?;
+        let stored_len = read_varint_u64(payload, &mut pos).await?;
+        let raw_len = read_varint_u64(payload, &mut pos).await?;
         if stored_len > limits.max_segment_len || raw_len > limits.max_segment_len {
             return Err(PackError::LimitExceeded("chunk table entry length exceeds max_segment_len"));
         }
@@ -438,57 +444,59 @@ struct RawManifest {
     symbol_count: u64,
 }
 
-fn write_span(buf: &mut Vec<u8>, span: ByteRange) {
-    write_varint_u64(buf, span.offset);
-    write_varint_u64(buf, span.len);
+async fn write_span(buf: &mut Vec<u8>, span: ByteRange) {
+    write_varint_u64(buf, span.offset).await;
+    write_varint_u64(buf, span.len).await;
 }
 
-fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackError> {
-    let offset = read_varint_u64(payload, pos)?;
-    let len = read_varint_u64(payload, pos)?;
+async fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackError> {
+    let offset = read_varint_u64(payload, pos).await?;
+    let len = read_varint_u64(payload, pos).await?;
     Ok(ByteRange { offset, len })
 }
 
 /// @emoji ✍️ Serializes the manifest segment payload per the contract's field order.
-fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u8> {
+async fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, schema_symref);
+    write_varint_u64(&mut buf, schema_symref).await;
     buf.extend_from_slice(&manifest.schema_hash);
-    write_span(&mut buf, manifest.doc_span);
-    write_varint_u64(&mut buf, manifest.doc_frame_count);
-    write_span(&mut buf, manifest.symbols_span);
-    write_span(&mut buf, manifest.chunk_table_span);
-    write_span(&mut buf, manifest.field_index_span);
-    write_varint_u64(&mut buf, manifest.uncompressed_body_len);
-    write_varint_u64(&mut buf, manifest.field_count);
-    write_varint_u64(&mut buf, manifest.chunk_count);
-    write_varint_u64(&mut buf, manifest.symbol_count);
+    write_span(&mut buf, manifest.doc_span).await;
+    write_varint_u64(&mut buf, manifest.doc_frame_count).await;
+    write_span(&mut buf, manifest.symbols_span).await;
+    write_span(&mut buf, manifest.chunk_table_span).await;
+    write_span(&mut buf, manifest.field_index_span).await;
+    write_varint_u64(&mut buf, manifest.uncompressed_body_len).await;
+    write_varint_u64(&mut buf, manifest.field_count).await;
+    write_varint_u64(&mut buf, manifest.chunk_count).await;
+    write_varint_u64(&mut buf, manifest.symbol_count).await;
     buf
 }
 
 /// @emoji 📖️ Parses the manifest segment payload. Trailing bytes beyond the known fields are
 /// silently ignored (additive-evolution slot), never an error.
-fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
+async fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
     let mut pos = 0usize;
-    let schema_symref = read_varint_u64(payload, &mut pos)?;
+    let schema_symref = read_varint_u64(payload, &mut pos).await?;
     if pos + 32 > payload.len() {
         return Err(PackError::Truncated(pos as u64));
     }
     let mut schema_hash = [0u8; 32];
     schema_hash.copy_from_slice(&payload[pos..pos + 32]);
     pos += 32;
-    let doc_span = read_span(payload, &mut pos)?;
-    let doc_frame_count = read_varint_u64(payload, &mut pos)?;
-    let symbols_span = read_span(payload, &mut pos)?;
-    let chunk_table_span = read_span(payload, &mut pos)?;
-    let field_index_span = read_span(payload, &mut pos)?;
-    let uncompressed_body_len = read_varint_u64(payload, &mut pos)?;
-    let field_count = read_varint_u64(payload, &mut pos)?;
-    let chunk_count = read_varint_u64(payload, &mut pos)?;
-    let symbol_count = read_varint_u64(payload, &mut pos)?;
+    let doc_span = read_span(payload, &mut pos).await?;
+    let doc_frame_count = read_varint_u64(payload, &mut pos).await?;
+    let symbols_span = read_span(payload, &mut pos).await?;
+    let chunk_table_span = read_span(payload, &mut pos).await?;
+    let field_index_span = read_span(payload, &mut pos).await?;
+    let uncompressed_body_len = read_varint_u64(payload, &mut pos).await?;
+    let field_count = read_varint_u64(payload, &mut pos).await?;
+    let chunk_count = read_varint_u64(payload, &mut pos).await?;
+    let symbol_count = read_varint_u64(payload, &mut pos).await?;
     Ok(RawManifest { schema_symref, schema_hash, doc_span, doc_frame_count, symbols_span, chunk_table_span, field_index_span, uncompressed_body_len, field_count, chunk_count, symbol_count })
 }
 
+// 🚫️async: E1 pure struct-field resolution — no I/O, no call into any async fn (unlike its
+// siblings in this region it never touches `crc32c`/`read_varint_u64`), so nothing forces async.
 fn resolve_manifest(raw: &RawManifest, symbols: &[String]) -> Result<Manifest, PackError> {
     let schema_name =
         if symbols.is_empty() && raw.schema_symref == 0 { String::new() } else { symbols.get(raw.schema_symref as usize).cloned().ok_or(PackError::Malformed { what: "manifest", offset: 0, detail: "schema symref out of range".to_string() })? };
@@ -522,6 +530,7 @@ pub enum VerificationLevel {
 }
 
 impl VerificationLevel {
+    // 🚫️async: E1 pure enum-variant predicate — no I/O, no async call anywhere in the body.
     fn checks_crc(self) -> bool {
         !matches!(self, Self::Trusted)
     }
@@ -561,7 +570,7 @@ pub struct PackWriter<S: PackSink> {
 
 impl<S: PackSink> PackWriter<S> {
     /// @emoji 🚀️ Writes the 32-byte header and returns a writer positioned right after it.
-    pub fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, PackError> {
+    pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, PackError> {
         let mut required_flags = options.required_flags;
         if options.codec.0 != 0 {
             required_flags |= REQUIRED_COMPRESSED;
@@ -571,7 +580,7 @@ impl<S: PackSink> PackWriter<S> {
             return Err(PackError::UnknownRequiredFlags(unknown));
         }
         let header = Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags, optional_flags: options.optional_flags };
-        sink.write_all(&header.write_bytes())?;
+        sink.write_all(&header.write_bytes().await).await?;
         Ok(Self { sink, options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec }, chunks: Vec::new(), symbols: Vec::new(), symbols_span: None, document_hasher: blake3::Hasher::new() })
     }
 
@@ -579,20 +588,20 @@ impl<S: PackSink> PackWriter<S> {
     /// at. Callers building a `Manifest` (e.g. `doc_span`/`field_index_span`) call this before
     /// and after their own `write_segment` calls to record spans this writer doesn't track
     /// automatically.
-    pub fn position(&self) -> u64 {
-        self.sink.position()
+    pub async fn position(&self) -> u64 {
+        self.sink.position().await
     }
 
     /// @emoji 🖇️ Frames, compresses (per `options.codec`), CRCs, and writes one segment. A
     /// `KIND_SYMBOLS` segment is parsed and remembered for `schema_name` resolution in `finish`;
     /// a `KIND_DOCUMENT` segment's raw bytes are folded into the running content-hash used for
     /// the footer.
-    pub fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
-        let base = self.sink.position();
-        let encoded = encode_segment(kind, self.options.codec, payload)?;
-        self.sink.write_all(&encoded.bytes)?;
+    pub async fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
+        let base = self.sink.position().await;
+        let encoded = encode_segment(kind, self.options.codec, payload).await?;
+        self.sink.write_all(&encoded.bytes).await?;
         if kind == crate::KIND_SYMBOLS {
-            self.symbols = decode_symbols(payload, &PackLimits::default())?;
+            self.symbols = decode_symbols(payload, &PackLimits::default()).await?;
             self.symbols_span = Some(ByteRange { offset: base, len: encoded.bytes.len() as u64 });
         }
         if kind == crate::KIND_DOCUMENT {
@@ -603,14 +612,14 @@ impl<S: PackSink> PackWriter<S> {
 
     /// @emoji 🧱️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
     /// chunk table `finish` will emit.
-    pub fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
-        let base = self.sink.position();
-        let encoded = encode_segment(crate::KIND_CHUNK, self.options.codec, payload)?;
+    pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
+        let base = self.sink.position().await;
+        let encoded = encode_segment(crate::KIND_CHUNK, self.options.codec, payload).await?;
         let payload_offset = base + encoded.header_len as u64;
         let stored_bytes = &encoded.bytes[encoded.header_len..encoded.header_len + encoded.stored_len];
-        let stored_crc = crc32c(stored_bytes);
+        let stored_crc = crc32c(stored_bytes).await;
         let raw_hash = blake3::hash(payload);
-        self.sink.write_all(&encoded.bytes)?;
+        self.sink.write_all(&encoded.bytes).await?;
         let id = ChunkId(self.chunks.len() as u32);
         self.chunks.push(ChunkTableEntry { offset: payload_offset, stored_len: encoded.stored_len as u64, raw_len: payload.len() as u64, crc32: stored_crc, blake3: *raw_hash.as_bytes() });
         Ok(id)
@@ -618,13 +627,13 @@ impl<S: PackSink> PackWriter<S> {
 
     /// @emoji 🏁️ Writes the chunk table (if any chunks were written), the manifest, an `End`
     /// segment, then the footer — and returns the underlying sink.
-    pub fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+    pub async fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
         let mut chunk_table_span = ByteRange { offset: 0, len: 0 };
         if !self.chunks.is_empty() {
-            let base = self.sink.position();
-            let table_bytes = encode_chunk_table(&self.chunks);
-            let encoded = encode_segment(crate::KIND_CHUNK_TABLE, self.options.codec, &table_bytes)?;
-            self.sink.write_all(&encoded.bytes)?;
+            let base = self.sink.position().await;
+            let table_bytes = encode_chunk_table(&self.chunks).await;
+            let encoded = encode_segment(crate::KIND_CHUNK_TABLE, self.options.codec, &table_bytes).await?;
+            self.sink.write_all(&encoded.bytes).await?;
             chunk_table_span = ByteRange { offset: base, len: encoded.bytes.len() as u64 };
         }
         let schema_symref = if manifest.schema_name.is_empty() {
@@ -645,17 +654,17 @@ impl<S: PackSink> PackWriter<S> {
             chunk_count: self.chunks.len() as u64,
             symbol_count: self.symbols.len() as u64,
         };
-        let manifest_bytes = encode_manifest_bytes(schema_symref, &final_manifest);
-        let manifest_base = self.sink.position();
-        let manifest_encoded = encode_segment(crate::KIND_MANIFEST, self.options.codec, &manifest_bytes)?;
-        self.sink.write_all(&manifest_encoded.bytes)?;
+        let manifest_bytes = encode_manifest_bytes(schema_symref, &final_manifest).await;
+        let manifest_base = self.sink.position().await;
+        let manifest_encoded = encode_segment(crate::KIND_MANIFEST, self.options.codec, &manifest_bytes).await?;
+        self.sink.write_all(&manifest_encoded.bytes).await?;
         let manifest_span = ByteRange { offset: manifest_base, len: manifest_encoded.bytes.len() as u64 };
 
-        let end_encoded = encode_segment(crate::KIND_END, CodecId(0), &[])?;
-        self.sink.write_all(&end_encoded.bytes)?;
+        let end_encoded = encode_segment(crate::KIND_END, CodecId(0), &[]).await?;
+        self.sink.write_all(&end_encoded.bytes).await?;
 
         let content_hash = ContentHash(*self.document_hasher.finalize().as_bytes());
-        let file_len = self.sink.position() + FOOTER_SIZE as u64;
+        let file_len = self.sink.position().await + FOOTER_SIZE as u64;
         let footer = Footer {
             version_major: FORMAT_VERSION_MAJOR,
             version_minor: FORMAT_VERSION_MINOR,
@@ -666,8 +675,8 @@ impl<S: PackSink> PackWriter<S> {
             content_hash,
             prev_footer_offset: 0,
         };
-        self.sink.write_all(&footer.write_bytes())?;
-        self.sink.flush()?;
+        self.sink.write_all(&footer.write_bytes().await).await?;
+        self.sink.flush().await?;
         Ok(self.sink)
     }
 }
@@ -697,17 +706,17 @@ pub struct PackFile<S: PackSource> {
 impl<S: PackSource> PackFile<S> {
     /// @emoji 1⃣ Level 1: parses and CRC-validates the header and footer only, and cross-checks
     /// the footer's `file_len` against the actual source length.
-    pub fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
-        let len = source.len();
+    pub async fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
+        let len = source.len().await;
         if len < FOOTER_SIZE as u64 {
             return Err(PackError::Truncated(len));
         }
         let mut header_bytes = [0u8; HEADER_SIZE];
-        source.read_exact_at(0, &mut header_bytes)?;
-        let header = Header::parse(&header_bytes)?;
+        source.read_exact_at(0, &mut header_bytes).await?;
+        let header = Header::parse(&header_bytes).await?;
         let mut footer_bytes = vec![0u8; FOOTER_SIZE];
-        source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes)?;
-        let footer = Footer::parse(&footer_bytes)?;
+        source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes).await?;
+        let footer = Footer::parse(&footer_bytes).await?;
         if footer.file_len != len {
             return Err(PackError::Malformed { what: "footer", offset: len - FOOTER_SIZE as u64, detail: "file_len does not match actual source length".to_string() });
         }
@@ -716,32 +725,32 @@ impl<S: PackSource> PackFile<S> {
 
     /// @emoji 2⃣ Level 2: `open_superblock` plus decoding the manifest, its symbol table (used
     /// to resolve `manifest().schema_name`), and the chunk table (if present).
-    pub fn open_manifest(source: S, limits: &PackLimits, verification: VerificationLevel) -> Result<Self, PackError> {
-        let mut this = Self::open_superblock(source, limits)?;
+    pub async fn open_manifest(source: S, limits: &PackLimits, verification: VerificationLevel) -> Result<Self, PackError> {
+        let mut this = Self::open_superblock(source, limits).await?;
         let verify_crc = verification.checks_crc();
-        let manifest_seg = decode_segment_at(&this.source, this.superblock.footer.manifest_offset, &this.limits, verify_crc)?;
+        let manifest_seg = decode_segment_at(&this.source, this.superblock.footer.manifest_offset, &this.limits, verify_crc).await?;
         if manifest_seg.kind != crate::KIND_MANIFEST {
             return Err(PackError::Malformed { what: "manifest", offset: this.superblock.footer.manifest_offset, detail: "expected KIND_MANIFEST segment".to_string() });
         }
         if manifest_seg.consumed != this.superblock.footer.manifest_len {
             return Err(PackError::Malformed { what: "manifest", offset: this.superblock.footer.manifest_offset, detail: "manifest_len mismatch".to_string() });
         }
-        let raw = parse_raw_manifest(&manifest_seg.payload)?;
+        let raw = parse_raw_manifest(&manifest_seg.payload).await?;
         let symbols = if raw.symbols_span.len > 0 {
-            let seg = decode_segment_at(&this.source, raw.symbols_span.offset, &this.limits, verify_crc)?;
+            let seg = decode_segment_at(&this.source, raw.symbols_span.offset, &this.limits, verify_crc).await?;
             if seg.kind != crate::KIND_SYMBOLS {
                 return Err(PackError::Malformed { what: "symbols", offset: raw.symbols_span.offset, detail: "expected KIND_SYMBOLS segment".to_string() });
             }
-            decode_symbols(&seg.payload, &this.limits)?
+            decode_symbols(&seg.payload, &this.limits).await?
         } else {
             Vec::new()
         };
         let chunk_table = if raw.chunk_table_span.len > 0 {
-            let seg = decode_segment_at(&this.source, raw.chunk_table_span.offset, &this.limits, verify_crc)?;
+            let seg = decode_segment_at(&this.source, raw.chunk_table_span.offset, &this.limits, verify_crc).await?;
             if seg.kind != crate::KIND_CHUNK_TABLE {
                 return Err(PackError::Malformed { what: "chunk_table", offset: raw.chunk_table_span.offset, detail: "expected KIND_CHUNK_TABLE segment".to_string() });
             }
-            decode_chunk_table(&seg.payload, &this.limits)?
+            decode_chunk_table(&seg.payload, &this.limits).await?
         } else {
             Vec::new()
         };
@@ -777,20 +786,20 @@ impl<S: PackSource> PackFile<S> {
 
     /// @emoji 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
     /// chunk; at `Full` also verifies its blake3 content hash.
-    pub fn read_chunk(&self, id: ChunkId, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
+    pub async fn read_chunk(&self, id: ChunkId, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
         let entry = self.chunk_table.get(id.0 as usize).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
         if entry.stored_len > self.limits.max_segment_len || entry.raw_len > self.limits.max_segment_len {
             return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));
         }
-        let total_len = self.source.len();
+        let total_len = self.source.len().await;
         let end = entry.offset.checked_add(entry.stored_len).ok_or(PackError::LimitExceeded("chunk range overflow"))?;
         if end > total_len {
             return Err(PackError::Truncated(entry.offset));
         }
         let mut stored = vec![0u8; entry.stored_len as usize];
-        self.source.read_exact_at(entry.offset, &mut stored)?;
+        self.source.read_exact_at(entry.offset, &mut stored).await?;
         if verification.checks_crc() {
-            let computed = crc32c(&stored);
+            let computed = crc32c(&stored).await;
             if computed != entry.crc32 {
                 return Err(PackError::ChecksumMismatch { segment: "chunk", offset: entry.offset });
             }
@@ -799,7 +808,7 @@ impl<S: PackSource> PackFile<S> {
             stored
         } else {
             let codec = if self.superblock.header.required_flags & REQUIRED_COMPRESSED != 0 { CodecId(1) } else { CodecId(0) };
-            codec_decompress(codec, &stored, entry.raw_len, self.limits.max_segment_len)?
+            codec_decompress(codec, &stored, entry.raw_len, self.limits.max_segment_len).await?
         };
         if verification.checks_content_hash() {
             let hash = blake3::hash(&raw);
@@ -813,14 +822,14 @@ impl<S: PackSource> PackFile<S> {
     /// @emoji 📄️ Level 3: reads and concatenates the `doc_frame_count` `KIND_DOCUMENT` segments
     /// starting at `manifest().doc_span.offset`; at `Full` also verifies the result's blake3
     /// hash against the footer's `content_hash`.
-    pub fn body_bytes(&self, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
+    pub async fn body_bytes(&self, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
         let manifest = self.manifest.as_ref().ok_or_else(|| PackError::Schema("manifest not loaded; call open_manifest first".to_string()))?;
         let mut out = Vec::new();
         if manifest.doc_span.len > 0 {
             let mut offset = manifest.doc_span.offset;
             let frames = manifest.doc_frame_count.max(1);
             for _ in 0..frames {
-                let seg = decode_segment_at(&self.source, offset, &self.limits, verification.checks_crc())?;
+                let seg = decode_segment_at(&self.source, offset, &self.limits, verification.checks_crc()).await?;
                 if seg.kind != crate::KIND_DOCUMENT {
                     return Err(PackError::Malformed { what: "document", offset, detail: "expected KIND_DOCUMENT segment".to_string() });
                 }
@@ -845,14 +854,14 @@ impl<S: PackSource> PackFile<S> {
 
 /// @emoji 🔎️ Standalone helper (used by `crate::content_hash`) that reads and parses only the
 /// last `FOOTER_SIZE` bytes of `source`, without touching the header or any segment.
-pub fn read_footer_only<S: PackSource>(source: &S) -> Result<Footer, PackError> {
-    let len = source.len();
+pub async fn read_footer_only<S: PackSource>(source: &S) -> Result<Footer, PackError> {
+    let len = source.len().await;
     if len < FOOTER_SIZE as u64 {
         return Err(PackError::Truncated(len));
     }
     let mut buf = vec![0u8; FOOTER_SIZE];
-    source.read_exact_at(len - FOOTER_SIZE as u64, &mut buf)?;
-    Footer::parse(&buf)
+    source.read_exact_at(len - FOOTER_SIZE as u64, &mut buf).await?;
+    Footer::parse(&buf).await
 }
 //#endregion 🔖️Reader
 
@@ -871,21 +880,21 @@ pub struct RecoveryReport {
 /// not rejected. If a `KIND_MANIFEST` and (when its `schema_name` is non-empty) a matching
 /// `KIND_SYMBOLS` segment were both recovered, the manifest is resolved and returned too. Used
 /// when the footer itself fails to parse/validate.
-pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
-    let len = source.len();
+pub async fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
+    let len = source.len().await;
     if len < HEADER_SIZE as u64 {
         return Err(PackError::Truncated(len));
     }
     let mut header_bytes = [0u8; HEADER_SIZE];
-    source.read_exact_at(0, &mut header_bytes)?;
-    Header::parse(&header_bytes)?;
+    source.read_exact_at(0, &mut header_bytes).await?;
+    Header::parse(&header_bytes).await?;
 
     let mut offset = HEADER_SIZE as u64;
     let mut segments_recovered = 0u64;
     let mut bytes_recovered = 0u64;
     let mut found: Vec<(u8, Vec<u8>)> = Vec::new();
     while offset < len {
-        match decode_segment_at(source, offset, limits, true) {
+        match decode_segment_at(source, offset, limits, true).await {
             Ok(seg) => {
                 segments_recovered += 1;
                 bytes_recovered += seg.consumed;
@@ -900,8 +909,18 @@ pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<Recover
         }
     }
 
-    let symbols = found.iter().find(|(kind, _)| *kind == crate::KIND_SYMBOLS).and_then(|(_, payload)| decode_symbols(payload, limits).ok()).unwrap_or_default();
-    let manifest = found.iter().find(|(kind, _)| *kind == crate::KIND_MANIFEST).and_then(|(_, payload)| parse_raw_manifest(payload).ok()).and_then(|raw| resolve_manifest(&raw, &symbols).ok());
+    let mut symbols = Vec::new();
+    if let Some((_, payload)) = found.iter().find(|(kind, _)| *kind == crate::KIND_SYMBOLS) {
+        if let Ok(decoded) = decode_symbols(payload, limits).await {
+            symbols = decoded;
+        }
+    }
+    let mut manifest = None;
+    if let Some((_, payload)) = found.iter().find(|(kind, _)| *kind == crate::KIND_MANIFEST) {
+        if let Ok(raw) = parse_raw_manifest(payload).await {
+            manifest = resolve_manifest(&raw, &symbols).ok();
+        }
+    }
 
     Ok(RecoveryReport { segments_recovered, bytes_recovered, manifest })
 }
@@ -914,71 +933,71 @@ mod tests {
     use super::*;
 
     //#region 🔖️Header
-    #[test]
-    fn header_hand_built_bytes_parse_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_hand_built_bytes_parse_round_trip() {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&MAGIC);
         bytes.extend_from_slice(&1u16.to_le_bytes());
         bytes.extend_from_slice(&0u16.to_le_bytes());
         bytes.extend_from_slice(&REQUIRED_COMPRESSED.to_le_bytes());
         bytes.extend_from_slice(&OPTIONAL_CANONICAL.to_le_bytes());
-        let crc = crc32c(&bytes[0..20]);
+        let crc = crc32c(&bytes[0..20]).await;
         bytes.extend_from_slice(&crc.to_le_bytes());
         bytes.extend_from_slice(&[0u8; 8]);
         assert_eq!(bytes.len(), HEADER_SIZE);
 
-        let header = Header::parse(&bytes).unwrap();
+        let header = Header::parse(&bytes).await.unwrap();
         assert_eq!(header.version_major, 1);
         assert_eq!(header.version_minor, 0);
         assert_eq!(header.required_flags, REQUIRED_COMPRESSED);
         assert_eq!(header.optional_flags, OPTIONAL_CANONICAL);
-        assert_eq!(header.write_bytes()[0..24], bytes[0..24]);
+        assert_eq!(header.write_bytes().await[0..24], bytes[0..24]);
     }
 
-    #[test]
-    fn header_parse_rejects_bad_magic() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_parse_rejects_bad_magic() {
         let bytes = [0u8; HEADER_SIZE];
-        assert_eq!(Header::parse(&bytes), Err(PackError::BadMagic));
+        assert_eq!(Header::parse(&bytes).await, Err(PackError::BadMagic));
     }
 
-    #[test]
-    fn header_parse_rejects_bad_crc() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_parse_rejects_bad_crc() {
         let header = Header { version_major: 1, version_minor: 0, required_flags: 0, optional_flags: 0 };
-        let mut bytes = header.write_bytes();
+        let mut bytes = header.write_bytes().await;
         bytes[20] ^= 0xFF;
-        assert!(matches!(Header::parse(&bytes), Err(PackError::ChecksumMismatch { segment: "header", .. })));
+        assert!(matches!(Header::parse(&bytes).await, Err(PackError::ChecksumMismatch { segment: "header", .. })));
     }
 
-    #[test]
-    fn header_parse_rejects_unknown_required_flags() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_parse_rejects_unknown_required_flags() {
         let header = Header { version_major: 1, version_minor: 0, required_flags: 1 << 4, optional_flags: 0 };
-        let bytes = header.write_bytes();
-        assert_eq!(Header::parse(&bytes), Err(PackError::UnknownRequiredFlags(1 << 4)));
+        let bytes = header.write_bytes().await;
+        assert_eq!(Header::parse(&bytes).await, Err(PackError::UnknownRequiredFlags(1 << 4)));
     }
 
-    #[test]
-    fn header_parse_rejects_unsupported_version() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_parse_rejects_unsupported_version() {
         let header = Header { version_major: 2, version_minor: 0, required_flags: 0, optional_flags: 0 };
-        let bytes = header.write_bytes();
-        assert_eq!(Header::parse(&bytes), Err(PackError::UnsupportedVersion { major: 2, minor: 0 }));
+        let bytes = header.write_bytes().await;
+        assert_eq!(Header::parse(&bytes).await, Err(PackError::UnsupportedVersion { major: 2, minor: 0 }));
     }
 
-    #[test]
-    fn header_truncated_at_every_byte_boundary_errors_never_panics() {
+    #[semio_framework_async_macros::async_test]
+    async fn header_truncated_at_every_byte_boundary_errors_never_panics() {
         let header = Header { version_major: 1, version_minor: 0, required_flags: REQUIRED_COMPRESSED, optional_flags: 0 };
-        let full = header.write_bytes();
+        let full = header.write_bytes().await;
         for len in 0..HEADER_SIZE {
             let slice = &full[..len];
-            assert!(Header::parse(slice).is_err(), "expected error at header truncation length {len}");
+            assert!(Header::parse(slice).await.is_err(), "expected error at header truncation length {len}");
             let limits = PackLimits::default();
-            assert!(PackFile::open_superblock(slice, &limits).is_err(), "expected error opening superblock at length {len}");
+            assert!(PackFile::open_superblock(slice, &limits).await.is_err(), "expected error opening superblock at length {len}");
         }
     }
     //#endregion 🔖️Header
 
     //#region 🔖️Footer
-    #[test]
-    fn footer_hand_built_bytes_parse_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn footer_hand_built_bytes_parse_round_trip() {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&FOOTER_MAGIC);
         bytes.extend_from_slice(&1u16.to_le_bytes());
@@ -991,50 +1010,50 @@ mod tests {
         bytes.extend_from_slice(&hash);
         bytes.extend_from_slice(&0u64.to_le_bytes());
         assert_eq!(bytes.len(), FOOTER_SIZE - 4);
-        let crc = crc32c(&bytes);
+        let crc = crc32c(&bytes).await;
         bytes.extend_from_slice(&crc.to_le_bytes());
         assert_eq!(bytes.len(), FOOTER_SIZE);
 
-        let footer = Footer::parse(&bytes).unwrap();
+        let footer = Footer::parse(&bytes).await.unwrap();
         assert_eq!(footer.version_major, 1);
         assert_eq!(footer.manifest_offset, 32);
         assert_eq!(footer.manifest_len, 100);
         assert_eq!(footer.file_len, 500);
         assert_eq!(footer.content_hash.0, hash);
         assert_eq!(footer.prev_footer_offset, 0);
-        assert_eq!(footer.write_bytes(), bytes);
+        assert_eq!(footer.write_bytes().await, bytes);
     }
 
-    #[test]
-    fn footer_parse_rejects_bad_magic() {
+    #[semio_framework_async_macros::async_test]
+    async fn footer_parse_rejects_bad_magic() {
         let bytes = [0u8; FOOTER_SIZE];
-        assert_eq!(Footer::parse(&bytes), Err(PackError::BadMagic));
+        assert_eq!(Footer::parse(&bytes).await, Err(PackError::BadMagic));
     }
 
-    #[test]
-    fn footer_parse_rejects_bad_crc() {
+    #[semio_framework_async_macros::async_test]
+    async fn footer_parse_rejects_bad_crc() {
         let footer = Footer { version_major: 1, version_minor: 0, required_flags: 0, manifest_offset: 32, manifest_len: 10, file_len: 200, content_hash: ContentHash([1u8; 32]), prev_footer_offset: 0 };
-        let mut bytes = footer.write_bytes();
+        let mut bytes = footer.write_bytes().await;
         let last = bytes.len() - 1;
         bytes[last] ^= 0xFF;
-        assert!(matches!(Footer::parse(&bytes), Err(PackError::ChecksumMismatch { segment: "footer", .. })));
+        assert!(matches!(Footer::parse(&bytes).await, Err(PackError::ChecksumMismatch { segment: "footer", .. })));
     }
 
-    #[test]
-    fn footer_truncated_at_every_byte_boundary_errors_never_panics() {
+    #[semio_framework_async_macros::async_test]
+    async fn footer_truncated_at_every_byte_boundary_errors_never_panics() {
         let footer = Footer { version_major: 1, version_minor: 0, required_flags: 0, manifest_offset: 32, manifest_len: 10, file_len: 200, content_hash: ContentHash([2u8; 32]), prev_footer_offset: 0 };
-        let full = footer.write_bytes();
+        let full = footer.write_bytes().await;
         for len in 0..FOOTER_SIZE {
             let slice = &full[..len];
-            assert!(Footer::parse(slice).is_err(), "expected error at footer truncation length {len}");
+            assert!(Footer::parse(slice).await.is_err(), "expected error at footer truncation length {len}");
         }
     }
 
-    #[test]
-    fn open_superblock_truncated_at_every_footer_byte_boundary_errors_never_panics() {
+    #[semio_framework_async_macros::async_test]
+    async fn open_superblock_truncated_at_every_footer_byte_boundary_errors_never_panics() {
         let options = WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
-        let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
-        writer.write_segment(crate::KIND_DOCUMENT, b"hello world").unwrap();
+        let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
+        writer.write_segment(crate::KIND_DOCUMENT, b"hello world").await.unwrap();
         let manifest = Manifest {
             schema_name: String::new(),
             schema_hash: [0u8; 32],
@@ -1048,81 +1067,81 @@ mod tests {
             chunk_count: 0,
             symbol_count: 0,
         };
-        let full = writer.finish(&manifest).unwrap();
+        let full = writer.finish(&manifest).await.unwrap();
         let limits = PackLimits::default();
         let start = full.len() - FOOTER_SIZE;
         for len in start..full.len() {
             let slice = &full[..len];
-            assert!(PackFile::open_superblock(slice, &limits).is_err(), "expected error at file truncation length {len}");
+            assert!(PackFile::open_superblock(slice, &limits).await.is_err(), "expected error at file truncation length {len}");
         }
-        assert!(PackFile::open_superblock(full.as_slice(), &limits).is_ok());
+        assert!(PackFile::open_superblock(full.as_slice(), &limits).await.is_ok());
     }
     //#endregion 🔖️Footer
 
     //#region 🔖️Segment
-    #[test]
-    fn segment_skip_unknown_kind_decodes_without_error() {
+    #[semio_framework_async_macros::async_test]
+    async fn segment_skip_unknown_kind_decodes_without_error() {
         let unknown_kind = 0x50u8;
-        let encoded = encode_segment(unknown_kind, CodecId(0), b"extension payload").unwrap();
+        let encoded = encode_segment(unknown_kind, CodecId(0), b"extension payload").await.unwrap();
         let mut file = vec![0u8; HEADER_SIZE];
         file.extend_from_slice(&encoded.bytes);
         let limits = PackLimits::default();
-        let decoded = decode_segment_at(&file, HEADER_SIZE as u64, &limits, true).unwrap();
+        let decoded = decode_segment_at(&file, HEADER_SIZE as u64, &limits, true).await.unwrap();
         assert_eq!(decoded.kind, unknown_kind);
         assert_eq!(decoded.payload, b"extension payload");
     }
 
-    #[test]
-    fn recover_accumulates_unknown_kind_segments_without_erroring() {
+    #[semio_framework_async_macros::async_test]
+    async fn recover_accumulates_unknown_kind_segments_without_erroring() {
         let header = Header { version_major: 1, version_minor: 0, required_flags: 0, optional_flags: 0 };
-        let mut file = header.write_bytes().to_vec();
-        file.extend_from_slice(&encode_segment(0x60, CodecId(0), b"future extension").unwrap().bytes);
-        file.extend_from_slice(&encode_segment(crate::KIND_END, CodecId(0), &[]).unwrap().bytes);
+        let mut file = header.write_bytes().await.to_vec();
+        file.extend_from_slice(&encode_segment(0x60, CodecId(0), b"future extension").await.unwrap().bytes);
+        file.extend_from_slice(&encode_segment(crate::KIND_END, CodecId(0), &[]).await.unwrap().bytes);
         let limits = PackLimits::default();
-        let report = recover(&file, &limits).unwrap();
+        let report = recover(&file, &limits).await.unwrap();
         assert_eq!(report.segments_recovered, 2);
         assert!(report.manifest.is_none());
     }
 
-    #[test]
-    fn segment_crc_mismatch_is_detected() {
-        let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn segment_crc_mismatch_is_detected() {
+        let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
         let mut file = vec![0u8; HEADER_SIZE];
         file.extend_from_slice(&encoded.bytes);
         let last = file.len() - 1;
         file[last] ^= 0xFF;
         let limits = PackLimits::default();
-        let result = decode_segment_at(&file, HEADER_SIZE as u64, &limits, true);
+        let result = decode_segment_at(&file, HEADER_SIZE as u64, &limits, true).await;
         assert!(matches!(result, Err(PackError::ChecksumMismatch { segment: "segment", .. })));
     }
 
-    #[test]
-    fn segment_crc_mismatch_ignored_at_trusted_level() {
-        let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn segment_crc_mismatch_ignored_at_trusted_level() {
+        let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
         let mut file = vec![0u8; HEADER_SIZE];
         file.extend_from_slice(&encoded.bytes);
         let last = file.len() - 1;
         file[last] ^= 0xFF;
         let limits = PackLimits::default();
-        let result = decode_segment_at(&file, HEADER_SIZE as u64, &limits, false);
+        let result = decode_segment_at(&file, HEADER_SIZE as u64, &limits, false).await;
         assert!(result.is_ok());
     }
     //#endregion 🔖️Segment
 
     //#region 🔖️Writer
-    fn build_sample_pack(codec: CodecId) -> (Vec<u8>, ChunkId, Vec<u8>) {
+    async fn build_sample_pack(codec: CodecId) -> (Vec<u8>, ChunkId, Vec<u8>) {
         let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
-        let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
+        let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
 
-        writer.write_segment(crate::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()])).unwrap();
+        writer.write_segment(crate::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()]).await).await.unwrap();
 
-        let doc_offset = writer.position();
+        let doc_offset = writer.position().await;
         let document_payload = b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility".to_vec();
-        writer.write_segment(crate::KIND_DOCUMENT, &document_payload).unwrap();
-        let doc_len = writer.position() - doc_offset;
+        writer.write_segment(crate::KIND_DOCUMENT, &document_payload).await.unwrap();
+        let doc_len = writer.position().await - doc_offset;
 
         let chunk_payload = vec![42u8; 4096];
-        let chunk_id = writer.write_chunk(&chunk_payload).unwrap();
+        let chunk_id = writer.write_chunk(&chunk_payload).await.unwrap();
 
         let manifest = Manifest {
             schema_name: "widget.v1".to_string(),
@@ -1137,15 +1156,15 @@ mod tests {
             chunk_count: 0,
             symbol_count: 0,
         };
-        let bytes = writer.finish(&manifest).unwrap();
+        let bytes = writer.finish(&manifest).await.unwrap();
         (bytes, chunk_id, chunk_payload)
     }
 
-    #[test]
-    fn write_then_read_round_trip_uncompressed() {
-        let (bytes, chunk_id, chunk_payload) = build_sample_pack(CodecId(0));
+    #[semio_framework_async_macros::async_test]
+    async fn write_then_read_round_trip_uncompressed() {
+        let (bytes, chunk_id, chunk_payload) = build_sample_pack(CodecId(0)).await;
         let limits = PackLimits::default();
-        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).unwrap();
+        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).await.unwrap();
 
         let manifest = file.manifest().unwrap();
         assert_eq!(manifest.schema_name, "widget.v1");
@@ -1153,48 +1172,48 @@ mod tests {
         assert_eq!(manifest.symbol_count, 2);
 
         assert_eq!(file.chunk_count(), 1);
-        let read_back = file.read_chunk(chunk_id, VerificationLevel::Full).unwrap();
+        let read_back = file.read_chunk(chunk_id, VerificationLevel::Full).await.unwrap();
         assert_eq!(read_back, chunk_payload);
 
-        let body = file.body_bytes(VerificationLevel::Full).unwrap();
+        let body = file.body_bytes(VerificationLevel::Full).await.unwrap();
         assert_eq!(body, b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility");
 
         assert_eq!(file.content_hash(), file.superblock().footer.content_hash);
     }
 
-    #[test]
-    fn write_then_read_round_trip_with_compressed_segment_and_chunk() {
-        let (bytes, chunk_id, chunk_payload) = build_sample_pack(CodecId(1));
+    #[semio_framework_async_macros::async_test]
+    async fn write_then_read_round_trip_with_compressed_segment_and_chunk() {
+        let (bytes, chunk_id, chunk_payload) = build_sample_pack(CodecId(1)).await;
         let limits = PackLimits::default();
         assert_eq!(bytes[0..8], MAGIC);
 
-        let superblock_only = PackFile::open_superblock(bytes.as_slice(), &limits).unwrap();
+        let superblock_only = PackFile::open_superblock(bytes.as_slice(), &limits).await.unwrap();
         assert_eq!(superblock_only.superblock().header.required_flags & REQUIRED_COMPRESSED, REQUIRED_COMPRESSED);
 
-        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).unwrap();
+        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).await.unwrap();
         let manifest = file.manifest().unwrap();
         assert_eq!(manifest.schema_name, "widget.v1");
 
-        let read_back = file.read_chunk(chunk_id, VerificationLevel::Full).unwrap();
+        let read_back = file.read_chunk(chunk_id, VerificationLevel::Full).await.unwrap();
         assert_eq!(read_back, chunk_payload);
 
-        let body = file.body_bytes(VerificationLevel::Full).unwrap();
+        let body = file.body_bytes(VerificationLevel::Full).await.unwrap();
         assert_eq!(body, b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility");
     }
 
-    #[test]
-    fn read_footer_only_matches_full_open() {
-        let (bytes, _chunk_id, _chunk_payload) = build_sample_pack(CodecId(0));
-        let footer = read_footer_only(&bytes).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn read_footer_only_matches_full_open() {
+        let (bytes, _chunk_id, _chunk_payload) = build_sample_pack(CodecId(0)).await;
+        let footer = read_footer_only(&bytes).await.unwrap();
         let limits = PackLimits::default();
-        let file = PackFile::open_superblock(bytes.as_slice(), &limits).unwrap();
+        let file = PackFile::open_superblock(bytes.as_slice(), &limits).await.unwrap();
         assert_eq!(footer, file.superblock().footer);
     }
 
-    #[test]
-    fn empty_document_and_no_chunks_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn empty_document_and_no_chunks_round_trips() {
         let options = WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
-        let writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
+        let writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
         let manifest = Manifest {
             schema_name: String::new(),
             schema_hash: [0u8; 32],
@@ -1208,19 +1227,19 @@ mod tests {
             chunk_count: 0,
             symbol_count: 0,
         };
-        let bytes = writer.finish(&manifest).unwrap();
+        let bytes = writer.finish(&manifest).await.unwrap();
         let limits = PackLimits::default();
-        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).unwrap();
+        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).await.unwrap();
         assert_eq!(file.chunk_count(), 0);
-        assert_eq!(file.body_bytes(VerificationLevel::Full).unwrap(), Vec::<u8>::new());
+        assert_eq!(file.body_bytes(VerificationLevel::Full).await.unwrap(), Vec::<u8>::new());
         let expected_empty_hash = ContentHash(*blake3::hash(b"").as_bytes());
         assert_eq!(file.content_hash(), expected_empty_hash);
     }
 
-    #[test]
-    fn finish_errors_when_schema_name_not_in_symbols() {
+    #[semio_framework_async_macros::async_test]
+    async fn finish_errors_when_schema_name_not_in_symbols() {
         let options = WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
-        let writer = PackWriter::begin(Vec::<u8>::new(), &options).unwrap();
+        let writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
         let manifest = Manifest {
             schema_name: "missing".to_string(),
             schema_hash: [0u8; 32],
@@ -1234,43 +1253,43 @@ mod tests {
             chunk_count: 0,
             symbol_count: 0,
         };
-        let result = writer.finish(&manifest);
+        let result = writer.finish(&manifest).await;
         assert!(matches!(result, Err(PackError::Schema(_))));
     }
 
-    #[test]
-    fn begin_rejects_unknown_required_flags() {
+    #[semio_framework_async_macros::async_test]
+    async fn begin_rejects_unknown_required_flags() {
         let options = WriteOptions { required_flags: 1 << 5, optional_flags: 0, codec: CodecId(0) };
-        let result = PackWriter::begin(Vec::<u8>::new(), &options);
+        let result = PackWriter::begin(Vec::<u8>::new(), &options).await;
         assert_eq!(result.err(), Some(PackError::UnknownRequiredFlags(1 << 5)));
     }
     //#endregion 🔖️Writer
 
     //#region 🔖️Corruption
-    #[test]
-    fn open_manifest_rejects_flipped_chunk_payload_crc_at_standard_level() {
-        let (bytes, chunk_id, _chunk_payload) = build_sample_pack(CodecId(0));
+    #[semio_framework_async_macros::async_test]
+    async fn open_manifest_rejects_flipped_chunk_payload_crc_at_standard_level() {
+        let (bytes, chunk_id, _chunk_payload) = build_sample_pack(CodecId(0)).await;
         let limits = PackLimits::default();
         let mut corrupted = bytes.clone();
-        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Standard).unwrap();
+        let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Standard).await.unwrap();
         let range = file.chunk_range(chunk_id).unwrap();
         corrupted[range.offset as usize] ^= 0xFF;
-        let corrupted_file = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard).unwrap();
-        let result = corrupted_file.read_chunk(chunk_id, VerificationLevel::Standard);
+        let corrupted_file = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard).await.unwrap();
+        let result = corrupted_file.read_chunk(chunk_id, VerificationLevel::Standard).await;
         assert!(matches!(result, Err(PackError::ChecksumMismatch { segment: "chunk", .. })));
     }
 
-    #[test]
-    fn open_manifest_rejects_wrong_kind_at_manifest_offset() {
-        let (bytes, _chunk_id, _chunk_payload) = build_sample_pack(CodecId(0));
+    #[semio_framework_async_macros::async_test]
+    async fn open_manifest_rejects_wrong_kind_at_manifest_offset() {
+        let (bytes, _chunk_id, _chunk_payload) = build_sample_pack(CodecId(0)).await;
         let limits = PackLimits::default();
         let mut footer_bytes = bytes[bytes.len() - FOOTER_SIZE..].to_vec();
-        let mut footer = Footer::parse(&footer_bytes).unwrap();
+        let mut footer = Footer::parse(&footer_bytes).await.unwrap();
         footer.manifest_offset = HEADER_SIZE as u64; // points at the symbols segment instead
-        footer_bytes = footer.write_bytes();
+        footer_bytes = footer.write_bytes().await;
         let mut corrupted = bytes[..bytes.len() - FOOTER_SIZE].to_vec();
         corrupted.extend_from_slice(&footer_bytes);
-        let result = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard);
+        let result = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard).await;
         assert!(matches!(result, Err(PackError::Malformed { what: "manifest", .. })));
     }
     //#endregion 🔖️Corruption

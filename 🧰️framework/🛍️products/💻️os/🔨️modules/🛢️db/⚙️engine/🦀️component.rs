@@ -169,8 +169,8 @@ pub struct HistoryView {
 /// groups `WAL_COMMAND` records by the `WAL_FRONTIER` record that closes their transaction, exactly
 /// mirroring `db_artifact::ArtifactEngine::submit`'s own commit shape (one frontier record per
 /// committed batch, preceded by that batch's command records).
-fn replay_history(storage: &dyn DbStorage, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
-    let records = db_actor::block_on(db_wal::replay_document(storage.wal(), core_document))?;
+fn replay_history<R: semio_framework_async::HostAsyncRuntime>(storage: &db_storage::DbBackend<R>, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
+    let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, core_document).await })?;
     let mut entries = Vec::new();
     let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
     for record in records {
@@ -648,7 +648,7 @@ pub struct DbHealth {
 /// backpressure machinery (that machinery matters for a document's WAL under load, not a rare
 /// catalog-root swap).
 pub struct Database {
-    storage: Arc<dyn DbStorage>,
+    storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>,
     config: DbConfig,
     capabilities: DbCapabilities,
     authz: Arc<dyn db_artifact::AuthzHook>,
@@ -662,28 +662,34 @@ pub struct Database {
     open_artifacts: Mutex<HashMap<String, Arc<db_artifact::ArtifactAuthority>>>,
 }
 
+// 🚫️async: E5 executor bridge — every `Database` method below is plain sync and drives its async
+// storage/`ArtifactEngine` calls via `db_actor::block_on` (R4 clause 2: this crate's own db-actor
+// thread bridges are sanctioned; `Database` is the facade the prior `db-trait-flip` packet already
+// classified as thread-owning alongside `db_artifact`, per its report's "db_engine (per-submit
+// bridge threads)"). Every `.wal()`/`.snapshot()`/`.catalog()`/`.index()`/`.payload()`/`.lease()`
+// accessor call is `.await`ed inside the SAME `block_on`, never a bare synchronous call.
 impl Database {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
-    /// over an arbitrary `Arc<dyn DbStorage>` backend, wired with the default `AllowAll` authz and
+    /// over an arbitrary `Arc<db_storage::DbBackend<db_storage::InlineRuntime>>` backend, wired with the default `AllowAll` authz and
     /// (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
-    pub fn open(config: DbConfig, storage: Arc<dyn DbStorage>) -> Result<Database, DbError> {
+    pub fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit())
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
     /// instead of the default `AllowAll`.
-    pub fn open_with_authz(config: DbConfig, storage: Arc<dyn DbStorage>, authz: Arc<dyn db_artifact::AuthzHook>) -> Result<Database, DbError> {
+    pub fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<dyn db_artifact::AuthzHook>) -> Result<Database, DbError> {
         Database::open_with(config, storage, authz, default_emit())
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
     /// over a real file) instead of the default in-memory one.
-    pub fn open_with_emit(config: DbConfig, storage: Arc<dyn DbStorage>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
+    pub fn open_with_emit(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit)
     }
 
-    fn open_with(config: DbConfig, storage: Arc<dyn DbStorage>, authz: Arc<dyn db_artifact::AuthzHook>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
-        let storage_capabilities = storage.capabilities();
+    fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<dyn db_artifact::AuthzHook>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
+        let storage_capabilities = db_actor::block_on(storage.capabilities());
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
             // aren't reachable through `ArtifactAuthority`'s current mailbox surface, and why
@@ -698,11 +704,11 @@ impl Database {
         let health = Arc::new(db_observe::HealthRegistry::new());
         health.set("db_engine.storage", if storage_capabilities.durable { db_observe::HealthState::Healthy } else { db_observe::HealthState::Degraded("storage backend is not durable".to_string()) });
 
-        let (epoch, entries) = match db_actor::block_on(storage.catalog().read_root())? {
+        let (epoch, entries) = match db_actor::block_on(async { storage.catalog().await.read_root().await })? {
             Some((bytes, epoch)) => (epoch, decode_catalog(&bytes)?),
             None => {
                 let empty = encode_catalog(&[])?;
-                let epoch = db_actor::block_on(storage.catalog().cas_root(EpochFence::INITIAL, &empty))?;
+                let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, &empty).await })?;
                 (epoch, Vec::new())
             }
         };
@@ -725,7 +731,8 @@ impl Database {
     /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
     /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
     pub fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database, DbError> {
-        let storage: Arc<dyn DbStorage> = Arc::new(db_storage::FsStorage::open_inline("db_engine", root)?);
+        let fs = db_actor::block_on(db_storage::FsStorage::open_inline("db_engine", root))?;
+        let storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>> = Arc::new(db_storage::DbBackend::Fs(fs));
         Database::open(DbConfig::for_profile(profile), storage)
     }
 
@@ -783,7 +790,7 @@ impl Database {
             let mut entries = catalog.entries.clone();
             entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms() });
             let bytes = encode_catalog(&entries)?;
-            let new_epoch = db_actor::block_on(self.storage.catalog().cas_root(catalog.epoch, &bytes))?;
+            let new_epoch = db_actor::block_on(async { self.storage.catalog().await.cas_root(catalog.epoch, &bytes).await })?;
             catalog.epoch = new_epoch;
             catalog.entries = entries;
         }
@@ -851,7 +858,7 @@ impl Database {
     /// session driving `db_sync::handle_frontier_advertise` directly). Additive: not part of the
     /// contract-frozen `Database` API surface listed in `contract.md`'s "Stable API" block, so it
     /// carries no compatibility promise beyond this crate's own semver.
-    pub fn storage(&self) -> Arc<dyn DbStorage> {
+    pub fn storage(&self) -> Arc<db_storage::DbBackend<db_storage::InlineRuntime>> {
         self.storage.clone()
     }
 
@@ -894,7 +901,7 @@ pub type SubmitFuture = db_actor::ReplyReceiver<Result<CommandReceipt, DbError>>
 #[derive(Clone)]
 pub struct ArtifactHandle {
     authority: Arc<db_artifact::ArtifactAuthority>,
-    storage: Arc<dyn DbStorage>,
+    storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>,
     document: protocol::ArtifactId,
     core_document: ArtifactId,
 }
@@ -1254,8 +1261,8 @@ mod tests {
     fn storage_accessor_reaches_the_same_backend_payload_store() {
         let root = tempdir("storage-accessor");
         let database = Database::open_at(&root, Profile::Test).unwrap();
-        let hash = db_actor::block_on(database.storage().payload().put(b"hello storage accessor")).unwrap();
-        assert_eq!(db_actor::block_on(database.storage().payload().get(&hash)).unwrap(), b"hello storage accessor");
+        let hash = db_actor::block_on(async { database.storage().payload().await.put(b"hello storage accessor").await }).unwrap();
+        assert_eq!(db_actor::block_on(async { database.storage().payload().await.get(&hash).await }).unwrap(), b"hello storage accessor");
     }
     //#endregion 🔖️Compact + Sync
 

@@ -47,7 +47,7 @@ impl NodeFlags {
         NodeFlags(0)
     }
 
-    pub fn set(&mut self, flag: NodeFlags, on: bool) {
+    pub async fn set(&mut self, flag: NodeFlags, on: bool) {
         if on {
             self.0 |= flag.0;
         } else {
@@ -55,7 +55,7 @@ impl NodeFlags {
         }
     }
 
-    pub fn contains(&self, flag: NodeFlags) -> bool {
+    pub async fn contains(&self, flag: NodeFlags) -> bool {
         self.0 & flag.0 == flag.0
     }
 }
@@ -147,7 +147,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(key: NodeKey, spec: WidgetSpec) -> Self {
+    pub async fn new(key: NodeKey, spec: WidgetSpec) -> Self {
         Self { parent: None, first_child: None, last_child: None, prev_sibling: None, next_sibling: None, key, spec, state: WidgetState::default(), layout: LayoutBucket::default(), paint: PaintBucket, flags: NodeFlags::empty() }
     }
 }
@@ -160,25 +160,25 @@ pub struct UiTree {
 }
 
 impl UiTree {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn node(&self, id: NodeId) -> Option<&Node> {
+    pub async fn node(&self, id: NodeId) -> Option<&Node> {
         self.arena.get(id)
     }
 
-    pub fn node_mut(&mut self, id: NodeId) -> Option<&mut Node> {
+    pub async fn node_mut(&mut self, id: NodeId) -> Option<&mut Node> {
         self.arena.get_mut(id)
     }
 
-    pub fn contains(&self, id: NodeId) -> bool {
+    pub async fn contains(&self, id: NodeId) -> bool {
         self.arena.contains(id)
     }
 
     /// 🔗️ Inserts `node` as the last child of `parent` (or as a root if `parent` is `None` and no
     /// root exists yet), threading the sibling links.
-    pub fn insert_child(&mut self, parent: Option<NodeId>, mut node: Node) -> NodeId {
+    pub async fn insert_child(&mut self, parent: Option<NodeId>, mut node: Node) -> NodeId {
         node.parent = parent;
         let id = self.arena.insert(node);
         match parent {
@@ -210,7 +210,7 @@ impl UiTree {
 
     /// 🧹️ Detaches `id` from its parent/siblings and recursively removes its subtree, freeing every
     /// arena slot involved.
-    pub fn remove(&mut self, id: NodeId) {
+    pub async fn remove(&mut self, id: NodeId) {
         let Some(node) = self.arena.get(id) else { return };
         let (parent, prev_sibling, next_sibling) = (node.parent, node.prev_sibling, node.next_sibling);
         let children: Vec<NodeId> = self.children(id).collect();
@@ -255,7 +255,7 @@ impl UiTree {
     /// always require a repaint), then bubbles `SUBTREE_DIRTY` up the parent chain, stopping at the
     /// first ancestor that already carries it — every ancestor above it is necessarily already
     /// marked too, so walking further is wasted work.
-    pub fn mark_dirty(&mut self, id: NodeId, flags: NodeFlags) {
+    pub async fn mark_dirty(&mut self, id: NodeId, flags: NodeFlags) {
         let mut flags = flags;
         if flags.contains(NodeFlags::DIRTY_LAYOUT) {
             flags.set(NodeFlags::DIRTY_PAINT, true);
@@ -279,7 +279,7 @@ impl UiTree {
     }
 
     /// 🚶️ Iterates the direct children of `id` in tree order via the first-child/next-sibling links.
-    pub fn children(&self, id: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+    pub async fn children(&self, id: NodeId) -> impl Iterator<Item = NodeId> + '_ {
         let mut next = self.arena.get(id).and_then(|n| n.first_child);
         std::iter::from_fn(move || {
             let current = next?;
@@ -294,16 +294,16 @@ mod tests {
     use super::*;
     use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
 
-    fn text(value: &str) -> UiNode {
+    async fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {
+    async fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {
         Node::new(NodeKey::Positional(discriminant, ordinal), WidgetSpec(text(value)))
     }
 
     #[test]
-    fn insert_and_iterate_children_in_order() {
+    async fn insert_and_iterate_children_in_order() {
         let mut tree = UiTree::new();
         let root = tree.insert_child(None, leaf(0, 0, "root"));
         let a = tree.insert_child(Some(root), leaf(1, 0, "a"));
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn mark_dirty_sets_layout_and_paint_and_bubbles_subtree_dirty_to_root() {
+    async fn mark_dirty_sets_layout_and_paint_and_bubbles_subtree_dirty_to_root() {
         let mut tree = UiTree::new();
         let root = tree.insert_child(None, leaf(0, 0, "root"));
         let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));
@@ -334,7 +334,7 @@ mod tests {
     }
 
     #[test]
-    fn mark_dirty_stops_bubbling_once_it_hits_an_already_dirty_ancestor() {
+    async fn mark_dirty_stops_bubbling_once_it_hits_an_already_dirty_ancestor() {
         let mut tree = UiTree::new();
         let root = tree.insert_child(None, leaf(0, 0, "root"));
         let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_detaches_node_and_frees_its_children_slots() {
+    async fn remove_detaches_node_and_frees_its_children_slots() {
         let mut tree = UiTree::new();
         let root = tree.insert_child(None, leaf(0, 0, "root"));
         let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));

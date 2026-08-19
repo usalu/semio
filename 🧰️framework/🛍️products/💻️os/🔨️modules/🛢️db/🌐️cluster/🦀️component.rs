@@ -134,19 +134,19 @@ pub struct ShardOwnership {
 impl ShardOwnership {
     /// @emoji 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
     /// wrapper over `LeaseStorage::acquire` that also remembers the resulting fence locally.
-    pub async fn acquire(storage: &dyn db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
+    pub async fn acquire(storage: &impl db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
         let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms).await?;
         Ok(ShardOwnership { shard: shard.to_string(), holder, fence })
     }
 
     /// @emoji ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
     /// another node has since won the shard (see `LeaseStorage::renew`'s doc).
-    pub async fn renew(&self, storage: &dyn db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub async fn renew(&self, storage: &impl db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms).await
     }
 
     /// @emoji 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
-    pub async fn release(&self, storage: &dyn db_storage::LeaseStorage) -> Result<(), DbError> {
+    pub async fn release(&self, storage: &impl db_storage::LeaseStorage) -> Result<(), DbError> {
         storage.release(&self.shard, &self.holder.0, self.fence).await
     }
 
@@ -166,7 +166,7 @@ pub enum OwnershipStatus {
 }
 
 /// @emoji 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
-pub async fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
+pub async fn ownership_status(storage: &impl db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
     Ok(match storage.current(shard, now_ms).await? {
         Some(info) => OwnershipStatus::Held { holder: NodeId(info.holder), fence: info.fence, expires_at_ms: info.expires_at_ms },
         None => OwnershipStatus::Vacant,
@@ -197,27 +197,27 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub async fn replicate_document(leader: &dyn DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
-    let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone()).await?;
-    let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone()).await?;
+pub async fn replicate_document<R: semio_framework_async::HostAsyncRuntime>(leader: &db_storage::DbBackend<R>, follower: &db_storage::DbBackend<R>, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    let follower_state = db_sync::replay_sync_state(&follower.wal().await, document.clone()).await?;
+    let leader_state = db_sync::replay_sync_state(&leader.wal().await, document.clone()).await?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
         return Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier });
     }
-    let plan = db_sync::decide_bootstrap(&leader_state, leader.snapshot(), Some(&follower_state.frontier)).await?;
+    let plan = db_sync::decide_bootstrap(&leader_state, &leader.snapshot().await, Some(&follower_state.frontier)).await?;
     match plan {
         db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
         db_sync::BootstrapPlan::Tail { envelopes } => {
             let count = envelopes.len();
-            let (mut wal, _report) = db_wal::ArtifactWal::open(follower.wal(), document.clone(), policy, now_ms).await?;
+            let (mut wal, _report) = db_wal::ArtifactWal::open(&follower.wal().await, document.clone(), policy, now_ms).await?;
             for envelope in &envelopes {
                 let bytes = db_sync::encode_command_envelope(envelope);
-                wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms).await?;
+                wal.submit(&follower.wal().await, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms).await?;
             }
-            let frontier = db_sync::replay_sync_state(follower.wal(), document).await?.frontier;
+            let frontier = db_sync::replay_sync_state(&follower.wal().await, document).await?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
         }
         db_sync::BootstrapPlan::Snapshot { generation, bytes, pack_hash } => {
-            follower.snapshot().write_generation(&document, generation, &bytes).await?;
+            follower.snapshot().await.write_generation(&document, generation, &bytes).await?;
             Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
         }
     }
@@ -353,7 +353,7 @@ pub fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainO
 /// `storage`'s actual current state, since another node may have already won a failover while it
 /// was partitioned. A still-matching holder+fence is confirmed as `LocalWins` (not a `Tie` — it's
 /// not actually contested); anything else is decided by `resolve_split_brain` on the two fences.
-pub async fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
+pub async fn reconcile_shard_owner(storage: &impl db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
     match ownership_status(storage, shard, now_ms).await? {
         OwnershipStatus::Vacant => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { holder, fence, .. } if holder == claimed.holder && fence == claimed.fence => Ok(SplitBrainOutcome::LocalWins),
@@ -531,6 +531,8 @@ mod tests {
         let follower = db_storage::MemoryStorage::new();
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4);
+        let leader = db_storage::DbBackend::Memory(leader);
+        let follower = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
@@ -541,7 +543,7 @@ mod tests {
             other => panic!("expected TailApplied, got {other:?}"),
         }
 
-        let follower_state = db_actor::block_on(db_sync::replay_sync_state(&follower, document)).unwrap();
+        let follower_state = db_actor::block_on(async { db_sync::replay_sync_state(&follower.wal().await, document).await }).unwrap();
         assert_eq!(follower_state.commands.len(), 4);
         assert_eq!(follower_state.commands[0].mutation_id.0, "op-0");
         assert_eq!(follower_state.commands[3].mutation_id.0, "op-3");
@@ -553,6 +555,8 @@ mod tests {
         let follower = db_storage::MemoryStorage::new();
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2);
+        let leader = db_storage::DbBackend::Memory(leader);
+        let follower = db_storage::DbBackend::Memory(follower);
 
         let first = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         assert!(matches!(first, ReplicationOutcome::TailApplied { count: 2, .. }));
@@ -574,6 +578,8 @@ mod tests {
             db_actor::block_on(wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000)).unwrap();
         }
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
+        let leader = db_storage::DbBackend::Memory(leader);
+        let follower = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {

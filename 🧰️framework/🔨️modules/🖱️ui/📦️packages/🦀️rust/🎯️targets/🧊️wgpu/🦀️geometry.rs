@@ -14,11 +14,11 @@ impl Rect {
         Self { x, y, w, h }
     }
 
-    pub fn contains(&self, px: f32, py: f32) -> bool {
+    pub async fn contains(&self, px: f32, py: f32) -> bool {
         px >= self.x && py >= self.y && px < self.x + self.w && py < self.y + self.h
     }
 
-    pub fn inset(&self, amount: f32) -> Self {
+    pub async fn inset(&self, amount: f32) -> Self {
         Self { x: self.x + amount, y: self.y + amount, w: (self.w - amount * 2.0).max(0.0), h: (self.h - amount * 2.0).max(0.0) }
     }
 }

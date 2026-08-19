@@ -9,6 +9,14 @@
 //! (`Apply`/`IngestRemote`/`PruneDrafts`/…) or [`ArtifactStore::reset`]. Envelope fields stay
 //! `pub` for serde/plugins; treat them as read-mostly and prefer [`ArtifactEnvelopeView`].
 
+// 🚫️async: R7 — `async fn` in a public trait warns because auto trait bounds (e.g. `Send`) cannot
+// be named on the method. Answered structurally per R3: every former `dyn` seam in this crate is a
+// concrete enum, so `Send` is derived at each spawn site from the concrete type, never from a bound
+// on the trait method's returned future. This crate is guest-reachable, so its futures are
+// deliberately `?Send` — do not "fix" this warning by adding `-> impl Future<..> + Send` (contradicts
+// R3) or by making a trait method sync (contradicts O1/R1).
+#![allow(async_fn_in_trait)]
+
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
 // external crate — every real consumer, INCLUDING this crate's own `.ops` header grammar
@@ -444,7 +452,7 @@ pub enum LinkState {
 /// of this artifact's own document and dispatch never touches it). A UI/renderer calls this only
 /// when it actually needs to show/open the linked content.
 pub trait LinkResolver {
-    fn resolve(&self, link: &ArtifactLink) -> LinkState;
+    async fn resolve(&self, link: &ArtifactLink) -> LinkState;
 }
 
 /// @emoji 🗂️ The read-only directory a `MemberLinkResolver` resolves against — whatever holds the
@@ -454,17 +462,17 @@ pub trait LinkResolver {
 /// (→ `LinkState::Missing`) from "member exists but reading it failed" (→ a real error, never
 /// silently reported as absent).
 pub trait MemberDirectory {
-    fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
-    fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
+    async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
+    async fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
 }
 
 impl MemberDirectory for SpaceHost {
-    fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-        self.member(artifact_id).map(|member| member.document_pack_bytes())
+    async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+        match self.member(artifact_id) { Some(member) => Some(member.document_pack_bytes().await), None => None }
     }
 
-    fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-        self.member(artifact_id).map(|member| member.pack_at_checkpoint(checkpoint_id))
+    async fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+        match self.member(artifact_id) { Some(member) => Some(member.pack_at_checkpoint(checkpoint_id).await), None => None }
     }
 }
 
@@ -479,173 +487,122 @@ impl MemberDirectory for SpaceHost {
 /// <hash>" without the content), which is precisely the state `LinkState::PinnedOnly` exists for.
 /// A read error is never laundered into `Missing`: absence and failure are different answers, and
 /// only absence is benign.
-pub struct MemberLinkResolver<D> {
-    directory: D,
-    blobs: Option<Arc<dyn BlobStore>>,
-}
+/// @emoji 🕳️ The default `B` for a `MemberLinkResolver` that carries no blob escrow — uninhabited,
+/// same stand-in shape as `BackboneChannelPorts`/`NoMembers`, so `MemberLinkResolver::new` never
+/// needs its caller to name a concrete `BlobStore` implementor it isn't using.
+pub enum NoBlobStore {}
 
-impl<D: MemberDirectory> MemberLinkResolver<D> {
-    /// 🏗️ Resolver without blob escrow — `LinkPin::Snapshot` always degrades to `PinnedOnly`.
-    pub fn new(directory: D) -> Self {
-        Self { directory, blobs: None }
+impl BlobStore for NoBlobStore {
+    async fn put(&self, _bytes: &[u8], _media_type: &str) -> Result<BlobRef, VcsError> {
+        match *self {}
     }
 
+    async fn get(&self, _hash: &str) -> Result<Option<Vec<u8>>, VcsError> {
+        match *self {}
+    }
+
+    async fn has(&self, _hash: &str) -> Result<bool, VcsError> {
+        match *self {}
+    }
+
+    async fn delete(&self, _hash: &str) -> Result<(), VcsError> {
+        match *self {}
+    }
+}
+
+pub struct MemberLinkResolver<D, B = NoBlobStore> {
+    directory: D,
+    blobs: Option<Arc<B>>,
+}
+
+impl<D: MemberDirectory> MemberLinkResolver<D, NoBlobStore> {
+    /// 🏗️ Resolver without blob escrow — `LinkPin::Snapshot` always degrades to `PinnedOnly`.
+    pub async fn new(directory: D) -> Self {
+        Self { directory, blobs: None }
+    }
+}
+
+impl<D: MemberDirectory, B: BlobStore> MemberLinkResolver<D, B> {
     /// 🏗️ Resolver that can also materialize content-addressed `LinkPin::Snapshot` blobs.
-    pub fn with_blobs(directory: D, blobs: Arc<dyn BlobStore>) -> Self {
+    pub async fn with_blobs(directory: D, blobs: Arc<B>) -> Self {
         Self { directory, blobs: Some(blobs) }
     }
 }
 
-impl<D: MemberDirectory> LinkResolver for MemberLinkResolver<D> {
-    fn resolve(&self, link: &ArtifactLink) -> LinkState {
+impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B> {
+    async fn resolve(&self, link: &ArtifactLink) -> LinkState {
         let dialect = link.target.dialect.clone();
         match &link.pin {
-            LinkPin::Head => match self.directory.head_pack(&link.target.artifact_id) {
+            LinkPin::Head => match self.directory.head_pack(&link.target.artifact_id).await {
                 Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
                 Some(Err(_)) | None => LinkState::Missing,
             },
-            LinkPin::Checkpoint { id } => match self.directory.checkpoint_pack(&link.target.artifact_id, id) {
+            LinkPin::Checkpoint { id } => match self.directory.checkpoint_pack(&link.target.artifact_id, id).await {
                 Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
                 Some(Err(_)) | None => LinkState::Missing,
             },
-            LinkPin::Snapshot { blob } => match self.blobs.as_ref().and_then(|blobs| blobs.get(&blob.hash).ok().flatten()) {
-                Some(pack_bytes) => LinkState::Resolved { pack_bytes, dialect },
-                None => LinkState::PinnedOnly { blob: blob.clone() },
-            },
+            LinkPin::Snapshot { blob } => {
+                let resolved = match &self.blobs {
+                    Some(blobs) => blobs.get(&blob.hash).await.ok().flatten(),
+                    None => None,
+                };
+                match resolved {
+                    Some(pack_bytes) => LinkState::Resolved { pack_bytes, dialect },
+                    None => LinkState::PinnedOnly { blob: blob.clone() },
+                }
+            }
         }
     }
 }
 
-/// @emoji 🏭️ Type-erased per-artifact-kind child store constructor, the composition sibling of
-/// `ArtifactCodec`/`register_document_codec` above. `create` mints a brand-new child store from a
-/// freshly-baked initial pack (composition genesis, see `CompositionCoordinator::dispatch_group`);
-/// `open` reconstructs one from a previously-persisted full envelope pack (loading an
-/// already-existing child). Both return `Result` (unlike the task brief's bare `Box<dyn
-/// SpaceMember>` shorthand) because either can genuinely fail on malformed bytes — every other
-/// fallible construction seam in this file (`ArtifactCodec`'s `compile_dsl`/`print_mirror`,
-/// `ChildStoreFactory`'s neighbor) returns `Result` for the same reason.
-pub trait ChildStoreFactory: Send + Sync {
-    fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError>;
-    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError>;
-}
-
-static CHILD_STORE_FACTORY_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, Arc<dyn ChildStoreFactory>>>> = std::sync::OnceLock::new();
-
-fn child_store_factory_registry() -> &'static std::sync::RwLock<HashMap<String, Arc<dyn ChildStoreFactory>>> {
-    CHILD_STORE_FACTORY_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
-}
-
-/// ⚠️ Child-store factory registration cannot replace an owner or use an unavailable registry.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ChildStoreFactoryRegistryError {
-    Conflict { kind: String },
-    Unavailable,
-}
-
-impl std::fmt::Display for ChildStoreFactoryRegistryError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Conflict { kind } => write!(f, "child store factory conflict for kind '{kind}'"),
-            Self::Unavailable => write!(f, "child store factory registry unavailable"),
-        }
+/// @emoji 🏭️ Generic genesis-construction helper every `space_members!`-generated `MemberFactory::
+/// create` arm calls — the composition sibling of `ArtifactCodec`/`register_document_codec` above.
+/// Bakes a brand-new child store from a freshly-baked initial pack (composition genesis, see
+/// `CompositionCoordinator::dispatch_group`): `initial_pack` decoded as `P` (empty rejected — a
+/// genesis caller always has an initial snapshot, and silently substituting `P::default()` would
+/// mint a child whose content nobody chose), stamped with `dialect`. Replaces the old
+/// `ChildStoreFactory`/`TypedChildStoreFactory` object-erased pair (O1 — a global `Arc<dyn
+/// ChildStoreFactory>` registry keyed by runtime kind string is exactly the dyn-dispatched seam the
+/// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
+pub async fn create_member_store<P, Mutation>(schema: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
+where
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    if initial_pack.is_empty() {
+        return Err(VcsError::Deserialize(format!("child genesis for {id} carries an empty initial pack")));
     }
-}
-impl std::error::Error for ChildStoreFactoryRegistryError {}
-
-/// 📝️ Registers a child-store factory only when its exact executable is already the owner.
-#[must_use]
-pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory: Arc<dyn ChildStoreFactory>) -> Result<(), ChildStoreFactoryRegistryError> {
-    let mut registry = child_store_factory_registry().write().map_err(|_| ChildStoreFactoryRegistryError::Unavailable)?;
-    match registry.get(kind.as_str()) {
-        Some(existing) if Arc::ptr_eq(existing, &factory) => Ok(()),
-        Some(_) => Err(ChildStoreFactoryRegistryError::Conflict { kind: kind.as_str().to_string() }),
-        None => {
-            registry.insert(kind.as_str().to_string(), factory);
-            Ok(())
-        }
-    }
+    let initial = P::decode_pack(initial_pack).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut envelope = create_document_envelope::<P, Mutation>(schema, id, initial, None);
+    envelope.dialect = Some(dialect.clone());
+    ArtifactStore::new(envelope)
 }
 
-/// 🔎️ Looks up the `ChildStoreFactory` registered for `kind`, if any.
-#[must_use]
-pub fn child_store_factory(kind: &crate::os_io::ArtifactKindId) -> Result<Option<Arc<dyn ChildStoreFactory>>, ChildStoreFactoryRegistryError> {
-    let registry = child_store_factory_registry().read().map_err(|_| ChildStoreFactoryRegistryError::Unavailable)?;
-    Ok(registry.get(kind.as_str()).cloned())
-}
-
-/// @emoji 🏭️ The one production `ChildStoreFactory`: a `(P, Mutation)` pair plus the `schema` string
-/// its envelopes carry, monomorphized once per composable artifact kind at registration time so a
-/// plugin registers a child kind with a single line and never hand-writes a factory. `create` bakes
-/// a genesis child (`initial_pack` decoded as `P`, empty rejected — a genesis caller always has an
-/// initial snapshot, and silently substituting `P::default()` would mint a child whose content
-/// nobody chose); `open` reconstructs a previously-persisted child from its full envelope pack via
-/// the same `parse_document_pack` → `reset(envelope, applied, redo)` path `apply_ops_binary` uses,
-/// so a reloaded child restores its exact undo/redo cursor position, not merely its content.
-///
-/// Both stamp `dialect`: `create` from its argument, `open` fail-closed from the persisted envelope.
-/// The invariant is `owner.is_some() ⇒ dialect.is_some()` — every envelope that is somebody's child
+/// @emoji 🏭️ Generic reload helper every `space_members!`-generated `MemberFactory::open` arm
+/// calls — reconstructs a previously-persisted child from its full envelope pack via the same
+/// `parse_document_pack` → `reset(envelope, applied, redo)` path `apply_ops_binary` uses, so a
+/// reloaded child restores its exact undo/redo cursor position, not merely its content. The
+/// invariant is `owner.is_some() ⇒ dialect.is_some()` — every envelope that is somebody's child
 /// knows which dialect it materializes as, which is what lets `ArtifactView.children` type a child
-/// without consulting the parent. (Making `ArtifactEnvelope.dialect` non-`Option` repo-wide is a
-/// separate mechanical slice, deliberately not bundled here — see this ticket's plan.)
-pub struct TypedChildStoreFactory<P, Mutation> {
-    schema: String,
-    _types: PhantomData<fn() -> (P, Mutation)>,
-}
-
-impl<P, Mutation> TypedChildStoreFactory<P, Mutation> {
-    /// 🏗️ Names the `ArtifactEnvelope.schema` every child this factory mints will carry.
-    pub fn new(schema: impl Into<String>) -> Self {
-        Self { schema: schema.into(), _types: PhantomData }
-    }
-}
-
-// 🧵️ `PhantomData<fn() -> (P, Mutation)>` (not `PhantomData<(P, Mutation)>`) keeps this `Send +
-// Sync` — required by `ChildStoreFactory` — for ANY `P`/`Mutation`, since a fn-pointer marker owns
-// no `P`/`Mutation` value. The bounds below still demand `Send` on both, because the produced
-// `Box<dyn SpaceMember>` genuinely carries them; the phantom simply must not add a second,
-// stricter-than-needed constraint on the factory type itself.
-impl<P, Mutation> ChildStoreFactory for TypedChildStoreFactory<P, Mutation>
+/// without consulting the parent.
+pub async fn open_member_store<P, Mutation>(envelope_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-        if initial_pack.is_empty() {
-            return Err(VcsError::Deserialize(format!("child genesis for {id} carries an empty initial pack")));
-        }
-        let initial = P::decode_pack(initial_pack).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let mut envelope = create_document_envelope::<P, Mutation>(&self.schema, id, initial, None);
-        envelope.dialect = Some(dialect.clone());
-        Ok(Box::new(ArtifactStore::new(envelope)?))
+    let (pack, spr) = decode_document_pack_bytes(envelope_pack)?;
+    let parsed = parse_document_pack::<P, Mutation>(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let envelope = parsed.envelope;
+    if envelope.owner.is_some() && envelope.dialect.is_none() {
+        return Err(VcsError::Deserialize(format!("owned child {} carries no dialect", envelope.id)));
     }
-
-    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-        let (pack, spr) = decode_document_pack_bytes(envelope_pack)?;
-        let parsed = parse_document_pack::<P, Mutation>(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let envelope = parsed.envelope;
-        if envelope.owner.is_some() && envelope.dialect.is_none() {
-            return Err(VcsError::Deserialize(format!("owned child {} carries no dialect", envelope.id)));
-        }
-        let (applied, redo) = match &envelope.cursor {
-            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
-        };
-        let mut store = ArtifactStore::new(envelope.clone())?;
-        store.reset(envelope, applied, redo)?;
-        Ok(Box::new(store))
-    }
-}
-
-/// @emoji 📝️ Registers `TypedChildStoreFactory::<P, Mutation>` for `kind` — the single line a plugin
-/// writes per composable artifact kind. Idempotent, same call-once-at-init contract as
-/// `register_child_store_factory` (which this wraps) and `register_document_codec`.
-#[must_use]
-pub fn register_typed_child_store_factory<P, Mutation>(kind: crate::os_io::ArtifactKindId, schema: impl Into<String>) -> Result<(), ChildStoreFactoryRegistryError>
-where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
-{
-    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
+    let (applied, redo) = match &envelope.cursor {
+        Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+    };
+    let mut store = ArtifactStore::new(envelope.clone())?;
+    store.reset(envelope, applied, redo)?;
+    Ok(store)
 }
 
 //#region 🔖️CompositionDsl
@@ -4229,7 +4186,7 @@ where
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
 {
     envelope: ArtifactEnvelope<P, Mutation>,
-    backbone: Option<Box<dyn Backbone>>,
+    backbone: Option<Backbones>,
     dag: crate::os_spr::MutationDag,
     applied_edit_ids: Vec<String>,
     redo_edit_ids: Vec<String>,
@@ -4780,8 +4737,8 @@ where
         self.edit_messages.get(edit_id).map(Vec::as_slice).unwrap_or(&[])
     }
 
-    pub fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
-        self.pump()?;
+    pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
+        self.pump().await?;
         let projection_cause = command.projection_cause();
         // 🎯️ `SetMergePolicy`/`ResolveConflict` never need a full snapshot re-broadcast: the policy
         // is local-only (never wire-carried) and a conflict resolution either replays already-
@@ -4793,7 +4750,7 @@ where
         self.dispatch_inner(command)?;
         self.last_projection_cause = projection_cause;
         if !skip_flush {
-            self.flush_outbound(is_apply)?;
+            self.flush_outbound(is_apply).await?;
         }
         // Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
         // rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
@@ -5231,26 +5188,26 @@ where
 
     /// @emoji 🔗️ Attaches a backbone channel, reconciling any already-persisted state before
     /// seeding it with this store's current snapshot.
-    pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
-        self.envelope.backbone = Some(backbone.descriptor());
+    pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
+        self.envelope.backbone = Some(backbone.descriptor().await);
         self.backbone = Some(backbone);
-        self.pump()?;
-        self.flush_outbound(false)?;
+        self.pump().await?;
+        self.flush_outbound(false).await?;
         self.bump();
         Ok(())
     }
 
     /// @emoji 🔗️ Resolves a backbone URI and attaches it. Only available inside the wasm sandbox,
     /// where every scheme forwards to the host over the injected {@link BackboneChannelPort} (a pure
-    /// queue). On native targets, callers attach an explicit `Box<dyn Backbone>` via
+    /// queue). On native targets, callers attach an explicit `Backbones` value via
     /// {@link attach_backbone} — the `framework/sync` actor layer owns all IO-performing endpoints.
     #[cfg(target_arch = "wasm32")]
-    pub fn attach_backbone_uri(&mut self, uri: &str) -> Result<(), VcsError> {
-        self.attach_backbone(resolve_backbone(uri)?)
+    pub async fn attach_backbone_uri(&mut self, uri: &str) -> Result<(), VcsError> {
+        self.attach_backbone(resolve_backbone(uri).await?).await
     }
 
     /// @emoji ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
-    pub fn detach_backbone(&mut self) -> Option<Box<dyn Backbone>> {
+    pub fn detach_backbone(&mut self) -> Option<Backbones> {
         self.envelope.backbone = None;
         self.bump();
         self.backbone.take()
@@ -5262,8 +5219,8 @@ where
 
     /// @emoji 📡️ Drains inbound backbone messages into the edit timeline. Safe to call anytime;
     /// `dispatch` already calls this before every command.
-    pub fn tick(&mut self) -> Result<bool, VcsError> {
-        self.pump()
+    pub async fn tick(&mut self) -> Result<bool, VcsError> {
+        self.pump().await
     }
 
     /// @emoji 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
@@ -5903,11 +5860,11 @@ where
     }
 
     /// @emoji 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
-    fn pump(&mut self) -> Result<bool, VcsError> {
+    async fn pump(&mut self) -> Result<bool, VcsError> {
         let Some(mut backbone) = self.backbone.take() else {
             return Ok(false);
         };
-        let received = backbone.receive();
+        let received = backbone.receive().await;
         self.backbone = Some(backbone);
         let messages = received?;
         if messages.is_empty() {
@@ -5931,7 +5888,7 @@ where
         }
         if !acked_op_ids.is_empty() {
             if let Some(mut backbone) = self.backbone.take() {
-                let result = backbone.send(BackboneMessage::Ack { op_ids: acked_op_ids });
+                let result = backbone.send(BackboneMessage::Ack { op_ids: acked_op_ids }).await;
                 self.backbone = Some(backbone);
                 result?;
             }
@@ -5942,7 +5899,7 @@ where
     /// @emoji 📤️ Sends the just-applied change outward: one {@link crate::os_spr::MutationEnvelope} per
     /// forward op for `Apply` (`crate::os_spr::mutation_envelope_from_edit`'s per-op fan-out — W5/W6),
     /// or a full snapshot for every structural command (undo/redo/checkpoint/alternative/amend).
-    fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
+    async fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
         let Some(mut backbone) = self.backbone.take() else {
             return Ok(());
         };
@@ -5965,7 +5922,7 @@ where
                             for op_envelope in &op_envelopes {
                                 self.dag.seed_applied(op_envelope.mutation_id.clone());
                             }
-                            backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&op_envelopes) })
+                            backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&op_envelopes) }).await
                         }
                         Err(error) => Err(VcsError::Serialize(error.to_string())),
                     }
@@ -5973,7 +5930,10 @@ where
                 None => Ok(()),
             }
         } else {
-            self.snapshot_pack().and_then(|files| backbone.send(BackboneMessage::Snapshot { pack: files.pack, spr: files.spr }))
+            match self.snapshot_pack() {
+                Ok(files) => backbone.send(BackboneMessage::Snapshot { pack: files.pack, spr: files.spr }).await,
+                Err(error) => Err(error),
+            }
         };
         self.backbone = Some(backbone);
         result
@@ -6181,27 +6141,30 @@ impl OpBinary for BackboneMessage {
 ///
 /// URI schemes are resolved by the host actor (`framework/sync`): `temp://` (in-memory),
 /// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS semio_hub).
-pub trait Backbone: Send + Sync {
-    fn descriptor(&self) -> ArtifactBackboneRef;
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError>;
+// 🧵️ No `Send`/`Sync` supertrait bound (R7 coordinator ruling 2026-08-19): this crate is
+// guest-reachable and Send-ness comes structurally from the concrete `Backbones` enum at each spawn
+// site, never from a bound named here.
+pub trait Backbone {
+    async fn descriptor(&self) -> ArtifactBackboneRef;
+    async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
+    async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError>;
 }
 
-pub trait BackbonePort: Send + Sync {
-    fn read(&self, uri: &str) -> Result<String, VcsError>;
-    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
+pub trait BackbonePort {
+    async fn read(&self, uri: &str) -> Result<String, VcsError>;
+    async fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
 }
 
-static HOST_BACKBONE_PORT: Mutex<Option<Arc<dyn BackbonePort>>> = Mutex::new(None);
+static HOST_BACKBONE_PORT: Mutex<Option<Arc<BackbonePorts>>> = Mutex::new(None);
 
 /// @emoji 🔌️ Injects the browser or dev-server backbone port for wasm file/folder IO.
-pub fn set_host_backbone_port(port: Arc<dyn BackbonePort>) {
+pub async fn set_host_backbone_port(port: Arc<BackbonePorts>) {
     if let Ok(mut guard) = HOST_BACKBONE_PORT.lock() {
         *guard = Some(port);
     }
 }
 
-fn host_backbone_port() -> Option<Arc<dyn BackbonePort>> {
+async fn host_backbone_port() -> Option<Arc<BackbonePorts>> {
     HOST_BACKBONE_PORT.lock().ok().and_then(|guard| guard.clone())
 }
 
@@ -6211,24 +6174,24 @@ pub struct MemoryBackbonePort {
 }
 
 impl MemoryBackbonePort {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 }
 
 impl BackbonePort for MemoryBackbonePort {
-    fn read(&self, uri: &str) -> Result<String, VcsError> {
+    async fn read(&self, uri: &str) -> Result<String, VcsError> {
         self.files.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.get(uri).cloned().ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))
     }
 
-    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+    async fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
         self.files.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.insert(uri.to_string(), payload.to_string());
         Ok(())
     }
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-fn local_storage_backbone_key(uri: &str) -> String {
+async fn local_storage_backbone_key(uri: &str) -> String {
     format!("semio:vcs:{uri}")
 }
 
@@ -6238,21 +6201,22 @@ pub struct LocalStorageBackbonePort {
 }
 
 impl LocalStorageBackbonePort {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { fallback: MemoryBackbonePort::new() }
     }
 }
 
 impl Default for LocalStorageBackbonePort {
+    // 🚫️async: E1 — `Default` is an externally-declared trait; its signature is fixed sync.
     fn default() -> Self {
-        Self::new()
+        Self { fallback: MemoryBackbonePort::default() }
     }
 }
 
 impl BackbonePort for LocalStorageBackbonePort {
-    fn read(&self, uri: &str) -> Result<String, VcsError> {
-        if let Some(port) = host_backbone_port() {
-            if let Ok(value) = port.read(uri) {
+    async fn read(&self, uri: &str) -> Result<String, VcsError> {
+        if let Some(port) = host_backbone_port().await {
+            if let Ok(value) = port.read(uri).await {
                 return Ok(value);
             }
         }
@@ -6260,19 +6224,19 @@ impl BackbonePort for LocalStorageBackbonePort {
         {
             if let Some(window) = web_sys::window() {
                 if let Ok(Some(storage)) = window.local_storage() {
-                    if let Ok(Some(value)) = storage.get_item(&local_storage_backbone_key(uri)) {
+                    if let Ok(Some(value)) = storage.get_item(&local_storage_backbone_key(uri).await) {
                         return Ok(value);
                     }
                 }
             }
         }
-        self.fallback.read(uri)
+        self.fallback.read(uri).await
     }
 
-    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
-        self.fallback.write(uri, payload)?;
-        if let Some(port) = host_backbone_port() {
-            let _ = port.write(uri, payload);
+    async fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        self.fallback.write(uri, payload).await?;
+        if let Some(port) = host_backbone_port().await {
+            let _ = port.write(uri, payload).await;
         }
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         {
@@ -6286,11 +6250,52 @@ impl BackbonePort for LocalStorageBackbonePort {
     }
 }
 
+/// @emoji 🧬️ Enum dispatch over every `BackbonePort` implementor (O1 — dyn dispatch is dropped
+/// repo-wide in favor of enum/generated dispatch). The trait stays as the contract; this enum
+/// implements it by match-delegation so 🪐️space's blanket `impl<T: BackbonePort>
+/// SpaceBackbonePort for T` keeps covering every concrete port through the enum too.
+pub enum BackbonePorts {
+    Memory(MemoryBackbonePort),
+    LocalStorage(LocalStorageBackbonePort),
+}
+
+impl BackbonePort for BackbonePorts {
+    async fn read(&self, uri: &str) -> Result<String, VcsError> {
+        match self {
+            Self::Memory(port) => port.read(uri).await,
+            Self::LocalStorage(port) => port.read(uri).await,
+        }
+    }
+
+    async fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        match self {
+            Self::Memory(port) => port.write(uri, payload).await,
+            Self::LocalStorage(port) => port.write(uri, payload).await,
+        }
+    }
+}
+
 /// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (program ↔ host process).
 /// `message`/the `poll` result are `BackboneMessage::encode_op`/`decode_op` (`crate::os_spr::OpBinary`) bytes.
 pub trait BackboneChannelPort: Send + Sync {
-    fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError>;
-    fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
+    async fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError>;
+    async fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
+}
+
+/// @emoji 🕳️ Enum dispatch over every `BackboneChannelPort` implementor — currently NONE (no caller
+/// constructs a real channel yet, see `PortBackbone`'s doc comment), so this is uninhabited, exactly
+/// like `NoMembers` for `SpaceMember`. The day a real channel lands (the deferred `EffectBackbone`
+/// bridge, A2), it becomes a variant here — never a `dyn` object.
+pub enum BackboneChannelPorts {}
+
+impl BackboneChannelPort for BackboneChannelPorts {
+    async fn send(&self, _uri: &str, _message: &[u8]) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn poll(&self, _uri: &str) -> Result<Vec<Vec<u8>>, VcsError> {
+        match *self {}
+    }
 }
 
 /// @emoji 🧵️ Backbone that forwards messages across the wasm sandbox boundary to the host process,
@@ -6303,33 +6308,33 @@ pub trait BackboneChannelPort: Send + Sync {
 /// linked" error rather than silently no-op'ing.
 pub struct PortBackbone {
     uri: String,
-    channel: Option<Arc<dyn BackboneChannelPort>>,
+    channel: Option<Arc<BackboneChannelPorts>>,
 }
 
 impl PortBackbone {
-    pub fn new(uri: &str) -> Self {
+    pub async fn new(uri: &str) -> Self {
         Self { uri: uri.to_string(), channel: None }
     }
 
-    pub fn with_channel(uri: &str, channel: Arc<dyn BackboneChannelPort>) -> Self {
+    pub async fn with_channel(uri: &str, channel: Arc<BackboneChannelPorts>) -> Self {
         Self { uri: uri.to_string(), channel: Some(channel) }
     }
 }
 
 impl Backbone for PortBackbone {
-    fn descriptor(&self) -> ArtifactBackboneRef {
+    async fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+    async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         let channel = self.channel.as_ref().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
         let bytes = message.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
-        channel.send(&self.uri, &bytes)
+        channel.send(&self.uri, &bytes).await
     }
 
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+    async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let channel = self.channel.as_ref().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
-        channel.poll(&self.uri)?.into_iter().map(|bytes| BackboneMessage::decode_op(&bytes).map_err(|e| VcsError::Deserialize(e.to_string()))).collect()
+        channel.poll(&self.uri).await?.into_iter().map(|bytes| BackboneMessage::decode_op(&bytes).map_err(|e| VcsError::Deserialize(e.to_string()))).collect()
     }
 }
 
@@ -6341,7 +6346,7 @@ pub struct MemoryBackbone {
 }
 
 impl MemoryBackbone {
-    pub fn pair(uri_a: &str, uri_b: &str) -> (Self, Self) {
+    pub async fn pair(uri_a: &str, uri_b: &str) -> (Self, Self) {
         let a_to_b = Arc::new(Mutex::new(VecDeque::new()));
         let b_to_a = Arc::new(Mutex::new(VecDeque::new()));
         (Self { uri: uri_a.to_string(), inbox: b_to_a.clone(), outbox: a_to_b.clone() }, Self { uri: uri_b.to_string(), inbox: a_to_b, outbox: b_to_a })
@@ -6349,16 +6354,16 @@ impl MemoryBackbone {
 }
 
 impl Backbone for MemoryBackbone {
-    fn descriptor(&self) -> ArtifactBackboneRef {
+    async fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+    async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         self.outbox.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
         Ok(())
     }
 
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+    async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut inbox = self.inbox.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
         Ok(inbox.drain(..).collect())
     }
@@ -6386,7 +6391,7 @@ pub struct ChannelBackboneRemote {
 impl ChannelBackbone {
     /// @emoji 🔗️ Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
     /// actor keeps the `ChannelBackboneRemote`.
-    pub fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
+    pub async fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
         let inbound = Arc::new(Mutex::new(VecDeque::new()));
         let outbound = Arc::new(Mutex::new(VecDeque::new()));
         (ChannelBackbone { uri: uri.to_string(), inbound: inbound.clone(), outbound: outbound.clone() }, ChannelBackboneRemote { uri: uri.to_string(), inbound, outbound })
@@ -6394,36 +6399,70 @@ impl ChannelBackbone {
 }
 
 impl Backbone for ChannelBackbone {
-    fn descriptor(&self) -> ArtifactBackboneRef {
+    async fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+    async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         self.outbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
         Ok(())
     }
 
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+    async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut inbound = self.inbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
         Ok(inbound.drain(..).collect())
     }
 }
 
 impl ChannelBackboneRemote {
-    pub fn descriptor(&self) -> ArtifactBackboneRef {
+    pub async fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri)
     }
 
     /// @emoji 📥️ Delivers a message to the store's inbound queue (actor→store).
-    pub fn push(&self, message: BackboneMessage) -> Result<(), VcsError> {
+    pub async fn push(&self, message: BackboneMessage) -> Result<(), VcsError> {
         self.inbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
         Ok(())
     }
 
     /// @emoji 📤️ Collects everything the store has sent outbound (store→actor), draining the queue.
-    pub fn drain(&self) -> Result<Vec<BackboneMessage>, VcsError> {
+    pub async fn drain(&self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut outbound = self.outbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
         Ok(outbound.drain(..).collect())
+    }
+}
+
+/// @emoji 🧬️ Enum dispatch over every `Backbone` implementor (O1 — see `BackbonePorts`' doc comment
+/// for why: every former `Box<dyn Backbone>` seam becomes `Backbones` by value, no box needed).
+pub enum Backbones {
+    Port(PortBackbone),
+    Memory(MemoryBackbone),
+    Channel(ChannelBackbone),
+}
+
+impl Backbone for Backbones {
+    async fn descriptor(&self) -> ArtifactBackboneRef {
+        match self {
+            Self::Port(backbone) => backbone.descriptor().await,
+            Self::Memory(backbone) => backbone.descriptor().await,
+            Self::Channel(backbone) => backbone.descriptor().await,
+        }
+    }
+
+    async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        match self {
+            Self::Port(backbone) => backbone.send(message).await,
+            Self::Memory(backbone) => backbone.send(message).await,
+            Self::Channel(backbone) => backbone.send(message).await,
+        }
+    }
+
+    async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        match self {
+            Self::Port(backbone) => backbone.receive().await,
+            Self::Memory(backbone) => backbone.receive().await,
+            Self::Channel(backbone) => backbone.receive().await,
+        }
     }
 }
 
@@ -6432,8 +6471,8 @@ impl ChannelBackboneRemote {
 /// {@link BackboneChannelPort} (a pure in-memory queue). Native IO-performing backbones moved out of
 /// this crate entirely — the `framework/sync` actor layer owns them.
 #[cfg(target_arch = "wasm32")]
-pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
-    Ok(Box::new(PortBackbone::new(uri)))
+pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
+    Ok(Backbones::Port(PortBackbone::new(uri).await))
 }
 //#endregion 🔖️Backbone
 
@@ -6477,27 +6516,30 @@ pub trait BlobStore: Send + Sync {
 /// (`Backbone`/`BackbonePort`/`BackboneChannelPort` are all `Send + Sync`) — `SpaceMember` was the
 /// one outlier. Only ONE implementor exists repo-wide (the blanket impl below, confirmed via
 /// `grep -rn "impl.*SpaceMember for"`), so this is a verified, not speculative, widening.
-pub trait SpaceMember: Send {
-    fn document_id(&self) -> &str;
+// 🧵️ No `Send` supertrait bound (R7 coordinator ruling 2026-08-19): this crate is guest-reachable
+// and `Send` comes structurally from the concrete `space_members!`-generated enum at each spawn
+// site, never from a bound named here.
+pub trait SpaceMember {
+    async fn document_id(&self) -> &str;
     /// @emoji 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
-    fn is_dirty(&self) -> bool;
-    fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError>;
-    fn current_checkpoint_id(&self) -> Option<String>;
-    fn current_alternative_id(&self) -> Option<String>;
-    fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
-    fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
+    async fn is_dirty(&self) -> bool;
+    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError>;
+    async fn current_checkpoint_id(&self) -> Option<String>;
+    async fn current_alternative_id(&self) -> Option<String>;
+    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
+    async fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
     // 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
     // read `MutationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
-    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
-    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
-    fn undo(&mut self) -> Result<(), VcsError>;
-    fn redo(&mut self) -> Result<(), VcsError>;
+    async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    async fn undo(&mut self) -> Result<(), VcsError>;
+    async fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄️ Downcast escape hatch: a space host UI (or a test) needs the concrete
     /// `ArtifactStore<P, Mutation>` back out of a `Box<dyn SpaceMember>` — e.g. to `Apply` a
     /// technology-specific `Mutation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Mutation` pair, so this never fails for a genuine member.
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    async fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 
     // 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
     // region below `🔖️Space`): nine object-safe methods, in two groups. `preview_wire`/
@@ -6528,7 +6570,7 @@ pub trait SpaceMember: Send {
     /// live store is untouched no matter what this returns. `CompositionCoordinator` phase 1 unions
     /// this across every member, computes ONE worst `crate::os_dsl::Severity`, and consults
     /// `merge_policy()` to decide accept/reject for the whole group.
-    fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage>;
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage>;
     /// @emoji 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
     /// `dispatch_binary`. `CompositionCoordinator` builds `cmd_bytes` from a member's
     /// `ChildDispatch.ops`/`parent_ops` by replicating `write_command_ops`'s byte layout directly
@@ -6536,24 +6578,24 @@ pub trait SpaceMember: Send {
     /// reason this whole family takes/returns bytes instead of a typed `ArtifactCommand<Mutation>`
     /// is that `SpaceMember` itself must stay object-safe (no generic method can appear on a trait
     /// object), so the coordinator stays fully agnostic of every member's concrete `Mutation` type.
-    fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError>;
+    async fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError>;
     /// @emoji ⚖️ Applies a preflighted group command under the authority-selected policy without
     /// changing this member's local policy after dispatch.
-    fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError>;
+    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError>;
     /// @emoji 🏷️ The `MutationMeta.group_id` recorded on this member's TAIL applied edit's last
     /// operation, if any — lets `CompositionCoordinator::undo_group` recognize "does this member's
     /// most recent edit belong to composite gesture X" without downcasting to a concrete
     /// `ArtifactStore<P, Mutation>`.
-    fn tail_group_id(&self) -> Option<String>;
+    async fn tail_group_id(&self) -> Option<String>;
     /// @emoji 🆔️ The id of this member's TAIL applied edit, if any — `tail_group_id`'s companion
     /// getter, so `GroupReceipt`/`GroupUndoReport` can report WHICH edit a group touched/undid, not
     /// only that group membership matched.
-    fn tail_edit_id(&self) -> Option<String>;
+    async fn tail_edit_id(&self) -> Option<String>;
     /// @emoji ↩️🏷️ `(tail_group_id, tail_edit_id)`'s REDO-direction mirror: the `(edit_id,
     /// group_id)` of whatever edit sits at the top of this member's redo stack (the one a following
     /// `redo()` would reapply), used by `CompositionCoordinator::redo_group` the way `tail_group_id`/
     /// `tail_edit_id` are used by `undo_group`.
-    fn redo_tail(&self) -> Option<(String, Option<String>)>;
+    async fn redo_tail(&self) -> Option<(String, Option<String>)>;
     /// @emoji 🖋️ Stamps `group_id` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — the mechanism `CompositionCoordinator::dispatch_group`'s phase 2 uses to give every
     /// member of one composite gesture the SAME `MutationMeta.group_id` after dispatching each
@@ -6562,7 +6604,7 @@ pub trait SpaceMember: Send {
     /// `group_id: None`). Errors with `VcsError::UnknownEdit` if this member has no applied edits at
     /// all — never true on the path `dispatch_group` actually calls it from, since it always calls
     /// this immediately after a successful `dispatch_wire`.
-    fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError>;
+    async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError>;
     /// @emoji 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
     /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
@@ -6572,7 +6614,7 @@ pub trait SpaceMember: Send {
     /// default (`Owner`) — this is precisely what keeps `Owned` byte-identical to its pre-`Peer`
     /// behaviour. Same `VcsError::UnknownEdit` failure mode as `stamp_tail_group_id` (never true on
     /// the path `dispatch_group` calls it from).
-    fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError>;
+    async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError>;
     /// @emoji 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
     /// `CompositionCoordinator::dispatch_group`'s phase 2 uses to record a freshly-`ChildGenesis`-
     /// created child's `OwnerRef` directly on the child's own envelope (see
@@ -6580,7 +6622,7 @@ pub trait SpaceMember: Send {
     /// side, not only from the parent's `ArtifactChild` handle). Not part of the ordinary
     /// VCS/dispatch surface — no ordinary `Apply` mutation can reach envelope metadata — so it needs
     /// its own object-safe setter.
-    fn set_owner(&mut self, owner: Option<OwnerRef>);
+    async fn set_owner(&mut self, owner: Option<OwnerRef>);
 
     // 📖️ Object-safe READ surface (this ticket's CW1-1b). Everything above either mutates a member
     // or reports a scalar about it; nothing could get a member's CONTENT back out without
@@ -6593,17 +6635,17 @@ pub trait SpaceMember: Send {
     /// composition parent reads through `ArtifactView.children` and a `LinkPin::Head` resolves to.
     /// Reads through the live store, so it cannot go stale behind an undo/redo/checkout the way the
     /// `thread_local!` child caches this replaces did.
-    fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
+    async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
     /// @emoji 🗄️ This member's WHOLE envelope (initial snapshot pack + `.spr` op log, in
     /// `encode_document_pack_bytes` framing) — what gets persisted for a child and handed back to
     /// `ChildStoreFactory::open` on reload. The full history, not just the current content.
-    fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
+    async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
     /// @emoji ⏮️📦️ This member's snapshot AS OF `checkpoint_id`, pack-encoded, without disturbing the
     /// live cursor — replays exactly the edit ids that checkpoint's changes cover, the same set
     /// `checkout_checkpoint_internal` would install. This is what makes `LinkPin::Checkpoint` real:
     /// a pinned reference resolves to the target's historical content rather than silently
     /// degrading to its head.
-    fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
+    async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
 
     /// @emoji ⚖️ This member's own `crate::os_spr::MergePolicy` — local/authority state (§C3: never
     /// wire-carried, never part of shared history), consulted by `CompositionCoordinator` phase 1
@@ -6614,7 +6656,7 @@ pub trait SpaceMember: Send {
     /// landed — override this method in the blanket impl below to delegate to it the moment that
     /// inherent method exists (Rust picks the inherent method over this trait one automatically, the
     /// same pattern `current_checkpoint_id` already relies on just above).
-    fn merge_policy(&self) -> crate::os_spr::MergePolicy {
+    async fn merge_policy(&self) -> crate::os_spr::MergePolicy {
         crate::os_spr::MergePolicy::default()
     }
 }
@@ -6624,45 +6666,45 @@ where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn document_id(&self) -> &str {
+    async fn document_id(&self) -> &str {
         self.envelope().id.as_str()
     }
 
-    fn is_dirty(&self) -> bool {
+    async fn is_dirty(&self) -> bool {
         !uncommitted_edit_ids(&self.envelope, self.applied_edit_ids()).is_empty()
     }
 
-    fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
-        self.dispatch(ArtifactCommand::CommitCheckpoint { message: Some(message), authors })?;
+    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+        self.dispatch(ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await?;
         // `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
         // trait method — Rust prefers inherent methods over trait methods of the same name.
         self.current_checkpoint_id().map(|id| id.to_string()).ok_or(VcsError::NoCheckpoint)
     }
 
-    fn current_checkpoint_id(&self) -> Option<String> {
+    async fn current_checkpoint_id(&self) -> Option<String> {
         self.current_checkpoint_id().map(|id| id.to_string())
     }
 
-    fn current_alternative_id(&self) -> Option<String> {
+    async fn current_alternative_id(&self) -> Option<String> {
         self.envelope().active_alternative_id.clone()
     }
 
-    fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
+    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
         if !alternative_id.is_empty() {
             let is_alternative_tip = self.envelope().vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).map(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id)).unwrap_or(false);
             if is_alternative_tip {
-                return self.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }).map(|_| ());
+                return self.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }).await.map(|_| ());
             }
         }
-        self.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }).map(|_| ())
+        self.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }).await.map(|_| ())
     }
 
-    fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
-        self.dispatch(ArtifactCommand::CreateAlternative { name })?;
+    async fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
+        self.dispatch(ArtifactCommand::CreateAlternative { name }).await?;
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
-    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+    async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         self.applied_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -6671,7 +6713,7 @@ where
         })
     }
 
-    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+    async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         self.redo_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -6680,19 +6722,19 @@ where
         })
     }
 
-    fn undo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(ArtifactCommand::Undo).map(|_| ())
+    async fn undo(&mut self) -> Result<(), VcsError> {
+        self.dispatch(ArtifactCommand::Undo).await.map(|_| ())
     }
 
-    fn redo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(ArtifactCommand::Redo).map(|_| ())
+    async fn redo(&mut self) -> Result<(), VcsError> {
+        self.dispatch(ArtifactCommand::Redo).await.map(|_| ())
     }
 
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+    async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
 
-    fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
         let mut running = match self.snapshot() {
             Ok(snapshot) => snapshot,
             Err(error) => return vec![crate::os_spr::MutationMessage::fatal("mutation.invariant", error.to_string())],
@@ -6719,11 +6761,11 @@ where
         all_messages
     }
 
-    fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError> {
         self.dispatch_binary(cmd_bytes)
     }
 
-    fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
         let local_policy = self.merge_policy;
         self.merge_policy = policy;
         let result = self.dispatch_binary(cmd_bytes);
@@ -6731,22 +6773,22 @@ where
         result
     }
 
-    fn tail_group_id(&self) -> Option<String> {
+    async fn tail_group_id(&self) -> Option<String> {
         let edit_id = self.applied_edit_ids().last()?;
         self.envelope().vcs.edits.iter().find(|edit| edit.id == *edit_id)?.mutation_meta.last()?.group_id.clone()
     }
 
-    fn tail_edit_id(&self) -> Option<String> {
+    async fn tail_edit_id(&self) -> Option<String> {
         self.applied_edit_ids().last().cloned()
     }
 
-    fn redo_tail(&self) -> Option<(String, Option<String>)> {
+    async fn redo_tail(&self) -> Option<(String, Option<String>)> {
         let edit_id = self.redo_edit_ids().last()?.clone();
         let group_id = self.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.last()).and_then(|meta| meta.group_id.clone());
         Some((edit_id, group_id))
     }
 
-    fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
+    async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
         let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for meta in edit.mutation_meta.iter_mut() {
@@ -6755,7 +6797,7 @@ where
         Ok(())
     }
 
-    fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+    async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
         let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for meta in edit.mutation_meta.iter_mut() {
@@ -6764,20 +6806,20 @@ where
         Ok(())
     }
 
-    fn set_owner(&mut self, owner: Option<OwnerRef>) {
+    async fn set_owner(&mut self, owner: Option<OwnerRef>) {
         self.envelope.owner = owner;
     }
 
-    fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+    async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
         Ok(self.snapshot()?.encode_pack())
     }
 
-    fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+    async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
         let files = print_document_pack(self.envelope())?;
         Ok(encode_document_pack_bytes(&files.pack, &files.spr))
     }
 
-    fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
+    async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
         let checkpoint = self.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
         let edit_ids = edit_ids_for_changes(self.envelope(), &checkpoint.change_ids);
         Ok(materialize_document_snapshot(self.envelope(), &edit_ids)?.encode_pack())
@@ -6787,9 +6829,250 @@ where
     /// `ArtifactStore::merge_policy` inherent method has landed (§C6) — `self.merge_policy()`
     /// resolves to the INHERENT method here (Rust prefers it over the trait one of the same name),
     /// exactly the `current_checkpoint_id` precedent this file already documents.
-    fn merge_policy(&self) -> crate::os_spr::MergePolicy {
+    async fn merge_policy(&self) -> crate::os_spr::MergePolicy {
         self.merge_policy()
     }
+}
+
+/// @emoji 🏭️ Replaces the old `ChildStoreFactory` object (O1 — a global `Arc<dyn ChildStoreFactory>`
+/// registry keyed by a runtime kind string is exactly the dyn-dispatched seam the program drops).
+/// A `space_members!`-generated enum implements this by matching `kind` over its own variants — the
+/// registry's kind-keying moves INTO the enum, closed and known at the composing plugin's own
+/// compile time, rather than living in a process-global mutable table of trait objects.
+pub trait MemberFactory: Sized {
+    async fn create(kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError>;
+    async fn open(kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError>;
+}
+
+/// @emoji 🕳️ Uninhabited default `SpaceHost`/`CompositionCoordinator` member type — the STABLE
+/// struct-param default so the many plugins that never compose members change nothing. Same
+/// stand-in shape as `BackboneChannelPorts`/`NoBlobStore`.
+pub enum NoMembers {}
+
+impl SpaceMember for NoMembers {
+    async fn document_id(&self) -> &str {
+        match *self {}
+    }
+
+    async fn is_dirty(&self) -> bool {
+        match *self {}
+    }
+
+    async fn commit_checkpoint(&mut self, _message: String, _authors: Vec<Author>) -> Result<String, VcsError> {
+        match *self {}
+    }
+
+    async fn current_checkpoint_id(&self) -> Option<String> {
+        match *self {}
+    }
+
+    async fn current_alternative_id(&self) -> Option<String> {
+        match *self {}
+    }
+
+    async fn checkout(&mut self, _checkpoint_id: &str, _alternative_id: &str) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn create_alternative(&mut self, _name: String) -> Result<String, VcsError> {
+        match *self {}
+    }
+
+    async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        match *self {}
+    }
+
+    async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        match *self {}
+    }
+
+    async fn undo(&mut self) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn redo(&mut self) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        match *self {}
+    }
+
+    async fn preview_wire(&self, _ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+        match *self {}
+    }
+
+    async fn dispatch_wire(&mut self, _cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError> {
+        match *self {}
+    }
+
+    async fn dispatch_wire_with_policy(&mut self, _cmd_bytes: &[u8], _policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
+        match *self {}
+    }
+
+    async fn tail_group_id(&self) -> Option<String> {
+        match *self {}
+    }
+
+    async fn tail_edit_id(&self) -> Option<String> {
+        match *self {}
+    }
+
+    async fn redo_tail(&self) -> Option<(String, Option<String>)> {
+        match *self {}
+    }
+
+    async fn stamp_tail_group_id(&mut self, _group_id: &str) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn stamp_tail_origin(&mut self, _origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+        match *self {}
+    }
+
+    async fn set_owner(&mut self, _owner: Option<OwnerRef>) {
+        match *self {}
+    }
+
+    async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+        match *self {}
+    }
+
+    async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+        match *self {}
+    }
+
+    async fn pack_at_checkpoint(&self, _checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
+        match *self {}
+    }
+}
+
+impl MemberFactory for NoMembers {
+    async fn create(kind: &str, _id: &str, _dialect: &crate::os_io::ArtifactDialect, _initial_pack: &[u8]) -> Result<Self, VcsError> {
+        Err(VcsError::ValidationFailed(format!("no member kind '{kind}' registered (this composition is NoMembers — composition disabled for this store)")))
+    }
+
+    async fn open(kind: &str, _envelope_pack: &[u8]) -> Result<Self, VcsError> {
+        Err(VcsError::ValidationFailed(format!("no member kind '{kind}' registered (this composition is NoMembers — composition disabled for this store)")))
+    }
+}
+
+/// @emoji 🧬️ Generates a per-plugin `SpaceMember`+`MemberFactory` enum spanning several document
+/// kinds composed under one `SpaceHost`/`CompositionCoordinator` — the O1 replacement for a
+/// `Box<dyn SpaceMember>` heterogeneous registry. Delegation arms are written ONCE here, next to
+/// `trait SpaceMember` itself, so drift between the trait and the macro is a compile error, never a
+/// silent bug. Usage:
+/// ```ignore
+/// space_members! {
+///     pub enum NoteMembers {
+///         Text("s.note.text", "note.text/v1") => ArtifactStore<TextSnapshot, TextMutation>,
+///         Sketch("s.note.sketch", "note.sketch/v1") => ArtifactStore<SketchSnapshot, SketchMutation>,
+///     }
+/// }
+/// ```
+/// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over all 22 non-default
+/// methods), and `impl MemberFactory for NoteMembers` (`create`/`open` matching `kind` against each
+/// variant's kind string via `create_member_store`/`open_member_store`).
+#[macro_export]
+macro_rules! space_members {
+    (pub enum $enum_name:ident { $($variant:ident($kind:literal, $schema:literal) => $inner:ty),+ $(,)? }) => {
+        pub enum $enum_name {
+            $($variant($inner)),+
+        }
+
+        impl $crate::os_store::SpaceMember for $enum_name {
+            async fn document_id(&self) -> &str {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
+            }
+            async fn is_dirty(&self) -> bool {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m).await),+ }
+            }
+            async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>) -> Result<String, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::commit_checkpoint(m, message, authors).await),+ }
+            }
+            async fn current_checkpoint_id(&self) -> Option<String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m).await),+ }
+            }
+            async fn current_alternative_id(&self) -> Option<String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m).await),+ }
+            }
+            async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::checkout(m, checkpoint_id, alternative_id).await),+ }
+            }
+            async fn create_alternative(&mut self, name: String) -> Result<String, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::create_alternative(m, name).await),+ }
+            }
+            async fn last_local_edit_timestamp(&self) -> Option<$crate::os_store::HybridLogicalTimestamp> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m).await),+ }
+            }
+            async fn last_undone_local_edit_timestamp(&self) -> Option<$crate::os_store::HybridLogicalTimestamp> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_undone_local_edit_timestamp(m).await),+ }
+            }
+            async fn undo(&mut self) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::undo(m).await),+ }
+            }
+            async fn redo(&mut self) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo(m).await),+ }
+            }
+            async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::as_any_mut(m).await),+ }
+            }
+            async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::preview_wire(m, ops).await),+ }
+            }
+            async fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire(m, cmd_bytes).await),+ }
+            }
+            async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire_with_policy(m, cmd_bytes, policy).await),+ }
+            }
+            async fn tail_group_id(&self) -> Option<String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_group_id(m).await),+ }
+            }
+            async fn tail_edit_id(&self) -> Option<String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_edit_id(m).await),+ }
+            }
+            async fn redo_tail(&self) -> Option<(String, Option<String>)> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m).await),+ }
+            }
+            async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_group_id(m, group_id).await),+ }
+            }
+            async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_origin(m, origin).await),+ }
+            }
+            async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::set_owner(m, owner).await),+ }
+            }
+            async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_pack_bytes(m).await),+ }
+            }
+            async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::envelope_pack_bytes(m).await),+ }
+            }
+            async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::pack_at_checkpoint(m, checkpoint_id).await),+ }
+            }
+            async fn merge_policy(&self) -> $crate::os_spr::MergePolicy {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m).await),+ }
+            }
+        }
+
+        impl $crate::os_store::MemberFactory for $enum_name {
+            async fn create(kind: &str, id: &str, dialect: &$crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
+                match kind {
+                    $($kind => Ok(Self::$variant($crate::os_store::create_member_store($schema, id, dialect, initial_pack).await?)),)+
+                    other => Err($crate::os_store::VcsError::ValidationFailed(format!("no member kind '{other}' registered in {}", stringify!($enum_name)))),
+                }
+            }
+            async fn open(kind: &str, envelope_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
+                match kind {
+                    $($kind => Ok(Self::$variant($crate::os_store::open_member_store(envelope_pack).await?)),)+
+                    other => Err($crate::os_store::VcsError::ValidationFailed(format!("no member kind '{other}' registered in {}", stringify!($enum_name)))),
+                }
+            }
+        }
+    };
 }
 //#endregion SpaceMember
 
@@ -7047,18 +7330,18 @@ impl ArtifactPack for SpaceHistorySnapshot {
 /// timeline, itself stored in a dogfooded `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`)
 /// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
 /// it satisfies `SpaceMember`.
-pub struct SpaceHost {
+pub struct SpaceHost<M = NoMembers> {
     meta: ArtifactStore<SpaceHistorySnapshot, SpaceHistoryMutation>,
-    members: HashMap<String, Box<dyn SpaceMember>>,
+    members: HashMap<String, M>,
 }
 
-impl SpaceHost {
+impl<M: SpaceMember> SpaceHost<M> {
     pub fn new(meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>) -> Result<Self, VcsError> {
         Ok(Self { meta: ArtifactStore::new(meta_envelope)?, members: HashMap::new() })
     }
 
-    pub fn register_member(&mut self, member: Box<dyn SpaceMember>) {
-        self.members.insert(member.document_id().to_string(), member);
+    pub async fn register_member(&mut self, member: M) {
+        self.members.insert(member.document_id().await.to_string(), member);
     }
 
     /// @emoji 📚️ Batch counterpart to `register_member`: registers a space's manifest document, its
@@ -7068,29 +7351,26 @@ impl SpaceHost {
     /// stores, W4's storage wiring — this crate stays app-agnostic and never names those types
     /// directly, only their common `SpaceMember` façade). Purely additive sugar over calling
     /// `register_member` three times in this order; no new mechanism.
-    pub fn register_space_documents(&mut self, manifest: Box<dyn SpaceMember>, collections: Vec<Box<dyn SpaceMember>>, artifacts: Vec<Box<dyn SpaceMember>>) {
-        self.register_member(manifest);
+    pub async fn register_space_documents(&mut self, manifest: M, collections: Vec<M>, artifacts: Vec<M>) {
+        self.register_member(manifest).await;
         for collection in collections {
-            self.register_member(collection);
+            self.register_member(collection).await;
         }
         for artifact in artifacts {
-            self.register_member(artifact);
+            self.register_member(artifact).await;
         }
     }
 
-    pub fn unregister_member(&mut self, document_id: &str) -> Option<Box<dyn SpaceMember>> {
+    pub fn unregister_member(&mut self, document_id: &str) -> Option<M> {
         self.members.remove(document_id)
     }
 
-    pub fn member(&self, document_id: &str) -> Option<&dyn SpaceMember> {
-        self.members.get(document_id).map(|member| member.as_ref())
+    pub fn member(&self, document_id: &str) -> Option<&M> {
+        self.members.get(document_id)
     }
 
-    pub fn member_mut<'a>(&'a mut self, document_id: &str) -> Option<&'a mut (dyn SpaceMember + 'a)> {
-        match self.members.get_mut(document_id) {
-            Some(member) => Some(member.as_mut()),
-            None => None,
-        }
+    pub fn member_mut(&mut self, document_id: &str) -> Option<&mut M> {
+        self.members.get_mut(document_id)
     }
 
     pub fn meta_snapshot(&self) -> Result<SpaceHistorySnapshot, VcsError> {
@@ -7100,12 +7380,12 @@ impl SpaceHost {
     /// @emoji 🔗️ Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
     /// contract as any other `ArtifactStore` — default is unattached, this is always an
     /// explicit call.
-    pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
-        self.meta.attach_backbone(backbone)
+    pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
+        self.meta.attach_backbone(backbone).await
     }
 
     /// @emoji ✂️ Detaches the meta-document's backbone; the space history stays in memory.
-    pub fn detach_backbone(&mut self) -> Option<Box<dyn Backbone>> {
+    pub fn detach_backbone(&mut self) -> Option<Backbones> {
         self.meta.detach_backbone()
     }
 
@@ -7114,25 +7394,25 @@ impl SpaceHost {
     }
 
     /// @emoji 📡️ Drains inbound backbone messages into the meta-document's edit timeline.
-    pub fn tick(&mut self) -> Result<bool, VcsError> {
-        self.meta.tick()
+    pub async fn tick(&mut self) -> Result<bool, VcsError> {
+        self.meta.tick().await
     }
 
     /// @emoji 💾️ Commits every dirty member (leaving clean members' existing checkpoints untouched),
     /// pins each member's resulting `(checkpoint, alternative)`, and records one `SpaceCheckpoint`
     /// on the meta-document — applied *and* committed there too, so the space history itself is
     /// durable the moment this returns.
-    pub fn commit_space_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+    pub async fn commit_space_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
         let mut document_ids: Vec<String> = self.members.keys().cloned().collect();
         document_ids.sort();
         let mut pins = Vec::with_capacity(document_ids.len());
         for document_id in &document_ids {
             let member = self.members.get_mut(document_id).expect("just collected from members");
-            if member.is_dirty() {
-                member.commit_checkpoint(message.clone(), authors.clone())?;
+            if member.is_dirty().await {
+                member.commit_checkpoint(message.clone(), authors.clone()).await?;
             }
-            let checkpoint_id = member.current_checkpoint_id().ok_or(VcsError::NoCheckpoint)?;
-            pins.push(SpaceMemberPin { document_id: document_id.clone(), checkpoint_id, alternative_id: member.current_alternative_id().unwrap_or_default() });
+            let checkpoint_id = member.current_checkpoint_id().await.ok_or(VcsError::NoCheckpoint)?;
+            pins.push(SpaceMemberPin { document_id: document_id.clone(), checkpoint_id, alternative_id: member.current_alternative_id().await.unwrap_or_default() });
         }
         let pins_fingerprint = serde_json::to_vec(&pins).unwrap_or_default();
         let mut space_checkpoint_payload = message.as_bytes().to_vec();
@@ -7150,62 +7430,73 @@ impl SpaceHost {
         // per-OP ids (distinct from the edit's own id — see `flush_outbound`), the two flushes are
         // no longer accidentally deduplicable, so avoiding the redundant one is the real fix.
         self.meta.dispatch_inner(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint }], description: Some(message) })?;
-        self.meta.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
+        self.meta.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await?;
         Ok(checkpoint_id)
     }
 
     /// @emoji 🌿️ Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
     /// if nothing has been committed yet), so it can later be switched back into.
-    pub fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
+    pub async fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
         let checkpoint_ids: Vec<String> = self.meta.snapshot()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).into_iter().collect();
         let mut space_alternative_payload = name.as_bytes().to_vec();
         space_alternative_payload.push(0);
         space_alternative_payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
         let alternative_id = content_addressed_entity_id("space-alternative", &space_alternative_payload);
         let alternative = SpaceAlternative { id: alternative_id.clone(), name, checkpoint_ids };
-        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative }], description: None })?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative }], description: None }).await?;
         Ok(alternative_id)
     }
 
     /// @emoji 🔀️ Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
     /// each to its exact recorded `(checkpoint, alternative)`.
-    pub fn checkout_space_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
+    pub async fn checkout_space_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
         let snapshot = self.meta.snapshot()?;
         let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or(VcsError::NoCheckpoint)?;
         for pin in &checkpoint.members {
             if let Some(member) = self.members.get_mut(&pin.document_id) {
-                member.checkout(&pin.checkpoint_id, &pin.alternative_id)?;
+                member.checkout(&pin.checkpoint_id, &pin.alternative_id).await?;
             }
         }
         Ok(())
     }
 
     /// @emoji 🔀️ Switches the studio's active alternative and fans out to its tip checkpoint's pins.
-    pub fn switch_space_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
+    pub async fn switch_space_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
         let snapshot = self.meta.snapshot()?;
         let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
-        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None })?;
-        self.checkout_space_checkpoint(&checkpoint_id)
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None }).await?;
+        self.checkout_space_checkpoint(&checkpoint_id).await
     }
 
     /// @emoji ↩️ Derived, local-only undo: targets whichever registered member has the most recent
     /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
     /// member. Never dispatched against the meta-document — space-level undo has no `SpaceHistoryMutation`
     /// of its own, it is purely a cross-member ordering policy.
-    pub fn undo(&mut self) -> Result<(), VcsError> {
-        let target = self.members.iter().filter_map(|(document_id, member)| member.last_local_edit_timestamp().map(|timestamp| (timestamp.cmp_key(), document_id.clone()))).max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
+    pub async fn undo(&mut self) -> Result<(), VcsError> {
+        let mut candidates = Vec::new();
+        for (document_id, member) in self.members.iter() {
+            if let Some(timestamp) = member.last_local_edit_timestamp().await {
+                candidates.push((timestamp.cmp_key(), document_id.clone()));
+            }
+        }
+        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
         let document_id = target.ok_or(VcsError::NothingToUndo)?;
-        self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo()
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo().await
     }
 
     /// @emoji ↪️ Derived, local-only redo: mirrors `undo`, targeting the member with the most
     /// recent `last_undone_local_edit_timestamp`.
-    pub fn redo(&mut self) -> Result<(), VcsError> {
-        let target =
-            self.members.iter().filter_map(|(document_id, member)| member.last_undone_local_edit_timestamp().map(|timestamp| (timestamp.cmp_key(), document_id.clone()))).max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
+    pub async fn redo(&mut self) -> Result<(), VcsError> {
+        let mut candidates = Vec::new();
+        for (document_id, member) in self.members.iter() {
+            if let Some(timestamp) = member.last_undone_local_edit_timestamp().await {
+                candidates.push((timestamp.cmp_key(), document_id.clone()));
+            }
+        }
+        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
         let document_id = target.ok_or(VcsError::NothingToRedo)?;
-        self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo()
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo().await
     }
 }
 //#endregion SpaceHost
@@ -7272,10 +7563,10 @@ pub struct ChildGenesis {
 /// `crate::os_io::ArtifactRef::to_uri()` (outermost segment), so a caller with several members in
 /// flight can always tell which member a given message came from — the same discipline §C4 mandates
 /// for composite step paths. Empty when every op's outcome was silent.
-pub struct GroupReceipt {
+pub struct GroupReceipt<M> {
     pub invocation_id: String,
     pub member_edits: Vec<(crate::os_io::ArtifactRef, String)>,
-    pub created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)>,
+    pub created_children: Vec<(crate::os_io::ArtifactRef, M)>,
     pub messages: Vec<crate::os_spr::MutationMessage>,
 }
 
@@ -7630,18 +7921,18 @@ impl TransactionCoordinator {
     /// `dispatch_group`'s doc comment for why every already-applied member must still get a
     /// best-effort rollback attempt even if an earlier one in this same pass failed. Relation-
     /// agnostic: undoing a member does not need to know WHY it was dispatched.
-    fn compensate(parent_ref: &crate::os_io::ArtifactRef, parent: &mut dyn SpaceMember, children: &mut [(&mut dyn SpaceMember, ChildDispatch)], applied_children: &[(usize, String)], parent_applied: Option<&str>) -> GroupUndoReport {
+    async fn compensate<M: SpaceMember>(parent_ref: &crate::os_io::ArtifactRef, parent: &mut M, children: &mut [(&mut M, ChildDispatch)], applied_children: &[(usize, String)], parent_applied: Option<&str>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         if let Some(edit_id) = parent_applied {
-            match parent.undo() {
+            match parent.undo().await {
                 Ok(()) => undone.push((parent_ref.clone(), edit_id.to_string())),
                 Err(error) => skipped.push((parent_ref.clone(), error)),
             }
         }
         for (index, edit_id) in applied_children.iter().rev() {
             let (member, dispatch) = &mut children[*index];
-            match member.undo() {
+            match member.undo().await {
                 Ok(()) => undone.push((dispatch.child.clone(), edit_id.clone())),
                 Err(error) => skipped.push((dispatch.child.clone(), error)),
             }
@@ -7653,16 +7944,16 @@ impl TransactionCoordinator {
     /// `self.graph`) and may create brand-new `genesis` children. See `dispatch_relation_group` for
     /// the shared two-phase/compensation engine this delegates to unchanged — this method's own
     /// behaviour is byte-identical to before `MemberRelation` existed.
-    pub fn dispatch_group(
+    pub async fn dispatch_group<M: SpaceMember + MemberFactory>(
         &mut self,
         parent_ref: &crate::os_io::ArtifactRef,
-        parent: &mut dyn SpaceMember,
-        children: &mut [(&mut dyn SpaceMember, ChildDispatch)],
+        parent: &mut M,
+        children: &mut [(&mut M, ChildDispatch)],
         parent_ops: Vec<Vec<u8>>,
         genesis: Vec<ChildGenesis>,
         meta: GroupMeta,
-    ) -> Result<GroupReceipt, VcsError> {
-        self.dispatch_relation_group(MemberRelation::Owned, parent_ref, parent, children, parent_ops, genesis, meta)
+    ) -> Result<GroupReceipt<M>, VcsError> {
+        self.dispatch_relation_group(MemberRelation::Owned, parent_ref, parent, children, parent_ops, genesis, meta).await
     }
 
     /// 🤝️ `Peer`-relation dispatch (contract-freeze §5): `initiator_ref`/`initiator` is the
@@ -7670,15 +7961,15 @@ impl TransactionCoordinator {
     /// No `genesis` parameter — a peer transaction never creates a child, only touches existing
     /// artifacts. See `MemberRelation::Peer`'s doc comment for exactly what differs from
     /// `dispatch_group`, and `dispatch_relation_group` for the shared engine.
-    pub fn dispatch_peer_group(
+    pub async fn dispatch_peer_group<M: SpaceMember + MemberFactory>(
         &mut self,
         initiator_ref: &crate::os_io::ArtifactRef,
-        initiator: &mut dyn SpaceMember,
-        peers: &mut [(&mut dyn SpaceMember, ChildDispatch)],
+        initiator: &mut M,
+        peers: &mut [(&mut M, ChildDispatch)],
         initiator_ops: Vec<Vec<u8>>,
         meta: GroupMeta,
-    ) -> Result<GroupReceipt, VcsError> {
-        self.dispatch_relation_group(MemberRelation::Peer, initiator_ref, initiator, peers, initiator_ops, Vec::new(), meta)
+    ) -> Result<GroupReceipt<M>, VcsError> {
+        self.dispatch_relation_group(MemberRelation::Peer, initiator_ref, initiator, peers, initiator_ops, Vec::new(), meta).await
     }
 
     /// 🧩️ Dispatches one composite/transactional gesture spanning `parent` + `children` (+ any
@@ -7733,20 +8024,20 @@ impl TransactionCoordinator {
     /// `VcsError::CompensationFailed` (`fold_compensation_error`) carrying both the original
     /// failure and which members could not be rolled back, rather than silently leaving partial
     /// state unreported.
-    fn dispatch_relation_group(
+    async fn dispatch_relation_group<M: SpaceMember + MemberFactory>(
         &mut self,
         relation: MemberRelation,
         parent_ref: &crate::os_io::ArtifactRef,
-        parent: &mut dyn SpaceMember,
-        children: &mut [(&mut dyn SpaceMember, ChildDispatch)],
+        parent: &mut M,
+        children: &mut [(&mut M, ChildDispatch)],
         parent_ops: Vec<Vec<u8>>,
         genesis: Vec<ChildGenesis>,
         meta: GroupMeta,
-    ) -> Result<GroupReceipt, VcsError> {
+    ) -> Result<GroupReceipt<M>, VcsError> {
         //#region Phase1Validate
         let mut all_messages: Vec<crate::os_spr::MutationMessage> = Vec::new();
         if !parent_ops.is_empty() {
-            all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops), &parent_ref.to_uri()));
+            all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops).await, &parent_ref.to_uri()));
         }
         for (member, dispatch) in children.iter() {
             match relation {
@@ -7761,7 +8052,7 @@ impl TransactionCoordinator {
                 }
             }
             if !dispatch.ops.is_empty() {
-                all_messages.extend(prefix_message_target(member.preview_wire(&dispatch.ops), &dispatch.child.to_uri()));
+                all_messages.extend(prefix_message_target(member.preview_wire(&dispatch.ops).await, &dispatch.child.to_uri()));
             }
         }
         let parent_edit_fingerprint = concat_ops_fingerprint(&parent_ops);
@@ -7771,13 +8062,9 @@ impl TransactionCoordinator {
             if self.graph.would_cycle_owns(&parent_ref.artifact_id, &child_id) {
                 return Err(VcsError::CompositionCycle(format!("creating child {child_id} in slot {} under {} would cycle", spec.slot, parent_ref.artifact_id)));
             }
-            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).map_err(VcsError::ValidationFailed)?;
-            if child_store_factory(&kind).map_err(|error| VcsError::ValidationFailed(format!("child-store factory registry unavailable: {error:?}")))?.is_none() {
-                return Err(VcsError::ValidationFailed(format!("no ChildStoreFactory registered for kind {}", spec.dialect.artifact_kind)));
-            }
             minted_child_ids.push(child_id);
         }
-        let group_policy = parent.merge_policy();
+        let group_policy = parent.merge_policy().await;
         reject_if_policy_rejects(group_policy, &all_messages)?;
         //#endregion Phase1Validate
 
@@ -7785,19 +8072,17 @@ impl TransactionCoordinator {
         let child_fingerprints: Vec<(String, Vec<u8>)> = children.iter().map(|(_, dispatch)| (dispatch.child.artifact_id.clone(), concat_ops_fingerprint(&dispatch.ops))).collect();
         let invocation_id = mint_invocation_id(&parent_ref.artifact_id, &parent_edit_fingerprint, &child_fingerprints);
 
-        let mut created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)> = Vec::with_capacity(genesis.len());
+        // 🎯️ O1: no more `ChildStoreFactory` global registry lookup — `M::create` (the
+        // `space_members!`-generated `MemberFactory` impl) matches `kind` against M's OWN closed
+        // variant set directly. Nothing to compensate on a genesis failure: no `dispatch_wire` has
+        // run yet in this call, and any earlier-succeeding genesis member in this same loop was
+        // never registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
+        let mut created_children: Vec<(crate::os_io::ArtifactRef, M)> = Vec::with_capacity(genesis.len());
         for (ordinal, spec) in genesis.into_iter().enumerate() {
             let child_id = minted_child_ids[ordinal].clone();
-            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).map_err(VcsError::ValidationFailed)?;
-            let factory = child_store_factory(&kind)
-                .map_err(|error| VcsError::ValidationFailed(format!("child-store factory registry unavailable: {error:?}")))?
-                .ok_or_else(|| VcsError::ValidationFailed(format!("no ChildStoreFactory registered for kind {}", spec.dialect.artifact_kind)))?;
-            // 🎯️ Nothing to compensate on a genesis failure: no `dispatch_wire` has run yet in this
-            // call, and any earlier-succeeding genesis member in this same loop was never
-            // registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
-            let mut member = factory.create(&child_id, &spec.dialect, &spec.initial_pack)?;
+            let mut member = M::create(&spec.dialect.artifact_kind, &child_id, &spec.dialect, &spec.initial_pack)?;
             let target = crate::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: spec.dialect.clone() };
-            member.set_owner(Some(OwnerRef { parent: parent_ref.clone(), slot: spec.slot.clone(), child_id: child_id.clone() }));
+            member.set_owner(Some(OwnerRef { parent: parent_ref.clone(), slot: spec.slot.clone(), child_id: child_id.clone() })).await;
             self.graph.insert_owns(&parent_ref.artifact_id, &spec.slot, &child_id).map_err(VcsError::OwnershipViolation)?;
             created_children.push((target, member));
         }
@@ -7808,23 +8093,23 @@ impl TransactionCoordinator {
                 continue;
             }
             let command_bytes = build_apply_command_bytes(&children[index].1.ops, meta.description.as_deref());
-            let receipt = match children[index].0.dispatch_wire_with_policy(&command_bytes, group_policy) {
+            let receipt = match children[index].0.dispatch_wire_with_policy(&command_bytes, group_policy).await {
                 Ok(receipt) => receipt,
                 Err(error) => {
-                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                     return Err(fold_compensation_error(error, report));
                 }
             };
             let edit_id = receipt.edit_ids.last().cloned().unwrap_or_default();
             applied_children.push((index, edit_id));
-            if let Err(error) = children[index].0.stamp_tail_group_id(&invocation_id) {
-                let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+            if let Err(error) = children[index].0.stamp_tail_group_id(&invocation_id).await {
+                let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                 return Err(fold_compensation_error(error, report));
             }
             if relation == MemberRelation::Peer {
                 let initiator = crate::os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate()) };
-                if let Err(error) = children[index].0.stamp_tail_origin(crate::os_spr::MutationOrigin::Transaction { initiator }) {
-                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                if let Err(error) = children[index].0.stamp_tail_origin(crate::os_spr::MutationOrigin::Transaction { initiator }).await {
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                     return Err(fold_compensation_error(error, report));
                 }
                 // 🔗️ Best-effort: `would_cycle_links` already cleared this exact edge in phase 1, so
@@ -7838,16 +8123,16 @@ impl TransactionCoordinator {
         let mut parent_edit_id: Option<String> = None;
         if !parent_ops.is_empty() {
             let command_bytes = build_apply_command_bytes(&parent_ops, meta.description.as_deref());
-            let receipt = match parent.dispatch_wire_with_policy(&command_bytes, group_policy) {
+            let receipt = match parent.dispatch_wire_with_policy(&command_bytes, group_policy).await {
                 Ok(receipt) => receipt,
                 Err(error) => {
-                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                     return Err(fold_compensation_error(error, report));
                 }
             };
             let edit_id = receipt.edit_ids.last().cloned().unwrap_or_default();
-            if let Err(error) = parent.stamp_tail_group_id(&invocation_id) {
-                let report = Self::compensate(parent_ref, parent, children, &applied_children, Some(&edit_id));
+            if let Err(error) = parent.stamp_tail_group_id(&invocation_id).await {
+                let report = Self::compensate(parent_ref, parent, children, &applied_children, Some(&edit_id)).await;
                 return Err(fold_compensation_error(error, report));
             }
             parent_edit_id = Some(edit_id);
@@ -7870,19 +8155,19 @@ impl TransactionCoordinator {
     /// Relation-agnostic by construction: it never consults `self.graph`/ownership at all, only
     /// each member's own `tail_group_id()`, so a `Peer`-relation group reverses as one exactly the
     /// same way an `Owned`-relation group does — no separate code path needed.
-    pub fn undo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
+    pub async fn undo_group<M: SpaceMember>(members: &mut [(&crate::os_io::ArtifactRef, &mut M)], group_id: &str) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         for (reference, member) in members.iter_mut() {
-            let tail_group = member.tail_group_id();
+            let tail_group = member.tail_group_id().await;
             if tail_group.as_deref() == Some(group_id) {
-                let edit_id = member.tail_edit_id().unwrap_or_default();
-                match member.undo() {
+                let edit_id = member.tail_edit_id().await.unwrap_or_default();
+                match member.undo().await {
                     Ok(()) => undone.push(((*reference).clone(), edit_id)),
                     Err(error) => skipped.push(((*reference).clone(), error)),
                 }
             } else {
-                skipped.push(((*reference).clone(), VcsError::ForeignEdit(member.document_id().to_string())));
+                skipped.push(((*reference).clone(), VcsError::ForeignEdit(member.document_id().await.to_string())));
             }
         }
         GroupUndoReport { undone, skipped }
@@ -7892,12 +8177,12 @@ impl TransactionCoordinator {
     /// `dispatch_group`/`dispatch_peer_group`'s apply order, so redo re-establishes the group in
     /// the same order it was originally applied), redoing each member whose `redo_tail()` group id
     /// matches. Relation-agnostic for the same reason `undo_group` is.
-    pub fn redo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
+    pub async fn redo_group<M: SpaceMember>(members: &mut [(&crate::os_io::ArtifactRef, &mut M)], group_id: &str) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         for (reference, member) in members.iter_mut() {
-            match member.redo_tail() {
-                Some((edit_id, Some(tail_group))) if tail_group == group_id => match member.redo() {
+            match member.redo_tail().await {
+                Some((edit_id, Some(tail_group))) if tail_group == group_id => match member.redo().await {
                     Ok(()) => undone.push(((*reference).clone(), edit_id)),
                     Err(error) => skipped.push(((*reference).clone(), error)),
                 },
@@ -8363,77 +8648,96 @@ mod tests {
         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
         Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
-        fn document_id(&self) -> &str {
-            SpaceMember::document_id(&self.0)
+        async fn document_id(&self) -> &str {
+            SpaceMember::document_id(&self.0).await
         }
-        fn is_dirty(&self) -> bool {
-            SpaceMember::is_dirty(&self.0)
+        async fn is_dirty(&self) -> bool {
+            SpaceMember::is_dirty(&self.0).await
         }
-        fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
-            SpaceMember::commit_checkpoint(&mut self.0, message, authors)
+        async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+            SpaceMember::commit_checkpoint(&mut self.0, message, authors).await
         }
-        fn current_checkpoint_id(&self) -> Option<String> {
-            SpaceMember::current_checkpoint_id(&self.0)
+        async fn current_checkpoint_id(&self) -> Option<String> {
+            SpaceMember::current_checkpoint_id(&self.0).await
         }
-        fn current_alternative_id(&self) -> Option<String> {
-            SpaceMember::current_alternative_id(&self.0)
+        async fn current_alternative_id(&self) -> Option<String> {
+            SpaceMember::current_alternative_id(&self.0).await
         }
-        fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
-            SpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id)
+        async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
+            SpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id).await
         }
-        fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
-            SpaceMember::create_alternative(&mut self.0, name)
+        async fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
+            SpaceMember::create_alternative(&mut self.0, name).await
         }
-        fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
-            SpaceMember::last_local_edit_timestamp(&self.0)
+        async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+            SpaceMember::last_local_edit_timestamp(&self.0).await
         }
-        fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
-            SpaceMember::last_undone_local_edit_timestamp(&self.0)
+        async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+            SpaceMember::last_undone_local_edit_timestamp(&self.0).await
         }
-        fn undo(&mut self) -> Result<(), VcsError> {
-            SpaceMember::undo(&mut self.0)
+        async fn undo(&mut self) -> Result<(), VcsError> {
+            SpaceMember::undo(&mut self.0).await
         }
-        fn redo(&mut self) -> Result<(), VcsError> {
-            SpaceMember::redo(&mut self.0)
+        async fn redo(&mut self) -> Result<(), VcsError> {
+            SpaceMember::redo(&mut self.0).await
         }
-        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
-        fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
-            SpaceMember::preview_wire(&self.0, ops)
+        async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+            SpaceMember::preview_wire(&self.0, ops).await
         }
-        fn dispatch_wire(&mut self, command: &[u8]) -> Result<CommandReceipt, VcsError> {
-            SpaceMember::dispatch_wire(&mut self.0, command)
+        async fn dispatch_wire(&mut self, command: &[u8]) -> Result<CommandReceipt, VcsError> {
+            SpaceMember::dispatch_wire(&mut self.0, command).await
         }
-        fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
-            SpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy)
+        async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
+            SpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy).await
         }
-        fn tail_group_id(&self) -> Option<String> {
-            SpaceMember::tail_group_id(&self.0)
+        async fn tail_group_id(&self) -> Option<String> {
+            SpaceMember::tail_group_id(&self.0).await
         }
-        fn tail_edit_id(&self) -> Option<String> {
-            SpaceMember::tail_edit_id(&self.0)
+        async fn tail_edit_id(&self) -> Option<String> {
+            SpaceMember::tail_edit_id(&self.0).await
         }
-        fn redo_tail(&self) -> Option<(String, Option<String>)> {
-            SpaceMember::redo_tail(&self.0)
+        async fn redo_tail(&self) -> Option<(String, Option<String>)> {
+            SpaceMember::redo_tail(&self.0).await
         }
-        fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
-            SpaceMember::stamp_tail_group_id(&mut self.0, group_id)
+        async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
+            SpaceMember::stamp_tail_group_id(&mut self.0, group_id).await
         }
-        fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
-            SpaceMember::stamp_tail_origin(&mut self.0, origin)
+        async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+            SpaceMember::stamp_tail_origin(&mut self.0, origin).await
         }
-        fn set_owner(&mut self, owner: Option<OwnerRef>) {
-            SpaceMember::set_owner(&mut self.0, owner)
+        async fn set_owner(&mut self, owner: Option<OwnerRef>) {
+            SpaceMember::set_owner(&mut self.0, owner).await
         }
-        fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-            SpaceMember::document_pack_bytes(&self.0)
+        async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::document_pack_bytes(&self.0).await
         }
-        fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-            SpaceMember::envelope_pack_bytes(&self.0)
+        async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::envelope_pack_bytes(&self.0).await
         }
-        fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
-            SpaceMember::pack_at_checkpoint(&self.0, checkpoint_id)
+        async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
+            SpaceMember::pack_at_checkpoint(&self.0, checkpoint_id).await
+        }
+    }
+
+    /// @emoji 🏭️ Test-fixture `MemberFactory`: single "kind" (any `kind` string matches — these
+    /// fixtures never register more than one composable kind under one coordinator), schema fixed
+    /// at `"demo/v1"`, empty genesis packs default to `P::default()` (mirrors the deleted
+    /// `DemoChildFactory`'s fixture-local empty-pack convenience — production `create_member_store`
+    /// deliberately rejects an empty pack, this fixture-only default is NOT that).
+    impl<P, Mutation> super::MemberFactory for ArtifactStore<P, Mutation>
+    where
+        P: Clone + Default + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        async fn create(_kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
+            let seeded = if initial_pack.is_empty() { P::default().encode_pack() } else { initial_pack.to_vec() };
+            Ok(Self(super::create_member_store("demo/v1", id, dialect, &seeded).await?))
+        }
+        async fn open(_kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError> {
+            Ok(Self(super::open_member_store(envelope_pack).await?))
         }
     }
 
@@ -9671,8 +9975,8 @@ mod tests {
         let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store_a = ArtifactStore::new(envelope_a);
         let mut store_b = ArtifactStore::new(envelope_b);
-        store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        store_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
+        store_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
 
         store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on a");
         store_b.tick().expect("tick b");
@@ -9689,8 +9993,8 @@ mod tests {
         let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store_a = ArtifactStore::new(envelope.clone());
         let mut store_b = ArtifactStore::new(envelope);
-        store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        store_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
+        store_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
         store_a.detach_backbone();
         assert!(store_a.backbone_ref().is_none());
 
@@ -9904,7 +10208,7 @@ mod tests {
 
         let fresh: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = ArtifactStore::new(fresh);
-        store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
+        store.attach_backbone(Backbones::Channel(channel)).expect("attach reconciles the pushed snapshot");
         assert_eq!(store.snapshot().expect("snapshot").n, 5, "adopted the pushed snapshot's edit");
     }
 
@@ -9913,7 +10217,7 @@ mod tests {
         let (channel, remote) = ChannelBackbone::pair("chan");
         let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = ArtifactStore::new(envelope);
-        store.attach_backbone(Box::new(channel)).expect("attach");
+        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
         let attach_flush = remote.drain().expect("drain attach");
         assert!(attach_flush.iter().any(|message| matches!(message, BackboneMessage::Snapshot { .. })), "attach flushes a snapshot to the actor end: {attach_flush:?}");
 
@@ -9931,7 +10235,7 @@ mod tests {
         let (channel, remote) = ChannelBackbone::pair("chan");
         let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let mut store = ArtifactStore::new(envelope);
-        store.attach_backbone(Box::new(channel)).expect("attach");
+        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
         let _ = remote.drain().expect("drain attach snapshot");
 
         let inbound = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 7 });
@@ -10454,8 +10758,8 @@ mod tests {
         let mut host_b = SpaceHost::new(meta_envelope).expect("valid second space host history");
         assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other ArtifactStore");
 
-        host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        host_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
+        host_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
         assert!(host_a.backbone_ref().is_some());
 
         let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
@@ -11329,7 +11633,7 @@ mod tests {
         remote_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).expect("remote commit");
 
         let (channel, remote_end) = ChannelBackbone::pair("chan");
-        store.attach_backbone(Box::new(channel)).expect("attach");
+        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
         let _ = remote_end.drain().expect("drain attach snapshot");
         let remote_files = remote_store.snapshot_pack().expect("remote snapshot");
         remote_end.push(BackboneMessage::Snapshot { pack: remote_files.pack, spr: remote_files.spr }).expect("push snapshot");
@@ -11530,27 +11834,6 @@ mod tests {
         }
     }
 
-    /// @emoji 🏭️ `ChildStoreFactory` fixture for the composition tests. Delegates wholly to the
-    /// production `TypedChildStoreFactory<DemoSnapshot, DemoMutation>` so these fixtures exercise
-    /// the REAL create/open code paths rather than a parallel stub that could drift from them —
-    /// only the genesis-with-empty-pack convenience (`n: 0`) is fixture-local, because the
-    /// production factory deliberately rejects an empty initial pack.
-    struct DemoChildFactory;
-    impl DemoChildFactory {
-        fn inner() -> TypedChildStoreFactory<DemoSnapshot, DemoMutation> {
-            TypedChildStoreFactory::new("demo/v1")
-        }
-    }
-    impl ChildStoreFactory for DemoChildFactory {
-        fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-            let seeded = if initial_pack.is_empty() { DemoSnapshot { n: 0 }.encode_pack() } else { initial_pack.to_vec() };
-            Self::inner().create(id, dialect, &seeded)
-        }
-        fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-            Self::inner().open(envelope_pack)
-        }
-    }
-
     /// 🎯️ The dialect every composition fixture below mints children under.
     fn demo_child_dialect() -> crate::os_io::ArtifactDialect {
         crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
@@ -11616,26 +11899,25 @@ mod tests {
 
     #[test]
     fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
-        let factory = TypedChildStoreFactory::<DemoSnapshot, DemoMutation>::new("demo/v1");
         let dialect = demo_child_dialect();
 
-        let mut child = factory.create("child-round-trip", &dialect, &DemoSnapshot { n: 7 }.encode_pack()).expect("create");
-        child.dispatch_wire(&build_apply_command_bytes(&[DemoMutation::SetN { n: 9 }.encode_op().expect("encode op")], Some("bump"))).expect("apply");
-        child.undo().expect("undo");
-        child.dispatch_wire(&build_apply_command_bytes(&[DemoMutation::SetN { n: 11 }.encode_op().expect("encode op")], None)).expect("re-apply");
+        let mut child = super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: 7 }.encode_pack()).expect("create");
+        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: Some("bump".into()) }).expect("apply");
+        child.dispatch(ArtifactCommand::Undo).expect("undo");
+        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 11 }], description: None }).expect("re-apply");
 
-        let persisted = child.envelope_pack_bytes().expect("envelope pack");
-        let reopened = factory.open(&persisted).expect("open");
+        let files = print_document_pack(child.envelope()).expect("print");
+        let persisted = encode_document_pack_bytes(&files.pack, &files.spr);
+        let reopened = super::open_member_store::<DemoSnapshot, DemoMutation>(&persisted).expect("open");
 
-        assert_eq!(reopened.document_id(), "child-round-trip");
-        assert_eq!(reopened.document_pack_bytes().expect("head pack"), child.document_pack_bytes().expect("head pack"), "reopened child's live content diverged from the persisted one");
-        assert_eq!(DemoSnapshot::decode_pack(&reopened.document_pack_bytes().expect("head pack")).expect("decode"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
+        assert_eq!(reopened.envelope().id, "child-round-trip");
+        assert_eq!(reopened.snapshot().expect("head snapshot"), child.snapshot().expect("head snapshot"), "reopened child's live content diverged from the persisted one");
+        assert_eq!(reopened.snapshot().expect("head snapshot"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
     }
 
     #[test]
     fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
-        let factory = TypedChildStoreFactory::<DemoSnapshot, DemoMutation>::new("demo/v1");
-        assert!(matches!(factory.create("child-empty", &demo_child_dialect(), &[]), Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+        assert!(matches!(super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[]), Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
         // 🏠️ owner ⇒ dialect: an envelope that is somebody's child but names no dialect cannot be
         // typed by its parent, so `open` must fail closed rather than hand back an untypable member.
@@ -11643,7 +11925,7 @@ mod tests {
         envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
         let files = print_document_pack(&envelope).expect("print");
         let orphan = encode_document_pack_bytes(&files.pack, &files.spr);
-        assert!(matches!(factory.open(&orphan), Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+        assert!(matches!(super::open_member_store::<DemoSnapshot, DemoMutation>(&orphan), Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     }
 
     #[test]
@@ -11787,9 +12069,9 @@ mod tests {
         let bad_op = ValidatedMutation::SetN { n: -1 }.encode_op().expect("encode bad op");
         let parent_ops = vec![good_op];
         let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![bad_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["bad".into()] };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, child_dispatch)];
+        let mut children = [(&mut child_store, child_dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default());
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
             // 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6: an
@@ -11823,9 +12105,9 @@ mod tests {
 
         let op = ValidatedMutation::SetN { n: 1 }.encode_op().expect("encode");
         let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, child_dispatch)];
+        let mut children = [(&mut child_store, child_dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected an OwnershipViolation, but the dispatch succeeded"),
             Err(VcsError::OwnershipViolation(_)) => {}
@@ -11858,10 +12140,10 @@ mod tests {
 
         let dispatch_a = ChildDispatch { child: child_a_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let dispatch_b = ChildDispatch { child: child_b_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 2] = [(&mut child_a as &mut dyn SpaceMember, dispatch_a), (&mut child_b as &mut dyn SpaceMember, dispatch_b)];
+        let mut children = [(&mut child_a, dispatch_a), (&mut child_b, dispatch_b)];
         let applied_children = vec![(0usize, child_a_edit_id), (1usize, child_b_edit_id)];
 
-        let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, &applied_children, Some(&parent_edit_id));
+        let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some(&parent_edit_id));
 
         assert!(report.skipped.is_empty(), "every member should have undone cleanly");
         assert_eq!(report.undone.len(), 3);
@@ -11891,10 +12173,10 @@ mod tests {
         let child_edit_id = child_store.envelope().vcs.edits.last().expect("child edit").id.clone();
 
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
         let applied_children = vec![(0usize, child_edit_id)];
 
-        let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, &applied_children, Some("bogus-parent-edit-id"));
+        let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some("bogus-parent-edit-id"));
 
         assert_eq!(report.skipped.len(), 1, "the parent's own failed undo must be recorded, not panic");
         assert_eq!(report.skipped[0].0.artifact_id, parent_ref.artifact_id);
@@ -11912,8 +12194,8 @@ mod tests {
     /// minted child id and the identical `invocation_id`.
     #[test]
     fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-        let _ = register_child_store_factory(crate::os_io::ArtifactKindId::parse("s.stdio.demochild").expect("valid kind"), Arc::new(DemoChildFactory)).expect("register child factory");
-
+        // 🎯️ O1: no more registry — `ArtifactStore<DemoSnapshot, DemoMutation>`'s `MemberFactory`
+        // impl (above) matches ANY `kind` string, so genesis creation just works.
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let genesis_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() };
         let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: genesis_dialect, initial_pack: Vec::new() }];
@@ -11921,13 +12203,13 @@ mod tests {
 
         let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
         let mut coordinator_1 = CompositionCoordinator::new();
-        let mut children_1: [(&mut dyn SpaceMember, ChildDispatch); 0] = [];
-        let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1 as &mut dyn SpaceMember, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default()).expect("replica 1 dispatch");
+        let mut children_1 = [];
+        let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default()).expect("replica 1 dispatch");
 
         let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
         let mut coordinator_2 = CompositionCoordinator::new();
-        let mut children_2: [(&mut dyn SpaceMember, ChildDispatch); 0] = [];
-        let receipt_2 = coordinator_2.dispatch_group(&parent_ref, &mut parent_2 as &mut dyn SpaceMember, &mut children_2, parent_ops, genesis, GroupMeta::default()).expect("replica 2 dispatch");
+        let mut children_2 = [];
+        let receipt_2 = coordinator_2.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default()).expect("replica 2 dispatch");
 
         assert_eq!(receipt_1.created_children.len(), 1);
         assert_eq!(receipt_2.created_children.len(), 1);
@@ -11961,8 +12243,8 @@ mod tests {
         foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply foreign");
         foreign_store.stamp_tail_group_id("some-other-group").expect("stamp foreign");
 
-        let mut members: [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember); 3] =
-            [(&parent_ref, &mut parent_store as &mut dyn SpaceMember), (&child_ref, &mut child_store as &mut dyn SpaceMember), (&foreign_ref, &mut foreign_store as &mut dyn SpaceMember)];
+        let mut members =
+            [(&parent_ref, &mut parent_store), (&child_ref, &mut child_store), (&foreign_ref, &mut foreign_store)];
 
         let report = CompositionCoordinator::undo_group(&mut members, group_id);
 
@@ -11994,7 +12276,7 @@ mod tests {
         foreign_store.stamp_tail_group_id("some-other-group").expect("stamp foreign");
         foreign_store.dispatch(ArtifactCommand::Undo).expect("undo foreign, seeding its redo stack");
 
-        let mut members: [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember); 2] = [(&parent_ref, &mut parent_store as &mut dyn SpaceMember), (&foreign_ref, &mut foreign_store as &mut dyn SpaceMember)];
+        let mut members = [(&parent_ref, &mut parent_store), (&foreign_ref, &mut foreign_store)];
         let report = CompositionCoordinator::redo_group(&mut members, group_id);
 
         assert_eq!(report.undone.len(), 1, "only the matching-group member is redone");
@@ -12026,9 +12308,9 @@ mod tests {
         let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode initiator op")];
         let peer_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode peer op");
         let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["peer".into()] };
-        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut peer_store as &mut dyn SpaceMember, peer_dispatch)];
+        let mut peers = [(&mut peer_store, peer_dispatch)];
 
-        let receipt = coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch");
+        let receipt = coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch");
 
         assert_eq!(receipt.member_edits.len(), 2, "both the initiator and the one peer got a real edit");
         assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 1);
@@ -12075,10 +12357,10 @@ mod tests {
 
         let dispatch_a = ChildDispatch { child: peer_a_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let dispatch_b = ChildDispatch { child: peer_b_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 2] = [(&mut peer_a as &mut dyn SpaceMember, dispatch_a), (&mut peer_b as &mut dyn SpaceMember, dispatch_b)];
+        let mut peers = [(&mut peer_a, dispatch_a), (&mut peer_b, dispatch_b)];
         let applied_so_far = vec![(0usize, peer_a_edit_id)];
 
-        let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, &applied_so_far, Some(&initiator_edit_id));
+        let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store, &mut peers, &applied_so_far, Some(&initiator_edit_id));
 
         assert!(report.skipped.is_empty(), "every already-applied member should have undone cleanly");
         assert_eq!(report.undone.len(), 2, "the initiator and peer A (the only two that were actually applied) are both rolled back");
@@ -12106,13 +12388,13 @@ mod tests {
         let peer_op = DemoMutation::SetN { n: 7 }.encode_op().expect("encode peer op");
         let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let receipt = {
-            let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut peer_store as &mut dyn SpaceMember, peer_dispatch)];
-            coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch")
+            let mut peers = [(&mut peer_store, peer_dispatch)];
+            coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch")
         };
         assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 5);
         assert_eq!(peer_store.snapshot().expect("peer snapshot").n, 7);
 
-        let mut members: [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember); 2] = [(&initiator_ref, &mut initiator_store as &mut dyn SpaceMember), (&peer_ref, &mut peer_store as &mut dyn SpaceMember)];
+        let mut members = [(&initiator_ref, &mut initiator_store), (&peer_ref, &mut peer_store)];
         let report = TransactionCoordinator::undo_group(&mut members, &receipt.invocation_id);
 
         assert!(report.skipped.is_empty(), "both real transaction members must belong to the group");
@@ -12139,15 +12421,15 @@ mod tests {
         let op_ab = DemoMutation::SetN { n: 1 }.encode_op().expect("encode a->b op");
         let dispatch_ab = ChildDispatch { child: artifact_b_ref.clone(), ops: vec![op_ab], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         {
-            let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut store_b as &mut dyn SpaceMember, dispatch_ab)];
-            coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a as &mut dyn SpaceMember, &mut peers, Vec::new(), GroupMeta::default()).expect("first transaction A -> B");
+            let mut peers = [(&mut store_b, dispatch_ab)];
+            coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a, &mut peers, Vec::new(), GroupMeta::default()).expect("first transaction A -> B");
         }
         assert_eq!(store_b.snapshot().expect("b snapshot").n, 1);
 
         let op_ba = DemoMutation::SetN { n: 9 }.encode_op().expect("encode b->a op");
         let dispatch_ba = ChildDispatch { child: artifact_a_ref.clone(), ops: vec![op_ba], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut peers: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut store_a as &mut dyn SpaceMember, dispatch_ba)];
-        let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b as &mut dyn SpaceMember, &mut peers, Vec::new(), GroupMeta::default());
+        let mut peers = [(&mut store_a, dispatch_ba)];
+        let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b, &mut peers, Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected a CompositionCycle rejection, but the dispatch succeeded"),
             Err(VcsError::CompositionCycle(_)) => {}
@@ -12178,9 +12460,9 @@ mod tests {
         let parent_ops = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode parent op")];
         let child_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("owned dispatch");
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("owned dispatch");
 
         assert_eq!(receipt.member_edits.len(), 2);
         let parent_origin = parent_store.envelope().vcs.edits.last().expect("parent edit").mutation_meta.last().expect("parent meta").origin.clone();
@@ -12219,9 +12501,9 @@ mod tests {
         let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
         let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default());
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected Normal policy to reject an Error-level message, but the dispatch succeeded"),
             Err(VcsError::Rejected { policy, messages }) => {
@@ -12268,9 +12550,9 @@ mod tests {
         let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
         let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts an Error-level message");
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts an Error-level message");
 
         assert_eq!(receipt.member_edits.len(), 2, "both parent and child got a real edit despite the child's Error message");
         assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 1, "the parent's own clean op still applied");
@@ -12300,9 +12582,9 @@ mod tests {
 
         let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
+        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
         match result {
             Ok(_) => panic!("expected Vigilant policy to reject a Warning-level message, but the dispatch succeeded"),
             Err(VcsError::Rejected { policy, messages }) => {
@@ -12339,9 +12621,9 @@ mod tests {
         let parent_ops = vec![SeverityMutation::WarnN { n: 3 }.encode_op().expect("encode parent op")];
         let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
-        let mut children: [(&mut dyn SpaceMember, ChildDispatch); 1] = [(&mut child_store as &mut dyn SpaceMember, dispatch)];
+        let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store as &mut dyn SpaceMember, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts a Warning-level message");
+        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts a Warning-level message");
 
         assert_eq!(receipt.messages.len(), 2, "one Warning from the parent, one from the child");
         assert_eq!(receipt.messages[0].level, crate::os_dsl::Severity::Warning);

@@ -22,7 +22,7 @@ struct ImperativeModuleTopicPayload {
 
 /// 🔎️ Extracts `(app_id, manifest_json)` from one contribution entry's open `topic_contribution`
 /// (topic `"imperative.module"`), if present and decodable.
-fn imperative_module_fields(entry: &ProgramContributionEntry) -> Option<(String, String)> {
+async fn imperative_module_fields(entry: &ProgramContributionEntry) -> Option<(String, String)> {
     let topic_contribution = entry.topic_contribution.as_ref()?;
     if topic_contribution.topic != IMPERATIVE_MODULE_TOPIC {
         return None;
@@ -46,7 +46,7 @@ static NATIVE_REGISTRARS: OnceLock<Mutex<HashMap<String, NativeRegistrar>>> = On
 static DEFAULT_CONTRIBUTIONS: OnceLock<fn() -> String> = OnceLock::new();
 static BOOTSTRAPPED: OnceLock<()> = OnceLock::new();
 
-fn registry_state() -> &'static Mutex<RegistryState> {
+async fn registry_state() -> &'static Mutex<RegistryState> {
     REGISTRY_STATE.get_or_init(|| {
         Mutex::new(RegistryState {
             registry: Registry::new(),
@@ -56,21 +56,21 @@ fn registry_state() -> &'static Mutex<RegistryState> {
     })
 }
 
-fn native_registrars() -> &'static Mutex<HashMap<String, NativeRegistrar>> {
+async fn native_registrars() -> &'static Mutex<HashMap<String, NativeRegistrar>> {
     NATIVE_REGISTRARS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// 🔌️ Registers an in-process extension crate that can materialize real operators when contributions sync.
-pub fn register_native_imperative_module(plugin_id: &str, register: NativeRegistrar) {
+pub async fn register_native_imperative_module(plugin_id: &str, register: NativeRegistrar) {
     native_registrars().lock().expect("native imperative registrars lock").insert(plugin_id.to_string(), register);
 }
 
 /// 📥️ Supplies default `contributionsJson` for dev hosts that have not pushed contributions yet.
-pub fn register_default_imperative_contributions(provider: fn() -> String) {
+pub async fn register_default_imperative_contributions(provider: fn() -> String) {
     let _ = DEFAULT_CONTRIBUTIONS.set(provider);
 }
 
-fn ensure_bootstrapped() {
+async fn ensure_bootstrapped() {
     BOOTSTRAPPED.get_or_init(|| {
         if let Some(provider) = DEFAULT_CONTRIBUTIONS.get() {
             sync_imperative_module_contributions(&provider());
@@ -84,13 +84,13 @@ struct ContributedExtensionStub {
 }
 
 impl Operator for ContributedExtensionStub {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = node_hash(&self.operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
     }
 }
 
-fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, manifest: &ImperativeExtensionManifest) {
+async fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, manifest: &ImperativeExtensionManifest) {
     for info in &manifest.contributes.operators {
         if registry.operator_info(&info.id).is_some() {
             continue;
@@ -105,7 +105,7 @@ fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, manifes
     }
 }
 
-fn merge_catalogue_sections(target: &mut Vec<serde_json::Value>, catalogue_json: &str) {
+async fn merge_catalogue_sections(target: &mut Vec<serde_json::Value>, catalogue_json: &str) {
     let Ok(value) = serde_json::from_str::<serde_json::Value>(catalogue_json) else {
         return;
     };
@@ -114,7 +114,7 @@ fn merge_catalogue_sections(target: &mut Vec<serde_json::Value>, catalogue_json:
     }
 }
 
-fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Value>) {
+async fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Value>) {
     let mut registry = Registry::new();
     let mut catalogue_sections = Vec::new();
     let registrars = native_registrars().lock().expect("native imperative registrars lock");
@@ -142,7 +142,7 @@ fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Valu
 }
 
 /// 🔌️ Refreshes contributed `imperative.module` operators and catalogue sections.
-pub fn sync_imperative_module_contributions(contributions_json: &str) {
+pub async fn sync_imperative_module_contributions(contributions_json: &str) {
     let mut state = registry_state().lock().expect("imperative registry state lock");
     if state.contributions_json == contributions_json {
         return;
@@ -154,14 +154,14 @@ pub fn sync_imperative_module_contributions(contributions_json: &str) {
 }
 
 /// 📦️ Returns the composed imperative operator registry from synced contributions.
-pub fn imperative_module_registry() -> Registry {
+pub async fn imperative_module_registry() -> Registry {
     ensure_bootstrapped();
     let contributions_json = registry_state().lock().expect("imperative registry state lock").contributions_json.clone();
     compose_registry(&contributions_json).0
 }
 
 /// 📚️ Merges catalogue sections from synced imperative modules.
-pub fn imperative_catalogue_json(registry: &Registry) -> String {
+pub async fn imperative_catalogue_json(registry: &Registry) -> String {
     ensure_bootstrapped();
     let state = registry_state().lock().expect("imperative registry state lock");
     let mut sections: Vec<serde_json::Value> = Vec::new();
@@ -206,7 +206,7 @@ pub fn imperative_catalogue_json(registry: &Registry) -> String {
 }
 
 /// 🧩️ Serializes contribution entries for host bootstrap.
-pub fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> String {
+pub async fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> String {
     serde_json::to_string(entries).unwrap_or_else(|_| "[]".into())
 }
 // #endregion 🔖️ModuleRegistry
@@ -217,14 +217,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_contributions_yield_empty_registry() {
+    async fn empty_contributions_yield_empty_registry() {
         sync_imperative_module_contributions("[]");
         let registry = imperative_module_registry();
         assert!(registry.operator_catalogue().is_empty());
     }
 
     #[test]
-    fn sync_is_idempotent_for_same_json() {
+    async fn sync_is_idempotent_for_same_json() {
         sync_imperative_module_contributions("[]");
         sync_imperative_module_contributions("[]");
         assert!(imperative_module_registry().operator_catalogue().is_empty());
@@ -232,7 +232,7 @@ mod tests {
 
     #[cfg(feature = "linked-modules")]
     #[test]
-    fn linked_modules_bootstrap_registers_text_operators() {
+    async fn linked_modules_bootstrap_registers_text_operators() {
         super::linked_modules::bootstrap_linked_modules();
         let registry = imperative_module_registry();
         assert!(registry.operator_info("text.uppercase").is_some());

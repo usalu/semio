@@ -274,14 +274,14 @@ pub struct ResolvedConsistency {
 /// never needs a concrete storage dependency of its own — `IndexConsistencyResolver` below is the
 /// ready-made adapter over the sibling `db_index` crate.
 pub trait ConsistencyResolver {
-    fn current_frontier<'a>(&'a self) -> db_storage::DbFuture<'a, Frontier>;
-    fn frontier_for_commit<'a>(&'a self, commit_id: &'a str) -> db_storage::DbFuture<'a, Frontier>;
+    async fn current_frontier(&self) -> Result<Frontier, DbError>;
+    async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError>;
 }
 
 /// @emoji 🧮️ Resolves `consistency` against `resolver` into a concrete `ResolvedConsistency`.
 /// `AtLeast`/`Exact` are checked against `Frontier::dominates`/equality respectively — both are the
 /// contract's own definition of those two modes, not this crate's invention.
-pub async fn resolve_consistency(consistency: &Consistency, resolver: &dyn ConsistencyResolver) -> Result<ResolvedConsistency, DbError> {
+pub async fn resolve_consistency(consistency: &Consistency, resolver: &impl ConsistencyResolver) -> Result<ResolvedConsistency, DbError> {
     match consistency {
         Consistency::Canonical => Ok(ResolvedConsistency { frontier: resolver.current_frontier().await?, preview_id: None, historical: false }),
         Consistency::AtLeast(target) => {
@@ -310,22 +310,18 @@ pub async fn resolve_consistency(consistency: &Consistency, resolver: &dyn Consi
 /// ("for `Consistency::Historical(commit_id)` query resolution"). Construction needs a live
 /// `db_storage::IndexStorage` on the caller's side — this crate stays storage-agnostic by only ever
 /// holding the already-constructed typed index handles, never constructing them itself.
-pub struct IndexConsistencyResolver<'a> {
-    pub commits: CommitIndex<'a>,
-    pub frontiers: FrontierIndex<'a>,
+pub struct IndexConsistencyResolver<'a, S: db_storage::IndexStorage> {
+    pub commits: CommitIndex<'a, S>,
+    pub frontiers: FrontierIndex<'a, S>,
 }
 
-impl<'resolver> ConsistencyResolver for IndexConsistencyResolver<'resolver> {
-    fn current_frontier<'a>(&'a self) -> db_storage::DbFuture<'a, Frontier> {
-        Box::pin(async move { self.frontiers.latest().await?.ok_or_else(|| DbError::NotFound("no frontier has been recorded for this document yet".to_string())) })
-    }
+impl<'resolver, S: db_storage::IndexStorage> ConsistencyResolver for IndexConsistencyResolver<'resolver, S> {
+    async fn current_frontier(&self) -> Result<Frontier, DbError> { self.frontiers.latest().await?.ok_or_else(|| DbError::NotFound("no frontier has been recorded for this document yet".to_string())) }
 
-    fn frontier_for_commit<'a>(&'a self, commit_id: &'a str) -> db_storage::DbFuture<'a, Frontier> {
-        Box::pin(async move {
+    async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {
             let command_seq = self.commits.lookup(commit_id).await?.ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
             self.frontiers.lookup(command_seq).await?.ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
-        })
-    }
+        }
 }
 //#endregion 🔖️Consistency
 
@@ -568,13 +564,24 @@ impl QuerySource for PVec<Value> {
 /// @emoji 🔌️ What a full-text pushdown needs: term → candidate row ids. `db_index::FullTextIndex`
 /// implements this directly below (its `doc_ref` postings are exactly this trait's `RowId`s).
 pub trait FullTextLookup {
-    fn search<'a>(&'a self, term: &'a str) -> db_storage::DbFuture<'a, Vec<RowId>>;
+    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError>;
+}
+
+/// @emoji 🚫️ The phantom `FullTextLookup` type for `execute`/`refresh`'s `fulltext: None` call
+/// sites — replaces the old `Option<&dyn FullTextLookup>` (per ruling **O1**, `dyn FullTextLookup`
+/// stopped being object-safe the moment `search` became a real `async fn`), so the generic
+/// `fulltext: Option<&impl FullTextLookup>` parameter needs a concrete type on every `None` call
+/// site for inference to succeed. Never actually constructed or called.
+pub enum NoFullTextLookup {}
+
+impl FullTextLookup for NoFullTextLookup {
+    async fn search(&self, _term: &str) -> Result<Vec<RowId>, DbError> {
+        match *self {}
+    }
 }
 
 impl<'index> FullTextLookup for FullTextIndex<'index> {
-    fn search<'a>(&'a self, term: &'a str) -> db_storage::DbFuture<'a, Vec<RowId>> {
-        Box::pin(async move { Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect()) })
-    }
+    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> { Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect()) }
 }
 //#endregion 🔖️QuerySource
 
@@ -842,7 +849,7 @@ pub struct QueryResult {
 /// down surfaces `DbError::InvalidArgument` rather than silently falling back to a full scan (a
 /// caller that owns a `FullTextLookup` should always pass it — silent fallback would hide a
 /// wiring bug as a performance regression instead of a compile/runtime-visible one).
-pub async fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&dyn FullTextLookup>, limits: &QueryLimits) -> Result<QueryResult, DbError> {
+pub async fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryResult, DbError> {
     let chosen_plan = plan(query);
     let mut scanned: u64 = 0;
     let mut matched: Vec<(RowId, Value)> = Vec::new();
@@ -1031,7 +1038,7 @@ impl LiveQuery {
     /// `LiveQuery`'s own `InferenceCache`) instead of being read directly off `result.rows` — a
     /// row whose content is byte-identical to one already seen by this cache is served from the
     /// cache rather than re-materialized, per `QueryResultField`'s doc above.
-    pub async fn refresh(&mut self, source: &dyn QuerySource, fulltext: Option<&dyn FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
+    pub async fn refresh(&mut self, source: &dyn QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
         let result = execute(&self.spec.query, source, fulltext, limits).await?;
         let rows: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
         let query_snapshot = QuerySnapshot { rows: &rows };
@@ -1252,7 +1259,7 @@ mod tests {
 
             let source = projection_query_source(&state_bytes).expect("decodes");
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
-            let result = db_actor::block_on(execute(&query, &source, None, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
         }
@@ -1272,7 +1279,7 @@ mod tests {
         fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source();
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
-            let result = db_actor::block_on(execute(&query, &source, None, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
             assert_eq!(result.diagnostics.rows_returned, 2);
@@ -1291,7 +1298,7 @@ mod tests {
         fn offset_skips_matched_rows_before_limit_applies() {
             let source = sample_source();
             let query = Query::new().sort(vec![SortKey::ascending(Path::field("age"))]).offset(1).limit(1);
-            let result = db_actor::block_on(execute(&query, &source, None, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
         }
@@ -1300,14 +1307,14 @@ mod tests {
         fn max_result_rows_limit_is_enforced() {
             let source = sample_source();
             let limits = QueryLimits { max_result_rows: 1, ..QueryLimits::default() };
-            let error = db_actor::block_on(execute(&Query::new(), &source, None, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
 
         #[test]
         fn into_stream_yields_the_same_rows_as_the_result() {
             let source = sample_source();
-            let result = db_actor::block_on(execute(&Query::new(), &source, None, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             let expected_len = result.rows.len();
             let stream = result.into_stream();
             assert_eq!(stream.count(), expected_len);
@@ -1317,16 +1324,14 @@ mod tests {
         /// real `db_storage::IndexStorage` (not a dependency of this crate; see module doc).
         pub(super) struct FakeFullText(pub std::collections::HashMap<String, Vec<RowId>>);
         impl FullTextLookup for FakeFullText {
-            fn search<'a>(&'a self, term: &'a str) -> db_storage::DbFuture<'a, Vec<RowId>> {
-                Box::pin(std::future::ready(Ok(self.0.get(term).cloned().unwrap_or_default())))
-            }
+            async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {Ok(self.0.get(term).cloned().unwrap_or_default())}
         }
 
         #[test]
         fn full_text_pushdown_without_a_lookup_is_an_error() {
             let source = sample_source();
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "alice".to_string()));
-            let error = db_actor::block_on(execute(&query, &source, None, &QueryLimits::default())).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
     }
@@ -1357,7 +1362,7 @@ mod tests {
             let source = sample_source();
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "admin".to_string()));
 
-            let full_scan_result = db_actor::block_on(execute(&query, &source, None, &QueryLimits::default()));
+            let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
 
             let mut postings = std::collections::HashMap::new();
@@ -1390,12 +1395,8 @@ mod tests {
         }
 
         impl ConsistencyResolver for FakeResolver {
-            fn current_frontier<'a>(&'a self) -> db_storage::DbFuture<'a, Frontier> {
-                Box::pin(std::future::ready(Ok(self.current.clone())))
-            }
-            fn frontier_for_commit<'a>(&'a self, commit_id: &'a str) -> db_storage::DbFuture<'a, Frontier> {
-                Box::pin(std::future::ready(self.commits.get(commit_id).cloned().ok_or_else(|| DbError::NotFound(commit_id.to_string()))))
-            }
+            async fn current_frontier(&self) -> Result<Frontier, DbError> {Ok(self.current.clone())}
+            async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {self.commits.get(commit_id).cloned().ok_or_else(|| DbError::NotFound(commit_id.to_string()))}
         }
 
         fn frontier_at(seq: u64) -> Frontier {
@@ -1473,19 +1474,19 @@ mod tests {
             let mut live = LiveQuery::new(spec);
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"])]);
-            let diff = db_actor::block_on(live.refresh(&first, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 2);
             assert!(diff.removed.is_empty());
             assert!(diff.updated.is_empty());
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
-            let diff = db_actor::block_on(live.refresh(&second, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 1);
             assert!(diff.removed.is_empty());
             assert_eq!(diff.updated.len(), 1);
 
             let third = source_with(vec![sample_row("alice", 31, vec!["admin"])]);
-            let diff = db_actor::block_on(live.refresh(&third, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert!(diff.added.is_empty());
             assert_eq!(diff.removed.len(), 2);
             assert!(diff.updated.is_empty());
@@ -1499,11 +1500,11 @@ mod tests {
             let mut live = LiveQuery::new(spec);
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"])]);
-            db_actor::block_on(live.refresh(&first, None, &QueryLimits::default())).expect("refresh succeeds");
+            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             let mut reconstructed = live.snapshot().clone();
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]), sample_row("cara", 40, vec!["admin"])]);
-            let diff = db_actor::block_on(live.refresh(&second, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
 
             for id in &diff.removed {
                 reconstructed.remove(id);
@@ -1532,11 +1533,11 @@ mod tests {
             let mut live = LiveQuery::new(spec);
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
-            db_actor::block_on(live.refresh(&first, None, &QueryLimits::default())).expect("refresh succeeds");
+            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
 
             // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
             let before = live.cache.stats();
-            let diff = db_actor::block_on(live.refresh(&first, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             let after = live.cache.stats();
             assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
             assert_eq!(after.misses, before.misses, "an unchanged refresh must produce zero new misses");
@@ -1546,7 +1547,7 @@ mod tests {
             // position-based added/removed churn).
             let third = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 26, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
             let before = live.cache.stats();
-            let diff = db_actor::block_on(live.refresh(&third, None, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             let after = live.cache.stats();
             assert_eq!(diff.updated.len(), 1, "only bob's row changed");
             assert!(diff.added.is_empty() && diff.removed.is_empty());
@@ -1571,7 +1572,7 @@ mod tests {
             let source = sample_source();
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
             let query = Query::new().filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
-            let error = db_actor::block_on(execute(&query, &source, None, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
     }

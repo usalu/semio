@@ -28,7 +28,7 @@ pub enum Dof {
 impl Dof {
     pub const ALL: [Dof; 6] = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz];
 
-    pub fn index(self) -> usize {
+    pub async fn index(self) -> usize {
         match self {
             Dof::Tx => 0,
             Dof::Ty => 1,
@@ -83,28 +83,28 @@ pub struct ElementContext {
 /// Every vector this trait produces or consumes is node-major, DOF-minor ordered, matching
 /// `node_ids()` paired with `dofs_per_node()`.
 pub trait Element {
-    fn id(&self) -> &str;
-    fn node_ids(&self) -> Vec<String>;
-    fn dofs_per_node(&self) -> &[Dof];
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
+    async fn id(&self) -> &str;
+    async fn node_ids(&self) -> Vec<String>;
+    async fn dofs_per_node(&self) -> &[Dof];
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
     /// 🌬️ Fixed-end nodal loads equivalent to a per-unit-length `MemberUdl` in GLOBAL coordinates.
     /// `None` (the default) means this element doesn't support member UDLs — meaningful for 2-node
     /// line members (`Bar2`/`Bar3`/`BeamEb2`/`Frame3`); continuum/plate/shell elements have no per-unit-
     /// length member concept, so distributed loading on them is the document layer's job (translated
     /// into ordinary nodal loads from an `Area`/pressure load — see `fem_2d`/`fem_3d`'s bridges).
-    fn equivalent_nodal_loads(&self, _ctx: &ElementContext, _udl: &MemberUdl) -> Option<VecD> {
+    async fn equivalent_nodal_loads(&self, _ctx: &ElementContext, _udl: &MemberUdl) -> Option<VecD> {
         None
     }
-    fn recover(&self, ctx: &ElementContext, u_local: &VecD, udl: Option<&MemberUdl>) -> ElementResult;
+    async fn recover(&self, ctx: &ElementContext, u_local: &VecD, udl: Option<&MemberUdl>) -> ElementResult;
     /// 🏋️ Consistent element mass matrix in GLOBAL coordinates, same DOF order as `stiffness_global`.
     /// `None` means this element contributes no mass (the default — self-weight/modal analysis skips
     /// it, so massless elements never spuriously restrain a modal shape).
-    fn mass(&self, _ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, _ctx: &ElementContext) -> Option<MatD> {
         None
     }
     /// 🌀️ Geometric ("stress") stiffness in GLOBAL coordinates for the element's current axial/stress
     /// state at displacement `u_element` — used by linear buckling. `None` means unsupported.
-    fn geometric_stiffness(&self, _ctx: &ElementContext, _u_element: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, _ctx: &ElementContext, _u_element: &VecD) -> Option<MatD> {
         None
     }
 }
@@ -253,18 +253,18 @@ struct DofMap {
 }
 
 impl DofMap {
-    fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
+    async fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
         self.index.get(&(node_id.to_string(), dof)).copied()
     }
 
-    fn len(&self) -> usize {
+    async fn len(&self) -> usize {
         self.order.len()
     }
 }
 
 /// 🔢️ Numbers each node's active DOFs (the union of `dofs_per_node()` over elements touching it),
 /// so nodes with no rotational stiffness never get a spurious, singular rotational equation.
-fn build_dof_map(model: &Model) -> DofMap {
+async fn build_dof_map(model: &Model) -> DofMap {
     let mut order = Vec::new();
     let mut index = HashMap::new();
     for node in &model.nodes {
@@ -289,7 +289,7 @@ fn build_dof_map(model: &Model) -> DofMap {
 // #endregion 🔖️DofMap
 
 // #region 🔖️Validate
-fn validate(model: &Model) -> Result<(), FemError> {
+async fn validate(model: &Model) -> Result<(), FemError> {
     if model.nodes.is_empty() {
         return Err(FemError::EmptyModel);
     }
@@ -322,11 +322,11 @@ fn validate(model: &Model) -> Result<(), FemError> {
 // #endregion 🔖️Validate
 
 // #region 🔖️Assembly
-fn positions_of(model: &Model, node_ids: &[String]) -> Vec<[f64; 3]> {
+async fn positions_of(model: &Model, node_ids: &[String]) -> Vec<[f64; 3]> {
     node_ids.iter().map(|id| model.nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
 }
 
-fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
+async fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
     let mut indices = Vec::with_capacity(node_ids.len() * dofs.len());
     for node_id in node_ids {
         for &dof in dofs {
@@ -336,7 +336,7 @@ fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -
     Some(indices)
 }
 
-fn extract_submatrix(k: &MatD, rows: &[usize], cols: &[usize]) -> MatD {
+async fn extract_submatrix(k: &MatD, rows: &[usize], cols: &[usize]) -> MatD {
     let mut out = MatD::zeros(rows.len(), cols.len());
     for (i, &row) in rows.iter().enumerate() {
         for (j, &col) in cols.iter().enumerate() {
@@ -352,7 +352,7 @@ fn extract_submatrix(k: &MatD, rows: &[usize], cols: &[usize]) -> MatD {
 /// support restraints (dense elimination — small/single-case scale; `analyses::solve_multi_case`
 /// is the sparse multi-case/combination pipeline for larger models), then recovers reactions and
 /// per-element internal forces from the solved displacement vector.
-pub fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError> {
+pub async fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError> {
     validate(model)?;
     let dof_map = build_dof_map(model);
     let ndof = dof_map.len();
@@ -468,19 +468,19 @@ mod tests {
     }
 
     impl Element for AxialSpring {
-        fn id(&self) -> &str {
+        async fn id(&self) -> &str {
             &self.id
         }
 
-        fn node_ids(&self) -> Vec<String> {
+        async fn node_ids(&self) -> Vec<String> {
             vec![self.a.clone(), self.b.clone()]
         }
 
-        fn dofs_per_node(&self) -> &[Dof] {
+        async fn dofs_per_node(&self) -> &[Dof] {
             &[Dof::Tx]
         }
 
-        fn stiffness_global(&self, _ctx: &ElementContext) -> MatD {
+        async fn stiffness_global(&self, _ctx: &ElementContext) -> MatD {
             let mut m = MatD::zeros(2, 2);
             m.set(0, 0, self.k);
             m.set(0, 1, -self.k);
@@ -489,12 +489,12 @@ mod tests {
             m
         }
 
-        fn recover(&self, _ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+        async fn recover(&self, _ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
             ElementResult::Bar { n: self.k * (u_local.get(1) - u_local.get(0)) }
         }
     }
 
-    fn two_spring_model() -> Model {
+    async fn two_spring_model() -> Model {
         Model {
             nodes: vec![Node { id: "n1".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "n2".into(), pos: [1.0, 0.0, 0.0] }],
             elements: vec![Box::new(AxialSpring { id: "e1".into(), a: "n1".into(), b: "n2".into(), k: 1000.0 })],
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn solves_single_spring_against_hand_calc() {
+    async fn solves_single_spring_against_hand_calc() {
         let model = two_spring_model();
         let result = solve_linear_static(&model).expect("solves");
         let n2 = result.displacements.iter().find(|d| d.node_id == "n2").unwrap();
@@ -519,7 +519,7 @@ mod tests {
     }
 
     #[test]
-    fn equilibrium_checks_are_near_zero() {
+    async fn equilibrium_checks_are_near_zero() {
         let model = two_spring_model();
         let result = solve_linear_static(&model).expect("solves");
         assert!(result.checks.residual_norm < 1e-9);
@@ -527,27 +527,27 @@ mod tests {
     }
 
     #[test]
-    fn empty_model_is_rejected() {
+    async fn empty_model_is_rejected() {
         let model = Model::default();
         assert_eq!(solve_linear_static(&model), Err(FemError::EmptyModel));
     }
 
     #[test]
-    fn dangling_node_ref_is_rejected() {
+    async fn dangling_node_ref_is_rejected() {
         let mut model = two_spring_model();
         model.supports.push(Support { node_id: "missing".into(), fixed: vec![Dof::Tx] });
         assert_eq!(solve_linear_static(&model), Err(FemError::DanglingNodeRef("missing".into())));
     }
 
     #[test]
-    fn unconstrained_model_is_singular() {
+    async fn unconstrained_model_is_singular() {
         let mut model = two_spring_model();
         model.supports.clear();
         assert_eq!(solve_linear_static(&model), Err(FemError::Singular));
     }
 
     #[test]
-    fn load_on_inactive_dof_is_silently_skipped() {
+    async fn load_on_inactive_dof_is_silently_skipped() {
         let mut model = two_spring_model();
         model.nodal_loads.push(NodalLoad { node_id: "n2".into(), dof: Dof::Ty, value: 999.0 });
         let result = solve_linear_static(&model).expect("solves despite inactive-dof load");
@@ -557,7 +557,7 @@ mod tests {
 
     /// 🔍️ Duplicate node ids are rejected the same way `analyses::validate` rejects them.
     #[test]
-    fn duplicate_node_id_is_rejected() {
+    async fn duplicate_node_id_is_rejected() {
         let mut model = two_spring_model();
         model.nodes.push(Node { id: "n1".into(), pos: [5.0, 0.0, 0.0] });
         assert_eq!(solve_linear_static(&model), Err(FemError::DuplicateNodeId("n1".into())));
@@ -565,7 +565,7 @@ mod tests {
 
     /// 🔍️ `Model`'s hand-rolled `Debug` (trait objects aren't `Debug`) must print element ids, not panic.
     #[test]
-    fn model_debug_fmt_prints_element_ids_not_trait_objects() {
+    async fn model_debug_fmt_prints_element_ids_not_trait_objects() {
         let model = two_spring_model();
         let printed = format!("{model:?}");
         assert!(printed.contains("e1"), "expected element id \"e1\" in {printed}");
@@ -575,7 +575,7 @@ mod tests {
     /// 🌬️ A member UDL on an element that doesn't override `equivalent_nodal_loads` (the trait default,
     /// `None`) is silently a no-op — same displacement as solving with no member load at all.
     #[test]
-    fn member_udl_on_element_without_udl_support_is_a_no_op() {
+    async fn member_udl_on_element_without_udl_support_is_a_no_op() {
         let mut model = two_spring_model();
         model.member_loads.push(("e1".into(), MemberUdl { wx: 123.0, wy: 456.0, wz: 0.0 }));
         let with_udl = solve_linear_static(&model).expect("solves");

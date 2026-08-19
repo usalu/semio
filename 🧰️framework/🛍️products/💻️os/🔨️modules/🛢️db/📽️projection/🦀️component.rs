@@ -353,18 +353,18 @@ fn should_run(projection: &dyn ErasedProjection, touched: &TouchedSet, changed_t
 /// (`rebuild_in_memory`, the ground truth `apply_envelope`'s persisted path is checked against),
 /// checkpoint-recovery rebuild (`rebuild_and_persist`), historical lookup (`state_at`), and
 /// preview augmentation (`preview_augmented`).
-pub struct ProjectionEngine<'a> {
-    storage: &'a dyn IndexStorage,
+pub struct ProjectionEngine<'a, S: IndexStorage> {
+    storage: &'a S,
     document: ArtifactId,
     projections: Vec<Box<dyn ErasedProjection>>,
     graph: ProjectionGraph,
 }
 
-impl<'a> ProjectionEngine<'a> {
+impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
     /// @emoji 🏗️ Registers `projections` for `document` against `storage`, validating the
     /// dependency DAG up front (see `ProjectionGraph::build`) so a misconfigured cycle/dangling
     /// dependency fails at construction rather than mid-apply.
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId, projections: Vec<Box<dyn ErasedProjection>>) -> Result<Self, DbError> {
+    pub fn new(storage: &'a S, document: ArtifactId, projections: Vec<Box<dyn ErasedProjection>>) -> Result<Self, DbError> {
         let graph = ProjectionGraph::build(&projections)?;
         Ok(ProjectionEngine { storage, document, projections, graph })
     }
@@ -379,7 +379,7 @@ impl<'a> ProjectionEngine<'a> {
         self.projections.iter().find(|projection| projection.id() == projection_id).map(|projection| projection.as_ref()).ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
     }
 
-    fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a> {
+    fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a, S> {
         let _ = projection_id; // ProjectionIndex is per-document, not per-projection-id; kept as a parameter for call-site clarity.
         ProjectionIndex::new(self.storage, self.document.clone())
     }

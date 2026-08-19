@@ -57,16 +57,16 @@ struct DofMap {
 }
 
 impl DofMap {
-    fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
+    async fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
         self.index.get(&(node_id.to_string(), dof)).copied()
     }
 
-    fn len(&self) -> usize {
+    async fn len(&self) -> usize {
         self.order.len()
     }
 }
 
-fn build_dof_map(nodes: &[Node], elements: &[Box<dyn Element>]) -> DofMap {
+async fn build_dof_map(nodes: &[Node], elements: &[Box<dyn Element>]) -> DofMap {
     let mut order = Vec::new();
     let mut index = HashMap::new();
     for node in nodes {
@@ -89,11 +89,11 @@ fn build_dof_map(nodes: &[Node], elements: &[Box<dyn Element>]) -> DofMap {
     DofMap { index, order }
 }
 
-fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
+async fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
     node_ids.iter().map(|id| nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
 }
 
-fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
+async fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
     let mut indices = Vec::with_capacity(node_ids.len() * dofs.len());
     for node_id in node_ids {
         for &dof in dofs {
@@ -105,7 +105,7 @@ fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -
 // #endregion 🔖️DofMap
 
 // #region 🔖️Validate
-fn validate(model: &AnalysisModel) -> Result<(), FemError> {
+async fn validate(model: &AnalysisModel) -> Result<(), FemError> {
     if model.nodes.is_empty() {
         return Err(FemError::EmptyModel);
     }
@@ -131,7 +131,7 @@ fn validate(model: &AnalysisModel) -> Result<(), FemError> {
     Ok(())
 }
 
-fn validate_case(model: &AnalysisModel, case: &LoadCase) -> Result<(), FemError> {
+async fn validate_case(model: &AnalysisModel, case: &LoadCase) -> Result<(), FemError> {
     let node_exists = |id: &str| model.nodes.iter().any(|n| n.id == id);
     for load in &case.nodal_loads {
         if !node_exists(&load.node_id) {
@@ -150,7 +150,7 @@ struct RcmPermutation {
     inv_perm: Vec<usize>,
 }
 
-fn build_rcm_permutation(nodes: &[Node], elements: &[Box<dyn Element>], dof_map: &DofMap) -> RcmPermutation {
+async fn build_rcm_permutation(nodes: &[Node], elements: &[Box<dyn Element>], dof_map: &DofMap) -> RcmPermutation {
     let n_nodes = nodes.len();
     let node_index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n_nodes];
@@ -217,12 +217,12 @@ struct AssembledSystem {
 }
 
 impl AssembledSystem {
-    fn n_free(&self) -> usize {
+    async fn n_free(&self) -> usize {
         self.free_new.len()
     }
 }
 
-fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
+async fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     validate(model)?;
     let dof_map = build_dof_map(&model.nodes, &model.elements);
     let ndof = dof_map.len();
@@ -276,7 +276,7 @@ fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
 
 /// 🌬️ Per-node gravity pattern for an element's own `dofs_per_node()` layout — `[gx,gy,gz]` placed at
 /// each node's active `Tx/Ty/Tz` slots, `0.0` at any `Rx/Ry/Rz` slots, repeated node-major.
-fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> VecD {
+async fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> VecD {
     let mut out = VecD::zeros(node_count * dofs.len());
     for n in 0..node_count {
         for (i, &dof) in dofs.iter().enumerate() {
@@ -294,7 +294,7 @@ fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> VecD {
 
 /// 🌬️ Assembles one load case's RHS in ORIGINAL (old) DOF-index space — nodal loads, member-UDL
 /// equivalent loads, and (if `self_weight`) `element.mass() · gravity_pattern` self-weight loads.
-fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravity: [f64; 3]) -> VecD {
+async fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravity: [f64; 3]) -> VecD {
     let ndof = dof_map.len();
     let mut f = VecD::zeros(ndof);
 
@@ -335,7 +335,7 @@ fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravit
 
 // #region 🔖️Combine
 /// 🌱️ A zero-valued `ElementResult` of the same variant/shape as `result` — the seed for superposition.
-fn zero_like(result: &ElementResult) -> ElementResult {
+async fn zero_like(result: &ElementResult) -> ElementResult {
     match result {
         ElementResult::Bar { .. } => ElementResult::Bar { n: 0.0 },
         ElementResult::Beam { stations } => ElementResult::Beam { stations: stations.iter().map(|s| BeamStation { x: s.x, n: 0.0, v: 0.0, m: 0.0 }).collect() },
@@ -347,7 +347,7 @@ fn zero_like(result: &ElementResult) -> ElementResult {
 }
 
 /// ➕️ `acc + factor * term`, field-by-field, matched by `ElementResult` variant and Gauss-point index.
-fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: f64) -> ElementResult {
+async fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: f64) -> ElementResult {
     match (acc, term) {
         (ElementResult::Bar { n: an }, ElementResult::Bar { n: tn }) => ElementResult::Bar { n: an + factor * tn },
         (ElementResult::Beam { stations: acc_s }, ElementResult::Beam { stations: term_s }) => {
@@ -394,7 +394,7 @@ fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: 
     }
 }
 
-fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
+async fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
     let mut displacements: Vec<NodeDisplacement> = Vec::new();
     let mut reactions: Vec<NodeReaction> = Vec::new();
     let mut elements: Vec<(String, ElementResult)> = Vec::new();
@@ -439,7 +439,7 @@ fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Co
 /// 🧮️ Assembles the model ONCE (sparse, RCM-ordered, free-free LDLT factored once), then solves every
 /// load case as one shared multi-RHS `solve_many` call, superposes `combinations` from the already-
 /// solved case results, and un-permutes everything back to original node identity.
-pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<String, StaticResult>, FemError> {
+pub async fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<String, StaticResult>, FemError> {
     for case in cases {
         validate_case(model, case)?;
     }
@@ -535,7 +535,7 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
 /// 🎯️ Modal analysis: shares `solve_multi_case`'s sparse RCM-ordered free-free LDLT factor, assembles
 /// the global mass matrix over the SAME free DOFs (elements with `mass() == None` contribute nothing),
 /// and calls `subspace_iteration` for the lowest `count` frequencies/shapes.
-pub fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemError> {
+pub async fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemError> {
     let system = assemble_system(model)?;
     let ndof = system.ndof;
     let n_free = system.n_free();
@@ -571,7 +571,7 @@ pub fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemErro
 /// 🔁️ Expands each compact free-DOF eigenvector back to full `ndof` (zero at constrained slots), then
 /// un-permutes RCM (new) index space back to the ORIGINAL `dof_map` order (node-major, matching
 /// `model.nodes`, DOF sub-order filtered to active DOFs).
-fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> Vec<VecD> {
+async fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> Vec<VecD> {
     vectors
         .iter()
         .map(|vec_compact| {
@@ -593,7 +593,7 @@ fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> 
 /// 🌀️ Linear buckling: solves `reference_case` (via `solve_multi_case`) for `u_ref`, assembles the
 /// geometric stiffness `Kg` from every element's own axial state under `u_ref`, then solves
 /// `K φ = λ (−Kg) φ` via `subspace_iteration` — `factors[i] * reference_case` is the i-th critical load.
-pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) -> Result<BucklingResult, FemError> {
+pub async fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) -> Result<BucklingResult, FemError> {
     let ref_results = solve_multi_case(model, std::slice::from_ref(reference_case), &[], [0.0, 0.0, 0.0])?;
     let ref_result = ref_results.get(&reference_case.id).expect("reference case was just solved");
 
@@ -676,8 +676,8 @@ pub enum StressScalar {
 /// 📊️ An element's own Gauss-point-averaged value of `scalar`, or `None` if that element kind/scalar
 /// combination isn't defined (e.g. `VonMisesTop` on a `Plane` result, or any scalar on a `Bar`/`Beam`
 /// result — those carry no stress tensor to project).
-fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Option<f64> {
-    fn avg(values: impl Iterator<Item = f64>) -> f64 {
+async fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Option<f64> {
+    async fn avg(values: impl Iterator<Item = f64>) -> f64 {
         let mut sum = 0.0;
         let mut count = 0usize;
         for v in values {
@@ -720,7 +720,7 @@ fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Optio
 /// touches; the returned value per node is that accumulation's mean. A node touched only by elements
 /// that report no value for `scalar` (e.g. a `Bar` in a mixed mesh) simply never appears in the map.
 /// Element-to-model matching is by `element.id()` against `result.elements`' ids.
-pub fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scalar: StressScalar) -> HashMap<String, f64> {
+pub async fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scalar: StressScalar) -> HashMap<String, f64> {
     let mut sums: HashMap<String, (f64, usize)> = HashMap::new();
     for (element_id, element_result) in &result.elements {
         let Some(value) = element_scalar_average(element_result, scalar) else { continue };
@@ -742,7 +742,7 @@ mod tests {
     use crate::elements2d::{Bar2, BeamEb2};
     use crate::model::{solve_linear_static, Model};
 
-    fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
+    async fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
             elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density })],
@@ -756,7 +756,7 @@ mod tests {
     /// `solve_linear_static`'s already-correct dense pipeline on an equivalent model — same oracle
     /// strategy already used elsewhere in this crate.
     #[test]
-    fn solve_multi_case_matches_single_case_dense_solve() {
+    async fn solve_multi_case_matches_single_case_dense_solve() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let (model, cases) = cantilever_analysis_model(e, area, iy, l, 0.0);
         let results = solve_multi_case(&model, &cases, &[], [0.0, 0.0, 0.0]).expect("solves");
@@ -785,7 +785,7 @@ mod tests {
 
     /// ➕️ A `Combination` must equal hand-computed superposition of the individually-solved case results.
     #[test]
-    fn combination_equals_manual_superposition() {
+    async fn combination_equals_manual_superposition() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -820,7 +820,7 @@ mod tests {
     /// ⚖️ Self-weight-only equilibrium: the sum of vertical reactions must equal `ρAL * g` — a
     /// strong, simple physical check independent of the moment distribution.
     #[test]
-    fn self_weight_matches_total_mass_times_gravity() {
+    async fn self_weight_matches_total_mass_times_gravity() {
         let (e, area, iy, l, density) = (30e9, 0.05, 1e-4, 6.0, 2400.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -839,7 +839,7 @@ mod tests {
 
     /// 🎯️ Cantilever modal frequencies vs the classical closed form `f_i = (β_iL)²/(2πL²) · sqrt(EI/ρA)`.
     #[test]
-    fn modal_cantilever_matches_analytical_frequencies() {
+    async fn modal_cantilever_matches_analytical_frequencies() {
         let (e, iy, area, density, total_l) = (200e9, 1e-5, 0.01, 7850.0, 3.0);
         let n = 9;
         let dl = total_l / n as f64;
@@ -858,7 +858,7 @@ mod tests {
 
     /// 🌀️ Euler pinned-pinned column buckling load vs `π²EI/L²` (K=1.0).
     #[test]
-    fn buckling_euler_column_matches_analytical_load() {
+    async fn buckling_euler_column_matches_analytical_load() {
         let (e, iy, area, density, total_l) = (200e9, 8e-6, 0.005, 7850.0, 3.0);
         let n = 7;
         let dl = total_l / n as f64;
@@ -888,7 +888,7 @@ mod tests {
 
     /// 🔍️ Duplicate-node-id models are rejected the same way `lib.rs::validate` rejects them.
     #[test]
-    fn duplicate_node_id_is_rejected() {
+    async fn duplicate_node_id_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "a".into(), pos: [1.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DuplicateNodeId("a".into()));
@@ -896,7 +896,7 @@ mod tests {
 
     /// 🔍️ A `Bar2` model works fine through the multi-case pipeline too (not just `BeamEb2`).
     #[test]
-    fn solve_multi_case_supports_bar2_truss() {
+    async fn solve_multi_case_supports_bar2_truss() {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -916,7 +916,7 @@ mod tests {
     /// node's averaged von Mises must equal the exact analytical `E*a` (a constant field averages to
     /// itself regardless of how many elements touch a node).
     #[test]
-    fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
+    async fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
         let coords = [[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
@@ -946,7 +946,7 @@ mod tests {
     /// constant von Mises values: the shared node's averaged value must land strictly between the
     /// two elements' own values, while each element's exclusive nodes keep that element's exact value.
     #[test]
-    fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
+    async fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
         let el_a = Tri3Cst { id: "a".into(), nodes: ["shared".into(), "a1".into(), "a2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
@@ -988,7 +988,7 @@ mod tests {
 
     /// 🔍️ An empty `AnalysisModel` is rejected the same way `Model`'s top-level `validate` rejects it.
     #[test]
-    fn empty_model_is_rejected() {
+    async fn empty_model_is_rejected() {
         let model = AnalysisModel { nodes: vec![], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::EmptyModel);
@@ -996,7 +996,7 @@ mod tests {
 
     /// 🔍️ An element referencing a node id absent from `model.nodes` is rejected.
     #[test]
-    fn dangling_element_node_ref_is_rejected() {
+    async fn dangling_element_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
@@ -1004,7 +1004,7 @@ mod tests {
 
     /// 🔍️ A support referencing a node id absent from `model.nodes` is rejected.
     #[test]
-    fn dangling_support_node_ref_is_rejected() {
+    async fn dangling_support_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
@@ -1013,7 +1013,7 @@ mod tests {
     /// 🔍️ A `LoadCase` nodal load referencing a node id absent from `model.nodes` is rejected —
     /// `validate_case`'s own check, distinct from `validate`'s model-wide checks above.
     #[test]
-    fn dangling_load_case_node_ref_is_rejected() {
+    async fn dangling_load_case_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let case = LoadCase { id: "bad".into(), nodal_loads: vec![NodalLoad { node_id: "missing".into(), dof: Dof::Tx, value: 1.0 }], member_loads: vec![], self_weight: false };
         let err = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -1023,7 +1023,7 @@ mod tests {
     /// 🌬️ `solve_multi_case`'s member-UDL branch (`case_rhs_old`'s `equivalent_nodal_loads` path) must
     /// match `solve_linear_static`'s dense pipeline (`model.member_loads`) on an equivalent model.
     #[test]
-    fn solve_multi_case_applies_member_udl_equivalent_loads() {
+    async fn solve_multi_case_applies_member_udl_equivalent_loads() {
         let (e, area, iy, l, w) = (200e9, 0.01, 1e-5, 2.0, 500.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -1055,7 +1055,7 @@ mod tests {
     /// covered by `combination_equals_manual_superposition` above), and `add_scaled_element_result` on
     /// a freshly-zeroed accumulator reduces to exactly `factor * term`, field-by-field, per variant.
     #[test]
-    fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
+    async fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
         let factor = 2.5;
 
         let bar = ElementResult::Bar { n: 4.0 };
@@ -1119,7 +1119,7 @@ mod tests {
     /// and every mismatched combination (`None`) — arms `nodal_averaged_scalar`'s own patch tests never
     /// happen to exercise (those only touch `Plane`/`VonMises`).
     #[test]
-    fn element_scalar_average_covers_every_variant_and_scalar_combination() {
+    async fn element_scalar_average_covers_every_variant_and_scalar_combination() {
         let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
         assert_eq!(element_scalar_average(&plane, StressScalar::VonMises), Some(4.0));
         assert_eq!(element_scalar_average(&plane, StressScalar::Sxx), Some(1.0));

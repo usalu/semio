@@ -20,7 +20,7 @@ pub struct SolidMesh {
 /// 🗺️ Triangulates+extrudes+tet-splits every `FemSolid` in `doc` (same deterministic `crate::model::mesh`
 /// calls as `resolve_geometry`, so tet indices line up with `"{solid_id}_c{i}"` element ids) and returns
 /// just the geometry plus its outer surface — cheap enough for every render.
-pub fn fem3d_mesh_preview(doc: &Fem3dSnapshot) -> Result<Vec<SolidMesh>, Fem3dError> {
+pub async fn fem3d_mesh_preview(doc: &Fem3dSnapshot) -> Result<Vec<SolidMesh>, Fem3dError> {
     let mut out = Vec::with_capacity(doc.solids.len());
     for solid in &doc.solids {
         let domain = crate::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
@@ -55,7 +55,7 @@ pub fn fem3d_mesh_preview(doc: &Fem3dSnapshot) -> Result<Vec<SolidMesh>, Fem3dEr
 /// 🎨️ Nodal-averaged von Mises stress for `case_id`'s solved result, keyed by node id — the
 /// document-layer bridge to `crate::analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
 /// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.
-pub fn fem3d_nodal_von_mises(doc: &Fem3dSnapshot, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
+pub async fn fem3d_nodal_von_mises(doc: &Fem3dSnapshot, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let results = super::fem3d_solve_all(doc)?;
@@ -69,7 +69,7 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
 
-    fn solid_slab_doc() -> Fem3dSnapshot {
+    async fn solid_slab_doc() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
+    async fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
         let doc = solid_slab_doc();
         let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
         assert_eq!(previews.len(), 1);
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
+    async fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
         let mut doc = solid_slab_doc();
         doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
         let averaged = fem3d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");

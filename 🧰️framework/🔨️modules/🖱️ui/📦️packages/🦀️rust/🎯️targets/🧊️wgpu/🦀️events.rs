@@ -111,11 +111,11 @@ pub enum ImeEvent {
 /// child's own (unclipped) rect would nominally contain the point. `HIT_TRANSPARENT` nodes are
 /// skipped for the match itself (their children are still tested — pass-through). Returns the
 /// deepest/topmost matching node.
-pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+pub(crate) async fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
     hit_test_node(tree, root, 0.0, 0.0, x, y)
 }
 
-fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
+async fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
     let node = tree.node(id)?;
     let abs_x = origin_x + node.layout.x;
     let abs_y = origin_y + node.layout.y;
@@ -158,7 +158,7 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
 /// row's per-item `hover_action`/`unhover_action` exception is deleted — hover on a tree row is now
 /// dispatched through the row's `UiTreeNode.interaction_domain` binding (`interactionHover`),
 /// never an ad hoc per-item action.
-fn is_plain_stack_container(node: &Node) -> bool {
+async fn is_plain_stack_container(node: &Node) -> bool {
     let UiNode::Stack(stack) = &node.spec.0 else { return false };
     stack.activate.is_none() && stack.drop_action.is_none() && !node.flags.contains(NodeFlags::DRAG_SOURCE)
 }
@@ -172,7 +172,7 @@ fn is_plain_stack_container(node: &Node) -> bool {
 /// item whose `id` matches this row's own stable key (`NodeKey::Explicit(item.id)`, exactly what
 /// `reconcile::tree_item_row` keys the row with). `None` for anything that isn't a keyed descendant
 /// of a `Tree` (ordinary `Stack`s, a `Tree`'s section rows, which are keyed by `section.id` instead).
-fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
+async fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
     let NodeKey::Explicit(row_id) = &tree.node(row)?.key else { return None };
     let mut ancestor = tree.node(row)?.parent;
     while let Some(candidate) = ancestor {
@@ -185,11 +185,11 @@ fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
     None
 }
 
-fn find_item_in_sections<'a>(sections: &'a [UiTreeSectionNode], id: &str) -> Option<&'a UiTreeItemNode> {
+async fn find_item_in_sections<'a>(sections: &'a [UiTreeSectionNode], id: &str) -> Option<&'a UiTreeItemNode> {
     sections.iter().find_map(|section| find_item_in_items(&section.items, id))
 }
 
-fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a UiTreeItemNode> {
+async fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a UiTreeItemNode> {
     for item in items {
         if item.id == id {
             return Some(item);
@@ -208,7 +208,7 @@ fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a U
 /// **parent-relative**, so this walks the parent chain to `root` (whose own origin is `(0.0, 0.0)`)
 /// summing offsets. Used by the overlay placement/dismissal machinery, which needs a node's real
 /// on-screen bounds rather than its parent-relative layout rect.
-fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
+async fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
     match tree.node(id) {
         Some(node) => {
             let (parent_x, parent_y) = match node.parent {
@@ -222,7 +222,7 @@ fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
 }
 
 /// 📐️ `node_abs_origin` plus the node's own size, as a `Rect` — `None` if `id` isn't in `tree`.
-pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
+pub(crate) async fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
     let node = tree.node(id)?;
     let (x, y) = node_abs_origin(tree, id);
     Some(Rect::new(x, y, node.layout.width, node.layout.height))
@@ -235,7 +235,7 @@ pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
 /// resolves `subtree_root`'s *parent's* absolute origin (`(0.0, 0.0)` if it has none) and translates
 /// `(x, y)` into that frame first, so overlay dismissal/hover-out checks against a non-root overlay
 /// subtree stay correct regardless of how deep it's nested.
-pub(crate) fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+pub(crate) async fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
     let (parent_x, parent_y) = match tree.node(subtree_root).and_then(|node| node.parent) {
         Some(parent) => node_abs_origin(tree, parent),
         None => (0.0, 0.0),
@@ -273,7 +273,7 @@ struct CaptureState {
 }
 
 impl CaptureState {
-    fn release(&mut self) -> Option<(NodeId, CaptureKind)> {
+    async fn release(&mut self) -> Option<(NodeId, CaptureKind)> {
         self.target.take()
     }
 }
@@ -281,11 +281,11 @@ impl CaptureState {
 
 //#region 🔖️Focus
 /// 🎯️ Which `UiNode` variants participate in Tab-order focus cycling.
-fn is_focusable(node: &UiNode) -> bool {
+async fn is_focusable(node: &UiNode) -> bool {
     matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_))
 }
 
-fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
+async fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
     if let Some(node) = tree.node(id) {
         if is_focusable(&node.spec.0) {
             out.push(id);
@@ -303,7 +303,7 @@ struct FocusState {
 }
 
 impl FocusState {
-    fn new() -> Self {
+    async fn new() -> Self {
         Self { focused: None, tab_order: Vec::new() }
     }
 
@@ -314,7 +314,7 @@ impl FocusState {
     /// so the node's declarative `value` governs again on the next `apply_tree`); focusing a
     /// `UiNode::Input` for the first time seeds `edit` from that declarative `value` with the caret
     /// at the end — see `tree::WidgetState`'s own doc comment for why reconcile never clobbers this.
-    fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>) {
+    async fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>) {
         if self.focused == node {
             return;
         }
@@ -340,16 +340,16 @@ impl FocusState {
         self.focused = node;
     }
 
-    fn clear_focus(&mut self, tree: &mut UiTree) {
+    async fn clear_focus(&mut self, tree: &mut UiTree) {
         self.set_focus(tree, None);
     }
 
-    fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
+    async fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
         self.tab_order.clear();
         collect_focusable(tree, root, &mut self.tab_order);
     }
 
-    fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) {
+    async fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) {
         self.rebuild_tab_order(tree, root);
         if self.tab_order.is_empty() {
             self.set_focus(tree, None);
@@ -362,7 +362,7 @@ impl FocusState {
         self.set_focus(tree, Some(self.tab_order[next_index]));
     }
 
-    fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) {
+    async fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) {
         self.rebuild_tab_order(tree, root);
         if self.tab_order.is_empty() {
             self.set_focus(tree, None);
@@ -380,7 +380,7 @@ impl FocusState {
 //#region 🔖️Bubble
 /// 🫧️ Walks from `from` up through `parent` links (including `from` itself), calling `handler(id)`
 /// for each ancestor until it returns `true` ("handled, stop bubbling") or the root is reached.
-pub(crate) fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut handler: F) {
+pub(crate) async fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut handler: F) {
     let mut cursor = Some(from);
     while let Some(id) = cursor {
         if handler(id) {
@@ -391,7 +391,7 @@ pub(crate) fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut 
 }
 
 /// 🌳️ Whether `id` is `ancestor` itself or a descendant of it, walking the parent chain.
-fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool {
+async fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool {
     let mut found = false;
     bubble(tree, id, |current| {
         if current == ancestor {
@@ -465,7 +465,7 @@ pub struct DismissPolicy {
 }
 
 impl OverlayKind {
-    pub fn default_placement(self) -> OverlayPlacement {
+    pub async fn default_placement(self) -> OverlayPlacement {
         match self {
             OverlayKind::SelectPopup | OverlayKind::ContextMenu => OverlayPlacement::BelowAnchorWithFlip,
             OverlayKind::Tooltip => OverlayPlacement::AtPointer { offset_x: 12.0, offset_y: 16.0 },
@@ -473,7 +473,7 @@ impl OverlayKind {
         }
     }
 
-    pub fn dismiss_policy(self) -> DismissPolicy {
+    pub async fn dismiss_policy(self) -> DismissPolicy {
         match self {
             OverlayKind::Tooltip => DismissPolicy { outside_press_swallow: false, escape_closes: true, hover_out_delay_seconds: Some(0.4) },
             _ => DismissPolicy { outside_press_swallow: true, escape_closes: true, hover_out_delay_seconds: None },
@@ -506,24 +506,24 @@ pub(crate) struct OverlayStack {
 }
 
 impl OverlayStack {
-    fn new() -> Self {
+    async fn new() -> Self {
         Self::default()
     }
 
-    fn open(&mut self, overlay: OpenOverlay) {
+    async fn open(&mut self, overlay: OpenOverlay) {
         self.open.push(overlay);
     }
 
-    fn topmost(&self) -> Option<&OpenOverlay> {
+    async fn topmost(&self) -> Option<&OpenOverlay> {
         self.open.last()
     }
 
-    fn close_root(&mut self, root: NodeId) -> Option<OpenOverlay> {
+    async fn close_root(&mut self, root: NodeId) -> Option<OpenOverlay> {
         let position = self.open.iter().position(|overlay| overlay.root == root)?;
         Some(self.open.remove(position))
     }
 
-    fn close_topmost(&mut self) -> Option<OpenOverlay> {
+    async fn close_topmost(&mut self) -> Option<OpenOverlay> {
         self.open.pop()
     }
 
@@ -531,7 +531,7 @@ impl OverlayStack {
     /// close the *topmost* overlay, but a focus trap set by a lower (still-open) trapping overlay
     /// stays in effect once a higher non-trapping overlay (e.g. a `Tooltip`) is on top of it, so this
     /// searches from the top down rather than just checking `topmost()`.
-    fn topmost_focus_trap_root(&self) -> Option<NodeId> {
+    async fn topmost_focus_trap_root(&self) -> Option<NodeId> {
         self.open.iter().rev().find(|overlay| overlay.focus_trap).map(|overlay| overlay.root)
     }
 }
@@ -542,7 +542,7 @@ impl OverlayStack {
 /// still own actually writing the result into the overlay root's layout — `events` only decides
 /// *where*, per the module doc comment's "the content subtree itself is whatever the caller
 /// reconciled in" scoping.
-pub fn resolve_overlay_placement(tree: &UiTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement) -> (f32, f32) {
+pub async fn resolve_overlay_placement(tree: &UiTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement) -> (f32, f32) {
     let anchor_rect = match anchor {
         OverlayAnchor::Node(id) => node_abs_rect(tree, id).unwrap_or(Rect::new(0.0, 0.0, 0.0, 0.0)),
         OverlayAnchor::Point { x, y } => Rect::new(x, y, 0.0, 0.0),
@@ -619,7 +619,7 @@ const DRAG_PROMOTE_THRESHOLD_SQ: f32 = 16.0;
 // `EventRouter::register_scroll_thumb`, decoupling thumb geometry from scrollable-content geometry.
 
 /// 🖱️ Walks `from`'s bubble chain (inclusive) for the nearest `NodeFlags::SCROLLABLE` node.
-fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
+async fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
     let mut found = None;
     bubble(tree, from, |id| {
         if tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::SCROLLABLE)) {
@@ -638,7 +638,7 @@ fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
 // throughout (see `EditState`'s own doc comment for why); `prev_char_boundary`/`next_char_boundary`
 // step one `char` at a time without re-deriving a full `char_indices` pass per keystroke.
 
-fn prev_char_boundary(text: &str, index: usize) -> usize {
+async fn prev_char_boundary(text: &str, index: usize) -> usize {
     if index == 0 {
         return 0;
     }
@@ -649,7 +649,7 @@ fn prev_char_boundary(text: &str, index: usize) -> usize {
     candidate
 }
 
-fn next_char_boundary(text: &str, index: usize) -> usize {
+async fn next_char_boundary(text: &str, index: usize) -> usize {
     if index >= text.len() {
         return text.len();
     }
@@ -662,14 +662,14 @@ fn next_char_boundary(text: &str, index: usize) -> usize {
 
 /// ↔ Selection bounds as `(start, end)` regardless of which of `anchor`/`caret` is smaller —
 /// `EditState`'s own doc comment documents the selection as `anchor..caret` in either order.
-fn selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
+async fn selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
     (anchor.min(caret), anchor.max(caret))
 }
 
 /// ✍️ Replaces the current selection (or inserts at the caret if there isn't one) with `text`,
 /// collapsing caret and anchor to just past the inserted text. Shared by `TextInput`, `Paste`, and
 /// `Ime::Commit` routing — insertion semantics are identical for all three.
-fn insert_at_caret(edit: &mut EditState, text: &str) {
+async fn insert_at_caret(edit: &mut EditState, text: &str) {
     let (start, end) = selection_bounds(edit.anchor, edit.caret);
     edit.text.replace_range(start..end, text);
     let caret = start + text.len();
@@ -754,7 +754,7 @@ pub(crate) struct EventRouter {
 }
 
 impl EventRouter {
-    pub(crate) fn new(window_id: impl Into<String>) -> Self {
+    pub(crate) async fn new(window_id: impl Into<String>) -> Self {
         Self {
             window_id: window_id.into(),
             capture: CaptureState::default(),
@@ -771,7 +771,7 @@ impl EventRouter {
         }
     }
 
-    fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+    async fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
         match self.capture.target {
             Some((id, _)) => Some(id),
             None => hit_test(tree, root, x, y),
@@ -784,7 +784,7 @@ impl EventRouter {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the per-row `hover_action`/
     /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
     /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
-    fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
+    async fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
         let commands = Vec::new();
         if self.hovered == target {
             return commands;
@@ -821,7 +821,7 @@ impl EventRouter {
     /// 🪟️ Opens an overlay: flags `root` `NodeFlags::OVERLAY` (hit-test priority — see 🔖️HitTest) and
     /// pushes it onto the z-ordered stack with `kind`'s default placement/dismissal policy.
     /// `Dialog`/`CommandPalette` become focus-trap scopes automatically.
-    pub(crate) fn open_overlay(&mut self, tree: &mut UiTree, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
+    pub(crate) async fn open_overlay(&mut self, tree: &mut UiTree, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
         if let Some(node) = tree.node_mut(root) {
             node.flags.set(NodeFlags::OVERLAY, true);
         }
@@ -830,14 +830,14 @@ impl EventRouter {
         self.overlays.open(OpenOverlay { root, kind, anchor, placement: kind.default_placement(), dismiss: kind.dismiss_policy(), focus_trap });
     }
 
-    pub(crate) fn close_overlay(&mut self, tree: &mut UiTree, root: NodeId) -> Vec<UiCommand> {
+    pub(crate) async fn close_overlay(&mut self, tree: &mut UiTree, root: NodeId) -> Vec<UiCommand> {
         match self.overlays.close_root(root) {
             Some(overlay) => self.finish_close(tree, overlay),
             None => Vec::new(),
         }
     }
 
-    pub(crate) fn close_topmost_overlay(&mut self, tree: &mut UiTree) -> Vec<UiCommand> {
+    pub(crate) async fn close_topmost_overlay(&mut self, tree: &mut UiTree) -> Vec<UiCommand> {
         match self.overlays.close_topmost() {
             Some(overlay) => self.finish_close(tree, overlay),
             None => Vec::new(),
@@ -845,7 +845,7 @@ impl EventRouter {
     }
 
     #[allow(dead_code, reason = "overlay-stack accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn topmost_overlay(&self) -> Option<&OpenOverlay> {
+    pub(crate) async fn topmost_overlay(&self) -> Option<&OpenOverlay> {
         self.overlays.topmost()
     }
 
@@ -856,7 +856,7 @@ impl EventRouter {
     /// priority over its own later-painted siblings). All dismissal paths (outside-press, `Escape`,
     /// an explicit `close_overlay`, or picking an item — see `dispatch`'s `PointerUp` handling) funnel
     /// through `finish_close`, which clears `open` back to `false` uniformly.
-    pub(crate) fn toggle_select_popup(&mut self, tree: &mut UiTree, select_id: NodeId) -> Vec<UiCommand> {
+    pub(crate) async fn toggle_select_popup(&mut self, tree: &mut UiTree, select_id: NodeId) -> Vec<UiCommand> {
         let already_open = tree.node(select_id).is_some_and(|node| node.state.open);
         if already_open {
             self.close_overlay(tree, select_id)
@@ -874,7 +874,7 @@ impl EventRouter {
     /// useful). `SelectPopup`'s `tree::WidgetState::open` is the popup's own show/hide bit
     /// (`paint::paint_select` reads it) — cleared here too, so every dismissal path (see
     /// `toggle_select_popup`'s doc comment) stays in sync with the overlay lifecycle uniformly.
-    fn finish_close(&mut self, tree: &mut UiTree, overlay: OpenOverlay) -> Vec<UiCommand> {
+    async fn finish_close(&mut self, tree: &mut UiTree, overlay: OpenOverlay) -> Vec<UiCommand> {
         if let Some(node) = tree.node_mut(overlay.root) {
             node.flags.set(NodeFlags::OVERLAY, false);
             if overlay.kind == OverlayKind::SelectPopup {
@@ -895,7 +895,7 @@ impl EventRouter {
     /// 👆️ If the topmost overlay dismisses on outside-press and `(x, y)` lands outside its subtree,
     /// closes it and returns the resulting commands — the caller must swallow the press (not route it
     /// any further) when this returns `Some`.
-    fn dismiss_topmost_if_outside_press(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Option<Vec<UiCommand>> {
+    async fn dismiss_topmost_if_outside_press(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Option<Vec<UiCommand>> {
         let top = self.overlays.topmost()?;
         if !top.dismiss.outside_press_swallow {
             return None;
@@ -910,7 +910,7 @@ impl EventRouter {
     /// 🖱️ `Tooltip`-only: closes the topmost overlay once the pointer leaves both its anchor and its
     /// own bounds. See `DismissPolicy::hover_out_delay_seconds` for why this is immediate, not
     /// debounced.
-    fn maybe_dismiss_tooltip_on_hover_out(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Vec<UiCommand> {
+    async fn maybe_dismiss_tooltip_on_hover_out(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Vec<UiCommand> {
         let Some(top) = self.overlays.topmost() else { return Vec::new() };
         if top.kind != OverlayKind::Tooltip {
             return Vec::new();
@@ -930,28 +930,28 @@ impl EventRouter {
     //#endregion 🔖️OverlayApi
 
     //#region 🔖️DragDropApi
-    pub(crate) fn set_drag_payload(&mut self, node: NodeId, payload: DragPayload) {
+    pub(crate) async fn set_drag_payload(&mut self, node: NodeId, payload: DragPayload) {
         self.drag_payloads.insert(node, payload);
     }
 
     #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn clear_drag_payload(&mut self, node: NodeId) {
+    pub(crate) async fn clear_drag_payload(&mut self, node: NodeId) {
         self.drag_payloads.remove(&node);
     }
 
     #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + 'static) {
+    pub(crate) async fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + 'static) {
         self.drop_accept.insert(node, Box::new(predicate));
     }
 
     #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn drag_session(&self) -> Option<&DragSession> {
+    pub(crate) async fn drag_session(&self) -> Option<&DragSession> {
         self.drag.as_ref()
     }
 
     /// 🫳️ Promotes a `Press` capture on a `drag_payloads`-registered node to `CaptureKind::Drag` once
     /// the pointer has moved past `DRAG_PROMOTE_THRESHOLD_SQ` from `press_origin`.
-    fn maybe_promote_to_drag(&mut self, x: f32, y: f32) {
+    async fn maybe_promote_to_drag(&mut self, x: f32, y: f32) {
         let Some((id, CaptureKind::Press)) = self.capture.target else { return };
         let Some(payload) = self.drag_payloads.get(&id).cloned() else { return };
         let Some((origin_x, origin_y)) = self.press_origin else { return };
@@ -964,7 +964,7 @@ impl EventRouter {
 
     /// 🫳️ Live-updates the active `DragSession`'s pointer position and re-evaluates the drop target
     /// under it.
-    fn update_drag(&mut self, tree: &UiTree, root: NodeId, x: f32, y: f32) {
+    async fn update_drag(&mut self, tree: &UiTree, root: NodeId, x: f32, y: f32) {
         if let Some(drag) = self.drag.as_mut() {
             drag.pointer_x = x;
             drag.pointer_y = y;
@@ -977,7 +977,7 @@ impl EventRouter {
 
     /// 🎯️ Walks `from`'s bubble chain for the nearest `NodeFlags::DROP_TARGET` node whose
     /// `drop_accept` predicate (if any) accepts the active `DragSession`'s payload.
-    fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
+    async fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
         let mut found = None;
         bubble(tree, from, |id| {
             if !tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::DROP_TARGET)) {
@@ -1000,11 +1000,11 @@ impl EventRouter {
 
     //#region 🔖️ScrollApi
     #[allow(dead_code, reason = "scroll-thumb registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn register_scroll_thumb(&mut self, thumb: NodeId, scrollable: NodeId, axis: ScrollAxis) {
+    pub(crate) async fn register_scroll_thumb(&mut self, thumb: NodeId, scrollable: NodeId, axis: ScrollAxis) {
         self.scroll_thumbs.insert(thumb, (scrollable, axis));
     }
 
-    fn route_scroll(&mut self, tree: &mut UiTree, root: NodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) {
+    async fn route_scroll(&mut self, tree: &mut UiTree, root: NodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) {
         let Some(hit) = hit_test(tree, root, x, y) else { return };
         let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return };
         if let Some(node) = tree.node_mut(scrollable) {
@@ -1014,7 +1014,7 @@ impl EventRouter {
         tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
     }
 
-    fn update_scroll_thumb(&mut self, tree: &mut UiTree, scrollable: NodeId, axis: ScrollAxis, x: f32, y: f32) {
+    async fn update_scroll_thumb(&mut self, tree: &mut UiTree, scrollable: NodeId, axis: ScrollAxis, x: f32, y: f32) {
         let Some((origin_x, origin_y, start_x, start_y)) = self.thumb_start else { return };
         let (delta_x, delta_y) = (x - origin_x, y - origin_y);
         let Some(node) = tree.node_mut(scrollable) else { return };
@@ -1027,7 +1027,7 @@ impl EventRouter {
     //#endregion 🔖️ScrollApi
 
     //#region 🔖️EditApi
-    fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) {
+    async fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) {
         let Some(id) = self.focus.focused else { return };
         let Some(node) = tree.node_mut(id) else { return };
         let Some(edit) = node.state.edit.as_mut() else { return };
@@ -1035,7 +1035,7 @@ impl EventRouter {
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
     }
 
-    fn route_ime(&mut self, tree: &mut UiTree, event: &ImeEvent) {
+    async fn route_ime(&mut self, tree: &mut UiTree, event: &ImeEvent) {
         let Some(id) = self.focus.focused else { return };
         let Some(node) = tree.node_mut(id) else { return };
         let Some(edit) = node.state.edit.as_mut() else { return };
@@ -1055,7 +1055,7 @@ impl EventRouter {
     /// and clipboard shortcuts for the focused node's `EditState`. A no-operation if nothing is focused or
     /// the focused node has no `EditState` (isn't a `UiNode::Input`, or hasn't been focused since
     /// `FocusState::set_focus` seeded one).
-    fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
+    async fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
         let Some(node) = tree.node_mut(id) else { return out };
@@ -1141,19 +1141,19 @@ impl EventRouter {
 
     //#region 🔖️CursorApi
     #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn hovered(&self) -> Option<NodeId> {
+    pub(crate) async fn hovered(&self) -> Option<NodeId> {
         self.hovered
     }
 
     #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
+    pub(crate) async fn capture(&self) -> Option<(NodeId, CaptureKind)> {
         self.capture.target
     }
 
     /// 🎯️ Read-only: whether this window's retained content currently holds keyboard focus — see
     /// `engine::Ui::window_has_focus` (its only caller), added for the `w2-input-wiring` host-side
     /// focus arbitration (content vs. chrome routing, `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`).
-    pub(crate) fn is_focused(&self) -> bool {
+    pub(crate) async fn is_focused(&self) -> bool {
         self.focus.focused.is_some()
     }
     //#endregion 🔖️CursorApi
@@ -1162,7 +1162,7 @@ impl EventRouter {
     /// `reconcile` has since removed from `tree` — generation-tagged `NodeId`s (see `arena`'s own doc
     /// comment) make stale entries harmless to *use* (they simply never match a live node again), but
     /// this keeps the maps from growing unboundedly across a long session's worth of churn.
-    fn prune_dead_registrations(&mut self, tree: &UiTree) {
+    async fn prune_dead_registrations(&mut self, tree: &UiTree) {
         self.drag_payloads.retain(|id, _| tree.contains(*id));
         self.drop_accept.retain(|id, _| tree.contains(*id));
         self.scroll_thumbs.retain(|thumb, (scrollable, _)| tree.contains(*thumb) && tree.contains(*scrollable));
@@ -1170,7 +1170,7 @@ impl EventRouter {
 
     /// 🚦️ Resolves the event's target (capture target if captured, else `hit_test`), updates
     /// interaction flags, and returns any `UiCommand`s the event produced.
-    pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
+    pub(crate) async fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         match event {
@@ -1330,7 +1330,7 @@ impl EventRouter {
     /// `paint::paint_node` each do independently — not reusing `collect_scene_slots` itself, since
     /// that walks the WHOLE tree per call and this runs once per real input event) and builds the
     /// `UiCommand::Scene` the host should route into that surface's per-`SurfaceKind` input handler.
-    fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
+    async fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
         let node = tree.node(id)?;
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
         let mut x = node.layout.x;
@@ -1353,11 +1353,11 @@ mod tests {
     use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
     use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 
-    fn action() -> ActionDescriptor {
+    async fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
     }
 
-    fn select_ui(id: &str, value: &str) -> UiNode {
+    async fn select_ui(id: &str, value: &str) -> UiNode {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
@@ -1369,7 +1369,7 @@ mod tests {
         })
     }
 
-    fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
+    async fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
         UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
@@ -1378,7 +1378,7 @@ mod tests {
     /// hand (like every other test in this module, via `leaf`), so `reconcile` never actually runs;
     /// this stand-in keeps the row's key (`NodeKey::Explicit(item.id)`) and geometry consistent with
     /// what `paint::sync_tree_row_layout` would have written.
-    fn insert_tree_row(tree: &mut UiTree, tree_id: NodeId, item_id: &str, rect: (f32, f32, f32, f32)) -> NodeId {
+    async fn insert_tree_row(tree: &mut UiTree, tree_id: NodeId, item_id: &str, rect: (f32, f32, f32, f32)) -> NodeId {
         let spec =
             UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(item_id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
         let id = tree.insert_child(Some(tree_id), Node::new(NodeKey::Explicit(item_id.into()), WidgetSpec(spec)));
@@ -1390,7 +1390,7 @@ mod tests {
         id
     }
 
-    fn input_ui(id: &str, value: &str) -> UiNode {
+    async fn input_ui(id: &str, value: &str) -> UiNode {
         UiNode::Input(UiInputNode {
             id: id.into(),
             input_kind: "text".into(),
@@ -1407,23 +1407,23 @@ mod tests {
         })
     }
 
-    fn stack_ui() -> UiNode {
+    async fn stack_ui() -> UiNode {
         UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
     }
 
-    fn text_ui(value: &str) -> UiNode {
+    async fn text_ui(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn separator_ui() -> UiNode {
+    async fn separator_ui() -> UiNode {
         UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(), menu: None })
     }
 
-    fn button_ui(id: &str) -> UiNode {
+    async fn button_ui(id: &str) -> UiNode {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
+    async fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
         let id = tree.insert_child(parent, Node::new(NodeKey::Positional(ordinal, ordinal), WidgetSpec(node)));
         let bucket = tree.node_mut(id).unwrap();
         bucket.layout.x = rect.0;
@@ -1433,12 +1433,12 @@ mod tests {
         id
     }
 
-    fn set_flag(tree: &mut UiTree, id: NodeId, flag: NodeFlags) {
+    async fn set_flag(tree: &mut UiTree, id: NodeId, flag: NodeFlags) {
         tree.node_mut(id).unwrap().flags.set(flag, true);
     }
 
     #[test]
-    fn hit_test_finds_the_topmost_of_two_non_overlapping_siblings() {
+    async fn hit_test_finds_the_topmost_of_two_non_overlapping_siblings() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let left = leaf(&mut tree, Some(root), 1, text_ui("left"), (0.0, 0.0, 100.0, 100.0));
@@ -1449,7 +1449,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_respects_clips_children_pruning() {
+    async fn hit_test_respects_clips_children_pruning() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let clipper = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 50.0, 50.0));
@@ -1462,7 +1462,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_test_skips_hit_transparent_node_but_still_matches_its_children() {
+    async fn hit_test_skips_hit_transparent_node_but_still_matches_its_children() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let overlay_glass = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -1474,7 +1474,7 @@ mod tests {
     }
 
     #[test]
-    fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_position() {
+    async fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_position() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let a = leaf(&mut tree, Some(root), 1, separator_ui(), (0.0, 0.0, 100.0, 100.0));
@@ -1493,7 +1493,7 @@ mod tests {
     }
 
     #[test]
-    fn focus_next_and_prev_cycle_only_through_focusable_nodes() {
+    async fn focus_next_and_prev_cycle_only_through_focusable_nodes() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 100.0));
         leaf(&mut tree, Some(root), 1, text_ui("not focusable"), (0.0, 0.0, 50.0, 20.0));
@@ -1514,7 +1514,7 @@ mod tests {
     }
 
     #[test]
-    fn set_focus_flips_the_focused_flag_in_both_directions() {
+    async fn set_focus_flips_the_focused_flag_in_both_directions() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
         let a = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
@@ -1534,7 +1534,7 @@ mod tests {
     }
 
     #[test]
-    fn clicking_a_button_emits_its_action_descriptor_as_a_ui_command() {
+    async fn clicking_a_button_emits_its_action_descriptor_as_a_ui_command() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
         let button = leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 100.0, 40.0));
@@ -1549,7 +1549,7 @@ mod tests {
     }
 
     #[test]
-    fn releasing_off_the_captured_button_does_not_fire_its_action() {
+    async fn releasing_off_the_captured_button_does_not_fire_its_action() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
         leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 40.0, 40.0));
@@ -1562,7 +1562,7 @@ mod tests {
     }
 
     #[test]
-    fn bubble_stops_when_a_handler_returns_true() {
+    async fn bubble_stops_when_a_handler_returns_true() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
         let mid = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 100.0));
@@ -1579,7 +1579,7 @@ mod tests {
 
     //#region 🔖️OverlayTests
     #[test]
-    fn overlay_open_flags_the_node_and_close_clears_it_and_emits_overlay_closed() {
+    async fn overlay_open_flags_the_node_and_close_clears_it_and_emits_overlay_closed() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let popup = leaf(&mut tree, Some(root), 1, stack_ui(), (10.0, 10.0, 50.0, 50.0));
@@ -1596,7 +1596,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press() {
+    async fn pointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, button_ui("underneath"), (0.0, 0.0, 200.0, 200.0));
@@ -1613,7 +1613,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_inside_a_dismissable_overlay_does_not_close_it() {
+    async fn pointer_down_inside_a_dismissable_overlay_does_not_close_it() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let popup = leaf(&mut tree, Some(root), 1, stack_ui(), (10.0, 10.0, 50.0, 50.0));
@@ -1628,7 +1628,7 @@ mod tests {
     }
 
     #[test]
-    fn escape_closes_only_the_topmost_of_two_open_overlays() {
+    async fn escape_closes_only_the_topmost_of_two_open_overlays() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let menu = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 50.0, 50.0));
@@ -1644,7 +1644,7 @@ mod tests {
     }
 
     #[test]
-    fn tab_focus_is_trapped_inside_an_open_dialog_overlay() {
+    async fn tab_focus_is_trapped_inside_an_open_dialog_overlay() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 300.0));
         leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
@@ -1667,7 +1667,7 @@ mod tests {
 
     //#region 🔖️DragDropTests
     #[test]
-    fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target() {
+    async fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
@@ -1699,7 +1699,7 @@ mod tests {
     }
 
     #[test]
-    fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
+    async fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0_f32, 200.0));
         let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
@@ -1715,7 +1715,7 @@ mod tests {
     }
 
     #[test]
-    fn a_drop_targets_accept_predicate_can_reject_the_active_payload() {
+    async fn a_drop_targets_accept_predicate_can_reject_the_active_payload() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
@@ -1735,7 +1735,7 @@ mod tests {
 
     //#region 🔖️ScrollTests
     #[test]
-    fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
+    async fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
@@ -1750,7 +1750,7 @@ mod tests {
     }
 
     #[test]
-    fn scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis() {
+    async fn scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
@@ -1773,7 +1773,7 @@ mod tests {
 
     //#region 🔖️EditStateTests
     #[test]
-    fn focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it() {
+    async fn focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let input = leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
@@ -1788,7 +1788,7 @@ mod tests {
     }
 
     #[test]
-    fn arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char() {
+    async fn arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
@@ -1810,7 +1810,7 @@ mod tests {
     }
 
     #[test]
-    fn character_insertion_replaces_the_selection() {
+    async fn character_insertion_replaces_the_selection() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
@@ -1828,7 +1828,7 @@ mod tests {
     }
 
     #[test]
-    fn copy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer() {
+    async fn copy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
@@ -1845,7 +1845,7 @@ mod tests {
     }
 
     #[test]
-    fn ime_commit_inserts_the_composed_text_and_clears_composition() {
+    async fn ime_commit_inserts_the_composed_text_and_clears_composition() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, input_ui("name", ""), (0.0, 0.0, 100.0, 20.0));
@@ -1866,7 +1866,7 @@ mod tests {
 
     //#region 🔖️HoverRevealTests
     #[test]
-    fn hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_clears_it_all() {
+    async fn hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_clears_it_all() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
         let row = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 100.0));
@@ -1892,7 +1892,7 @@ mod tests {
     // `draggable` (`find_tree_item_spec`).
 
     #[test]
-    fn clicking_a_select_opens_its_popup_and_clicking_again_closes_it() {
+    async fn clicking_a_select_opens_its_popup_and_clicking_again_closes_it() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
@@ -1910,7 +1910,7 @@ mod tests {
     }
 
     #[test]
-    fn a_press_outside_an_open_selects_popup_closes_it_and_swallows_the_press() {
+    async fn a_press_outside_an_open_selects_popup_closes_it_and_swallows_the_press() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
@@ -1926,7 +1926,7 @@ mod tests {
     }
 
     #[test]
-    fn picking_a_selects_item_row_fires_its_action_and_closes_the_popup() {
+    async fn picking_a_selects_item_row_fires_its_action_and_closes_the_popup() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
@@ -1945,7 +1945,7 @@ mod tests {
         let _ = row_b;
     }
 
-    fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
+    async fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: None,
@@ -1961,7 +1961,7 @@ mod tests {
     }
 
     #[test]
-    fn clicking_an_activatable_stack_fires_its_activate_action() {
+    async fn clicking_an_activatable_stack_fires_its_activate_action() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let _card = leaf(&mut tree, Some(root), 1, activatable_stack_ui(action()), (0.0, 0.0, 100.0, 40.0));
@@ -1975,7 +1975,7 @@ mod tests {
     }
 
     #[test]
-    fn a_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through() {
+    async fn a_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let _plain = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 40.0));
@@ -1988,7 +1988,7 @@ mod tests {
     /// action here — the framework now owns hover per `UiTreeNode.interactionDomain`
     /// (`interactionHover`), wired at a layer above this retained-mode event router.
     #[test]
-    fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
+    async fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
         let item = UiTreeItemNode::base("row1", "Row One");
         let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
@@ -2006,7 +2006,7 @@ mod tests {
     }
 
     #[test]
-    fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_drag_session() {
+    async fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_drag_session() {
         let mut item = UiTreeItemNode::base("row1", "Row One");
         item.draggable = Some(true);
         let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
@@ -2036,7 +2036,7 @@ mod tests {
     /// 🎬️ A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
     /// mirroring `scene_slots::tests::scene`'s own fixture (this module can't reuse that one directly:
     /// it's private to the `scene_slots` submodule).
-    fn component_scene_ui(surface_id: &str, kind: SurfaceKind) -> UiNode {
+    async fn component_scene_ui(surface_id: &str, kind: SurfaceKind) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: surface_id.into(),
             controller_id: "ctrl".into(),
@@ -2064,7 +2064,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
+    async fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let scene_id = leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
@@ -2086,7 +2086,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_outside_any_component_scene_leaf_emits_no_scene_command() {
+    async fn pointer_down_outside_any_component_scene_leaf_emits_no_scene_command() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
@@ -2098,7 +2098,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_on_a_plain_button_emits_no_scene_command() {
+    async fn pointer_down_on_a_plain_button_emits_no_scene_command() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, button_ui("b1"), (0.0, 0.0, 50.0, 20.0));
@@ -2110,7 +2110,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_move_over_a_component_scene_leaf_emits_a_scene_command() {
+    async fn pointer_move_over_a_component_scene_leaf_emits_a_scene_command() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::InkCanvas), (0.0, 0.0, 200.0, 200.0));
@@ -2122,7 +2122,7 @@ mod tests {
     }
 
     #[test]
-    fn scroll_over_a_component_scene_leaf_emits_a_scene_command_and_still_routes_container_scroll() {
+    async fn scroll_over_a_component_scene_leaf_emits_a_scene_command_and_still_routes_container_scroll() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Table), (0.0, 0.0, 200.0, 200.0));
@@ -2134,7 +2134,7 @@ mod tests {
     }
 
     #[test]
-    fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
+    async fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 300.0));
         let container = leaf(&mut tree, Some(root), 1, stack_ui(), (20.0, 30.0, 250.0, 250.0));

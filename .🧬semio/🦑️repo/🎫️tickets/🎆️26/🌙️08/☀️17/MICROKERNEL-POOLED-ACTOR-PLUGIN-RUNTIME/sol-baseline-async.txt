@@ -1,0 +1,337 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = CancelState>`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:165:22
+    |
+165 |         self.state() == CancelState::Park
+    |         ------------ ^^ ----------------- CancelState
+    |         |
+    |         impl Future<Output = CancelState>
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = CancelState>`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:161:22
+    |
+161 |         self.state() == CancelState::Cancelled
+    |         ------------ ^^ ---------------------- CancelState
+    |         |
+    |         impl Future<Output = CancelState>
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = CancelState>`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:169:22
+    |
+169 |         self.state() == CancelState::Live
+    |         ------------ ^^ ----------------- CancelState
+    |         |
+    |         impl Future<Output = CancelState>
+
+error[E0599]: the method `max` exists for opaque type `impl Future<Output = CancelState>`, but its trait bounds were not satisfied
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:155:35
+    |
+155 |             Some(parent) => local.max(parent.state()),
+    |                                   ^^^ method cannot be called on `impl Future<Output = CancelState>` due to unsatisfied trait bounds
+    |
+    = note: the following trait bounds were not satisfied:
+            `impl Future<Output = CancelState>: Ord`
+            which is required by `&impl Future<Output = CancelState>: Ord`
+            `impl Future<Output = CancelState>: Ord`
+            which is required by `&mut impl Future<Output = CancelState>: Ord`
+            `impl Future<Output = CancelState>: Iterator`
+            which is required by `&mut impl Future<Output = CancelState>: Iterator`
+
+error[E0599]: no method named `fetch_sub` found for opaque type `impl Future<Output = &Atomic<u32>>` in the current scope
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:335:32
+    |
+335 |         let previous = counter.fetch_sub(n, Ordering::SeqCst);
+    |                                ^^^^^^^^^ method not found in `impl Future<Output = &Atomic<u32>>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+335 |         let previous = counter.await.fetch_sub(n, Ordering::SeqCst);
+    |                                ++++++
+
+error[E0599]: no method named `load` found for opaque type `impl Future<Output = &Atomic<u32>>` in the current scope
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:341:28
+    |
+341 |         self.counter(role).load(Ordering::SeqCst)
+    |                            ^^^^ method not found in `impl Future<Output = &Atomic<u32>>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+341 |         self.counter(role).await.load(Ordering::SeqCst)
+    |                            ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:148:28
+     |
+ 148 |         self.0.local.store(CancelState::Cancelled.to_u8(), Ordering::SeqCst);
+     |                      ----- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `u8`, found future
+     |                      |
+     |                      arguments to this method are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:148:28
+     |
+ 148 |         self.0.local.store(CancelState::Cancelled.to_u8(), Ordering::SeqCst);
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/sync/atomic.rs:2882:20
+     |
+2882 |               pub fn store(&self, val: $int_type, order: Ordering) {
+     |                      ^^^^^
+...
+3626 | / atomic_int! {
+3627 | |     cfg(target_has_atomic = "8"),
+3628 | |     cfg(target_has_atomic_primitive_alignment = "8"),
+3629 | |     stable(feature = "integer_atomics_stable", since = "1.34.0"),
+...    |
+3641 | |     u8 AtomicU8
+3642 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `atomic_int` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future`
+     |
+ 148 |         self.0.local.store(CancelState::Cancelled.to_u8().await, Ordering::SeqCst);
+     |                                                          ++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:285:29
+    |
+285 |     ThreadPlan { kernel: 1, shards, io_workers, compute, epoch_ticker: 1 }
+    |                             ^^^^^^ expected `u32`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:285:29
+    |
+285 |     ThreadPlan { kernel: 1, shards, io_workers, compute, epoch_ticker: 1 }
+    |                             ^^^^^^
+help: consider `await`ing on the `Future`
+    |
+285 |     ThreadPlan { kernel: 1, shards.await, io_workers, compute, epoch_ticker: 1 }
+    |                                   ++++++
+
+error[E0308]: arguments to this method are incorrect
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:137:30
+     |
+ 137 | ...   let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                            ^^^^^^^^^^^^^^^^
+     |
+note: expected `u8`, found future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:137:47
+     |
+ 137 | ...   let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:137:47
+     |
+ 137 | ...   let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: expected `u8`, found future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:137:74
+     |
+ 137 | ...   let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:137:74
+     |
+ 137 | ...   let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/sync/atomic.rs:3045:20
+     |
+3045 |               pub fn compare_exchange(&self,
+     |                      ^^^^^^^^^^^^^^^^
+...
+3626 | / atomic_int! {
+3627 | |     cfg(target_has_atomic = "8"),
+3628 | |     cfg(target_has_atomic_primitive_alignment = "8"),
+3629 | |     stable(feature = "integer_atomics_stable", since = "1.34.0"),
+...    |
+3641 | |     u8 AtomicU8
+3642 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `atomic_int` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future`
+     |
+ 137 |         let _ = self.0.local.compare_exchange(CancelState::Live.to_u8().await, CancelState::Park.to_u8(), Ordering::SeqCst, Ordering::SeqCst);
+     |                                                                        ++++++
+help: consider `await`ing on the `Future`
+     |
+ 137 |         let _ = self.0.local.compare_exchange(CancelState::Live.to_u8(), CancelState::Park.to_u8().await, Ordering::SeqCst, Ordering::SeqCst);
+     |                                                                                                   ++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:285:37
+    |
+285 |     ThreadPlan { kernel: 1, shards, io_workers, compute, epoch_ticker: 1 }
+    |                                     ^^^^^^^^^^ expected `u32`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:285:37
+    |
+285 |     ThreadPlan { kernel: 1, shards, io_workers, compute, epoch_ticker: 1 }
+    |                                     ^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+285 |     ThreadPlan { kernel: 1, shards, io_workers.await, compute, epoch_ticker: 1 }
+    |                                               ++++++
+
+error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:281:28
+    |
+281 |     let shards = clamp_u32(ceil_div_usize(cores, 2) as u32, 2, 8);
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:282:32
+    |
+282 |     let io_workers = clamp_u32(ceil_div_usize(cores, 4) as u32, 1, 4);
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0605]: non-primitive cast: `impl Future<Output = u32>` as `i64`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:283:20
+    |
+283 |     let reserved = shards as i64 + io_workers as i64 + 1;
+    |                    ^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0605]: non-primitive cast: `impl Future<Output = u32>` as `i64`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:283:36
+    |
+283 |     let reserved = shards as i64 + io_workers as i64 + 1;
+    |                                    ^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:127:64
+     |
+ 127 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8()), parent: None }))
+     |                                                  ------------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `u8`, found future
+     |                                                  |
+     |                                                  arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:127:64
+     |
+ 127 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8()), parent: None }))
+     |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: associated function defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/sync/atomic.rs:2617:26
+     |
+2617 |               pub const fn new(v: $int_type) -> Self {
+     |                            ^^^
+...
+3626 | / atomic_int! {
+3627 | |     cfg(target_has_atomic = "8"),
+3628 | |     cfg(target_has_atomic_primitive_alignment = "8"),
+3629 | |     stable(feature = "integer_atomics_stable", since = "1.34.0"),
+...    |
+3641 | |     u8 AtomicU8
+3642 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `atomic_int` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future`
+     |
+ 127 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8().await), parent: None }))
+     |                                                                                         ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:132:64
+     |
+ 132 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8()), parent: Some(self.clone()) }))
+     |                                                  ------------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `u8`, found future
+     |                                                  |
+     |                                                  arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:132:64
+     |
+ 132 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8()), parent: Some(self.clone()) }))
+     |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: associated function defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/sync/atomic.rs:2617:26
+     |
+2617 |               pub const fn new(v: $int_type) -> Self {
+     |                            ^^^
+...
+3626 | / atomic_int! {
+3627 | |     cfg(target_has_atomic = "8"),
+3628 | |     cfg(target_has_atomic_primitive_alignment = "8"),
+3629 | |     stable(feature = "integer_atomics_stable", since = "1.34.0"),
+...    |
+3641 | |     u8 AtomicU8
+3642 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `atomic_int` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future`
+     |
+ 132 |         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8().await), parent: Some(self.clone()) }))
+     |                                                                                         ++++++
+
+error[E0308]: arguments to this method are incorrect
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:142:30
+     |
+ 142 | ...   let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                            ^^^^^^^^^^^^^^^^
+     |
+note: expected `u8`, found future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:142:47
+     |
+ 142 | ...   let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:142:47
+     |
+ 142 | ...   let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: expected `u8`, found future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:142:74
+     |
+ 142 | ...   let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:142:74
+     |
+ 142 | ...   let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqC...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/sync/atomic.rs:3045:20
+     |
+3045 |               pub fn compare_exchange(&self,
+     |                      ^^^^^^^^^^^^^^^^
+...
+3626 | / atomic_int! {
+3627 | |     cfg(target_has_atomic = "8"),
+3628 | |     cfg(target_has_atomic_primitive_alignment = "8"),
+3629 | |     stable(feature = "integer_atomics_stable", since = "1.34.0"),
+...    |
+3641 | |     u8 AtomicU8
+3642 | | }
+     | |_- in this macro invocation
+     = note: this error originates in the macro `atomic_int` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future`
+     |
+ 142 |         let _ = self.0.local.compare_exchange(CancelState::Park.to_u8().await, CancelState::Live.to_u8(), Ordering::SeqCst, Ordering::SeqCst);
+     |                                                                        ++++++
+help: consider `await`ing on the `Future`
+     |
+ 142 |         let _ = self.0.local.compare_exchange(CancelState::Park.to_u8(), CancelState::Live.to_u8().await, Ordering::SeqCst, Ordering::SeqCst);
+     |                                                                                                   ++++++
+
+error[E0277]: `impl Future<Output = CancelState>` doesn't implement `Debug`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:175:40
+    |
+175 |         write!(f, "CancelToken({:?})", self.state())
+    |                                ----    ^^^^^^^^^^^^ `impl Future<Output = CancelState>` cannot be formatted using `{:?}` because it doesn't implement `Debug`
+    |                                |
+    |                                required by this formatting parameter
+    |
+    = help: the trait `Debug` is not implemented for `impl Future<Output = CancelState>`
+
+Some errors have detailed explanations: E0277, E0308, E0369, E0599, E0605.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-async` (lib) due to 18 previous errors
+EXIT=101

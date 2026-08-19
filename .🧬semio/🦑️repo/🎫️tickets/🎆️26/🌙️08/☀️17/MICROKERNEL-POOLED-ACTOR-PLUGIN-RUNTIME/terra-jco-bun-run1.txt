@@ -1,0 +1,30 @@
+[harness] S1: PASS — probe.poll(21) returned a Promise resolving to 42 in 3.52ms (expected Promise resolving to 42)
+[host-shim] slowEcho(50, 777) START t=57.32
+46 |     }
+47 |   }
+48 |   let er;
+49 |   if (args.length > 0)
+50 |     er = args[0];
+51 |     throw er;
+                 ^
+error: process.binding("tcp_wrap") is not implemented in Bun. If that breaks something, please file an issue and include a reproducible code sample.
+      at emitError (node:events:51:13)
+      at #onError (node:worker_threads:217:14)
+[host-shim] slowEcho(50, 777) DONE  t=107.68 (elapsed=50.36ms)
+[harness] S2: PASS — awaitEcho(50,777) took 75.85ms, result=777, concurrent setInterval(5ms) fired 13 times while it was pending (>=3 required to prove the loop wasn't blocked)
+[host-shim] slowEcho(80, 3732587757) START t=132.25
+[host-shim] slowEcho(80, 3732587757) DONE  t=212.87 (elapsed=80.62ms)
+[harness] S3: PASS — spawnDetached(80) export Promise resolved at t=1.67ms with value 1; see host-shim slowEcho DONE log timestamp above for when the detached background import actually completed (should be AFTER 1.67ms, close to 80ms)
+[host-shim] fetchBody() called, handing back 5-chunk async generator
+[host-shim] fetchBody stream yielding chunk 0x10
+[host-shim] fetchBody stream yielding chunk 0x20
+[host-shim] fetchBody stream yielding chunk 0x30
+[host-shim] fetchBody stream yielding chunk 0x40
+[host-shim] fetchBody stream yielding chunk 0x50
+[harness] S4: PASS — readBody() returned 5 (expected 5, one per host-shim fetchBody chunk — see the 5 "yielding chunk" host-shim log lines above, each logged as the guest polled the stream one item at a time)
+[harness] ==== VERDICTS ====
+[harness] S1: PASS — probe.poll(21) returned a Promise resolving to 42 in 3.52ms (expected Promise resolving to 42)
+[harness] S2: PASS — awaitEcho(50,777) took 75.85ms, result=777, concurrent setInterval(5ms) fired 13 times while it was pending (>=3 required to prove the loop wasn't blocked)
+[harness] S3: PASS — spawnDetached(80) export Promise resolved at t=1.67ms with value 1; see host-shim slowEcho DONE log timestamp above for when the detached background import actually completed (should be AFTER 1.67ms, close to 80ms)
+[harness] S4: PASS — readBody() returned 5 (expected 5, one per host-shim fetchBody chunk — see the 5 "yielding chunk" host-shim log lines above, each logged as the guest polled the stream one item at a time)
+[harness] overall: ALL PASS

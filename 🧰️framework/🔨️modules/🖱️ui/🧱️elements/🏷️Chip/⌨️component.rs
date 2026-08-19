@@ -8,7 +8,7 @@ use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::ChipState;
 
 /// 🧊️ Paints the terminal capability fallback as opaque cells because a TUI has no backdrop compositor.
-pub(crate) fn paint_chip(c: &ChipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_chip(c: &ChipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = if c.on { theme.role(Role::Accent) } else { theme.surface(Surface::Panel) };
     let fg = if c.on { theme.role(Role::AccentForeground) } else { theme.role(Role::MutedForeground) };
     buf.fill_rect(rect, Cell::blank(fg, bg));

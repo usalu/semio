@@ -1,0 +1,246 @@
+{
+  "crate": "semio-framework-replication",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 209,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 46
+    }
+  ],
+  "residual_errors": 209,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:80",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:234",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1420",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:44",
+      "code": "E0053",
+      "msg": "method `serialize_bool` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:468",
+      "code": "E0053",
+      "msg": "method `deserialize_any` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:48",
+      "code": "E0053",
+      "msg": "method `serialize_i8` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:300",
+      "code": "E0053",
+      "msg": "method `deserialize_any` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:52",
+      "code": "E0053",
+      "msg": "method `serialize_i16` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:329",
+      "code": "E0053",
+      "msg": "method `deserialize_option` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:56",
+      "code": "E0053",
+      "msg": "method `serialize_i32` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:337",
+      "code": "E0053",
+      "msg": "method `deserialize_enum` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:60",
+      "code": "E0053",
+      "msg": "method `serialize_i64` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:352",
+      "code": "E0053",
+      "msg": "method `deserialize_newtype_struct` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:64",
+      "code": "E0053",
+      "msg": "method `serialize_u8` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:68",
+      "code": "E0053",
+      "msg": "method `serialize_u16` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:72",
+      "code": "E0053",
+      "msg": "method `serialize_u32` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:76",
+      "code": "E0053",
+      "msg": "method `serialize_u64` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:80",
+      "code": "E0053",
+      "msg": "method `serialize_f32` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:84",
+      "code": "E0053",
+      "msg": "method `serialize_f64` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:88",
+      "code": "E0053",
+      "msg": "method `serialize_char` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:92",
+      "code": "E0053",
+      "msg": "method `serialize_str` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:96",
+      "code": "E0053",
+      "msg": "method `serialize_bytes` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:100",
+      "code": "E0053",
+      "msg": "method `serialize_none` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:104",
+      "code": "E0053",
+      "msg": "method `serialize_some` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:108",
+      "code": "E0053",
+      "msg": "method `serialize_unit` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:419",
+      "code": "E0053",
+      "msg": "method `deserialize_any` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:112",
+      "code": "E0053",
+      "msg": "method `serialize_unit_struct` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:116",
+      "code": "E0053",
+      "msg": "method `serialize_unit_variant` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:120",
+      "code": "E0053",
+      "msg": "method `serialize_newtype_struct` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:124",
+      "code": "E0053",
+      "msg": "method `serialize_newtype_variant` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:128",
+      "code": "E0053",
+      "msg": "method `serialize_seq` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:132",
+      "code": "E0053",
+      "msg": "method `serialize_tuple` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:136",
+      "code": "E0053",
+      "msg": "method `serialize_tuple_struct` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:140",
+      "code": "E0053",
+      "msg": "method `serialize_tuple_variant` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:144",
+      "code": "E0053",
+      "msg": "method `serialize_map` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:148",
+      "code": "E0053",
+      "msg": "method `serialize_struct` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:152",
+      "code": "E0053",
+      "msg": "method `serialize_struct_variant` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:312",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:293",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<MutationId>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1326",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1497",
+      "code": "E0382",
+      "msg": "use of moved value: `closure`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:46",
+      "code": "E0502",
+      "msg": "cannot borrow `buf` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:135",
+      "code": "E0271",
+      "msg": "expected `varint_width` to return `{integer}`, but it returns `impl Future<Output = u64>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:176",
+      "code": "E0271",
+      "msg": "expected `varint_width` to return `{integer}`, but it returns `impl Future<Output = u64>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:423",
+      "code": "E0502",
+      "msg": "cannot borrow `self.sink` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:404",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

@@ -49,6 +49,8 @@ pub struct RetryPolicy {
     pub max_backoff: Duration,
 }
 
+// 🚫️async: E1 impl of the externally-declared `Default` trait; `default`'s signature is fixed
+// by `std::default::Default` and must stay sync — no `.await`-able work here regardless.
 impl Default for RetryPolicy {
     fn default() -> Self {
         Self { max_retries: 3, initial_backoff: Duration::from_millis(50), max_backoff: Duration::from_secs(2) }
@@ -71,12 +73,17 @@ struct SharedState {
 }
 
 impl SharedState {
+    // 🚫️async: no suspension point — construction only; kept sync so it can be called directly
+    // from `HttpPackSource::with_retry_policy` below, itself sync for the same reason that
+    // function is tagged.
     fn new() -> Self {
         Self { last_etag: Mutex::new(None), known_len: AtomicU64::new(LEN_UNKNOWN) }
     }
 
     /// @emoji 📏️ The best length known so far, or `0` if nothing has been observed yet — mirrors
     /// `AsyncPackSource::len`'s infallible-`u64` contract.
+    // 🚫️async: no suspension point — `AsyncPackSource::len` (see `⏳️async/🦀️component.rs`) is
+    // deliberately sync by contract, so every path reaching it must stay sync too.
     fn len(&self) -> u64 {
         match self.known_len.load(Ordering::SeqCst) {
             LEN_UNKNOWN => 0,
@@ -100,13 +107,16 @@ impl<T: RangeTransport> InnerSource<T> {
     /// @emoji 🔁️ True iff `error` represents a transient condition worth retrying (currently:
     /// any `PackError::Io`, which is how transport failures are surfaced across the trait
     /// boundary).
+    // 🚫️async: the only call site is the `match` guard in `fetch_with_retry` below
+    // (`Err(error) if Self::is_transient(&error) && ...`) — `.await` is not permitted inside a
+    // `match` guard, a hard syntactic restriction independent of this fn's own design.
     fn is_transient(error: &PackError) -> bool {
         matches!(error, PackError::Io(_))
     }
 
     /// @emoji ⏱️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
     /// `initial_backoff` and capped at `max_backoff`.
-    fn backoff_for(&self, attempt: u32) -> Duration {
+    async fn backoff_for(&self, attempt: u32) -> Duration {
         let scale = 1u64.checked_shl(attempt).unwrap_or(u64::MAX);
         let millis = self.retry_policy.initial_backoff.as_millis() as u64;
         let delay = millis.saturating_mul(scale);
@@ -132,7 +142,7 @@ impl<T: RangeTransport> InnerSource<T> {
                     return Ok(response);
                 }
                 Err(error) if Self::is_transient(&error) && attempt < self.retry_policy.max_retries => {
-                    let delay = self.backoff_for(attempt);
+                    let delay = self.backoff_for(attempt).await;
                     if delay > Duration::ZERO {
                         sleep(delay).await;
                     }
@@ -144,30 +154,58 @@ impl<T: RangeTransport> InnerSource<T> {
     }
 }
 
-/// @emoji 💤️ A tiny runtime-neutral async sleep (no `tokio` dependency): spin-parks the current
-/// task with a short thread sleep between polls, mirroring `pack_async`'s own cancellation
-/// watcher pattern.
+/// @emoji 💤️ A tiny runtime-neutral async sleep (no `tokio` dependency): the *first* `poll`
+/// spawns a one-shot timer thread that owns the actual waiting and calls `Waker::wake` once
+/// `duration` elapses; `poll` itself never blocks and is called at most twice (once to arm the
+/// timer, once — from the timer thread's wake — to observe it fired).
 async fn sleep(duration: Duration) {
+    struct SleepState {
+        woken: bool,
+        waker: Option<std::task::Waker>,
+        spawned: bool,
+    }
     struct Sleep {
         deadline: std::time::Instant,
+        state: Arc<Mutex<SleepState>>,
     }
     impl std::future::Future for Sleep {
         type Output = ();
+
+        // 🚫️async: E1 impl of the externally-declared `Future` trait; `poll`'s signature is
+        // fixed by `std::future::Future` and must stay sync. The wait itself happens on the
+        // dedicated timer thread spawned (once) below, never inside this fn.
         fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
-            if std::time::Instant::now() >= self.deadline {
-                std::task::Poll::Ready(())
-            } else {
-                cx.waker().wake_by_ref();
-                std::thread::sleep(Duration::from_micros(200));
-                std::task::Poll::Pending
+            let mut state = self.state.lock().unwrap();
+            if state.woken || std::time::Instant::now() >= self.deadline {
+                return std::task::Poll::Ready(());
             }
+            state.waker = Some(cx.waker().clone());
+            if !state.spawned {
+                state.spawned = true;
+                let deadline = self.deadline;
+                let state_handle = self.state.clone();
+                std::thread::spawn(move || {
+                    let now = std::time::Instant::now();
+                    if deadline > now {
+                        std::thread::sleep(deadline - now);
+                    }
+                    let mut state = state_handle.lock().unwrap();
+                    state.woken = true;
+                    if let Some(waker) = state.waker.take() {
+                        waker.wake();
+                    }
+                });
+            }
+            std::task::Poll::Pending
         }
     }
-    Sleep { deadline: std::time::Instant::now() + duration }.await;
+    Sleep { deadline: std::time::Instant::now() + duration, state: Arc::new(Mutex::new(SleepState { woken: false, waker: None, spawned: false })) }.await;
 }
 
 #[async_trait::async_trait]
 impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
+    // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
+    // `⏳️async/🦀️component.rs`); this impl just mirrors that.
     fn len(&self) -> u64 {
         self.shared.len()
     }
@@ -194,11 +232,14 @@ pub struct HttpPackSource<T: RangeTransport> {
 impl<T: RangeTransport> HttpPackSource<T> {
     /// @emoji 🆕️ A source fetching `url` through `transport`, with default retry policy and no
     /// known length or etag yet.
+    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
+    // call sites (`let source = HttpPackSource::new(...);`, unawaited) keep compiling.
     pub fn new(url: String, transport: T) -> Self {
         Self::with_retry_policy(url, transport, RetryPolicy::default())
     }
 
     /// @emoji 🆕️ As `new`, but with an explicit `RetryPolicy`.
+    // 🚫️async: no suspension point — same constructor reasoning as `new` above.
     pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy) -> Self {
         let shared = Arc::new(SharedState::new());
         let inner = InnerSource { url, transport, retry_policy, shared: shared.clone() };
@@ -208,6 +249,8 @@ impl<T: RangeTransport> HttpPackSource<T> {
 
 #[async_trait::async_trait]
 impl<T: RangeTransport> AsyncPackSource for HttpPackSource<T> {
+    // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
+    // `⏳️async/🦀️component.rs`); this impl just mirrors that.
     fn len(&self) -> u64 {
         self.shared.len()
     }
@@ -238,11 +281,16 @@ mod ureq_transport {
 
     impl UreqRangeTransport {
         /// @emoji 🆕️ A transport using `ureq`'s default agent configuration.
+        // 🚫️async: no suspension point — `ureq::Agent::new()` itself is a plain sync
+        // constructor; also called from `Default::default` below, an E1 impl of the
+        // externally-declared `Default` trait whose fixed sync signature cannot `.await`.
         pub fn new() -> Self {
             Self { agent: ureq::Agent::new() }
         }
     }
 
+    // 🚫️async: E1 impl of the externally-declared `Default` trait; `default`'s signature is
+    // fixed by `std::default::Default` and must stay sync.
     impl Default for UreqRangeTransport {
         fn default() -> Self {
             Self::new()
@@ -279,6 +327,10 @@ pub use ureq_transport::UreqRangeTransport;
 //#endregion 🔖️Ureq
 
 //#region 🧪️Tests
+// 🚫️async: every `futures_lite::future::block_on(...)` in this module drives one `#[test] fn` —
+// each is its own synchronous test-harness entry point, the same role `fn main` plays for a
+// binary (R4 item 1), so none are converted to `.await` here. See
+// `📓️terra-pack-waker-report.md` for the full site-by-site census.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -328,6 +380,36 @@ mod tests {
             let range_satisfied = end - start == request.range.len as usize;
             Ok(RangeResponse { bytes, etag: Some(self.etag.to_string()), total_len: Some(self.data.len() as u64), range_satisfied })
         }
+    }
+
+    /// 🧪️ Regression test for the poll-sleep defect this packet fixes: `sleep`'s inner `Sleep`
+    /// future must resolve after its duration elapses without ever blocking inside `poll` — the
+    /// actual wait now happens on a dedicated timer thread that calls `Waker::wake`. Proven by
+    /// counting polls: a busy-poll implementation (the original 200µs-sleep version) would rack
+    /// up roughly `15ms / 200µs` ≈ 75 polls; a correct implementation polls a small constant
+    /// number of times (arm the timer, then observe it fired) regardless of the duration.
+    #[test]
+    fn sleep_resolves_via_timer_thread_without_busy_polling() {
+        // Boxed + pinned rather than generic-over-`F: Unpin`: an `async fn`'s generated future
+        // has no guaranteed `Unpin` impl, so this sidesteps that entirely.
+        struct CountingPoll {
+            inner: std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>,
+            polls: Arc<AtomicU32>,
+        }
+        impl std::future::Future for CountingPoll {
+            type Output = ();
+            fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
+                self.polls.fetch_add(1, Ordering::SeqCst);
+                self.inner.as_mut().poll(cx)
+            }
+        }
+
+        let polls = Arc::new(AtomicU32::new(0));
+        let counted = CountingPoll { inner: Box::pin(sleep(Duration::from_millis(15))), polls: polls.clone() };
+        futures_lite::future::block_on(counted);
+
+        let observed = polls.load(Ordering::SeqCst);
+        assert!(observed <= 4, "sleep's Future::poll must be driven by Waker::wake from its timer thread, not busy-spinning; observed {observed} polls waiting out 15ms");
     }
 
     #[test]

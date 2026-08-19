@@ -19,20 +19,20 @@ pub struct Bar3 {
 }
 
 impl Element for Bar3 {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         &self.id
     }
 
-    fn node_ids(&self) -> Vec<String> {
+    async fn node_ids(&self) -> Vec<String> {
         vec![self.node_a.clone(), self.node_b.clone()]
     }
 
-    fn dofs_per_node(&self) -> &[Dof] {
+    async fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
         &DOFS
     }
 
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let c = vec3d_normalize(d);
@@ -50,7 +50,7 @@ impl Element for Bar3 {
         ke
     }
 
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+    async fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let c = vec3d_normalize(d);
@@ -62,7 +62,7 @@ impl Element for Bar3 {
 
     /// 🏋️ Isotropic mass — same pattern as `Bar2` but with 3x3 identity blocks, no preferred direction.
     /// `m = ρAL/6`, block `(node_i, node_j) = (2m if i==j else m) * I3`.
-    fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let m = self.density * self.a * l / 6.0;
@@ -78,7 +78,7 @@ impl Element for Bar3 {
 
     /// 🌬️ Consistent end-load `wL/2` at each node from a global member UDL `(wx,wy,wz)` — same
     /// exact-split reasoning as `elements2d::Bar2::equivalent_nodal_loads`.
-    fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
+    async fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let half = l / 2.0;
@@ -87,7 +87,7 @@ impl Element for Bar3 {
 
     /// 🌀️ 3D truss geometric stiffness under axial force `n` (tension-positive, `recover`'s convention):
     /// `N/L·(I₃ − ccᵀ)` per 3x3 node block — the 3D analogue of `elements2d::Bar2::geometric_stiffness`.
-    fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let c = vec3d_normalize(d);
@@ -114,7 +114,7 @@ impl Element for Bar3 {
 // #region 🔖️Frame3
 /// 🧮️ Places a 4x4 bending block into `k` at the given DOF indices (used for both the y- and z-bending
 /// planes, which are decoupled from each other and from axial/torsion).
-fn set_bend_block(k: &mut MatD, idx: [usize; 4], block: [[f64; 4]; 4]) {
+async fn set_bend_block(k: &mut MatD, idx: [usize; 4], block: [[f64; 4]; 4]) {
     for (bi, &gi) in idx.iter().enumerate() {
         for (bj, &gj) in idx.iter().enumerate() {
             k.set(gi, gj, block[bi][bj]);
@@ -143,7 +143,7 @@ pub struct Frame3 {
 impl Frame3 {
     /// 🧭️ Builds the member length, local 12x12 stiffness, and the 12x12 global<->local block-diagonal
     /// rotation `T` (four `R^T` 3x3 blocks) shared by `stiffness_global` and `recover`.
-    fn local_system(&self, ctx: &ElementContext) -> (f64, MatD, MatD) {
+    async fn local_system(&self, ctx: &ElementContext) -> (f64, MatD, MatD) {
         let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
         let l = vec3d_length(d);
         let cx = vec3d_normalize(d);
@@ -166,7 +166,7 @@ impl Frame3 {
     }
 
     /// 🧮️ Decoupled local 12x12 stiffness: axial, torsion, and biaxial (y/z) Euler-Bernoulli bending.
-    fn local_stiffness(&self, l: f64) -> MatD {
+    async fn local_stiffness(&self, l: f64) -> MatD {
         let mut k = MatD::zeros(12, 12);
         let l2 = l * l;
         let ax = self.e * self.a / l;
@@ -198,7 +198,7 @@ impl Frame3 {
     /// at `(3,9)` — a simplified polar-inertia proxy (not rigorously exact rotary inertia, but the
     /// accepted simplification at this scope — see `mass`'s doc), and both bending planes ([1,5,7,11]
     /// z-plane, [2,4,8,10] y-plane) using the same 156/22L/54/-13L consistent-beam-mass pattern.
-    fn local_mass(&self, l: f64) -> MatD {
+    async fn local_mass(&self, l: f64) -> MatD {
         let mut m = MatD::zeros(12, 12);
         let axial = self.density * self.a * l / 6.0;
         m.set(0, 0, 2.0 * axial);
@@ -231,7 +231,7 @@ impl Frame3 {
     /// 🌀️ Local 12x12 geometric stiffness under axial force `n` (tension-positive, matches `recover`'s
     /// convention), applied independently to both bending planes via the same `Kg_bend` beam-column
     /// formula `beam_local_geometric_stiffness` in `elements2d` uses.
-    fn local_geometric_stiffness(&self, l: f64, n: f64) -> MatD {
+    async fn local_geometric_stiffness(&self, l: f64, n: f64) -> MatD {
         let mut kg = MatD::zeros(12, 12);
         let l2 = l * l;
         let coeff = n / l;
@@ -252,7 +252,7 @@ impl Frame3 {
 
 /// 🌬️ Rotates a GLOBAL member UDL `(wx,wy,wz)` into LOCAL `(wx_l,wy_l,wz_l)` via the same 12x12
 /// global->local block-diagonal rotation `T` used for stiffness/displacement (`local_system`'s `t`).
-fn local_udl_components(t: &MatD, udl: &MemberUdl) -> (f64, f64, f64) {
+async fn local_udl_components(t: &MatD, udl: &MemberUdl) -> (f64, f64, f64) {
     let global_w = VecD::from_vec(vec![udl.wx, udl.wy, udl.wz, 0.0, 0.0, 0.0, udl.wx, udl.wy, udl.wz, 0.0, 0.0, 0.0]);
     let local_w = t.mul_vec(&global_w);
     (local_w.get(0), local_w.get(1), local_w.get(2))
@@ -264,7 +264,7 @@ fn local_udl_components(t: &MatD, udl: &MemberUdl) -> (f64, f64, f64) {
 /// indices 2/4/8/10, using `iy`) carries the same off-diagonal sign flip `local_stiffness`'s `by`
 /// block has relative to its `bz` block — hand-verified against a cantilever-under-UDL benchmark
 /// (base moment `wL²/2`, base shear `wL`, zero at the tip) in `solid_tests`.
-fn local_udl(l: f64, t: &MatD, udl: &MemberUdl) -> VecD {
+async fn local_udl(l: f64, t: &MatD, udl: &MemberUdl) -> VecD {
     let (wx_l, wy_l, wz_l) = local_udl_components(t, udl);
     let l2 = l * l;
     let mut f = VecD::zeros(12);
@@ -282,31 +282,31 @@ fn local_udl(l: f64, t: &MatD, udl: &MemberUdl) -> VecD {
 }
 
 impl Element for Frame3 {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         &self.id
     }
 
-    fn node_ids(&self) -> Vec<String> {
+    async fn node_ids(&self) -> Vec<String> {
         vec![self.node_a.clone(), self.node_b.clone()]
     }
 
-    fn dofs_per_node(&self) -> &[Dof] {
+    async fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 6] = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz];
         &DOFS
     }
 
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
         let (_l, k_local, t) = self.local_system(ctx);
         t.transpose().matmul(&k_local).matmul(&t)
     }
 
-    fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
+    async fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
         let (l, _k_local, t) = self.local_system(ctx);
         let f_local = local_udl(l, &t, udl);
         Some(t.transpose().mul_vec(&f_local))
     }
 
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
+    async fn recover(&self, ctx: &ElementContext, u_elem: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
         let (l, k_local, t) = self.local_system(ctx);
         let u_loc = t.mul_vec(u_elem);
         let f_udl_local = udl.map(|u| local_udl(l, &t, u)).unwrap_or_else(|| VecD::zeros(12));
@@ -324,7 +324,7 @@ impl Element for Frame3 {
         ElementResult::Beam { stations }
     }
 
-    fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
         let (l, _k_local, t) = self.local_system(ctx);
         let m_local = self.local_mass(l);
         Some(t.transpose().matmul(&m_local).matmul(&t))
@@ -332,7 +332,7 @@ impl Element for Frame3 {
 
     /// 🌀️ Buckling geometric stiffness from the member's own axial force under `u_element` — same
     /// sign convention as `recover`'s `n` (tension-positive): `n = -k_local.mul_vec(u_loc).get(0)`.
-    fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
         let (l, k_local, t) = self.local_system(ctx);
         let u_loc = t.mul_vec(u_element);
         let f = k_local.mul_vec(&u_loc);
@@ -345,7 +345,7 @@ impl Element for Frame3 {
 
 // #region 🔖️Solid
 /// 🧮️ Isotropic 3D solid-mechanics constitutive matrix (6x6), strain order `[εxx,εyy,εzz,γxy,γyz,γxz]`.
-fn d_matrix_solid(e: f64, nu: f64) -> MatD {
+async fn d_matrix_solid(e: f64, nu: f64) -> MatD {
     let s = e / ((1.0 + nu) * (1.0 - 2.0 * nu));
     let mut d = MatD::zeros(6, 6);
     d.set(0, 0, s * (1.0 - nu));
@@ -366,7 +366,7 @@ fn d_matrix_solid(e: f64, nu: f64) -> MatD {
 
 /// 🧮️ Standard solid-mechanics B-matrix (6x3n) from per-node physical shape-function gradients —
 /// shared by `Tet4` (constant gradients, one row of blocks) and `Hex8` (per-Gauss-point gradients).
-fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
+async fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
     let mut b = MatD::zeros(6, grads.len() * 3);
     for (i, g) in grads.iter().enumerate() {
         let (bx, by, bz) = (g[0], g[1], g[2]);
@@ -385,7 +385,7 @@ fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
 }
 
 /// 🧮️ Von Mises equivalent stress from the full 3D stress state.
-fn von_mises_solid(sxx: f64, syy: f64, szz: f64, sxy: f64, syz: f64, sxz: f64) -> f64 {
+async fn von_mises_solid(sxx: f64, syy: f64, szz: f64, sxy: f64, syz: f64, sxz: f64) -> f64 {
     (0.5 * ((sxx - syy).powi(2) + (syy - szz).powi(2) + (szz - sxx).powi(2) + 6.0 * (sxy * sxy + syz * syz + sxz * sxz))).sqrt()
 }
 // #endregion 🔖️Solid
@@ -404,7 +404,7 @@ pub struct Tet4 {
 
 impl Tet4 {
     /// 🧭️ Signed volume via the scalar triple product of edge vectors from node 0.
-    fn volume(ctx: &ElementContext) -> f64 {
+    async fn volume(ctx: &ElementContext) -> f64 {
         let p = &ctx.positions;
         let e1 = vec3d_sub(p[1], p[0]);
         let e2 = vec3d_sub(p[2], p[0]);
@@ -416,7 +416,7 @@ impl Tet4 {
     /// 🧭️ Constant per-node shape-function gradients `[∂Li/∂x, ∂Li/∂y, ∂Li/∂z]`. `Li(x,y,z) = a+bx+cy+dz`
     /// with `Li(node_j) = δij` for all j — solving `R·[a,b,c,d]ᵀ = e_i` per node (`R`'s row j is
     /// `[1,xj,yj,zj]`) gives node i's coefficients directly, gradient in components 1..4.
-    fn gradients(ctx: &ElementContext) -> [[f64; 3]; 4] {
+    async fn gradients(ctx: &ElementContext) -> [[f64; 3]; 4] {
         let p = &ctx.positions;
         let mut r = MatD::zeros(4, 4);
         for (j, pj) in p.iter().enumerate() {
@@ -437,20 +437,20 @@ impl Tet4 {
 }
 
 impl Element for Tet4 {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         &self.id
     }
 
-    fn node_ids(&self) -> Vec<String> {
+    async fn node_ids(&self) -> Vec<String> {
         self.nodes.to_vec()
     }
 
-    fn dofs_per_node(&self) -> &[Dof] {
+    async fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
         &DOFS
     }
 
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
         let v = Self::volume(ctx);
         let grads = Self::gradients(ctx);
         let b = solid_b_matrix(&grads);
@@ -460,7 +460,7 @@ impl Element for Tet4 {
         ke
     }
 
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+    async fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
         let grads = Self::gradients(ctx);
         let b = solid_b_matrix(&grads);
         let d = d_matrix_solid(self.e, self.nu);
@@ -474,7 +474,7 @@ impl Element for Tet4 {
     /// 🏋️ Consistent tet mass `ρV/20 * (2 on the diagonal, 1 off-diagonal)` per direction — the
     /// standard closed-form linear-tetrahedron consistent mass (Cook, Malkus, Plesha & Witt), exact
     /// since `Ni=Li` are the tet's own barycentric coordinates.
-    fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
         let v = Self::volume(ctx);
         let mut m = MatD::zeros(12, 12);
         for i in 0..4 {
@@ -491,7 +491,7 @@ impl Element for Tet4 {
     /// 🌀️ Initial-stress geometric stiffness `Kg = V·Gᵀ·(σ̂⊗I₃)·G` from the element's own (constant)
     /// stress state under `u_elem` — the 3D analogue of `elements2d::plane_geometric_stiffness`,
     /// `σ̂` the full 3x3 stress tensor built from the recovered `[sxx,syy,szz,sxy,syz,sxz]`.
-    fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
         let v = Self::volume(ctx);
         let grads = Self::gradients(ctx);
         let b = solid_b_matrix(&grads);
@@ -522,7 +522,7 @@ impl Element for Tet4 {
 const HEX8_CORNERS: [[f64; 3]; 8] = [[-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 1.0]];
 
 /// 🧭️ 2x2x2 Gauss points (`±1/√3`, weight 1 each — 8 points, tensor product of the 1D 2-point rule).
-fn hex8_gauss_points() -> [([f64; 3], f64); 8] {
+async fn hex8_gauss_points() -> [([f64; 3], f64); 8] {
     let g = 1.0 / 3.0_f64.sqrt();
     let mut pts = [([0.0; 3], 1.0); 8];
     let mut idx = 0;
@@ -539,7 +539,7 @@ fn hex8_gauss_points() -> [([f64; 3], f64); 8] {
 
 /// 🧭️ Per-node trilinear shape values `Ni = 0.125*(1+ξξi)(1+ηηi)(1+ζζi)` at one point — shared by
 /// `mass`'s `Nᵀ·N` (the stiffness/recover Gauss loop only needed `hex8_param_derivs`, not values).
-fn hex8_shape(xi: f64, eta: f64, zeta: f64) -> [f64; 8] {
+async fn hex8_shape(xi: f64, eta: f64, zeta: f64) -> [f64; 8] {
     let mut n = [0.0; 8];
     for (i, c) in HEX8_CORNERS.iter().enumerate() {
         n[i] = 0.125 * (1.0 + xi * c[0]) * (1.0 + eta * c[1]) * (1.0 + zeta * c[2]);
@@ -548,7 +548,7 @@ fn hex8_shape(xi: f64, eta: f64, zeta: f64) -> [f64; 8] {
 }
 
 /// 🧭️ Per-node parametric shape-function derivatives `[∂Ni/∂ξ, ∂Ni/∂η, ∂Ni/∂ζ]` at one Gauss point.
-fn hex8_param_derivs(xi: f64, eta: f64, zeta: f64) -> [[f64; 3]; 8] {
+async fn hex8_param_derivs(xi: f64, eta: f64, zeta: f64) -> [[f64; 3]; 8] {
     let mut out = [[0.0; 3]; 8];
     for (i, c) in HEX8_CORNERS.iter().enumerate() {
         let (xi_i, eta_i, zeta_i) = (c[0], c[1], c[2]);
@@ -558,7 +558,7 @@ fn hex8_param_derivs(xi: f64, eta: f64, zeta: f64) -> [[f64; 3]; 8] {
 }
 
 /// 🧭️ 3x3 determinant via cofactor expansion (Jacobians are always 3x3, no need for general-`n` logic).
-fn mat3_det(j: &MatD) -> f64 {
+async fn mat3_det(j: &MatD) -> f64 {
     j.get(0, 0) * (j.get(1, 1) * j.get(2, 2) - j.get(1, 2) * j.get(2, 1)) - j.get(0, 1) * (j.get(1, 0) * j.get(2, 2) - j.get(1, 2) * j.get(2, 0)) + j.get(0, 2) * (j.get(1, 0) * j.get(2, 1) - j.get(1, 1) * j.get(2, 0))
 }
 
@@ -575,7 +575,7 @@ impl Hex8 {
     /// 🧭️ Jacobian `J[a][b] = Σi ∂Ni/∂param_a · coord_i[b]`, its determinant, and the physical
     /// shape-function gradients `∂Ni/∂[x,y,z] = J⁻¹ · ∂Ni/∂[ξ,η,ζ]` (solved via `lu_solve`, one
     /// right-hand side per node, rather than a hand-derived closed-form 3x3 inverse).
-    fn gradients_at(ctx: &ElementContext, xi: f64, eta: f64, zeta: f64) -> (f64, [[f64; 3]; 8]) {
+    async fn gradients_at(ctx: &ElementContext, xi: f64, eta: f64, zeta: f64) -> (f64, [[f64; 3]; 8]) {
         let param = hex8_param_derivs(xi, eta, zeta);
         let mut j = MatD::zeros(3, 3);
         for (i, pd) in param.iter().enumerate() {
@@ -597,20 +597,20 @@ impl Hex8 {
 }
 
 impl Element for Hex8 {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         &self.id
     }
 
-    fn node_ids(&self) -> Vec<String> {
+    async fn node_ids(&self) -> Vec<String> {
         self.nodes.to_vec()
     }
 
-    fn dofs_per_node(&self) -> &[Dof] {
+    async fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
         &DOFS
     }
 
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
         let d = d_matrix_solid(self.e, self.nu);
         let mut ke = MatD::zeros(24, 24);
         for (p, weight) in hex8_gauss_points() {
@@ -621,7 +621,7 @@ impl Element for Hex8 {
         ke
     }
 
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+    async fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
         let d = d_matrix_solid(self.e, self.nu);
         let gauss = hex8_gauss_points()
             .iter()
@@ -640,7 +640,7 @@ impl Element for Hex8 {
 
     /// 🏋️ Consistent trilinear mass `ρ∫Nᵀ·N·dV` over the same 2x2x2 Gauss rule as stiffness — exact,
     /// since `Ni·Nj` (biquadratic-per-axis) is within that rule's precision.
-    fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
         let mut m = MatD::zeros(24, 24);
         for (p, weight) in hex8_gauss_points() {
             let (det_j, _) = Self::gradients_at(ctx, p[0], p[1], p[2]);
@@ -660,7 +660,7 @@ impl Element for Hex8 {
 
     /// 🌀️ Initial-stress geometric stiffness, same `Gᵀ(σ̂⊗I₃)G` pattern as `Tet4::geometric_stiffness`
     /// but Gauss-integrated over the element's own 2x2x2 rule (stress varies point-to-point).
-    fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
         let d = d_matrix_solid(self.e, self.nu);
         let mut kg = MatD::zeros(24, 24);
         for (p, weight) in hex8_gauss_points() {
@@ -692,7 +692,7 @@ impl Element for Hex8 {
 /// points (no roll angle or reference-vector edge case needed — 3 points unambiguously define a
 /// plane, unlike `Frame3::local_system`'s 1D-member case): local x along edge `p0->p1`, local z the
 /// facet normal (`cross(p1-p0, p2-p0)`, right-hand rule), local y completing the right-handed frame.
-fn shell_local_axes(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> Mat3d {
+async fn shell_local_axes(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> Mat3d {
     let d1 = vec3d_sub(p1, p0);
     let d2 = vec3d_sub(p2, p0);
     let local_x = vec3d_normalize(d1);
@@ -704,7 +704,7 @@ fn shell_local_axes(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> Mat3d {
 /// 🧭️ 18x18 global<->local block-diagonal rotation `T` — six `R^T` 3x3 blocks (one per node's
 /// translation triple `[Tx,Ty,Tz]`, one per node's rotation triple `[Rx,Ry,Rz]`), the same pattern
 /// `Frame3::local_system` uses for its 12x12 `T`, extended to 3 nodes x 2 triples.
-fn shell_transform(r: &Mat3d) -> MatD {
+async fn shell_transform(r: &Mat3d) -> MatD {
     let rt = r.transpose();
     let mut t = MatD::zeros(18, 18);
     for offset in [0usize, 3, 6, 9, 12, 15] {
@@ -740,7 +740,7 @@ impl ShellFacet3 {
     /// 🧭️ Local in-plane 2D triangle coordinates (`p0_local=(0,0)`, `p1_local` on the local x-axis,
     /// `p2_local` completing the triangle) plus the local-axes rotation `Mat3d` shared by
     /// `local_stiffness`'s membrane/bending quadrature and `shell_transform`'s `T`.
-    fn local_coords(ctx: &ElementContext) -> ([[f64; 2]; 3], Mat3d) {
+    async fn local_coords(ctx: &ElementContext) -> ([[f64; 2]; 3], Mat3d) {
         let (p0, p1, p2) = (ctx.positions[0], ctx.positions[1], ctx.positions[2]);
         let r = shell_local_axes(p0, p1, p2);
         let (local_x, local_y) = (r.cols[0], r.cols[1]);
@@ -754,7 +754,7 @@ impl ShellFacet3 {
     /// 🧮️ Local 18x18 stiffness, dof order `[Tx1,Ty1,Tz1,Rx1,Ry1,Rz1, ... x3]`: 6x6 CST membrane
     /// block at each node's `(Tx,Ty)` indices, 9x9 DKT bending block at each node's `(Tz,Rx,Ry)`
     /// indices, drilling diagonal at each node's `Rz` index — all cross-terms zero by construction.
-    fn local_stiffness(&self, coords: &[[f64; 2]; 3]) -> MatD {
+    async fn local_stiffness(&self, coords: &[[f64; 2]; 3]) -> MatD {
         let mut k = MatD::zeros(18, 18);
 
         let d_mem = d_matrix_plane_stress(self.e, self.nu);
@@ -797,27 +797,27 @@ impl ShellFacet3 {
 }
 
 impl Element for ShellFacet3 {
-    fn id(&self) -> &str {
+    async fn id(&self) -> &str {
         &self.id
     }
 
-    fn node_ids(&self) -> Vec<String> {
+    async fn node_ids(&self) -> Vec<String> {
         self.nodes.to_vec()
     }
 
-    fn dofs_per_node(&self) -> &[Dof] {
+    async fn dofs_per_node(&self) -> &[Dof] {
         const DOFS: [Dof; 6] = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz];
         &DOFS
     }
 
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+    async fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
         let (coords, r) = Self::local_coords(ctx);
         let t = shell_transform(&r);
         let k_local = self.local_stiffness(&coords);
         t.transpose().matmul(&k_local).matmul(&t)
     }
 
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+    async fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
         let (coords, r) = Self::local_coords(ctx);
         let t = shell_transform(&r);
         let u_loc = t.mul_vec(u_elem);
@@ -856,7 +856,7 @@ impl Element for ShellFacet3 {
     /// 🏋️ Lumped translational mass `ρtA/3` on each node's `[Tx,Ty,Tz]` — diagonal and isotropic
     /// (equal in all 3 local translation directions), so it needs no local->global rotation, unlike
     /// `local_stiffness`. Zero rotational inertia, same lumping rationale as `PlateDkt::mass`.
-    fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+    async fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
         let (coords, _) = Self::local_coords(ctx);
         let (_, det_j, _) = jacobian_2d(&coords, &shape_tri3(0.0, 0.0).1);
         let area = 0.5 * det_j;
@@ -875,7 +875,7 @@ impl Element for ShellFacet3 {
     /// simplification — the DKT bending field's rotation-driven curvature correction is neglected
     /// for this coupling, following common practice for flat shell buckling), local `Tz` dof per
     /// node using the SAME constant gradient `local_stiffness`'s membrane block computes.
-    fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+    async fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
         let (coords, r) = Self::local_coords(ctx);
         let t = shell_transform(&r);
         let u_loc = t.mul_vec(u_element);
@@ -914,7 +914,7 @@ mod tests {
 
     /// 🪵️ Headless axial elongation check along an arbitrary (non-axis-aligned) 3D direction.
     #[test]
-    fn bar3_axial_matches_hand_calc_on_skew_member() {
+    async fn bar3_axial_matches_hand_calc_on_skew_member() {
         // A free 3D joint needs ≥3 non-coplanar bars to be determinate (see `truss_fixture` below),
         // so `b` gets two extra fixed-node bars (to `d` and `c`) besides the member under test (`e1`).
         // Loading exactly along e1's own axis (0.6,0.8,0) makes e1 carry the full load by equilibrium
@@ -957,7 +957,7 @@ mod tests {
 
     /// 🌀️ Rigid-body test: a pure 3D translation must produce zero internal force on a `Frame3`.
     #[test]
-    fn frame3_rigid_translation_gives_zero_force() {
+    async fn frame3_rigid_translation_gives_zero_force() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
         let ke = frame.stiffness_global(&ctx);
@@ -974,7 +974,7 @@ mod tests {
     /// with global Y/Z exactly — so a UDL in global `wz` lands directly in the local z-bending plane
     /// that `recover` already reports via `v1 = f.get(2)`/`m1 = f.get(4)`.
     #[test]
-    fn frame3_udl_cantilever_matches_hand_calc() {
+    async fn frame3_udl_cantilever_matches_hand_calc() {
         let (e, g, a, iy, iz, j) = (200e9, 80e9, 0.01, 8e-5, 8e-5, 1e-6);
         let l = 4.0;
         let w = 1000.0;
@@ -1003,7 +1003,7 @@ mod tests {
 
     /// 🏋️ `Bar3::mass` matches the hand-derived isotropic `m = ρAL/6` block form (3x3 identity blocks).
     #[test]
-    fn bar3_mass_matches_hand_calc() {
+    async fn bar3_mass_matches_hand_calc() {
         let (density, a, l) = (7850.0, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 200e9, a, density };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
@@ -1020,7 +1020,7 @@ mod tests {
     /// ⚖️ Sum of ALL entries of `Bar3::mass` (a pure translational, no-rotation element) equals the
     /// total member mass `ρAL` — same partition-of-unity identity as `Bar2`'s.
     #[test]
-    fn bar3_mass_total_equals_rho_a_l() {
+    async fn bar3_mass_total_equals_rho_a_l() {
         let (density, a, l) = (7850.0, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 200e9, a, density };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
@@ -1038,7 +1038,7 @@ mod tests {
     /// (`ρAL` axial, `ρJL` torsion) — checked on a member along global X with `roll: 0.0`, for which
     /// `local_system` aligns local axes with global ones exactly (rotation is identity).
     #[test]
-    fn frame3_mass_axial_and_torsion_blocks_sum_to_total() {
+    async fn frame3_mass_axial_and_torsion_blocks_sum_to_total() {
         let (e, g, a, iy, iz, j, density) = (200e9, 80e9, 0.01, 8e-5, 8e-5, 1e-6, 7850.0);
         let l = 4.0;
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, g, a, iy, iz, j, roll: 0.0, density };
@@ -1052,7 +1052,7 @@ mod tests {
 
     /// 🌀️ `Frame3` geometric stiffness must vanish under a pure rigid translation.
     #[test]
-    fn frame3_geometric_stiffness_rigid_translation_gives_zero_force() {
+    async fn frame3_geometric_stiffness_rigid_translation_gives_zero_force() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
         let mut u = VecD::zeros(12);
@@ -1067,7 +1067,7 @@ mod tests {
 
     /// 🌀️ `Frame3` geometric stiffness is symmetric.
     #[test]
-    fn frame3_geometric_stiffness_is_symmetric() {
+    async fn frame3_geometric_stiffness_is_symmetric() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
         let mut u = VecD::zeros(12);
@@ -1083,7 +1083,7 @@ mod tests {
     /// 🌬️ `Bar3::equivalent_nodal_loads` splits a global UDL `wL/2` exactly evenly at both nodes —
     /// the 3D analogue of `elements2d::bar2_equivalent_nodal_loads_matches_wl_over_2`.
     #[test]
-    fn bar3_equivalent_nodal_loads_matches_wl_over_2() {
+    async fn bar3_equivalent_nodal_loads_matches_wl_over_2() {
         let (e, a, l) = (200e9, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
@@ -1102,7 +1102,7 @@ mod tests {
     /// as `elements2d::bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric`)
     /// zero along the bar's own axis.
     #[test]
-    fn bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+    async fn bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, a) = (200e9, 0.001);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
@@ -1144,17 +1144,17 @@ mod solid_tests {
     }
 
     impl LinearField {
-        fn sample() -> Self {
+        async fn sample() -> Self {
             Self { ux: 0.0011, uy: 0.0007, uz: -0.0004, vx: -0.0006, vy: 0.0012, vz: 0.0003, wx: 0.0002, wy: -0.0005, wz: 0.0009 }
         }
 
-        fn displacement_at(&self, p: [f64; 3]) -> [f64; 3] {
+        async fn displacement_at(&self, p: [f64; 3]) -> [f64; 3] {
             [self.ux * p[0] + self.uy * p[1] + self.uz * p[2], self.vx * p[0] + self.vy * p[1] + self.vz * p[2], self.wx * p[0] + self.wy * p[1] + self.wz * p[2]]
         }
 
         /// 🧮️ Analytical `σ = Dε` for this field's (constant) strain, hand-expanded independently of
         /// `d_matrix_solid` as a cross-check of the whole B/D recovery pipeline.
-        fn expected_stress(&self, e: f64, nu: f64) -> SolidStress {
+        async fn expected_stress(&self, e: f64, nu: f64) -> SolidStress {
             let (exx, eyy, ezz) = (self.ux, self.vy, self.wz);
             let (gxy, gyz, gxz) = (self.uy + self.vx, self.vz + self.wy, self.uz + self.wx);
             let s = e / ((1.0 + nu) * (1.0 - 2.0 * nu));
@@ -1167,7 +1167,7 @@ mod solid_tests {
             SolidStress { sxx, syy, szz, sxy, syz, sxz, von_mises }
         }
 
-        fn nodal_vector(&self, positions: &[[f64; 3]]) -> VecD {
+        async fn nodal_vector(&self, positions: &[[f64; 3]]) -> VecD {
             let mut data = Vec::with_capacity(positions.len() * 3);
             for &p in positions {
                 data.extend_from_slice(&self.displacement_at(p));
@@ -1178,7 +1178,7 @@ mod solid_tests {
 
     /// 🔍️ Component-wise relative comparison (scaled by `max(|expected|, 1.0)` so a near-zero
     /// expected component doesn't demand an absurdly tight absolute match).
-    fn assert_stress_close(actual: &SolidStress, expected: &SolidStress, rel_tol: f64) {
+    async fn assert_stress_close(actual: &SolidStress, expected: &SolidStress, rel_tol: f64) {
         let check = |name: &str, a: f64, ex: f64| {
             let scale = ex.abs().max(1.0);
             assert!((a - ex).abs() / scale < rel_tol, "{name}: {a} vs expected {ex}");
@@ -1192,14 +1192,14 @@ mod solid_tests {
     }
 
     // #region 🔖️Tet4
-    fn skew_tet_positions() -> [[f64; 3]; 4] {
+    async fn skew_tet_positions() -> [[f64; 3]; 4] {
         [[0.0, 0.0, 0.0], [1.0, 0.1, 0.05], [0.2, 1.0, 0.1], [0.1, 0.15, 1.0]]
     }
 
     /// 🧮️ Constant-strain patch test: an exact linear field imposed at every node must recover the
     /// exact analytical `σ=Dε` at the (single, exact) integration point.
     #[test]
-    fn tet4_patch_test_recovers_exact_constant_stress() {
+    async fn tet4_patch_test_recovers_exact_constant_stress() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
         let field = LinearField::sample();
@@ -1216,7 +1216,7 @@ mod solid_tests {
 
     /// 🌀️ Rigid-body test: a pure translation of all 4 nodes must produce zero internal force.
     #[test]
-    fn tet4_rigid_translation_gives_zero_force() {
+    async fn tet4_rigid_translation_gives_zero_force() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
         let ctx = ElementContext { positions: positions.to_vec() };
@@ -1229,7 +1229,7 @@ mod solid_tests {
         }
     }
 
-    fn tet_volume(positions: &[[f64; 3]; 4]) -> f64 {
+    async fn tet_volume(positions: &[[f64; 3]; 4]) -> f64 {
         let e1 = [positions[1][0] - positions[0][0], positions[1][1] - positions[0][1], positions[1][2] - positions[0][2]];
         let e2 = [positions[2][0] - positions[0][0], positions[2][1] - positions[0][1], positions[2][2] - positions[0][2]];
         let e3 = [positions[3][0] - positions[0][0], positions[3][1] - positions[0][1], positions[3][2] - positions[0][2]];
@@ -1240,7 +1240,7 @@ mod solid_tests {
     /// ⚖️ `Tet4::mass`'s total (the pure-`Tx` submatrix's sum) equals `ρV` — same partition-of-unity
     /// identity as `Bar3`'s.
     #[test]
-    fn tet4_mass_total_equals_rho_v() {
+    async fn tet4_mass_total_equals_rho_v() {
         let (density, e, nu) = (2400.0, 200e9, 0.3);
         let positions = skew_tet_positions();
         let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density };
@@ -1255,7 +1255,7 @@ mod solid_tests {
     /// same strong equilibrium check `analyses`'s beam self-weight test uses, now exercised on a
     /// continuum solid element (only possible once `Tet4::mass` exists).
     #[test]
-    fn tet4_self_weight_matches_total_mass_times_gravity() {
+    async fn tet4_self_weight_matches_total_mass_times_gravity() {
         let (density, e, nu, g) = (2400.0, 30e9, 0.2, 9.81);
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let nodes: Vec<Node> = (0..4).map(|i| Node { id: format!("n{i}"), pos: positions[i] }).collect();
@@ -1274,7 +1274,7 @@ mod solid_tests {
 
     /// 🌀️ `Tet4::geometric_stiffness`: zero under rigid translation and symmetric.
     #[test]
-    fn tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+    async fn tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
         let field = LinearField::sample();
@@ -1296,7 +1296,7 @@ mod solid_tests {
     // #endregion 🔖️Tet4
 
     // #region 🔖️Hex8
-    fn skew_hex_positions() -> [[f64; 3]; 8] {
+    async fn skew_hex_positions() -> [[f64; 3]; 8] {
         [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.05, 1.0, 0.02], [-0.03, 0.98, 0.01], [0.02, 0.01, 1.0], [1.02, -0.01, 0.97], [0.99, 1.03, 1.05], [0.01, 1.0, 0.98]]
     }
 
@@ -1304,7 +1304,7 @@ mod solid_tests {
     /// skewed-but-non-degenerate hex still reproduces an exact linear field everywhere, a fundamental
     /// isoparametric-interpolation property, not something specific to parallelepiped geometry).
     #[test]
-    fn hex8_patch_test_recovers_exact_constant_stress() {
+    async fn hex8_patch_test_recovers_exact_constant_stress() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
         let field = LinearField::sample();
@@ -1325,7 +1325,7 @@ mod solid_tests {
 
     /// 🌀️ Rigid-body test: a pure translation of all 8 nodes must produce zero internal force.
     #[test]
-    fn hex8_rigid_translation_gives_zero_force() {
+    async fn hex8_rigid_translation_gives_zero_force() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
         let ctx = ElementContext { positions: positions.to_vec() };
@@ -1345,7 +1345,7 @@ mod solid_tests {
     /// wide: just confirm the deflection is negative (toward the load), finite, and the right order
     /// of magnitude.
     #[test]
-    fn hex8_meshed_cantilever_deflection_is_right_order_of_magnitude() {
+    async fn hex8_meshed_cantilever_deflection_is_right_order_of_magnitude() {
         let (e, nu) = (200e9, 0.3);
         let (b, h, l, nx) = (0.2, 0.3, 4.0, 4usize);
         let dx = l / nx as f64;
@@ -1401,7 +1401,7 @@ mod solid_tests {
     /// positions make an independent volume oracle fiddly — the axis-aligned unit cube's volume is
     /// trivially `1.0`, isolating the mass identity from any volume-computation risk).
     #[test]
-    fn hex8_mass_total_equals_rho_v() {
+    async fn hex8_mass_total_equals_rho_v() {
         let density = 2400.0;
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
         let nodes: [String; 8] = std::array::from_fn(|i| format!("n{i}"));
@@ -1414,7 +1414,7 @@ mod solid_tests {
 
     /// 🌀️ `Hex8::geometric_stiffness`: zero under rigid translation and symmetric.
     #[test]
-    fn hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+    async fn hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
         let field = LinearField::sample();
@@ -1460,12 +1460,12 @@ mod shell_tests {
     /// frame (`local_x=normalize(p1-p0)`, `local_z=facet normal`) then coincides EXACTLY with global
     /// `(X,Y,Z)`, so local == global coordinates and the combined membrane+bending patch-test input
     /// can be built directly in global `(x,y)` without any local-frame bookkeeping.
-    fn aligned_triangle_positions() -> [[f64; 3]; 3] {
+    async fn aligned_triangle_positions() -> [[f64; 3]; 3] {
         [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.2, 1.8, 0.0]]
     }
 
     #[test]
-    fn shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature() {
+    async fn shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature() {
         let positions = aligned_triangle_positions();
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
         let ctx = ElementContext { positions: positions.to_vec() };
@@ -1508,7 +1508,7 @@ mod shell_tests {
     /// 🌀️ Rigid-body test: a pure 3D translation (zero rotation, so the drilling DOF is untouched too)
     /// must produce zero internal force on a generic (non-axis-aligned) skew triangle.
     #[test]
-    fn shell_facet3_rigid_translation_gives_zero_force() {
+    async fn shell_facet3_rigid_translation_gives_zero_force() {
         let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.3], [0.5, 1.5, 0.7]];
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
         let ctx = ElementContext { positions: positions.to_vec() };
@@ -1528,7 +1528,7 @@ mod shell_tests {
     /// free node — deflection must be finite, nonzero, and in the same direction as the applied load
     /// (not a precision benchmark, just a physical-sanity check on assembly/BC wiring).
     #[test]
-    fn shell_facet3_cantilever_deflects_toward_tip_load() {
+    async fn shell_facet3_cantilever_deflects_toward_tip_load() {
         let (e, nu, t) = (200e9, 0.3, 0.01);
         let p = -1000.0;
         let model = Model {
@@ -1547,7 +1547,7 @@ mod shell_tests {
     /// ⚖️ `ShellFacet3::mass`'s total (pure-`Tx` submatrix sum) equals `ρtA` — same lumped-mass
     /// row-sum identity `PlateDkt`'s translational lump satisfies.
     #[test]
-    fn shell_facet3_mass_total_equals_rho_t_area() {
+    async fn shell_facet3_mass_total_equals_rho_t_area() {
         let (density, thickness) = (7850.0, 0.008);
         let positions = aligned_triangle_positions();
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness, density };
@@ -1565,7 +1565,7 @@ mod shell_tests {
     /// buckling load factor — possible only now that `ShellFacet3::geometric_stiffness` exists (a
     /// `PlateDkt`-only panel would report no geometric stiffness at all, per its documented `None`).
     #[test]
-    fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness() {
+    async fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness() {
         let positions = aligned_triangle_positions();
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
         let ctx = ElementContext { positions: positions.to_vec() };

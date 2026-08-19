@@ -1,0 +1,63 @@
+{
+  "crate": "semio-framework-pack",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 67,
+      "edits": 3,
+      "ambiguous": 0,
+      "other": 5
+    },
+    {
+      "pass": 2,
+      "errors": 67,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 8
+    }
+  ],
+  "residual_errors": 67,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:63",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:134",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:210",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:96",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:51",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:102",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:55",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../🔌️io/🦀️component.rs:106",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    }
+  ]
+}

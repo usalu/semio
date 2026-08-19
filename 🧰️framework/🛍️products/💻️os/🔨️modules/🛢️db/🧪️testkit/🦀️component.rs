@@ -33,7 +33,8 @@ use std::sync::{Arc, Mutex};
 use crate::*;
 use crate::db_durability::Frontier;
 use crate::db_ids::DbError;
-use db_storage::{CatalogStorage, DbFuture, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use db_storage::{CatalogStorage, DbBackend, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use semio_framework_async::HostAsyncRuntime;
 
 //#region 🔖️Prng
 /// @emoji 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
@@ -279,16 +280,16 @@ pub struct FaultScript {
 /// other operation (segment lifecycle, snapshot/payload/index/lease storage) passes straight
 /// through to `inner` untouched, since those are outside this testkit's stated crash-simulation
 /// scope (fail-nth-write / torn write / fsync-lie / CAS-conflict injection).
-pub struct FaultStorage {
-    inner: Arc<dyn DbStorage>,
+pub struct FaultStorage<R: HostAsyncRuntime> {
+    inner: Arc<DbBackend<R>>,
     script: Mutex<FaultScript>,
     append_calls: AtomicU64,
     sync_delegated_calls: AtomicU64,
     cas_calls: AtomicU64,
 }
 
-impl FaultStorage {
-    pub fn new(inner: Arc<dyn DbStorage>) -> FaultStorage {
+impl<R: HostAsyncRuntime> FaultStorage<R> {
+    pub fn new(inner: Arc<DbBackend<R>>) -> FaultStorage<R> {
         FaultStorage { inner, script: Mutex::new(FaultScript::default()), append_calls: AtomicU64::new(0), sync_delegated_calls: AtomicU64::new(0), cas_calls: AtomicU64::new(0) }
     }
 
@@ -315,188 +316,164 @@ impl FaultStorage {
     pub fn cas_calls(&self) -> u64 {
         self.cas_calls.load(Ordering::SeqCst)
     }
+
+    /// @emoji 🎚️ Passes the inner backend's own capabilities straight through — fault injection
+    /// never changes what the backend claims to support, only what it actually does on a call.
+    pub async fn capabilities(&self) -> StorageCapabilities {
+        self.inner.capabilities().await
+    }
 }
 
-impl WalStorage for FaultStorage {
-    fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        self.inner.wal().create_segment(document, index)
+impl<R: HostAsyncRuntime> WalStorage for FaultStorage<R> {
+    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        self.inner.wal().await.create_segment(document, index).await
     }
 
-    fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let call = self.append_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let script = self.script();
-        Box::pin(async move {
+        {
             if script.fail_nth_write == Some(call) {
                 return Err(DbError::Io(format!("fault_storage: injected failure on wal append #{call}")));
             }
             if let Some((torn_call, keep_bytes)) = script.torn_write_at {
                 if torn_call == call {
                     let keep = (keep_bytes as usize).min(bytes.len());
-                    return self.inner.wal().append(document, index, &bytes[..keep]).await;
+                    return self.inner.wal().await.append(document, index, &bytes[..keep]).await;
                 }
             }
-            self.inner.wal().append(document, index, bytes).await
-        })
+            self.inner.wal().await.append(document, index, bytes).await
+        }
     }
 
-    fn sync<'a>(&'a self, document: &'a ArtifactId, index: u64, class: DurabilityClass) -> DbFuture<'a, ()> {
+    async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         if self.script().fsync_lies {
-            return Box::pin(async { Ok(()) });
+            return { Ok(()) };
         }
         self.sync_delegated_calls.fetch_add(1, Ordering::SeqCst);
-        self.inner.wal().sync(document, index, class)
+        self.inner.wal().await.sync(document, index, class).await
     }
 
-    fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        self.inner.wal().seal(document, index)
+    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        self.inner.wal().await.seal(document, index).await
     }
 
-    fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: pack::ByteRange) -> DbFuture<'a, Vec<u8>> {
-        self.inner.wal().read(document, index, range)
+    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
+        self.inner.wal().await.read(document, index, range).await
     }
 
-    fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
-        self.inner.wal().segment_len(document, index)
+    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
+        self.inner.wal().await.segment_len(document, index).await
     }
 
-    fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        self.inner.wal().list_segments(document)
+    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        self.inner.wal().await.list_segments(document).await
     }
 
-    fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
-        self.inner.wal().truncate_tail(document, index, new_len)
+    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
+        self.inner.wal().await.truncate_tail(document, index, new_len).await
     }
 
-    fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        self.inner.wal().delete_segment(document, index)
-    }
-}
-
-impl SnapshotStorage for FaultStorage {
-    fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        self.inner.snapshot().write_generation(document, generation, bytes)
-    }
-
-    fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
-        self.inner.snapshot().read_generation(document, generation)
-    }
-
-    fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
-        self.inner.snapshot().latest_generation(document)
-    }
-
-    fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        self.inner.snapshot().list_generations(document)
-    }
-
-    fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
-        self.inner.snapshot().delete_generation(document, generation)
+    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        self.inner.wal().await.delete_segment(document, index).await
     }
 }
 
-impl PayloadStorage for FaultStorage {
-    fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
-        self.inner.payload().put(bytes)
+impl<R: HostAsyncRuntime> SnapshotStorage for FaultStorage<R> {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+        self.inner.snapshot().await.write_generation(document, generation, bytes).await
     }
 
-    fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
-        self.inner.payload().get(hash)
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+        self.inner.snapshot().await.read_generation(document, generation).await
     }
 
-    fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
-        self.inner.payload().contains(hash)
+    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
+        self.inner.snapshot().await.latest_generation(document).await
     }
 
-    fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
-        self.inner.payload().delete(hash)
+    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        self.inner.snapshot().await.list_generations(document).await
     }
 
-    fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
-        self.inner.payload().len(hash)
+    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
+        self.inner.snapshot().await.delete_generation(document, generation).await
     }
 }
 
-impl CatalogStorage for FaultStorage {
-    fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
-        self.inner.catalog().read_root()
+impl<R: HostAsyncRuntime> PayloadStorage for FaultStorage<R> {
+    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+        self.inner.payload().await.put(bytes).await
     }
 
-    fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
+    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+        self.inner.payload().await.get(hash).await
+    }
+
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+        self.inner.payload().await.contains(hash).await
+    }
+
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+        self.inner.payload().await.delete(hash).await
+    }
+
+    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+        self.inner.payload().await.len(hash).await
+    }
+}
+
+impl<R: HostAsyncRuntime> CatalogStorage for FaultStorage<R> {
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+        self.inner.catalog().await.read_root().await
+    }
+
+    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
         let call = self.cas_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let conflict = self.script().cas_conflict_nth == Some(call);
-        Box::pin(async move {
+        {
             if conflict {
-                let current = self.inner.catalog().read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
+                let current = self.inner.catalog().await.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
                 return Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch });
             }
-            self.inner.catalog().cas_root(expected, new_bytes).await
-        })
+            self.inner.catalog().await.cas_root(expected, new_bytes).await
+        }
     }
 }
 
-impl IndexStorage for FaultStorage {
-    fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        self.inner.index().write_run(document, run_id, bytes)
+impl<R: HostAsyncRuntime> IndexStorage for FaultStorage<R> {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+        self.inner.index().await.write_run(document, run_id, bytes).await
     }
 
-    fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
-        self.inner.index().read_run(document, run_id)
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+        self.inner.index().await.read_run(document, run_id).await
     }
 
-    fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        self.inner.index().list_runs(document)
+    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        self.inner.index().await.list_runs(document).await
     }
 
-    fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
-        self.inner.index().delete_run(document, run_id)
-    }
-}
-
-impl LeaseStorage for FaultStorage {
-    fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
-        self.inner.lease().acquire(resource, holder, ttl_ms, now_ms)
-    }
-
-    fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
-        self.inner.lease().renew(resource, holder, fence, ttl_ms, now_ms)
-    }
-
-    fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
-        self.inner.lease().release(resource, holder, fence)
-    }
-
-    fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
-        self.inner.lease().current(resource, now_ms)
+    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
+        self.inner.index().await.delete_run(document, run_id).await
     }
 }
 
-impl DbStorage for FaultStorage {
-    fn wal(&self) -> &dyn WalStorage {
-        self
+impl<R: HostAsyncRuntime> LeaseStorage for FaultStorage<R> {
+    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+        self.inner.lease().await.acquire(resource, holder, ttl_ms, now_ms).await
     }
 
-    fn snapshot(&self) -> &dyn SnapshotStorage {
-        self
+    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        self.inner.lease().await.renew(resource, holder, fence, ttl_ms, now_ms).await
     }
 
-    fn payload(&self) -> &dyn PayloadStorage {
-        self
+    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+        self.inner.lease().await.release(resource, holder, fence).await
     }
 
-    fn catalog(&self) -> &dyn CatalogStorage {
-        self
-    }
-
-    fn index(&self) -> &dyn IndexStorage {
-        self
-    }
-
-    fn lease(&self) -> &dyn LeaseStorage {
-        self
-    }
-
-    fn capabilities(&self) -> StorageCapabilities {
-        self.inner.capabilities()
+    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+        self.inner.lease().await.current(resource, now_ms).await
     }
 }
 //#endregion 🔖️FaultStorage
@@ -550,20 +527,20 @@ impl CrashHarness {
         let document = protocol::ArtifactId(format!("testkit-crash-{seed:x}"));
         let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count);
 
-        let baseline = Arc::new(FaultStorage::new(Arc::new(db_storage::MemoryStorage::new())));
-        run_workload_against(&document, &ops, storage_as_dyn(baseline.clone()));
-        let total_appends = baseline.append_calls();
+        let baseline = new_fault_backend();
+        run_workload_against(&document, &ops, baseline.clone());
+        let total_appends = as_fault(&baseline).append_calls();
 
         let mut report = CrashHarnessReport::default();
         for crash_at in 2..=total_appends {
             report.writes_tested += 1;
             let expected_committed = (crash_at - 2) as usize;
 
-            let faulted = Arc::new(FaultStorage::new(Arc::new(db_storage::MemoryStorage::new())));
-            faulted.set_script(FaultScript { fail_nth_write: Some(crash_at), ..FaultScript::default() });
-            run_workload_until_fault(&document, &ops, storage_as_dyn(faulted.clone()));
+            let faulted = new_fault_backend();
+            as_fault(&faulted).set_script(FaultScript { fail_nth_write: Some(crash_at), ..FaultScript::default() });
+            run_workload_until_fault(&document, &ops, faulted.clone());
 
-            match db_artifact::ArtifactEngine::open(document.clone(), &storage_as_dyn(faulted), db_artifact::ArtifactEngineConfig::default(), 0) {
+            match db_artifact::ArtifactEngine::open(document.clone(), &faulted, db_artifact::ArtifactEngineConfig::default(), 0) {
                 Ok((recovered, _report)) => {
                     if !recovered_state_matches_prefix(&recovered, &ops, expected_committed) {
                         report.state_mismatches.push(crash_at);
@@ -576,11 +553,26 @@ impl CrashHarness {
     }
 }
 
-fn storage_as_dyn(storage: Arc<FaultStorage>) -> Arc<dyn DbStorage> {
-    storage
+/// @emoji 💥️ A fresh `FaultStorage`-wrapped `MemoryStorage`, already living inside its
+/// [`DbBackend::Fault`] variant — `R` fixed to [`db_storage::InlineRuntime`] since `CrashHarness`'s
+/// workloads never touch a genuinely-blocking backend (`MemoryStorage` needs no real runtime).
+fn new_fault_backend() -> Arc<DbBackend<db_storage::InlineRuntime>> {
+    Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()))))))
 }
 
-fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
+/// @emoji 🔍️ Recovers the `&FaultStorage` a [`new_fault_backend`] produced, so `CrashHarness` can
+/// call its `append_calls`/`set_script` inherent methods without a second, unwrapped handle to the
+/// same storage (an `Arc` clone can't be un-wrapped back to an owned value while other references
+/// are still live, so the enum is the single source of truth, matched into on demand instead).
+fn as_fault<R: HostAsyncRuntime>(storage: &DbBackend<R>) -> &FaultStorage<R> {
+    match storage {
+        DbBackend::Fault(inner) => inner,
+        #[allow(unreachable_patterns)]
+        _ => panic!("as_fault: backend is not a DbBackend::Fault"),
+    }
+}
+
+fn run_workload_against<R: HostAsyncRuntime>(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend<R>>) {
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
@@ -590,7 +582,7 @@ fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::Mutati
 
 /// @emoji 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
 /// panicking — the fault IS the point, simulating a crash mid-workload.
-fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<dyn DbStorage>) {
+fn run_workload_until_fault<R: HostAsyncRuntime>(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend<R>>) {
     let created = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0);
     let mut engine = match created {
         Ok(engine) => engine,
@@ -683,7 +675,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     let document = protocol::ArtifactId(format!("testkit-snap-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, before_snapshot + after_snapshot.max(1));
 
-    let storage_snapshotting: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let storage_snapshotting: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
@@ -696,7 +688,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     let (materialized_from_snapshot, report_a) = db_artifact::ArtifactEngine::open(document.clone(), &storage_snapshotting, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine a");
     assert!(before_snapshot == 0 || report_a.from_snapshot, "replica a must have materialized from a real snapshot when one was published");
 
-    let storage_full_replay: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let storage_full_replay: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
@@ -755,7 +747,7 @@ pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) 
     let storage = db_storage::MemoryStorage::new();
     let build_projections = || vec![db_projection::erase(CountingProjection)];
 
-    let incremental_engine = db_projection::ProjectionEngine::new(storage.index(), document_core.clone(), build_projections()).expect("projection engine (incremental)");
+    let incremental_engine = db_projection::ProjectionEngine::new(&storage, document_core.clone(), build_projections()).expect("projection engine (incremental)");
     let mut events = Vec::with_capacity(ops.len());
     let mut final_incremental = db_state::PMap::new();
     for (i, envelope) in ops.iter().enumerate() {
@@ -766,7 +758,7 @@ pub fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: usize) 
         events.push((seq, envelope.clone(), touched));
     }
 
-    let rebuild_engine = db_projection::ProjectionEngine::new(storage.index(), document_core, build_projections()).expect("projection engine (rebuild)");
+    let rebuild_engine = db_projection::ProjectionEngine::new(&storage, document_core, build_projections()).expect("projection engine (rebuild)");
     let rebuilt = rebuild_engine.rebuild_in_memory(&events).expect("rebuild_in_memory");
 
     for id in incremental_engine.topological_order() {
@@ -796,7 +788,7 @@ fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &str, ac
 /// original value. Drives a real `db_artifact::ArtifactEngine` over `MemoryStorage`.
 pub fn assert_inverse_undo_roundtrip(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-undo-{seed:x}"));
-    let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
@@ -825,22 +817,22 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
     let document_core = ArtifactId(document.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(2));
 
-    let server_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let server_storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     let mut server = db_artifact::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
         server.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("server submit");
     }
     let server_frontier = server.frontier();
-    let sync_state = db_actor::block_on(db_sync::replay_sync_state(server_storage.wal(), document_core.clone())).expect("replay_sync_state");
+    let sync_state = db_actor::block_on(async { db_sync::replay_sync_state(&server_storage.wal().await, document_core.clone()).await }).expect("replay_sync_state");
 
-    let replica1_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let replica1_storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     let mut replica1 = db_artifact::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica1");
     let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
         replica1.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("replica1 submit");
     }
 
-    let replica2_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let replica2_storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     let mut replica2 = db_artifact::ArtifactEngine::create(document, replica2_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica2");
     let half = ops.len() / 2;
     let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).expect("missing_commands first half");
@@ -860,9 +852,9 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
 /// @emoji 🚧️ The fencing law: once a writer's `cas_root` succeeds, a second writer presenting the
 /// now-superseded epoch must be fenced (`DbError::Fenced`), and the root must remain exactly what
 /// the winning writer left it as — the split-brain gate `EpochFence`/`CatalogStorage`
-/// exist for. Generic over any real `&dyn CatalogStorage` backend (exercised against both
+/// exist for. Generic over any real `&impl CatalogStorage` backend (exercised against both
 /// `MemoryStorage` and `FsStorage` in this crate's own tests).
-pub fn assert_fencing_excludes_stale_writer(storage: &dyn CatalogStorage) {
+pub fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage) {
     let stale_epoch = db_actor::block_on(storage.read_root()).expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
     let winner_epoch = db_actor::block_on(storage.cas_root(stale_epoch, b"writer-a")).expect("the first writer presenting the current epoch must win");
     assert_ne!(winner_epoch, stale_epoch, "a successful cas_root must advance the epoch");
@@ -881,7 +873,7 @@ pub fn assert_fencing_excludes_stale_writer(storage: &dyn CatalogStorage) {
 /// `db_artifact::ArtifactEngine` (backed by a real `db_preview::PreviewStore`) over `MemoryStorage`.
 pub fn assert_preview_never_durable(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-preview-{seed:x}"));
-    let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+    let storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
     let core_document = ArtifactId(document.0.clone());
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
@@ -890,15 +882,16 @@ pub fn assert_preview_never_durable(seed: u64) {
     let envelope = schema_erased_envelope(&document, "op-committed", "actor-1", &path, committed_value.clone(), serde_json::Value::Null);
     engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).expect("submit committed");
 
-    let segments_before = db_actor::block_on(storage.wal().list_segments(&core_document)).expect("list_segments");
-    let lengths_before: Vec<u64> = segments_before.iter().map(|&index| db_actor::block_on(storage.wal().segment_len(&core_document, index)).expect("segment_len")).collect();
+    let wal_facet = db_actor::block_on(storage.wal());
+    let segments_before = db_actor::block_on(wal_facet.list_segments(&core_document)).expect("list_segments");
+    let lengths_before: Vec<u64> = segments_before.iter().map(|&index| db_actor::block_on(wal_facet.segment_len(&core_document, index)).expect("segment_len")).collect();
     let frontier_before = engine.frontier();
 
     let preview_value = serde_json::json!("preview-only");
     let preview_id = engine.publish_preview(&[(path.clone(), Some(preview_value.clone()))], 2).expect("publish_preview");
 
-    let segments_after = db_actor::block_on(storage.wal().list_segments(&core_document)).expect("list_segments");
-    let lengths_after: Vec<u64> = segments_after.iter().map(|&index| db_actor::block_on(storage.wal().segment_len(&core_document, index)).expect("segment_len")).collect();
+    let segments_after = db_actor::block_on(wal_facet.list_segments(&core_document)).expect("list_segments");
+    let lengths_after: Vec<u64> = segments_after.iter().map(|&index| db_actor::block_on(wal_facet.segment_len(&core_document, index)).expect("segment_len")).collect();
     assert_eq!(segments_before, segments_after, "publishing a preview must never create a new wal segment");
     assert_eq!(lengths_before, lengths_after, "publishing a preview must never append a single byte to the wal");
     assert_eq!(engine.frontier(), frontier_before, "a preview must never advance the document's committed frontier");
@@ -1016,7 +1009,7 @@ mod tests {
         let document = protocol::ArtifactId("explore-doc".to_string());
         let hashes = explore_interleavings(4242, 12, |seed| {
             let ops = WorkloadGen::new(55).disjoint_batch(&document, 5);
-            let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+            let storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
             let engine = Rc::new(RefCell::new(db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine")));
             let mut runtime = SimRuntime::new(seed);
             for (i, envelope) in ops.into_iter().enumerate() {
@@ -1083,7 +1076,7 @@ mod tests {
 
     #[test]
     fn fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root() {
-        let faulted = FaultStorage::new(Arc::new(db_storage::MemoryStorage::new()));
+        let faulted = FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new())));
         faulted.set_script(FaultScript { cas_conflict_nth: Some(1), ..FaultScript::default() });
         let result = db_actor::block_on(faulted.cas_root(EpochFence::INITIAL, b"attempt"));
         assert!(matches!(result, Err(DbError::Fenced { .. })), "the scripted call must be rejected as fenced");
@@ -1101,12 +1094,11 @@ mod tests {
 
     #[test]
     fn document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail() {
-        let faulted = Arc::new(FaultStorage::new(Arc::new(db_storage::MemoryStorage::new())));
+        let storage: Arc<DbBackend<db_storage::InlineRuntime>> = new_fault_backend();
         // Call #1 is the document's own genesis header write; torn-write call #2 is the first
         // `submit()`'s commit — truncated to 1 byte, an unrecoverable partial commit frame.
-        faulted.set_script(FaultScript { torn_write_at: Some((2, 1)), ..FaultScript::default() });
+        as_fault(&storage).set_script(FaultScript { torn_write_at: Some((2, 1)), ..FaultScript::default() });
         let document = protocol::ArtifactId("torn-doc".to_string());
-        let storage: Arc<dyn DbStorage> = faulted;
         {
             let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
             let envelope = schema_erased_envelope(&document, "op-1", "actor-1", "x", serde_json::json!(1), serde_json::Value::Null);
@@ -1153,7 +1145,7 @@ mod tests {
     #[test]
     fn law_fencing_excludes_stale_writer_fs() {
         let root = temp_dir("fencing-fs");
-        let storage = db_storage::FsStorage::open_inline("db_testkit", &root).expect("open fs storage");
+        let storage = db_actor::block_on(db_storage::FsStorage::open_inline("db_testkit", &root)).expect("open fs storage");
         assert_fencing_excludes_stale_writer(&storage);
     }
 
@@ -1181,14 +1173,14 @@ mod tests {
             let document = ArtifactId("fuzz-doc".to_string());
             db_actor::block_on(storage.create_segment(&document, 0)).map_err(|err| err.to_string())?;
             db_actor::block_on(storage.append(&document, 0, bytes)).map_err(|err| err.to_string())?;
-            let storage: Arc<dyn DbStorage> = Arc::new(storage);
+            let storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(storage));
             db_artifact::ArtifactEngine::open(protocol::ArtifactId(document.0), &storage, db_artifact::ArtifactEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
         }
 
         #[test]
         fn wal_recovery_never_panics_under_truncation_or_bit_flip_corruption() {
             let document = protocol::ArtifactId("fuzz-doc".to_string());
-            let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
+            let storage: Arc<DbBackend<db_storage::InlineRuntime>> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new()));
             {
                 let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
                 for i in 0..2 {
@@ -1197,8 +1189,9 @@ mod tests {
                 }
             }
             let core_document = ArtifactId(document.0);
-            let len = db_actor::block_on(storage.wal().segment_len(&core_document, 0)).unwrap();
-            let bytes = db_actor::block_on(storage.wal().read(&core_document, 0, pack::ByteRange { offset: 0, len })).unwrap();
+            let wal_facet = db_actor::block_on(storage.wal());
+            let len = db_actor::block_on(wal_facet.segment_len(&core_document, 0)).unwrap();
+            let bytes = db_actor::block_on(wal_facet.read(&core_document, 0, pack::ByteRange { offset: 0, len })).unwrap();
 
             let truncation_report = pack_testkit::fuzz_truncation(&bytes, pack_testkit::CorruptionLevel::Exhaustive, decode_wal_bytes);
             assert!(truncation_report.cases_panicked.is_empty(), "wal recovery must never panic on truncated input: {:?}", truncation_report.cases_panicked);

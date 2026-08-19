@@ -1,5 +1,12 @@
 //! 🗄️ Db facade — Shape V2 #[path] glue.
 
+// 🎛️ Ruling R7 (2026-08-19): `async fn` in a public trait lints "auto trait bounds cannot be
+// specified" on every crate this ticket converts, because our own ruling R3 forbids the lint's own
+// suggested fix (`-> impl Future<..> + Send`) — Send on a spawned future is derived STRUCTURALLY
+// from the concrete `DbBackend`/`WalRef`/... enum at the call site, never from a bound on the
+// trait method. Silencing the lint here is deliberate, not an oversight.
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as pack;
 pub use semio_framework_os_kernel::os_pack::testkit as pack_testkit;
 extern crate semio_framework_os_kernel as store;

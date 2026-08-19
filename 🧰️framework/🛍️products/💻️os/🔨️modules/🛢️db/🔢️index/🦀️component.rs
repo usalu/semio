@@ -362,22 +362,22 @@ pub type KeyValuePairs = Vec<(Vec<u8>, Vec<u8>)>;
 /// @emoji 🔍️ One `(document, kind)`'s view onto its sorted runs — every typed wrapper below
 /// (`CommandIndex`, `FrontierIndex`, ...) is a thin codec layered on top of one of these. Never
 /// interprets key/value bytes itself; that's the typed layer's job.
-pub struct IndexHandle<'a> {
-    storage: &'a dyn IndexStorage,
+pub struct IndexHandle<'a, S: IndexStorage> {
+    storage: &'a S,
     document: ArtifactId,
     kind: IndexKind,
     policy: MergePolicy,
 }
 
-impl<'a> IndexHandle<'a> {
+impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// @emoji 🚀️ Opens a handle with the default `MergePolicy`.
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind) -> Self {
+    pub fn new(storage: &'a S, document: ArtifactId, kind: IndexKind) -> Self {
         Self::with_policy(storage, document, kind, MergePolicy::default())
     }
 
     /// @emoji 🚀️ Opens a handle with an explicit `MergePolicy` (e.g. a tighter threshold for a
     /// hot, frequently-scanned kind, or a looser one for a write-heavy, rarely-read kind).
-    pub fn with_policy(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind, policy: MergePolicy) -> Self {
+    pub fn with_policy(storage: &'a S, document: ArtifactId, kind: IndexKind, policy: MergePolicy) -> Self {
         Self { storage, document, kind, policy }
     }
 
@@ -556,12 +556,12 @@ fn decode_location(bytes: &[u8]) -> Result<RecordLocation, DbError> {
 /// @emoji 🔢️ `u64 -> RecordLocation`, keyed big-endian so byte order matches numeric order — the
 /// shared shape behind both `CommandIndex` (keyed by command seq) and `InverseIndex` (keyed by the
 /// same command seq, pointing at its inverse's location instead).
-struct SeqLocationIndex<'a> {
-    handle: IndexHandle<'a>,
+struct SeqLocationIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
-impl<'a> SeqLocationIndex<'a> {
-    fn new(storage: &'a dyn IndexStorage, document: ArtifactId, kind: IndexKind) -> Self {
+impl<'a, S: IndexStorage> SeqLocationIndex<'a, S> {
+    fn new(storage: &'a S, document: ArtifactId, kind: IndexKind) -> Self {
         Self { handle: IndexHandle::new(storage, document, kind) }
     }
 
@@ -583,10 +583,10 @@ impl<'a> SeqLocationIndex<'a> {
 /// @emoji 🗃️ `command_seq -> RecordLocation` — `db_artifact`'s primary lookup for "where in the
 /// WAL is command N", the backbone of replay-from-a-point and `Consistency::Exact`/`AtLeast` query
 /// resolution.
-pub struct CommandIndex<'a>(SeqLocationIndex<'a>);
+pub struct CommandIndex<'a, S: IndexStorage>(SeqLocationIndex<'a, S>);
 
-impl<'a> CommandIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> CommandIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Command))
     }
 
@@ -615,10 +615,10 @@ impl<'a> CommandIndex<'a> {
 //#region 🔖️InverseIndex
 /// @emoji ↩️ `command_seq -> RecordLocation` of that command's inverse operation payload —
 /// `db_artifact`'s undo machinery's lookup.
-pub struct InverseIndex<'a>(SeqLocationIndex<'a>);
+pub struct InverseIndex<'a, S: IndexStorage>(SeqLocationIndex<'a, S>);
 
-impl<'a> InverseIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> InverseIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Inverse))
     }
 
@@ -650,8 +650,8 @@ impl<'a> InverseIndex<'a> {
 /// sequence. Keys are `actor_bytes || 0x00 || actor_seq(8, BE)`; `actor`'s id must not itself
 /// contain a NUL byte (validated) so the `0x00` separator stays unambiguous and prefix scans by
 /// actor (`latest_for_actor`) can't spill into a neighboring actor's entries.
-pub struct ActorSeqIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct ActorSeqIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn validate_actor_key_safe(actor: &ActorId) -> Result<(), DbError> {
@@ -675,8 +675,8 @@ fn decode_u64_le(bytes: &[u8]) -> Result<u64, DbError> {
     Ok(u64::from_le_bytes(array))
 }
 
-impl<'a> ActorSeqIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::ActorSeq) }
     }
 
@@ -711,8 +711,8 @@ impl<'a> ActorSeqIndex<'a> {
 /// @emoji 🧭️ `commit_seq -> Frontier` — a per-commit snapshot of `Frontier`, letting
 /// `Consistency::Historical`/replica resume resolve "what did the frontier look like at commit N"
 /// without replaying.
-pub struct FrontierIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct FrontierIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn encode_frontier(frontier: &Frontier) -> Vec<u8> {
@@ -740,8 +740,8 @@ fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
     Ok(Frontier { document, head_seq, commit_seq, chain_hash, epoch })
 }
 
-impl<'a> FrontierIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Frontier) }
     }
 
@@ -764,8 +764,8 @@ impl<'a> FrontierIndex<'a> {
 /// @emoji 🎯️ `region -> [command_seq]` (ascending, deduplicated) — `db_conflict`'s reverse index:
 /// given a region a new command is about to touch, which prior commands also touched it (the
 /// candidate set for touched-region-intersection conflict checks).
-pub struct TouchedRegionIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct TouchedRegionIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn encode_postings(postings: &[u64]) -> Vec<u8> {
@@ -788,8 +788,8 @@ fn decode_postings(bytes: &[u8]) -> Result<Vec<u64>, DbError> {
     Ok(postings)
 }
 
-impl<'a> TouchedRegionIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::TouchedRegion) }
     }
 
@@ -816,12 +816,12 @@ impl<'a> TouchedRegionIndex<'a> {
 /// @emoji 🏁️ `commit_id -> command_seq` — resolves a VCS-facing commit id (`vcs::Checkpoint.id`,
 /// per the contract's content-addressed `ck-<hex16>` scheme) to the command sequence it was cut at,
 /// for `Consistency::Historical(commit_id)` query resolution.
-pub struct CommitIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct CommitIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
-impl<'a> CommitIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> CommitIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Commit) }
     }
 
@@ -841,16 +841,16 @@ impl<'a> CommitIndex<'a> {
 /// field/command location) against each; `search` resolves one term to its posting list. No
 /// ranking/stemming/stopwords — `db_query`'s full-text query planner is expected to layer that on
 /// top of this crate's exact-term postings.
-pub struct FullTextIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct FullTextIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn tokenize(text: &str) -> Vec<String> {
     text.split(|character: char| !character.is_alphanumeric()).filter(|term| !term.is_empty()).map(str::to_lowercase).collect()
 }
 
-impl<'a> FullTextIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::FullText) }
     }
 
@@ -919,12 +919,12 @@ fn decode_blob_list(bytes: &[u8]) -> Result<Vec<Vec<u8>>, DbError> {
 /// `command_seq` the same way `TouchedRegionIndex` accumulates a posting list: read the current
 /// list, append, write back. Record shapes are `db_conflict`'s concern; this index only stores and
 /// returns the opaque bytes it's handed.
-pub struct ConflictIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct ConflictIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
-impl<'a> ConflictIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Conflict) }
     }
 
@@ -962,8 +962,8 @@ impl<'a> ConflictIndex<'a> {
 /// composite shape `ActorSeqIndex` uses (`projection_id` must not itself contain a NUL byte,
 /// validated) so a prefix scan by projection id can't spill into a lexicographically-neighboring
 /// projection's entries.
-pub struct ProjectionIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct ProjectionIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn validate_projection_id_key_safe(projection_id: &str) -> Result<(), DbError> {
@@ -982,8 +982,8 @@ fn projection_key(projection_id: &str, frontier_seq: u64) -> Result<Vec<u8>, DbE
     Ok(key)
 }
 
-impl<'a> ProjectionIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Projection) }
     }
 
@@ -1036,8 +1036,8 @@ impl<'a> ProjectionIndex<'a> {
 /// (`actor`'s id must not contain a NUL byte, validated; `preview_key` is the final component so
 /// it needs no such restriction). Never durable per that same law — `db_preview` is responsible for
 /// never routing this index's writes through a durable `DurabilityClass`.
-pub struct PreviewIndex<'a> {
-    handle: IndexHandle<'a>,
+pub struct PreviewIndex<'a, S: IndexStorage> {
+    handle: IndexHandle<'a, S>,
 }
 
 fn encode_preview_key(actor: &ActorId, preview_key: &str) -> Result<Vec<u8>, DbError> {
@@ -1049,8 +1049,8 @@ fn encode_preview_key(actor: &ActorId, preview_key: &str) -> Result<Vec<u8>, DbE
     Ok(key)
 }
 
-impl<'a> PreviewIndex<'a> {
-    pub fn new(storage: &'a dyn IndexStorage, document: ArtifactId) -> Self {
+impl<'a, S: IndexStorage> PreviewIndex<'a, S> {
+    pub fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Preview) }
     }
 

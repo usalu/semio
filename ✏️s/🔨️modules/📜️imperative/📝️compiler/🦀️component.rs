@@ -5,16 +5,16 @@ use neural_engine::{Atom, Value, SCHEMA_KEY};
 
 // #region 🔖️Compile
 /// 📝️ Emits one line of source per step, e.g. `state.increment(by=5, key="counter");`
-pub fn compile_to_text(path: &Path) -> String {
+pub async fn compile_to_text(path: &Path) -> String {
     compile_steps(&path.steps, 0)
 }
 
-fn compile_steps(steps: &[Step], indent: usize) -> String {
+async fn compile_steps(steps: &[Step], indent: usize) -> String {
     let pad = "  ".repeat(indent);
     steps.iter().map(|step| compile_step(step, indent, &pad)).collect::<Vec<_>>().join("\n")
 }
 
-fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
+async fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
     match step.kind.as_str() {
         "control.if" => {
             let key = read_string_param(&step.params, "key").unwrap_or_else(|| "condition".into());
@@ -52,7 +52,7 @@ fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
     }
 }
 
-fn format_value(value: &Value) -> String {
+async fn format_value(value: &Value) -> String {
     match value {
         Value::Atom(atom) => match atom {
             Atom::Null => "null".into(),
@@ -80,14 +80,14 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn compile_to_text_emits_one_line_per_step() {
+    async fn compile_to_text_emits_one_line_per_step() {
         let path =
             Path { steps: vec![Step { id: "s1".into(), kind: "state.increment".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(5.0))), bodies: BTreeMap::new() }] };
         assert_eq!(compile_to_text(&path), "state.increment(by=5, key=\"counter\");");
     }
 
     #[test]
-    fn compile_to_text_emits_nested_control_blocks() {
+    async fn compile_to_text_emits_nested_control_blocks() {
         let mut bodies = BTreeMap::new();
         bodies.insert("then".into(), Path { steps: vec![Step { id: "t1".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))), bodies: BTreeMap::new() }] });
         let path = Path { steps: vec![Step { id: "s1".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), bodies }] };

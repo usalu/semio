@@ -119,7 +119,7 @@ thread_local! {
 /// 🧬️ `semio.io-run`/`semio.io-sniff` are registered unconditionally for every plugin, the same
 /// "for free" behaviour the old hard-coded `match` gave every plugin — no `PluginBuilder::job(...)`
 /// call is required to get them.
-fn builtin_registry() -> HashMap<&'static str, JobFn> {
+async fn builtin_registry() -> HashMap<&'static str, JobFn> {
     let mut map: HashMap<&'static str, JobFn> = HashMap::new();
     map.insert(JOB_KIND_IO_RUN, job_io_run as JobFn);
     map.insert(JOB_KIND_IO_SNIFF, job_io_sniff as JobFn);
@@ -135,7 +135,7 @@ fn builtin_registry() -> HashMap<&'static str, JobFn> {
 /// earlier one (including a builtin), matching `plugin_command`'s own last-writer convention one
 /// layer up minus the duplicate-id assertion (a plugin legitimately overriding `semio.io-run`'s
 /// default body is not an error here).
-pub fn register_job_kind(kind: &'static str, run: JobFn) {
+pub async fn register_job_kind(kind: &'static str, run: JobFn) {
     KIND_REGISTRY.with(|registry| {
         registry.borrow_mut().insert(kind, run);
     });
@@ -192,7 +192,7 @@ pub struct JobCtx {
 
 impl JobCtx {
     /// 🪪️ The `job` id this ctx belongs to — mirrors `start-job`'s own `job: u64` parameter.
-    pub fn id(&self) -> u64 {
+    pub async fn id(&self) -> u64 {
         self.job
     }
 
@@ -207,26 +207,26 @@ impl JobCtx {
 
     /// 📈️ Surfaces as `JobStep::Running(Some(bytes))` → `Event::JobProgress` on the SAME slice this
     /// was called during; a later slice that never calls this again reports `Running(None)`.
-    pub fn progress(&self, bytes: Vec<u8>) {
+    pub async fn progress(&self, bytes: Vec<u8>) {
         self.state.borrow_mut().progress = Some(bytes);
     }
 
     /// 📸️ Latest-kept — see `JobState::checkpoint`'s own doc. Carried into the actor checkpoint
     /// pack by `checkpoint_jobs()`.
-    pub fn checkpoint(&self, bytes: Vec<u8>) {
+    pub async fn checkpoint(&self, bytes: Vec<u8>) {
         self.state.borrow_mut().checkpoint = Some(bytes);
     }
 
     /// ⛽️ The `JobBudget` from the MOST RECENT `step_job` call — updated before the job's task is
     /// woken, so a `tick()` that just resolved always observes the budget that granted it.
-    pub fn budget(&self) -> JobBudget {
+    pub async fn budget(&self) -> JobBudget {
         self.state.borrow().budget
     }
 
     /// 🌐️ See module doc's "Host-await restriction" — `#[cfg]`-gated on purpose, do not ungate for
     /// the poll world.
     #[cfg(feature = "component-guest-async")]
-    pub fn host(&self) -> &crate::host::Host {
+    pub async fn host(&self) -> &crate::host::Host {
         &self.host
     }
 }
@@ -295,7 +295,7 @@ const STALL_LIMIT: u32 = 3;
 /// actor may legitimately replay a `start-job` for one still in flight from the caller's point of
 /// view — see `restore_job` for the checkpoint-replay counterpart, which threads `restored` bytes
 /// this entry point always passes as `None`.
-pub fn start_job(job: u64, kind: &str, input: &[u8]) {
+pub async fn start_job(job: u64, kind: &str, input: &[u8]) {
     spawn_job(job, kind, input, None);
 }
 
@@ -304,11 +304,11 @@ pub fn start_job(job: u64, kind: &str, input: &[u8]) {
 /// (leased) `⚛️reactor/📸️checkpoint/🦀️component.rs::restore` for every entry `checkpoint_jobs()`
 /// packed, handing each kind's `JobFn` the last `checkpoint()` bytes it produced before the actor
 /// was torn down.
-pub fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<Vec<u8>>) {
+pub async fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<Vec<u8>>) {
     spawn_job(job, kind, input, checkpoint);
 }
 
-fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
+async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
     let Some(run) = KIND_REGISTRY.with(|registry| registry.borrow().get(kind).copied()) else {
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::UnknownKind }));
         return;
@@ -336,7 +336,7 @@ fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
 /// `JOBS_EXECUTOR` is left in place (its `Rc<RefCell<JobState>>` becomes unreachable from here and
 /// is dropped, but `LocalExecutor` exposes no by-id removal — see this packet's report `## honest
 /// gaps`); the parked future itself never resumes since nothing ever wakes or re-steps it again.
-pub fn cancel_job(job: u64) {
+pub async fn cancel_job(job: u64) {
     JOBS.with(|jobs| {
         jobs.borrow_mut().remove(&job);
     });
@@ -352,7 +352,7 @@ pub fn cancel_job(job: u64) {
 /// (after running) no `progress` bytes were set this slice, `stall_count` increments; any slice
 /// with new progress OR a changed budget resets it to zero. Reaching `STALL_LIMIT` fails the job as
 /// `job.stalled` instead of returning `Running` forever.
-pub fn step_job(job: u64, budget: JobBudget) -> JobStep {
+pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     let Some((kind, running)) = JOBS.with(|jobs| {
         jobs.borrow().get(&job).map(|slot| {
             let running = match &slot.body {
@@ -431,7 +431,7 @@ pub struct JobCheckpointEntry {
 
 /// 📸️ Every job this actor currently has open, in no particular order — `restore_job` (called by
 /// the leased `checkpoint::restore` for each entry) is what re-establishes them.
-pub fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
+pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
     JOBS.with(|jobs| {
         jobs.borrow()
             .iter()
@@ -450,11 +450,11 @@ pub fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
 
 //#region 🔖️Fault
 
-fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
+async fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
     semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new(code), message.into())
 }
 
-fn fault_bytes(code: &str, message: String) -> Vec<u8> {
+async fn fault_bytes(code: &str, message: String) -> Vec<u8> {
     dsl::encode_fault_bytes(&fault(code, message))
 }
 
@@ -507,18 +507,18 @@ struct IoRunInput {
     payload: semio_framework::io_schema::IoPayload,
 }
 
-fn job_io_run(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+async fn job_io_run(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move { run_io_run(&input) })
 }
 
-fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+async fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move { run_io_sniff(&input) })
 }
 
 /// 🌉️ Body unchanged from the pre-rewrite `run_io_run` — only the return type moved from
 /// `JobOutcome` to `Result<Vec<u8>, Fault>` so every registry entry (builtin or plugin-authored)
 /// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
-fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
@@ -534,7 +534,7 @@ fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of
 /// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
-fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
@@ -558,7 +558,7 @@ mod tests {
     //#region 🔖️PreRewriteParity
 
     #[test]
-    fn step_job_on_an_unknown_id_fails_without_panicking() {
+    async fn step_job_on_an_unknown_id_fails_without_panicking() {
         match step_job(999, JobBudget::default()) {
             JobStep::Failed(_) => {}
             _ => panic!("an unregistered job id must fail, not succeed"),
@@ -566,7 +566,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
+    async fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
         start_job(1, JOB_KIND_IO_RUN, b"{}");
         cancel_job(1);
         match step_job(1, JobBudget::default()) {
@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
+    async fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
         start_job(2, "semio.not-a-real-kind", b"{}");
         match step_job(2, JobBudget::default()) {
             JobStep::Failed(bytes) => {
@@ -592,7 +592,7 @@ mod tests {
     /// no fixture for a REAL io-run hop either (that coverage lives in `🖥️host`'s mock-backed
     /// integration tests), so this is the same scope the pre-rewrite suite actually had.
     #[test]
-    fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
+    async fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(3, JOB_KIND_IO_RUN, b"not json");
         match step_job(3, JobBudget::default()) {
             JobStep::Failed(bytes) => {
@@ -604,7 +604,7 @@ mod tests {
     }
 
     #[test]
-    fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
+    async fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(4, JOB_KIND_IO_SNIFF, b"not json");
         match step_job(4, JobBudget::default()) {
             JobStep::Failed(bytes) => {
@@ -622,7 +622,7 @@ mod tests {
     /// 🧬️ Three ticks, three slices: waits for a grant, does one unit of work (`count += 1`,
     /// progress/checkpoint bytes = `count`), then loops until `count` reaches 3. Resumable from
     /// `restored` (a one-byte `count`), which is what the checkpoint/restore test below exercises.
-    fn resumable_counter_job(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    async fn resumable_counter_job(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
         Box::pin(async move {
             let mut count: u8 = restored.and_then(|bytes| bytes.first().copied()).unwrap_or(0);
             while count < 3 {
@@ -636,7 +636,7 @@ mod tests {
     }
 
     #[test]
-    fn a_three_slice_job_returns_running_running_done_with_progress_each_slice() {
+    async fn a_three_slice_job_returns_running_running_done_with_progress_each_slice() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(10, "test.resumable-counter", &[7]);
 
@@ -655,8 +655,8 @@ mod tests {
     }
 
     #[test]
-    fn the_budget_a_tick_observes_is_whatever_step_job_most_recently_passed() {
-        fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    async fn the_budget_a_tick_observes_is_whatever_step_job_most_recently_passed() {
+        async fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
                 ctx.tick().await;
                 ctx.progress(vec![ctx.budget().fuel as u8]);
@@ -680,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
+    async fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(12, "test.resumable-counter", b"[]");
         match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }) {
@@ -698,7 +698,7 @@ mod tests {
     }
 
     #[test]
-    fn checkpoint_restore_resumes_and_matches_an_uninterrupted_run() {
+    async fn checkpoint_restore_resumes_and_matches_an_uninterrupted_run() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
 
         // Uninterrupted baseline.
@@ -732,8 +732,8 @@ mod tests {
     }
 
     #[test]
-    fn the_stall_guard_fires_after_repeated_no_progress_static_budget_slices() {
-        fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    async fn the_stall_guard_fires_after_repeated_no_progress_static_budget_slices() {
+        async fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
                 loop {
                     ctx.tick().await;

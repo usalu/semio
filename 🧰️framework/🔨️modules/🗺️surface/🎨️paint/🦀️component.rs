@@ -69,11 +69,11 @@ enum LayerNodeJson {
     },
 }
 
-fn default_true() -> bool {
+async fn default_true() -> bool {
     true
 }
 
-fn default_opacity() -> f32 {
+async fn default_opacity() -> f32 {
     1.0
 }
 
@@ -92,7 +92,7 @@ struct TransformJson {
     rotation: f64,
 }
 
-fn default_one() -> f64 {
+async fn default_one() -> f64 {
     1.0
 }
 
@@ -140,7 +140,7 @@ struct RasterDocument {
     layers: Vec<LayerNode>,
 }
 
-fn blend_from_str(raw: &str) -> BlendMode {
+async fn blend_from_str(raw: &str) -> BlendMode {
     match raw {
         "multiply" => BlendMode::Multiply,
         "screen" => BlendMode::Screen,
@@ -161,17 +161,17 @@ fn blend_from_str(raw: &str) -> BlendMode {
     }
 }
 
-fn affine_from_json(t: &TransformJson) -> Affine {
+async fn affine_from_json(t: &TransformJson) -> Affine {
     let cos_r = t.rotation.cos();
     let sin_r = t.rotation.sin();
     Affine::new([t.scale_x * cos_r, t.scale_x * sin_r, -t.scale_y * sin_r, t.scale_y * cos_r, t.x, t.y])
 }
 
-fn parse_mask(m: &MaskJson) -> MaskState {
+async fn parse_mask(m: &MaskJson) -> MaskState {
     MaskState { enabled: m.enabled, invert: m.invert, width: m.width.unwrap_or(512), height: m.height.unwrap_or(512) }
 }
 
-fn parse_layer(raw: LayerNodeJson) -> LayerNode {
+async fn parse_layer(raw: LayerNodeJson) -> LayerNode {
     match raw {
         LayerNodeJson::Pixel { id, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => LayerNode::Pixel {
             id,
@@ -191,7 +191,7 @@ fn parse_layer(raw: LayerNodeJson) -> LayerNode {
     }
 }
 
-fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintError> {
+async fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintError> {
     let doc: DocumentJson = serde_json::from_str(json)?;
     if doc.schema != "raster.document" {
         return Err(FrameworkSurfacePaintError::UnsupportedSchema(doc.schema));
@@ -214,7 +214,7 @@ pub enum FrameworkSurfacePaintError {
 //#endregion ⚠️ Errors
 
 // #region 🔖️Pixels
-fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> Vec<u8> {
+async fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> Vec<u8> {
     let mut rgba = vec![0u8; (width * height * 4) as usize];
     let cell = 16u32;
     for y in 0..height {
@@ -231,12 +231,12 @@ fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> 
     rgba
 }
 
-fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> RasterImage {
+async fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> RasterImage {
     RasterImage::rgba8(width, height, Arc::new(rgba))
 }
 
 #[cfg(test)]
-fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
+async fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
     let b = brightness;
     let c = contrast;
     for px in rgba.chunks_exact_mut(4) {
@@ -249,7 +249,7 @@ fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
 }
 
 #[cfg(test)]
-fn apply_blur_box(rgba: &mut [u8], width: u32, height: u32, radius: u32) {
+async fn apply_blur_box(rgba: &mut [u8], width: u32, height: u32, radius: u32) {
     if radius == 0 {
         return;
     }
@@ -345,7 +345,7 @@ impl Default for RasterHost {
 }
 
 impl RasterHost {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         let theme_clear = theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(theme_clear);
         Self {
@@ -370,7 +370,7 @@ impl RasterHost {
         }
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
+    pub async fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         let v: serde_json::Value = serde_json::from_str(json)?;
         theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(self.theme_clear);
@@ -379,31 +379,31 @@ impl RasterHost {
         Ok(())
     }
 
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.width = width.max(1);
         self.viewport.height = height.max(1);
         self.viewport.dpr = dpr.max(1.0);
     }
 
-    pub fn set_show_selection_chrome(&mut self, enabled: bool) {
+    pub async fn set_show_selection_chrome(&mut self, enabled: bool) {
         self.show_selection_chrome = enabled;
     }
 
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
         self.camera.zoom = camera::clamp_zoom(zoom);
     }
 
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     }
 
-    fn screen_to_world(&self, sx: f64, sy: f64) -> Point {
+    async fn screen_to_world(&self, sx: f64, sy: f64) -> Point {
         camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
         if button == 1 {
             self.panning = true;
             self.pan_last = Some(Point::new(sx, sy));
@@ -417,7 +417,7 @@ impl RasterHost {
         }
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
         if self.panning {
             if let Some(last) = self.pan_last {
                 let dx = (sx - last.x) / self.camera.zoom;
@@ -437,18 +437,18 @@ impl RasterHost {
         }
     }
 
-    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
+    pub async fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
         self.panning = false;
         self.pan_last = None;
         self.painting = false;
         self.last_paint = None;
     }
 
-    fn layer_pixel_buffer_key(id: &str) -> String {
+    async fn layer_pixel_buffer_key(id: &str) -> String {
         format!("layer:{id}")
     }
 
-    fn ensure_layer_buffer(&mut self, id: &str, width: u32, height: u32) -> &mut Vec<u8> {
+    async fn ensure_layer_buffer(&mut self, id: &str, width: u32, height: u32) -> &mut Vec<u8> {
         let key = Self::layer_pixel_buffer_key(id);
         let len = (width * height * 4) as usize;
         let checkerboard_light_cell = self.checkerboard_light_cell;
@@ -460,7 +460,7 @@ impl RasterHost {
         buf
     }
 
-    fn paint_at(&mut self, world: Point) {
+    async fn paint_at(&mut self, world: Point) {
         let radius = (self.brush_size as f64 * 0.5).max(1.0);
         let layer_id = self.selected_ids.first().cloned().unwrap_or_else(|| "bg".into());
         let (width, height) = (512u32, 512u32);
@@ -497,7 +497,7 @@ impl RasterHost {
         self.images.insert(Self::layer_pixel_buffer_key(&layer_id), image);
     }
 
-    fn stroke_paint(&mut self, from: Point, to: Point) {
+    async fn stroke_paint(&mut self, from: Point, to: Point) {
         let steps = ((to.x - from.x).hypot(to.y - from.y) / 2.0).ceil().max(1.0) as i32;
         for i in 0..=steps {
             let t = i as f64 / steps as f64;
@@ -506,12 +506,12 @@ impl RasterHost {
         }
     }
 
-    pub fn sync_document_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
+    pub async fn sync_document_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         self.document = parse_document(json)?;
         Ok(())
     }
 
-    pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
+    pub async fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
         let img = image::load_from_memory(bytes)?;
         let rgba = img.to_rgba8();
         let width = rgba.width();
@@ -524,7 +524,7 @@ impl RasterHost {
         Ok(())
     }
 
-    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
+    pub async fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
         let img = image::load_from_memory(bytes)?;
         let rgba = img.to_rgba8();
         let width = rgba.width();
@@ -536,31 +536,31 @@ impl RasterHost {
         Ok(())
     }
 
-    pub fn set_active_utility(&mut self, utility: &str) {
+    pub async fn set_active_utility(&mut self, utility: &str) {
         self.active_utility = utility.to_string();
     }
 
-    pub fn set_brush_size(&mut self, size: f32) {
+    pub async fn set_brush_size(&mut self, size: f32) {
         self.brush_size = size;
     }
 
-    pub fn set_brush_opacity(&mut self, opacity: f32) {
+    pub async fn set_brush_opacity(&mut self, opacity: f32) {
         self.brush_opacity = opacity.clamp(0.0, 1.0);
     }
 
     /// 🕹️ Replaces the deleted `set_hovered_id`/`set_selection_ids_json` push-setters — reads the
     /// framework's current `DomainSelection.ids`/`DomainHover.ids.first()` for this domain, called at
     /// render time instead of pushed arbitrarily by app code.
-    pub fn sync_interaction(&mut self, selected_ids: &[String], hovered_id: Option<&str>) {
+    pub async fn sync_interaction(&mut self, selected_ids: &[String], hovered_id: Option<&str>) {
         self.selected_ids = selected_ids.to_vec();
         self.hovered_id = hovered_id.map(str::to_string);
     }
 
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }).to_string()
     }
 
-    fn layer_image(&mut self, id: &str, width: u32, height: u32, image_key: &Option<String>) -> Arc<RasterImage> {
+    async fn layer_image(&mut self, id: &str, width: u32, height: u32, image_key: &Option<String>) -> Arc<RasterImage> {
         let key = image_key.clone().unwrap_or_else(|| Self::layer_pixel_buffer_key(id));
         if let Some(img) = self.images.get(&key) {
             return img;
@@ -574,7 +574,7 @@ impl RasterHost {
         self.images.insert(key, image_from_rgba(width, height, rgba))
     }
 
-    fn append_layer_node(&mut self, scene: &mut Scene, cam: Affine, node: &LayerNode, isolated_id: Option<&str>) {
+    async fn append_layer_node(&mut self, scene: &mut Scene, cam: Affine, node: &LayerNode, isolated_id: Option<&str>) {
         match node {
             LayerNode::Pixel { id, visible, opacity, blend, transform, width, height, image_key, mask } => {
                 if !visible {
@@ -642,15 +642,15 @@ impl RasterHost {
         }
     }
 
-    pub fn build_vector_scene(&mut self) -> Scene {
+    pub async fn build_vector_scene(&mut self) -> Scene {
         self.build_scene_for_layer(None)
     }
 
-    pub fn build_layer_scene(&mut self, layer_id: &str) -> Scene {
+    pub async fn build_layer_scene(&mut self, layer_id: &str) -> Scene {
         self.build_scene_for_layer(Some(layer_id))
     }
 
-    pub fn build_mask_scene(&mut self, layer_id: &str) -> Scene {
+    pub async fn build_mask_scene(&mut self, layer_id: &str) -> Scene {
         let mut scene = Scene::new();
         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
         let key = format!("mask:{layer_id}");
@@ -660,7 +660,7 @@ impl RasterHost {
         scene
     }
 
-    fn build_scene_for_layer(&mut self, isolated: Option<&str>) -> Scene {
+    async fn build_scene_for_layer(&mut self, isolated: Option<&str>) -> Scene {
         let mut scene = Scene::new();
         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
         for layer in self.document.layers.clone() {
@@ -669,18 +669,18 @@ impl RasterHost {
         scene
     }
 
-    pub fn build_render_scene(&mut self) -> Scene {
+    pub async fn build_render_scene(&mut self) -> Scene {
         let inner = self.build_vector_scene();
         render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     }
 }
 
 impl canvas_content::CanvasContent for RasterHost {
-    fn build_scene(&self) -> Scene {
+    async fn build_scene(&self) -> Scene {
         Scene::new()
     }
 
-    fn clear_color(&self) -> Color {
+    async fn clear_color(&self) -> Color {
         self.theme_clear
     }
 }
@@ -697,7 +697,7 @@ struct ScreenRect {
 }
 
 impl ScreenRect {
-    fn from_points(points: &[Point]) -> Self {
+    async fn from_points(points: &[Point]) -> Self {
         let min_x = points.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
         let min_y = points.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
         let max_x = points.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max);
@@ -705,7 +705,7 @@ impl ScreenRect {
         Self { x: min_x, y: min_y, width: max_x - min_x, height: max_y - min_y }
     }
 
-    fn union(acc: Option<Self>, next: Self) -> Self {
+    async fn union(acc: Option<Self>, next: Self) -> Self {
         match acc {
             None => next,
             Some(a) => {
@@ -718,15 +718,15 @@ impl ScreenRect {
         }
     }
 
-    fn contains(&self, inner: &ScreenRect) -> bool {
+    async fn contains(&self, inner: &ScreenRect) -> bool {
         inner.x >= self.x && inner.y >= self.y && inner.x + inner.width <= self.x + self.width && inner.y + inner.height <= self.y + self.height
     }
 
-    fn intersects(&self, other: &ScreenRect) -> bool {
+    async fn intersects(&self, other: &ScreenRect) -> bool {
         self.x <= other.x + other.width && self.x + self.width >= other.x && self.y <= other.y + other.height && self.y + self.height >= other.y
     }
 
-    fn contains_point(&self, x: f64, y: f64) -> bool {
+    async fn contains_point(&self, x: f64, y: f64) -> bool {
         x >= self.x && x <= self.x + self.width && y >= self.y && y <= self.y + self.height
     }
 }
@@ -771,7 +771,7 @@ enum PickEntry {
 }
 
 impl RasterHost {
-    fn pixel_screen_bounds(&self, parent: Affine, transform: &Affine, width: u32, height: u32) -> ScreenRect {
+    async fn pixel_screen_bounds(&self, parent: Affine, transform: &Affine, width: u32, height: u32) -> ScreenRect {
         let world = camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
         let hw = width as f64 * 0.5;
         let hh = height as f64 * 0.5;
@@ -780,7 +780,7 @@ impl RasterHost {
     }
 
     /// 🎯️ Bounding box of a group's visible pixel descendants — port of premigration `rasterGroupScreenBounds`.
-    fn group_screen_bounds(&self, parent: Affine, children: &[LayerNode]) -> Option<ScreenRect> {
+    async fn group_screen_bounds(&self, parent: Affine, children: &[LayerNode]) -> Option<ScreenRect> {
         let mut acc: Option<ScreenRect> = None;
         for child in children {
             match child {
@@ -801,8 +801,8 @@ impl RasterHost {
         acc
     }
 
-    fn flatten_pick_targets(&self) -> Vec<PickEntry> {
-        fn walk(nodes: &[LayerNode], parent: Affine, ancestors: &[(String, bool)], out: &mut Vec<PickEntry>) {
+    async fn flatten_pick_targets(&self) -> Vec<PickEntry> {
+        async fn walk(nodes: &[LayerNode], parent: Affine, ancestors: &[(String, bool)], out: &mut Vec<PickEntry>) {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { id, visible, transform, width, height, .. } => {
@@ -824,7 +824,7 @@ impl RasterHost {
     }
 
     /// 🎯️ Stacked pick targets at a screen point, topmost first — port of premigration `resolveRasterPickTargetsAtScreenPoint`.
-    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         let entries = self.flatten_pick_targets();
         let mut hits: Vec<PickTargetJson> = Vec::new();
         for entry in entries.iter().rev() {
@@ -862,7 +862,7 @@ impl RasterHost {
     }
 
     /// 🖱️ Pixel layer ids hit by a screen-space marquee (rect or lasso bbox) — port of premigration `resolveRasterMarqueeLayerHits`.
-    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, FrameworkSurfacePaintError> {
+    pub async fn marquee_hits_json(&self, query_json: &str) -> Result<String, FrameworkSurfacePaintError> {
         let query: MarqueeQueryIn = serde_json::from_str(query_json)?;
         if query.points.len() < 2 {
             return Ok("[]".into());
@@ -886,8 +886,8 @@ impl RasterHost {
     }
 
     /// 📐️ World-space bounds of visible pixel layers (own + ancestor transforms, no camera) — port of premigration `resolveRasterDocumentWorldBounds`.
-    fn document_world_bounds(&self) -> Option<ScreenRect> {
-        fn walk(nodes: &[LayerNode], parent: Affine, acc: &mut Option<ScreenRect>) {
+    async fn document_world_bounds(&self) -> Option<ScreenRect> {
+        async fn walk(nodes: &[LayerNode], parent: Affine, acc: &mut Option<ScreenRect>) {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { visible, transform, width, height, .. } => {
@@ -911,7 +911,7 @@ impl RasterHost {
     }
 
     /// 🧭️ Fits a camera to document content — port of premigration `rasterNavigatorFitCamera`. Falls back to the current camera when the document has no visible pixel content.
-    pub fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
+    pub async fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
         let padding = 24.0;
         let (x, y, zoom) = match self.document_world_bounds() {
             None => (self.camera.x, self.camera.y, self.camera.zoom),
@@ -928,7 +928,7 @@ impl RasterHost {
     }
 
     /// 🧭️ Maps the composite viewport into navigator screen space for the overview overlay rectangle — port of premigration `rasterNavigatorViewportOverlay`. `self.camera`/`self.viewport` act as the navigator's own camera/viewport.
-    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, FrameworkSurfacePaintError> {
+    pub async fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, FrameworkSurfacePaintError> {
         let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json)?;
         let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json)?;
         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: camera::clamp_zoom(content_camera.zoom) };
@@ -965,12 +965,12 @@ struct RasterSessionInner {
 
 #[cfg(target_arch = "wasm32")]
 impl RasterSessionInner {
-    fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
+    async fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
     }
 
-    fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
+    async fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = match self.view_mode.as_str() {
             "layer" => {
                 let id = self.isolated_view.clone().unwrap_or_default();
@@ -996,17 +996,17 @@ pub struct RasterSession {
 #[wasm_bindgen]
 impl RasterSession {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
-    pub fn gpu_ready(&self) -> bool {
+    pub async fn gpu_ready(&self) -> bool {
         self.state.borrow().gpu.gpu_ready()
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
-    pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+    pub async fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
         let lw = logical_w.max(1);
         let lh = logical_h.max(1);
@@ -1032,7 +1032,7 @@ impl RasterSession {
     }
 
     #[wasm_bindgen(js_name = setSize)]
-    pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+    pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         let lw = width.max(1);
         let lh = height.max(1);
         let dpr = dpr.max(1.0);
@@ -1042,62 +1042,62 @@ impl RasterSession {
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
-    pub fn render_frame(&mut self) {
+    pub async fn render_frame(&mut self) {
         let _ = self.state.borrow_mut().render_frame_gpu();
     }
 
     #[wasm_bindgen(js_name = setCamera)]
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
     #[wasm_bindgen(js_name = wheelScreen)]
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
+    pub async fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
         self.state.borrow_mut().host.pointer_down_screen(sx, sy, button);
     }
 
     #[wasm_bindgen(js_name = pointerMoveScreen)]
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy);
     }
 
     #[wasm_bindgen(js_name = pointerUpScreen)]
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+    pub async fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy);
     }
 
     #[wasm_bindgen(js_name = syncDocumentJson)]
-    pub fn sync_document_json(&mut self, json: &str) -> Result<(), JsValue> {
+    pub async fn sync_document_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.sync_document_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadLayerImage)]
-    pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), JsValue> {
         self.state.borrow_mut().host.upload_layer_image(layer_id, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadRasterImageKey)]
-    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), JsValue> {
         self.state.borrow_mut().host.upload_raster_image_key(key, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setActiveUtility)]
-    pub fn set_active_utility(&mut self, utility: &str) {
+    pub async fn set_active_utility(&mut self, utility: &str) {
         self.state.borrow_mut().host.set_active_utility(utility);
     }
 
     #[wasm_bindgen(js_name = setBrushSize)]
-    pub fn set_brush_size(&mut self, size: f32) {
+    pub async fn set_brush_size(&mut self, size: f32) {
         self.state.borrow_mut().host.set_brush_size(size);
     }
 
     #[wasm_bindgen(js_name = setBrushOpacity)]
-    pub fn set_brush_opacity(&mut self, opacity: f32) {
+    pub async fn set_brush_opacity(&mut self, opacity: f32) {
         self.state.borrow_mut().host.set_brush_opacity(opacity);
     }
 
@@ -1105,24 +1105,24 @@ impl RasterSession {
     /// `hoveredId` are the caller's resolved `DomainSelection.ids`/`DomainHover.ids.first()`, read from
     /// the framework's `InteractionState` at render time.
     #[wasm_bindgen(js_name = syncInteraction)]
-    pub fn sync_interaction(&mut self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+    pub async fn sync_interaction(&mut self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
         let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
         self.state.borrow_mut().host.sync_interaction(&ids, hovered_id.as_deref());
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
-    pub fn set_canvas_theme_json(&mut self, json: &str) {
+    pub async fn set_canvas_theme_json(&mut self, json: &str) {
         let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
-    pub fn camera_json(&self) -> String {
+    pub async fn camera_json(&self) -> String {
         self.state.borrow().host.camera_json()
     }
 
     #[wasm_bindgen(js_name = setViewMode)]
-    pub fn set_view_mode(&mut self, mode: &str, layer_id: Option<String>) {
+    pub async fn set_view_mode(&mut self, mode: &str, layer_id: Option<String>) {
         let mut g = self.state.borrow_mut();
         g.view_mode = mode.to_string();
         g.isolated_view = layer_id;
@@ -1130,22 +1130,22 @@ impl RasterSession {
     }
 
     #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
-    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+    pub async fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
     }
 
     #[wasm_bindgen(js_name = marqueeHitsJson)]
-    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, JsValue> {
+    pub async fn marquee_hits_json(&self, query_json: &str) -> Result<String, JsValue> {
         self.state.borrow().host.marquee_hits_json(query_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = navigatorFitCameraJson)]
-    pub fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
+    pub async fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
         self.state.borrow().host.navigator_fit_camera_json(viewport_w, viewport_h)
     }
 
     #[wasm_bindgen(js_name = navigatorViewportOverlayJson)]
-    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, JsValue> {
+    pub async fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, JsValue> {
         self.state.borrow().host.navigator_viewport_overlay_json(content_camera_json, content_viewport_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
@@ -1157,14 +1157,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_minimal_document() {
+    async fn parse_minimal_document() {
         let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[]}"#;
         let doc = parse_document(json).expect("parse");
         assert!(doc.layers.is_empty());
     }
 
     #[test]
-    fn parse_play_fixtures() {
+    async fn parse_play_fixtures() {
         // 🩹️ Was `include_str!` of raster's example fixture; raster migrated that fixture to a
         // handcrafted DSL (`store::ArtifactDsl`), which this JSON-only surface parser doesn't read.
         // Inlined an equivalent layered document so this test still exercises multi-layer parsing.
@@ -1176,7 +1176,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_adjustment_without_params() {
+    async fn parse_adjustment_without_params() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"adjustmentKind":"brightnessContrast"}
         ]}"#;
@@ -1185,7 +1185,7 @@ mod tests {
     }
 
     #[test]
-    fn group_child_world_transform_uses_parent_once() {
+    async fn group_child_world_transform_uses_parent_once() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"group","id":"g","name":"G","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":100,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"children":[
                 {"kind":"pixel","id":"p","name":"P","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":50,"height":50}
@@ -1199,7 +1199,7 @@ mod tests {
         assert_eq!(hits.first().map(|h| h.id.as_str()), Some("p"), "group translate(100) + camera center should place child at screen x≈300");
     }
 
-    fn two_pixel_layer_host() -> RasterHost {
+    async fn two_pixel_layer_host() -> RasterHost {
         let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[
             {"kind":"pixel","id":"back","name":"Back","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100},
             {"kind":"pixel","id":"front","name":"Front","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":10,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100}
@@ -1211,7 +1211,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_targets_topmost_first() {
+    async fn pick_targets_topmost_first() {
         let host = two_pixel_layer_host();
         let hits: Vec<PickTargetJson> = serde_json::from_str(&host.pick_targets_at_screen_json(200.0, 200.0)).expect("json");
         assert_eq!(hits.first().map(|h| h.id.as_str()), Some("front"), "later document layer is topmost");
@@ -1219,14 +1219,14 @@ mod tests {
     }
 
     #[test]
-    fn pick_targets_empty_when_missed() {
+    async fn pick_targets_empty_when_missed() {
         let host = two_pixel_layer_host();
         let hits: Vec<PickTargetJson> = serde_json::from_str(&host.pick_targets_at_screen_json(0.0, 0.0)).expect("json");
         assert!(hits.is_empty());
     }
 
     #[test]
-    fn marquee_hits_containment_vs_crossing() {
+    async fn marquee_hits_containment_vs_crossing() {
         let host = two_pixel_layer_host();
         let full_marquee = r#"{"points":[{"x":0,"y":0},{"x":400,"y":400}],"crossing":false}"#;
         let full_hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(full_marquee).expect("marquee")).expect("json");
@@ -1241,7 +1241,7 @@ mod tests {
     }
 
     #[test]
-    fn navigator_fit_camera_centers_content() {
+    async fn navigator_fit_camera_centers_content() {
         let host = two_pixel_layer_host();
         let camera_json = host.navigator_fit_camera_json(300.0, 300.0);
         let camera: CameraJsonIn = serde_json::from_str(&camera_json).expect("camera json");
@@ -1250,7 +1250,7 @@ mod tests {
     }
 
     #[test]
-    fn navigator_viewport_overlay_tracks_composite_camera() {
+    async fn navigator_viewport_overlay_tracks_composite_camera() {
         let mut host = two_pixel_layer_host();
         let fit_json = host.navigator_fit_camera_json(300.0, 300.0);
         let fit: CameraJsonIn = serde_json::from_str(&fit_json).expect("camera json");
@@ -1263,13 +1263,13 @@ mod tests {
 
     // #region 📄️ Document parsing errors
     #[test]
-    fn parse_document_rejects_invalid_json() {
+    async fn parse_document_rejects_invalid_json() {
         let err = parse_document("not json").err().unwrap();
         assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
     }
 
     #[test]
-    fn parse_document_rejects_unsupported_schema() {
+    async fn parse_document_rejects_unsupported_schema() {
         let json = r#"{"schema":"vector.document","id":"t","layers":[]}"#;
         let err = parse_document(json).err().unwrap();
         match &err {
@@ -1280,7 +1280,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_document_pixel_defaults_when_fields_absent() {
+    async fn parse_document_pixel_defaults_when_fields_absent() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{}}
         ]}"#;
@@ -1300,7 +1300,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_document_group_with_mask_and_clip_to_below() {
+    async fn parse_document_group_with_mask_and_clip_to_below() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"group","id":"g","name":"G","opacity":0.5,"blendMode":"multiply","transform":{},"clipToBelow":true,
              "mask":{"enabled":true,"linked":false,"invert":true,"width":64,"height":32},
@@ -1323,7 +1323,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_document_opacity_out_of_range_is_clamped() {
+    async fn parse_document_opacity_out_of_range_is_clamped() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","opacity":5.0,"transform":{}}
         ]}"#;
@@ -1337,7 +1337,7 @@ mod tests {
 
     // #region 🎨️ Blend mode mapping
     #[test]
-    fn blend_from_str_maps_known_modes() {
+    async fn blend_from_str_maps_known_modes() {
         assert!(matches!(blend_from_str("multiply"), BlendMode::Multiply));
         assert!(matches!(blend_from_str("screen"), BlendMode::Screen));
         assert!(matches!(blend_from_str("overlay"), BlendMode::Overlay));
@@ -1356,7 +1356,7 @@ mod tests {
     }
 
     #[test]
-    fn blend_from_str_falls_back_to_normal_for_unknown() {
+    async fn blend_from_str_falls_back_to_normal_for_unknown() {
         assert!(matches!(blend_from_str("bogus"), BlendMode::Normal));
         assert!(matches!(blend_from_str(""), BlendMode::Normal));
     }
@@ -1364,14 +1364,14 @@ mod tests {
 
     // #region 🖼️ Pixel helpers
     #[test]
-    fn checkerboard_rgba_has_correct_size_and_opaque_alpha() {
+    async fn checkerboard_rgba_has_correct_size_and_opaque_alpha() {
         let rgba = checkerboard_rgba(32, 16, 200, 40);
         assert_eq!(rgba.len(), 32 * 16 * 4);
         assert!(rgba.chunks_exact(4).all(|px| px[3] == 255));
     }
 
     #[test]
-    fn checkerboard_rgba_alternates_cells() {
+    async fn checkerboard_rgba_alternates_cells() {
         let rgba = checkerboard_rgba(32, 32, 200, 40);
         let px = |x: u32, y: u32| rgba[((y * 32 + x) * 4) as usize];
         assert_eq!(px(0, 0), 200, "cell (0,0) is light");
@@ -1381,7 +1381,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_brightness_contrast_shifts_brightness() {
+    async fn apply_brightness_contrast_shifts_brightness() {
         let mut rgba = vec![128u8, 128, 128, 255];
         apply_brightness_contrast(&mut rgba, 0.2, 0.0);
         assert_eq!(rgba[0], 179);
@@ -1391,7 +1391,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_brightness_contrast_clamps_extremes() {
+    async fn apply_brightness_contrast_clamps_extremes() {
         let mut bright = vec![0u8, 0, 0, 255];
         apply_brightness_contrast(&mut bright, 2.0, 0.0);
         assert_eq!(bright[0], 255);
@@ -1402,7 +1402,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_blur_box_zero_radius_is_noop() {
+    async fn apply_blur_box_zero_radius_is_noop() {
         let mut rgba = vec![10u8, 20, 30, 255, 200, 100, 50, 255];
         let original = rgba.clone();
         apply_blur_box(&mut rgba, 2, 1, 0);
@@ -1410,7 +1410,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_blur_box_preserves_uniform_image() {
+    async fn apply_blur_box_preserves_uniform_image() {
         let width = 8u32;
         let height = 8u32;
         let mut rgba = vec![0u8; (width * height * 4) as usize];
@@ -1422,7 +1422,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_blur_box_smooths_a_sharp_edge() {
+    async fn apply_blur_box_smooths_a_sharp_edge() {
         let width = 6u32;
         let height = 1u32;
         let mut rgba = vec![0u8; (width * height * 4) as usize];
@@ -1439,7 +1439,7 @@ mod tests {
 
     // #region 🖱️ RasterHost lifecycle
     #[test]
-    fn raster_host_new_has_sane_defaults() {
+    async fn raster_host_new_has_sane_defaults() {
         let host = RasterHost::new();
         assert_eq!(host.active_utility, "selectMarquee");
         assert_eq!(host.brush_size, 24.0);
@@ -1449,7 +1449,7 @@ mod tests {
     }
 
     #[test]
-    fn set_size_clamps_minimums() {
+    async fn set_size_clamps_minimums() {
         let mut host = RasterHost::new();
         host.set_size(0, 0, 0.1);
         assert_eq!(host.viewport.width, 1);
@@ -1458,7 +1458,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_clamps_zoom_bounds() {
+    async fn set_camera_clamps_zoom_bounds() {
         let mut host = RasterHost::new();
         host.set_camera(10.0, 20.0, 1_000_000.0);
         assert_eq!(host.camera.x, 10.0);
@@ -1470,7 +1470,7 @@ mod tests {
     }
 
     #[test]
-    fn wheel_screen_changes_zoom_toward_cursor() {
+    async fn wheel_screen_changes_zoom_toward_cursor() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         let before = host.camera.zoom;
@@ -1479,21 +1479,21 @@ mod tests {
     }
 
     #[test]
-    fn set_canvas_theme_from_json_updates_checkerboard_for_dark_clear() {
+    async fn set_canvas_theme_from_json_updates_checkerboard_for_dark_clear() {
         let mut host = RasterHost::new();
         host.set_canvas_theme_from_json(r#"{"rasterClear":[0,0,0,255]}"#).expect("theme");
         assert_eq!((host.checkerboard_light_cell, host.checkerboard_dark_cell), (64, 48));
     }
 
     #[test]
-    fn set_canvas_theme_from_json_rejects_invalid_json() {
+    async fn set_canvas_theme_from_json_rejects_invalid_json() {
         let mut host = RasterHost::new();
         let err = host.set_canvas_theme_from_json("not json").unwrap_err();
         assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
     }
 
     #[test]
-    fn set_show_selection_chrome_toggles_flag() {
+    async fn set_show_selection_chrome_toggles_flag() {
         let mut host = RasterHost::new();
         host.set_show_selection_chrome(false);
         assert!(!host.show_selection_chrome);
@@ -1502,7 +1502,7 @@ mod tests {
 
     // #region ✋️ Pointer / paint interaction
     #[test]
-    fn pointer_down_button1_pans_on_move() {
+    async fn pointer_down_button1_pans_on_move() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.pointer_down_screen(100.0, 100.0, 1);
@@ -1516,7 +1516,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_paint_utility_paints_immediately() {
+    async fn pointer_down_paint_utility_paints_immediately() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintBrush");
@@ -1530,7 +1530,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_move_while_painting_strokes_between_points() {
+    async fn pointer_move_while_painting_strokes_between_points() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintBrush");
@@ -1544,7 +1544,7 @@ mod tests {
     }
 
     #[test]
-    fn paint_eraser_reduces_alpha_instead_of_coloring() {
+    async fn paint_eraser_reduces_alpha_instead_of_coloring() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintEraser");
@@ -1559,7 +1559,7 @@ mod tests {
     // #endregion ✋️ Pointer / paint interaction
 
     // #region 📤️ Image uploads
-    fn png_bytes(width: u32, height: u32) -> Vec<u8> {
+    async fn png_bytes(width: u32, height: u32) -> Vec<u8> {
         let img = image::RgbaImage::from_pixel(width, height, image::Rgba([10, 20, 30, 255]));
         let mut cursor = std::io::Cursor::new(Vec::new());
         image::DynamicImage::ImageRgba8(img).write_to(&mut cursor, image::ImageFormat::Png).expect("encode png");
@@ -1567,7 +1567,7 @@ mod tests {
     }
 
     #[test]
-    fn upload_layer_image_decodes_valid_png() {
+    async fn upload_layer_image_decodes_valid_png() {
         let mut host = RasterHost::new();
         let bytes = png_bytes(4, 4);
         host.upload_layer_image("layer1", &bytes).expect("decode");
@@ -1579,14 +1579,14 @@ mod tests {
     }
 
     #[test]
-    fn upload_layer_image_rejects_invalid_bytes() {
+    async fn upload_layer_image_rejects_invalid_bytes() {
         let mut host = RasterHost::new();
         let err = host.upload_layer_image("layer1", b"not an image").unwrap_err();
         assert!(matches!(err, FrameworkSurfacePaintError::Image(_)));
     }
 
     #[test]
-    fn upload_raster_image_key_stores_under_given_key() {
+    async fn upload_raster_image_key_stores_under_given_key() {
         let mut host = RasterHost::new();
         let bytes = png_bytes(2, 2);
         host.upload_raster_image_key("custom:key", &bytes).expect("decode");
@@ -1597,7 +1597,7 @@ mod tests {
 
     // #region ⚙️ Settings
     #[test]
-    fn set_brush_opacity_clamps_range() {
+    async fn set_brush_opacity_clamps_range() {
         let mut host = RasterHost::new();
         host.set_brush_opacity(5.0);
         assert_eq!(host.brush_opacity, 1.0);
@@ -1606,7 +1606,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_interaction_updates_hovered_and_selected_state() {
+    async fn sync_interaction_updates_hovered_and_selected_state() {
         let mut host = RasterHost::new();
         host.sync_interaction(&[], Some("x"));
         assert_eq!(host.hovered_id.as_deref(), Some("x"));
@@ -1617,7 +1617,7 @@ mod tests {
     }
 
     #[test]
-    fn camera_json_reflects_current_state() {
+    async fn camera_json_reflects_current_state() {
         let mut host = RasterHost::new();
         host.set_camera(3.0, 4.0, 2.0);
         let json: serde_json::Value = serde_json::from_str(&host.camera_json()).expect("json");
@@ -1629,14 +1629,14 @@ mod tests {
 
     // #region 🎬️ Scene building
     #[test]
-    fn build_vector_scene_empty_document_is_empty() {
+    async fn build_vector_scene_empty_document_is_empty() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         assert!(host.build_vector_scene().is_empty());
     }
 
     #[test]
-    fn build_vector_scene_skips_invisible_layers() {
+    async fn build_vector_scene_skips_invisible_layers() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","visible":false,"transform":{},"width":50,"height":50}
         ]}"#;
@@ -1647,7 +1647,7 @@ mod tests {
     }
 
     #[test]
-    fn build_vector_scene_draws_visible_pixel_layer() {
+    async fn build_vector_scene_draws_visible_pixel_layer() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
         ]}"#;
@@ -1658,7 +1658,7 @@ mod tests {
     }
 
     #[test]
-    fn build_vector_scene_adds_stroke_for_selected_layer_when_chrome_enabled() {
+    async fn build_vector_scene_adds_stroke_for_selected_layer_when_chrome_enabled() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
         ]}"#;
@@ -1677,7 +1677,7 @@ mod tests {
     }
 
     #[test]
-    fn build_layer_scene_isolates_single_pixel_layer() {
+    async fn build_layer_scene_isolates_single_pixel_layer() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"back","name":"Back","transform":{},"width":50,"height":50},
             {"kind":"pixel","id":"front","name":"Front","transform":{},"width":50,"height":50}
@@ -1691,7 +1691,7 @@ mod tests {
     }
 
     #[test]
-    fn build_layer_scene_group_isolation_recurses_into_children() {
+    async fn build_layer_scene_group_isolation_recurses_into_children() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"group","id":"g","name":"G","transform":{},"children":[
                 {"kind":"pixel","id":"child","name":"C","transform":{},"width":50,"height":50}
@@ -1704,14 +1704,14 @@ mod tests {
     }
 
     #[test]
-    fn build_mask_scene_returns_nonempty_scene() {
+    async fn build_mask_scene_returns_nonempty_scene() {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         assert!(!host.build_mask_scene("any").is_empty());
     }
 
     #[test]
-    fn build_render_scene_matches_vector_scene_at_unit_dpr() {
+    async fn build_render_scene_matches_vector_scene_at_unit_dpr() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
         ]}"#;
@@ -1722,7 +1722,7 @@ mod tests {
     }
 
     #[test]
-    fn build_render_scene_scales_for_device_pixel_ratio() {
+    async fn build_render_scene_scales_for_device_pixel_ratio() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50}
         ]}"#;
@@ -1733,7 +1733,7 @@ mod tests {
     }
 
     #[test]
-    fn append_layer_node_draws_enabled_mask() {
+    async fn append_layer_node_draws_enabled_mask() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"pixel","id":"p","name":"P","transform":{},"width":50,"height":50,
              "mask":{"enabled":true,"invert":true,"width":50,"height":50}}
@@ -1755,7 +1755,7 @@ mod tests {
     }
 
     #[test]
-    fn append_layer_node_adjustment_layer_is_transparent_to_scene() {
+    async fn append_layer_node_adjustment_layer_is_transparent_to_scene() {
         let json = r#"{"schema":"raster.document","id":"t","layers":[
             {"kind":"adjustment","id":"a","name":"A","transform":{},"adjustmentKind":"brightnessContrast",
              "params":{"brightness":0.3,"contrast":0.1}}
@@ -1769,7 +1769,7 @@ mod tests {
 
     // #region 📐️ ScreenRect
     #[test]
-    fn screen_rect_contains_and_intersects() {
+    async fn screen_rect_contains_and_intersects() {
         let outer = ScreenRect { x: 0.0, y: 0.0, width: 100.0, height: 100.0 };
         let inner = ScreenRect { x: 10.0, y: 10.0, width: 20.0, height: 20.0 };
         let overlapping = ScreenRect { x: 90.0, y: 90.0, width: 50.0, height: 50.0 };
@@ -1785,7 +1785,7 @@ mod tests {
     }
 
     #[test]
-    fn screen_rect_union_grows_bounding_box() {
+    async fn screen_rect_union_grows_bounding_box() {
         let a = ScreenRect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 };
         let b = ScreenRect { x: 5.0, y: -5.0, width: 10.0, height: 10.0 };
         let merged = ScreenRect::union(Some(a), b);
@@ -1801,28 +1801,28 @@ mod tests {
 
     // #region 🎯️ Picking edge cases
     #[test]
-    fn marquee_hits_json_requires_at_least_two_points() {
+    async fn marquee_hits_json_requires_at_least_two_points() {
         let host = two_pixel_layer_host();
         let hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(r#"{"points":[{"x":0,"y":0}],"crossing":false}"#).expect("marquee")).expect("json");
         assert!(hits.is_empty());
     }
 
     #[test]
-    fn marquee_hits_json_rejects_invalid_json() {
+    async fn marquee_hits_json_rejects_invalid_json() {
         let host = two_pixel_layer_host();
         let err = host.marquee_hits_json("not json").unwrap_err();
         assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
     }
 
     #[test]
-    fn navigator_viewport_overlay_rejects_invalid_camera_json() {
+    async fn navigator_viewport_overlay_rejects_invalid_camera_json() {
         let host = two_pixel_layer_host();
         let err = host.navigator_viewport_overlay_json("not json", r#"{"width":400,"height":400}"#).unwrap_err();
         assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
     }
 
     #[test]
-    fn navigator_fit_camera_json_falls_back_when_document_is_empty() {
+    async fn navigator_fit_camera_json_falls_back_when_document_is_empty() {
         let mut host = RasterHost::new();
         host.set_camera(7.0, 8.0, 1.5);
         let json = host.navigator_fit_camera_json(300.0, 300.0);

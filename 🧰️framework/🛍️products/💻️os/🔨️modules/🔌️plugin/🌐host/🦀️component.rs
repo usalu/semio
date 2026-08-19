@@ -37,7 +37,7 @@ pub use body::BodyReader;
 /// `Event::Completed` routing step before it hands the result to `RequestRegistry::resolve` —
 /// that routing step lives in `wit_bridge`, so this is gated identically (native never reaches it).
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+pub(crate) async fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),
         RequestOutcome::Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
@@ -73,7 +73,7 @@ pub mod direct {
 /// exist off-target. Mirrors this crate's `log`/`now_ms`/`trace_span` double-`#[cfg]`-with-fallback
 /// idiom below, just returning a fault instead of an `eprintln!`.
 #[cfg(feature = "component-guest-async")]
-fn direct_unavailable_fault(op: &str) -> Fault {
+async fn direct_unavailable_fault(op: &str) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.direct-unavailable"), format!("host::{op}: the Direct (component-guest-async) backend requires a real wasm32-wasip2 build"))
 }
 
@@ -84,7 +84,7 @@ fn direct_unavailable_fault(op: &str) -> Fault {
 /// bytes, only the surrounding record type differs between `world actor`'s generated module and
 /// this file's own `direct` module.
 #[cfg(feature = "component-guest-async")]
-fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
+async fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null))
 }
 
@@ -95,7 +95,7 @@ fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
 /// one can just gate on the same full arch check `direct` itself does; no native-fallback shape
 /// needed since nothing off-target ever calls it.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-fn kernel_placement_to_direct_wit(placement: JobPlacement) -> direct::effects::JobPlacement {
+async fn kernel_placement_to_direct_wit(placement: JobPlacement) -> direct::effects::JobPlacement {
     use direct::effects::JobPlacement as W;
     match placement {
         JobPlacement::Inline => W::Inline,
@@ -150,7 +150,7 @@ struct HttpResponseWire {
 }
 
 impl Host {
-    pub fn new(registry: RequestRegistry) -> Self {
+    pub async fn new(registry: RequestRegistry) -> Self {
         Self { backend: HostBackend::Poll(registry) }
     }
 
@@ -159,7 +159,7 @@ impl Host {
     /// this wave (see this packet's report's honest gaps), landing pad only, matching
     /// `AsyncActorHostState`'s own "built, not yet wired to a live `Store`" shape on the host side.
     #[cfg(feature = "component-guest-async")]
-    pub fn new_direct() -> Self {
+    pub async fn new_direct() -> Self {
         Self { backend: HostBackend::Direct }
     }
 
@@ -167,7 +167,7 @@ impl Host {
     /// all — the returned future itself IS the correlation). Was infallible before this packet;
     /// nothing in this crate calls it today (checked — see this packet's report), so narrowing the
     /// signature breaks no live caller.
-    pub fn registry(&self) -> Option<&RequestRegistry> {
+    pub async fn registry(&self) -> Option<&RequestRegistry> {
         match &self.backend {
             HostBackend::Poll(registry) => Some(registry),
             #[cfg(feature = "component-guest-async")]
@@ -180,7 +180,7 @@ impl Host {
     /// variant to `host-async`'s one fire-and-forget door, `emit`, per that WIT func's own doc
     /// ("takes the whole existing `effect` variant rather than growing a hand-written signature
     /// per case").
-    fn emit(&self, effect: Effect) {
+    async fn emit(&self, effect: Effect) {
         match &self.backend {
             HostBackend::Poll(registry) => registry.emit(effect),
             #[cfg(feature = "component-guest-async")]
@@ -543,25 +543,25 @@ impl Host {
         }
     }
 
-    pub fn send_message(&self, target: semio_framework::kernel::MessageEndpoint, payload: Vec<u8>) {
+    pub async fn send_message(&self, target: semio_framework::kernel::MessageEndpoint, payload: Vec<u8>) {
         self.emit(Effect::SendMessage { target, payload });
     }
 
-    pub fn publish_event(&self, topic: impl Into<String>, payload: Vec<u8>) {
+    pub async fn publish_event(&self, topic: impl Into<String>, payload: Vec<u8>) {
         self.emit(Effect::PublishEvent { topic: topic.into(), payload });
     }
 
-    pub fn subscribe(&self, topic: impl Into<String>) {
+    pub async fn subscribe(&self, topic: impl Into<String>) {
         self.emit(Effect::Subscribe { topic: topic.into() });
     }
 
-    pub fn unsubscribe(&self, topic: impl Into<String>) {
+    pub async fn unsubscribe(&self, topic: impl Into<String>) {
         self.emit(Effect::Unsubscribe { topic: topic.into() });
     }
 
     /// ↩️ Answers an inbound `Event::Request{req, ..}` — must be called within the bounded number
     /// of turns the host allows, or the caller sees a timeout fault.
-    pub fn respond(&self, req: RequestId, result: Result<Vec<u8>, Vec<u8>>) {
+    pub async fn respond(&self, req: RequestId, result: Result<Vec<u8>, Vec<u8>>) {
         let result = match result {
             Ok(bytes) => RequestOutcome::Ok(bytes),
             Err(bytes) => RequestOutcome::Err(bytes),
@@ -571,7 +571,7 @@ impl Host {
     //#endregion 🔖️Extensions
 
     //#region 🔖️Timers / Jobs
-    pub fn set_timer(&self, id: u64, after_ms: u64, repeat: bool) {
+    pub async fn set_timer(&self, id: u64, after_ms: u64, repeat: bool) {
         self.emit(Effect::SetTimer { id, after_ms, repeat });
     }
 
@@ -609,7 +609,7 @@ impl Host {
     /// an id minted by the `RequestRegistry`'s `req` counter (Poll world) or `DIRECT_JOB_IDS`
     /// (Direct world), exactly as `respond`/every other `req`-carrying effect already assumes about
     /// ids it did not itself allocate.
-    pub fn cancel_job(&self, job: u64) {
+    pub async fn cancel_job(&self, job: u64) {
         self.emit(Effect::CancelJob { job });
     }
     //#endregion 🔖️Timers
@@ -634,51 +634,51 @@ impl Host {
         }
     }
 
-    pub fn close_window(&self, window: WindowHandle) {
+    pub async fn close_window(&self, window: WindowHandle) {
         self.emit(Effect::CloseWindow { window });
     }
 
-    pub fn notify(&self, message: impl Into<String>) {
+    pub async fn notify(&self, message: impl Into<String>) {
         self.emit(Effect::Notify { message: message.into() });
     }
 
-    pub fn clipboard_write(&self, fragment: ClipboardFragment) {
+    pub async fn clipboard_write(&self, fragment: ClipboardFragment) {
         self.emit(Effect::ClipboardWrite { fragment });
     }
 
-    pub fn navigate(&self, uri: impl Into<String>) {
+    pub async fn navigate(&self, uri: impl Into<String>) {
         self.emit(Effect::Navigate { uri: uri.into() });
     }
 
-    pub fn open_external_url(&self, url: impl Into<String>) {
+    pub async fn open_external_url(&self, url: impl Into<String>) {
         self.emit(Effect::OpenExternalUrl { url: url.into() });
     }
 
-    pub fn set_panel(&self, panel_json: impl Into<String>) {
+    pub async fn set_panel(&self, panel_json: impl Into<String>) {
         self.emit(Effect::SetPanel { panel_json: panel_json.into() });
     }
 
-    pub fn set_active_utility(&self, window_id: impl Into<String>, utility_id: impl Into<String>) {
+    pub async fn set_active_utility(&self, window_id: impl Into<String>, utility_id: impl Into<String>) {
         self.emit(Effect::SetActiveUtility { window_id: window_id.into(), utility_id: utility_id.into() });
     }
 
-    pub fn set_active_tool(&self, tool_id: impl Into<String>) {
+    pub async fn set_active_tool(&self, tool_id: impl Into<String>) {
         self.emit(Effect::SetActiveTool { tool_id: tool_id.into() });
     }
 
-    pub fn patch_world3d_chrome(&self, selection_json: impl Into<String>, vortices_json: Option<String>, document_selected_ids: Vec<String>, document_highlighted_ids: Option<Vec<String>>) {
+    pub async fn patch_world3d_chrome(&self, selection_json: impl Into<String>, vortices_json: Option<String>, document_selected_ids: Vec<String>, document_highlighted_ids: Option<Vec<String>>) {
         self.emit(Effect::PatchWorld3dChrome { selection_json: selection_json.into(), vortices_json, document_selected_ids, document_highlighted_ids });
     }
 
-    pub fn replay_shell_command(&self, action_id: impl Into<String>, args: Option<DslValue>) {
+    pub async fn replay_shell_command(&self, action_id: impl Into<String>, args: Option<DslValue>) {
         self.emit(Effect::ReplayShellCommand { action_id: action_id.into(), args });
     }
 
-    pub fn download_media_export(&self, filename: impl Into<String>, mime_type: impl Into<String>, data: impl Into<String>, encoding: Option<String>) {
+    pub async fn download_media_export(&self, filename: impl Into<String>, mime_type: impl Into<String>, data: impl Into<String>, encoding: Option<String>) {
         self.emit(Effect::DownloadMediaExport { filename: filename.into(), mime_type: mime_type.into(), data: data.into(), encoding });
     }
 
-    pub fn icon_render_export(&self, items: Vec<IconRenderExportItem>) {
+    pub async fn icon_render_export(&self, items: Vec<IconRenderExportItem>) {
         self.emit(Effect::IconRenderExport { items });
     }
 
@@ -727,7 +727,7 @@ impl Host {
         }
     }
 
-    pub fn load_document(&self, pack: Vec<u8>, spr: Vec<u8>) {
+    pub async fn load_document(&self, pack: Vec<u8>, spr: Vec<u8>) {
         self.emit(Effect::LoadDocument { pack, spr });
     }
 
@@ -751,7 +751,7 @@ impl Host {
         }
     }
 
-    pub fn open_plugin_instance(&self, plugin_id: impl Into<String>, app_id: impl Into<String>, os_instance_id: Option<String>) {
+    pub async fn open_plugin_instance(&self, plugin_id: impl Into<String>, app_id: impl Into<String>, os_instance_id: Option<String>) {
         self.emit(Effect::OpenPluginInstance { plugin_id: plugin_id.into(), app_id: app_id.into(), os_instance_id });
     }
 
@@ -799,7 +799,7 @@ impl Host {
         }
     }
 
-    pub fn request_sync(&self) {
+    pub async fn request_sync(&self) {
         self.emit(Effect::RequestSync);
     }
     //#endregion 🔖️Ui
@@ -884,7 +884,7 @@ impl Host {
         }
     }
 
-    pub fn release_capability(&self, id: CapabilityId) {
+    pub async fn release_capability(&self, id: CapabilityId) {
         self.emit(Effect::ReleaseCapability { id });
     }
     //#endregion 🔖️Storage
@@ -902,7 +902,7 @@ impl Host {
 static DIRECT_JOB_IDS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-fn next_direct_job_id() -> u64 {
+async fn next_direct_job_id() -> u64 {
     DIRECT_JOB_IDS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
@@ -929,7 +929,7 @@ async fn collect_direct_body(body: wit_bindgen::StreamReader<u8>) -> Result<Vec<
 /// without a matching conversion arm here), not a WIT/schema gap — hence `unreachable!`, not a
 /// silent default.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
+async fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
     use direct::effects as wit_effects;
     match effect {
         Effect::SendMessage { target, payload } => wit_effects::Effect::SendMessage(wit_effects::SendMessageEffect { target: kernel_endpoint_to_direct_wit(target), payload }),
@@ -960,7 +960,7 @@ fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
 }
 
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::MessageEndpoint) -> direct::types::MessageEndpoint {
+async fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::MessageEndpoint) -> direct::types::MessageEndpoint {
     use direct::types::MessageEndpoint as W;
     use semio_framework::kernel::MessageEndpoint as K;
     match endpoint {
@@ -973,7 +973,7 @@ fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::MessageEndpo
 }
 
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effects::RespondResult {
+async fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effects::RespondResult {
     match result {
         RequestOutcome::Ok(bytes) => direct::effects::RespondResult::Ok(bytes),
         RequestOutcome::Err(bytes) => direct::effects::RespondResult::Fault(bytes),
@@ -983,7 +983,7 @@ fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effec
 /// 📝️ Synchronous — wraps the `pure` WIT import `log`. Native/test builds (no `component-guest`
 /// wasm32-wasip2 target) fall back to `eprintln!`, mirroring `host_port::host_now_ms`'s own
 /// fallback shape.
-pub fn log(level: &str, message: &str) {
+pub async fn log(level: &str, message: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
         crate::component::component::semio::framework::pure::log(level, message);
@@ -994,7 +994,7 @@ pub fn log(level: &str, message: &str) {
 }
 
 /// ⏱️ Synchronous — wraps the `pure` WIT import `now-ms`.
-pub fn now_ms() -> i64 {
+pub async fn now_ms() -> i64 {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
         return crate::component::component::semio::framework::pure::now_ms();
@@ -1004,7 +1004,7 @@ pub fn now_ms() -> i64 {
 }
 
 /// 📏️ Synchronous — wraps the `pure` WIT import `trace-span`.
-pub fn trace_span(name: &str) {
+pub async fn trace_span(name: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
         crate::component::component::semio::framework::pure::trace_span(name);

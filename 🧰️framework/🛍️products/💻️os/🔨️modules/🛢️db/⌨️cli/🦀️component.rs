@@ -144,8 +144,11 @@ fn usage(message: &str) -> i32 {
 /// `db_storage::InlineRuntime`, which lives beside the `FsStorage` that needs it rather than being
 /// re-implemented here: this binary is single-shot and strictly sequential (one subcommand, one
 /// process, exits), which is exactly what that runtime is for.
-fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
-    db::storage::FsStorage::open_inline("db_cli", root)
+// 🚫️async: E5 executor bridge — `db_cli` is a single-shot, strictly-sequential process (R4
+// clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
+// stays plain sync and crosses the boundary here, once, via `db_actor::block_on`.
+fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage<db::storage::InlineRuntime>, db::db_ids::DbError> {
+    db::actor::block_on(db::storage::FsStorage::open_inline("db_cli", root))
 }
 //#endregion 🔖️AsyncBridge
 
@@ -773,11 +776,11 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
     let id = &positional[2];
 
     let leader = match open_fs_storage(Path::new(leader_root)) {
-        Ok(storage) => storage,
+        Ok(storage) => db::storage::DbBackend::Fs(storage),
         Err(err) => return fail("open leader", err),
     };
     let follower = match open_fs_storage(Path::new(follower_root)) {
-        Ok(storage) => storage,
+        Ok(storage) => db::storage::DbBackend::Fs(storage),
         Err(err) => return fail("open follower", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());

@@ -1,0 +1,20 @@
+[package]
+name = "semio-jcoprobe-guest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# 🧪️ terra-jco-spike: deliberately its own workspace root so cargo never treats this as a member of
+# the repo's root workspace (which does not know this crate exists — registrar-owned file). Same
+# pattern as the sibling `🔌️asyncprobe` fixture, see `terra-probe-spikes-report.md`.
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+path = "🦀️component.rs"
+
+[dependencies]
+wit-bindgen = { version = "0.57.1", features = ["macros", "async-spawn"] }
+
+[profile.release]
+opt-level = "s"

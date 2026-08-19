@@ -1,0 +1,4 @@
+[pass 1] errors=2 await-edits=2 ambiguous=0 other=0
+    EDIT 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📦️glue.rs [809:809] -> '.await'   (E0308 @ 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📦️glue.rs:18)
+    EDIT 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📦️glue.rs [1259:1259] -> '.await'   (E0308 @ 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📦️glue.rs:28)
+EXIT=0

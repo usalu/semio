@@ -9,7 +9,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{SelectState, WidgetSignal};
 
-pub(crate) fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) async fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if s.options.is_empty() {
         return None;
     }
@@ -26,7 +26,7 @@ pub(crate) fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub(crate) async fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let fg = if focused { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
     let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Panel));
     let value = s.options.get(s.index).map(String::as_str).unwrap_or("");

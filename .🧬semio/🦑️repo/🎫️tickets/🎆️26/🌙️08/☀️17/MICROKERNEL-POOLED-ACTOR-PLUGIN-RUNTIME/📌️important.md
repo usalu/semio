@@ -2,6 +2,168 @@
 
 **Empty this file before `ticket_close`.**
 
+---
+
+# 🌅️ U-PROGRAM RULINGS (2026-08-19) — these SUPERSEDE anything below that contradicts them
+
+Plan of record: `📋️master-u.md`. Designs: `📓️design-dedyn.md` + §"Design B" of `📋️master-u.md`.
+
+## Owner decisions (not negotiable, not re-litigable by any packet)
+
+- **O1 — DROP DYN DISPATCH.** Every first-party dyn-dispatched seam becomes enum / static / generated
+  dispatch so plain AFIT (`async fn` in trait) works. Every first-party fn keeps the **literal `async`
+  keyword**. The boxed-future-trait-method route (`DbFuture`-shaped) is **REJECTED** as an end state —
+  the existing instances of it are damage to be removed, not precedent to follow.
+- **O2 — ONE COORDINATOR.** The W5/W6 coordinator and the papert fleet coordinator are stood down.
+  The two-coordinator path contract (fleet owns `✏️s/🔌️plugins/**`, everything else registrar-only) is
+  **withdrawn**; ownership is now purely the U-program packet registry.
+- **O3 — the root `compose/` tree is OUT OF SCOPE ENTIRELY.** Never edit it, never gate on it. The
+  framework's own `semio.compose` cold job kind IS in scope. (Do not confuse the two.)
+- **O4 — external sync deps**: literal reimplementation where no async version exists; async-native
+  replacement where one does; always behind a first-party interface.
+
+## R1 — what "zero dyn" means
+
+Zero `dyn T` where `T` is one of the ~236 first-party traits. `dyn Future`, `dyn Fn/FnMut/FnOnce`,
+`dyn Any`, `dyn Error` (std/lang) remain PERMITTED, but **dyn-Future erasure is confined to**
+(i) argument-position plumbing (`HostFuture<T>` as `spawn_scoped`'s argument) and (ii) the return type
+of fn-pointer thunks in erasure tables (`ComposeFuture`, `IoFuture`).
+**`dyn Future` is BANNED from trait-method return position** — that is exactly the double-future damage
+being removed. A trait method returning `Pin<Box<dyn Future>>` is a bug from now on.
+
+## R2 — async-literal exception classes (the ONLY legal reasons a first-party fn is not `async`)
+
+- **E1** impls of externally-declared traits (serde, `Display`/`Debug`, `From`/`TryFrom`, `Default`,
+  `Drop`, `Iterator`, `Future::poll`). Signature fixed outside this repo.
+- **E2** `const fn`. **E3** `extern "abi" fn`, `fn main`, proc-macro entry points.
+- **E4 (NEW)** fn items whose VALUE is stored in a **fn-pointer-typed slot** — `AsyncComposeFn`,
+  `IoEntry.run/sniff`, `SurfaceDeclaration.{factory,app_schema,mutation_roster}`, `OnceLock<fn()>`
+  installers, `RawWakerVTable` members. An `async fn` item's pointer type is unnameable, so this is
+  language-fixed, same class as E3. **Discipline: E4 fns are either macro-generated (invisible in
+  source) or tagged `// 🚫️async: E4 fn-pointer slot`.**
+- **E5 (NEW)** sync↔async bridge entry points: `block_on`, `LocalExecutor` internals, `resolve_ready`,
+  hand-rolled `Future::poll` impls. **At most one per crate**, tagged `// 🚫️async: E5 executor bridge`.
+
+Anything outside E1–E5 that is not `async fn` is a defect. Untagged E4/E5 is a defect.
+
+## R3 — the Send boundary
+
+- **Guest side** (`semio-framework-plugin`, the store's guest paths, all 63 fleet crates): futures are
+  **?Send**. Single-threaded wasm, `LocalExecutor`, thread_local state. Never add `+ Send`.
+- **Host side**: Send-ness is obtained **STRUCTURALLY** — every former dyn seam becomes a concrete enum,
+  so at each spawn site the future's concrete type is known and the compiler derives `Send` itself.
+  **Never `+ Send` RPITIT, never return-type-notation, never `trait-variant`.** If a generic host path
+  needs to spawn a trait-method future, the fix is *route it through the enum*, never *add a bound*.
+- The one erased spawn channel that survives is
+  `HostAsyncRuntime::spawn_scoped(&self, scope, ctx, fut: HostFuture<()>)` — callers build the box at
+  concrete types (argument-position, R1-legal).
+
+## R4 — sanctioned `block_on` allow-list (census-enforced; everything else must reach 0)
+
+1. Binary / `main` executor entry points: `semio-framework-os-services`, the describe bin, benches,
+   `🏃️run/📦️bin.rs`.
+2. **Dedicated-thread actor bridges where the thread IS the executor** — the db `postgres`/`neo4j`
+   bridge threads are explicitly sanctioned under this clause.
+3. `StorageScheduler`'s bounded-blocking storage ops (deliberate: bounded + lane-prioritised +
+   quota-accounted, which `tokio::fs`'s unbounded `spawn_blocking` pool is not).
+4. Shard/actor **thread roots** for as long as a thread-loop backend exists (removed when the async
+   runtime becomes the sole backend).
+
+**NEVER sanctioned**: the winit thread, any wasm host path, any per-call site inside a turn.
+
+**Clause 5 (added after `pack-waker` correctly asked): a `#[test] fn` body is a sanctioned executor
+entry point.** A test harness is a `main`-equivalent — it is the thread root, and something has to be the
+bridge. So `block_on` inside `#[cfg(test)]` is allowed and is NOT counted against the census target.
+Preferred form is still `#[async_test]` (which keeps the literal `async fn` and generates the bridge for
+you); a hand-written `block_on` in a test is acceptable where the test needs to control the executor
+itself. Tag either way. The census must therefore report **production** `block_on` separately from
+**test** `block_on` — a single blended total would be both a false alarm and a false all-clear.
+
+## R8 — `#[async_trait]` must go (it is a boxed-future trait method by another name)
+
+The external `async_trait` macro desugars precisely to `Pin<Box<dyn Future>>` in trait-method return
+position, which **R1 bans** and which **O1 rejects** as an end state. Measured surface — small and fully
+enumerated, so there is no excuse for it to survive:
+
+| location | sites |
+|---|---:|
+| `🧰️framework/🔨️modules/🎒️pack/🌐️http` | 5 |
+| `🧰️framework/🔨️modules/🎒️pack/⏳️async` | 3 |
+| `🌎️hub/📇️directory/` (`🦀️component.rs`, `🐘️postgres`, `🪶️sqlite`, `🌐️neo4j`) | 4 |
+| **total** | **12 attribute sites in 6 files**, 5 `Cargo.toml` declarations |
+
+Replace with plain AFIT (`async fn` in trait) plus enum dispatch at the consumer, exactly as O1 requires
+everywhere else; then drop the `async-trait` dependency from those 5 manifests. Assigned: the `🎒️pack`
+half to the follow-up that re-accepts `pack-waker`; the `🌎️hub/📇️directory` half to `os-ripple`.
+
+## R5 — packet slugs are U-program slugs
+
+`jco-spike` `async-harness-spike` `brep-probe` `macros-blockon` `dyn-census` · `vocab-repair`
+`io-thunks` `store-dedyn` `db-dedyn` `sdk-dedyn` `world-collapse` `host-dedyn` `os-ripple`
+`framework-tests` `fleet-codemods` `asyncfleet-stdio` `asyncfleet-a`…`asyncfleet-f` ·
+`async-plugin-runtime` `describe-async` `fleet-wasm-descriptors` · `web-bridges` `wgpu-native-async`
+`winit-unblock` `wgpu-web-shard` `run-through-kernel` `extension-activation` `exchange-removal` ·
+`http-hyper` `pack-waker` `adopt-stdio` `adopt-a`…`adopt-f` · `parity-rebaseline` `bench-web-rows`
+`census-zero`. Reports are `📓️terra-<slug>-report.md`, audits `📓️luna-<topic>-audit.md`.
+
+## R9 — E1 is TRANSITIVE: a pure computation whose consumers cannot be async stays sync
+
+The blind codemod made pure in-memory helpers `async`. Where those helpers are consumed by code that
+**can never** be async — impls of externally-declared traits (serde `Serializer`/`Deserializer`,
+`Display`, `Debug`), fn-pointer slots (E4), or encoders that are themselves E1/E4 — the helper cannot be
+async either. `async` there buys nothing (no suspension point exists) and costs a compile error with no
+alternative fix. **E1 therefore propagates one hop backwards along the call graph.**
+
+**Decision procedure — per function, with evidence, never as a blanket sweep:**
+1. Does the fn perform any I/O? Check for `std::fs`, `tokio`, `reqwest`, `ureq`, `File::`, `TcpStream`,
+   `spawn`, `sleep`, `SystemTime`. If yes → it stays `async`; fix the consumer instead.
+2. If it is pure AND at least one consumer is E1/E3/E4 → make it sync and **tag it**:
+   `// 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9`
+3. If it is pure and every consumer *can* become async → **make the consumer async instead.** That is the
+   direction the decree wants; R9 is a fallback, not a shortcut for avoiding await-insertion work.
+
+Worked precedents (both verified I/O-free before conversion, both went green immediately):
+`🧰️framework/🔨️modules/🌱️value/**` (11 + 8 fns; consumers were hand-rolled serde impls) and
+`🧰️framework/🔨️modules/⚠️diagnostic/**` (39 + 2 fns). Their `.await`s were removed along with the
+keyword — **an orphaned `.await` after de-asyncifying is E0728 and must be removed in the same edit.**
+
+⚠️ Do NOT use R9 to de-asyncify something merely because awaiting it is inconvenient. The test is
+"no suspension point exists AND a consumer is language-barred from being async", and both halves must be
+shown in the report.
+
+## R7 — `async_fn_in_trait` is ALLOWED, crate-wide, with a written reason (do NOT "fix" it)
+
+Measured on the first crate to go green (`semio-framework-async`): `--lib` and `--all-targets` and
+`cargo test` all exit 0, with **6 warnings, all of them**:
+
+> `warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified`
+
+Under universal async this fires on **every public trait with an async method** — i.e. ~93 trait families,
+potentially hundreds of warnings, against an exit bar that demands zero.
+
+**The lint's concern is real but it is already answered by R3.** It warns that callers cannot assume the
+returned future is `Send`. Our architecture answers that *structurally*: every former `dyn` seam becomes a
+concrete enum, so at each spawn site the future's concrete type is known and the compiler derives `Send`
+itself. Guest-side futures are deliberately `?Send`.
+
+**Therefore:**
+- ✅ Add `#![allow(async_fn_in_trait)]` at crate root, with a one-line comment pointing at R3 and R7.
+- ⛔ **NEVER silence it by writing `-> impl Future<Output = T> + Send` on the trait method.** rustc
+  suggests exactly this in the warning text, and it is the WRONG fix here: it re-imposes `Send` on guest
+  traits whose futures cannot be `Send` (single-threaded wasm, `LocalExecutor`, thread_local state), and
+  it contradicts R3 in the letter. Do not take the compiler's suggestion.
+- ⛔ Never resolve it by making the trait method sync.
+
+Every other warning class still counts toward the zero-warning exit bar.
+
+## R6 — ATOMIC packets in this program (rule 25 applies: redirect BEFORE start or let them FINISH)
+
+`sdk-dedyn` · `world-collapse` · each `asyncfleet-*` crate sweep · `fleet-codemods`.
+`sdk-dedyn` + `world-collapse` form ONE long quiet window in which nothing else may build against the
+SDK. Offline work (`fleet-codemods`) is deliberately scheduled inside that window.
+
+---
+
 ## Hard prohibitions (every agent)
 
 1. **No git-modifying commands.** No `commit`, `stash`, `checkout`, `reset`, `worktree`, `add`. Other sessions are live in this tree and an auto-commit bot runs. `git status` is NOT a churn detector — use `git log --oneline -3 -- <path>` and file hashes.

@@ -9,7 +9,7 @@ use crate::tui::geometry::{Pos, Rect};
 use crate::tui::text::display_width;
 use crate::tui::theme::{Role, Surface, Theme};
 
-fn paint_items(items: &[NavItem], theme: &Theme, mut x: u16, y: u16, bg: [u8; 3], rect: Rect, buf: &mut CellBuffer) -> u16 {
+async fn paint_items(items: &[NavItem], theme: &Theme, mut x: u16, y: u16, bg: [u8; 3], rect: Rect, buf: &mut CellBuffer) -> u16 {
     for item in items {
         let fg = if item.active { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
         let label = format!(" {} ", item.label);
@@ -19,7 +19,7 @@ fn paint_items(items: &[NavItem], theme: &Theme, mut x: u16, y: u16, bg: [u8; 3]
     x
 }
 
-pub(crate) fn paint_navbar(n: &NavbarState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_navbar(n: &NavbarState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Base);
     let (content, hairline) = rect.split_bottom(1);
     buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));

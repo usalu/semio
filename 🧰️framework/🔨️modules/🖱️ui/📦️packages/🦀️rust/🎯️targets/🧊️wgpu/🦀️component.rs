@@ -64,7 +64,7 @@ pub mod layout {
         Finished,
     }
 
-    fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    async fn is_default<T: Default + PartialEq>(value: &T) -> bool {
         *value == T::default()
     }
 
@@ -125,47 +125,47 @@ pub mod layout {
     }
 
     impl UiPresence {
-        pub fn is_default(&self) -> bool {
+        pub async fn is_default(&self) -> bool {
             *self == Self::default()
         }
         /// 🙈️ `false` for `state == Hidden` — callers must not render, lay out, or hit-test the element.
-        pub fn visible(&self) -> bool {
+        pub async fn visible(&self) -> bool {
             self.state != UiState::Hidden
         }
-        pub fn state(state: UiState) -> Self {
+        pub async fn state(state: UiState) -> Self {
             Self { state, ..Self::default() }
         }
-        pub fn status(status: UiStatus) -> Self {
+        pub async fn status(status: UiStatus) -> Self {
             Self { status, ..Self::default() }
         }
-        pub fn selected(selected: bool) -> Self {
+        pub async fn selected(selected: bool) -> Self {
             Self { selected, ..Self::default() }
         }
-        pub fn with_state(self, state: UiState) -> Self {
+        pub async fn with_state(self, state: UiState) -> Self {
             Self { state, ..self }
         }
-        pub fn with_status(self, status: UiStatus) -> Self {
+        pub async fn with_status(self, status: UiStatus) -> Self {
             Self { status, ..self }
         }
-        pub fn with_hover(self, hover: bool) -> Self {
+        pub async fn with_hover(self, hover: bool) -> Self {
             Self { hover, ..self }
         }
-        pub fn with_selected(self, selected: bool) -> Self {
+        pub async fn with_selected(self, selected: bool) -> Self {
             Self { selected, ..self }
         }
         /// 🙈️ `Hidden` when `hidden`, else `Normal` — the one-line migration for today's `is_hidden`
         /// flags on elements that are genuinely not rendered (not to be confused with a domain "dimmed"
         /// prop, e.g. a tree item's eye-toggle, which must stay visible/clickable).
-        pub fn hidden_if(hidden: bool) -> Self {
+        pub async fn hidden_if(hidden: bool) -> Self {
             Self::state(if hidden { UiState::Hidden } else { UiState::Normal })
         }
         /// 🚫️ `Disabled` when `disabled`, else `Normal` — the one-line migration for today's `disabled` flags.
-        pub fn disabled_if(disabled: bool) -> Self {
+        pub async fn disabled_if(disabled: bool) -> Self {
             Self::state(if disabled { UiState::Disabled } else { UiState::Normal })
         }
         /// 🎉️ `Celebrating` when `celebrating`, else `Normal` — the transient completion emphasis fired e.g.
         /// when an introduction step advances by the user performing the taught action.
-        pub fn celebrate_if(celebrating: bool) -> Self {
+        pub async fn celebrate_if(celebrating: bool) -> Self {
             Self::state(if celebrating { UiState::Celebrating } else { UiState::Normal })
         }
     }
@@ -173,7 +173,7 @@ pub mod layout {
     impl UiStatus {
         /// 🌀️ The one-line migration for today's independent `loading`/`waiting` flag pairs — `loading`
         /// wins precedence when both are set, matching the prior ad-hoc convention.
-        pub fn busy(loading: bool, waiting: bool) -> Self {
+        pub async fn busy(loading: bool, waiting: bool) -> Self {
             if loading {
                 UiStatus::Loading
             } else if waiting {
@@ -266,7 +266,7 @@ pub mod layout {
     /// `uiRibbonParentEn`/`uiRibbonParentDe` bundles (same file as above, ~3826/~3797). `None` for any id
     /// outside the closed 20-id taxonomy — callers (`shell_context_menu_item_from_spec`) fall back to the
     /// raw category id in that case.
-    pub fn ribbon_parent_label(category: &str, is_de: bool) -> Option<&'static str> {
+    pub async fn ribbon_parent_label(category: &str, is_de: bool) -> Option<&'static str> {
         Some(match (category, is_de) {
             ("history", false) => "History",
             ("history", true) => "Verlauf",
@@ -315,28 +315,28 @@ pub mod layout {
     const CONTEXT_MENU_ROW_BUDGET: usize = 9;
     const CONTEXT_MENU_PRIMARY_BUDGET: usize = 5;
 
-    fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
+    async fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
         item.separator == Some(true) && item.label.is_none()
     }
 
     /// 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider.
-    fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
+    async fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
         item.separator == Some(true) && item.label.is_some()
     }
 
-    fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
+    async fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
         item.id.starts_with("menu.group.")
     }
 
-    fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
+    async fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
         item.id.strip_prefix("menu.group.").unwrap_or(item.id.as_str())
     }
 
-    fn context_menu_taxonomy_rank(category: &str) -> usize {
+    async fn context_menu_taxonomy_rank(category: &str) -> usize {
         RIBBON_PARENT_CATEGORIES.iter().position(|known| *known == category).unwrap_or(RIBBON_PARENT_CATEGORIES.len())
     }
 
-    fn context_menu_separator_row(seed: usize) -> ContextMenuItemSpec {
+    async fn context_menu_separator_row(seed: usize) -> ContextMenuItemSpec {
         ContextMenuItemSpec { id: format!("separator-organized-{seed}"), separator: Some(true), ..Default::default() }
     }
 
@@ -344,7 +344,7 @@ pub mod layout {
     /// separator left at the very start or end (nothing to separate from/to). A labeled separator (header,
     /// see `context_menu_is_header`) is never touched by this — it always survives in place, adjacent bare
     /// separators collapse/drop around it independently.
-    fn context_menu_normalize_separators(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu_normalize_separators(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
         let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
         for item in items {
             if context_menu_is_bare_separator(&item) && out.last().map(context_menu_is_bare_separator).unwrap_or(false) {
@@ -363,7 +363,7 @@ pub mod layout {
 
     /// 🗂️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
     /// concatenating and deduping their `children` by id (first occurrence wins).
-    fn context_menu_merge_group_rows(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu_merge_group_rows(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
         let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
         let mut group_index: HashMap<String, usize> = HashMap::new();
         for item in items {
@@ -389,7 +389,7 @@ pub mod layout {
     /// 🗂️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
     /// taxonomy order (unknown categories after, emit order), then — only if any exist — a separator
     /// followed by destructive leaves.
-    fn context_menu_emit_within_budget(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    async fn context_menu_emit_within_budget(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
         let mut leaves_and_headers: Vec<ContextMenuItemSpec> = Vec::new();
         let mut group_rows: Vec<ContextMenuItemSpec> = Vec::new();
         let mut destructive_leaves: Vec<ContextMenuItemSpec> = Vec::new();
@@ -418,8 +418,8 @@ pub mod layout {
     /// pre-existing group rows pass through unchanged; groups then sort in taxonomy order and, if the
     /// primaries+groups row count is still over budget, the excess trailing groups fold into one
     /// `menu.group.more`. Destructive leaves are carried separately and appended last, after a separator.
-    fn context_menu_emit_over_budget(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
-        fn bucket_mut(buckets: &mut Vec<ContextMenuItemSpec>, id: String) -> usize {
+    async fn context_menu_emit_over_budget(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
+        async fn bucket_mut(buckets: &mut Vec<ContextMenuItemSpec>, id: String) -> usize {
             match buckets.iter().position(|bucket| bucket.id == id) {
                 Some(index) => index,
                 None => {
@@ -494,7 +494,7 @@ pub mod layout {
     /// `category_of` resolves a leaf's dispatched action id to a `RIBBON_PARENT_CATEGORIES` id (`None`
     /// buckets into `"actions"`) — pass `AppActionRegistry::category_of` at the SDK funnel, or
     /// `ActionDefinition.category` lookups in shell builders.
-    pub fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
+    pub async fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
         let items: Vec<ContextMenuItemSpec> = items
             .into_iter()
             .map(|item| {
@@ -533,7 +533,7 @@ pub mod layout {
     /// prompt for arguments before dispatch), appends a fixed `"shell.openPalette"` leaf when
     /// `include_palette`, then runs the whole thing through `organize_context_menu` (D5) exactly like every
     /// plugin-emitted menu.
-    pub fn build_shell_context_menu_specs(actions: &[ShellMenuAction], include_palette: bool) -> Vec<ContextMenuItemSpec> {
+    pub async fn build_shell_context_menu_specs(actions: &[ShellMenuAction], include_palette: bool) -> Vec<ContextMenuItemSpec> {
         let mut items: Vec<ContextMenuItemSpec> = actions
             .iter()
             .filter(|action| action.in_palette)
@@ -669,7 +669,7 @@ pub mod layout {
     pub const FRAMEWORK_HISTORY_BODY_KEY: &str = "framework.body.history";
 
     /// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
-    pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
+    pub async fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
         match (id, is_de) {
             (FRAMEWORK_PANEL_TAB_ARTIFACT_ID, false) => Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL),
             (FRAMEWORK_PANEL_TAB_ARTIFACT_ID, true) => Some("Dokument"),
@@ -687,11 +687,11 @@ pub mod layout {
     //#endregion 🔖️PanelTabConstants
 
     //#region 🔖️WindowLayout
-    fn kind_window() -> String {
+    async fn kind_window() -> String {
         "window".into()
     }
 
-    fn kind_stack() -> String {
+    async fn kind_stack() -> String {
         "stack".into()
     }
 
@@ -793,11 +793,11 @@ pub mod layout {
         pub group_path: Option<Vec<String>>,
     }
 
-    pub fn create_window_layout(window_kind_id: impl Into<String>, title: Option<String>, instance_id: Option<String>, template_id: Option<String>) -> WindowLayoutWindowNode {
+    pub async fn create_window_layout(window_kind_id: impl Into<String>, title: Option<String>, instance_id: Option<String>, template_id: Option<String>) -> WindowLayoutWindowNode {
         WindowLayoutWindowNode { kind: kind_window(), window_kind_id: window_kind_id.into(), title, instance_id, template_id, corner: None }
     }
 
-    pub fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
+    pub async fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
         WindowLayout {
             root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
                 kind: kind_stack(),
@@ -808,7 +808,7 @@ pub mod layout {
         }
     }
 
-    pub fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
+    pub async fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
         WindowLayout {
             root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
                 kind: direction.into(),
@@ -829,13 +829,13 @@ pub mod layout {
         }
     }
 
-    pub fn create_tab_stack_layout(window_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
+    pub async fn create_tab_stack_layout(window_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
         create_stack_layout(window_ids, titles)
     }
 
     /// 🪟️ Builds a balanced fallback layout for an app that declares no `default_layout`: a single
     /// stack when there is one window, otherwise an even row of single-window stacks.
-    pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
+    pub async fn even_window_layout(window_ids: &[String]) -> WindowLayout {
         if window_ids.is_empty() {
             return WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: None, children: vec![] }) };
         }
@@ -857,11 +857,11 @@ pub mod layout {
         }
     }
 
-    pub fn create_named_layout(id: impl Into<String>, label: impl Into<String>, layout: WindowLayout, origin: impl Into<String>, icon_id: Option<IconName>, group_path: Option<Vec<String>>) -> NamedLayout {
+    pub async fn create_named_layout(id: impl Into<String>, label: impl Into<String>, layout: WindowLayout, origin: impl Into<String>, icon_id: Option<IconName>, group_path: Option<Vec<String>>) -> NamedLayout {
         NamedLayout { id: id.into(), label: label.into(), icon_id, layout, origin: origin.into(), group_path }
     }
 
-    pub fn merge_named_layouts(base: &[NamedLayout], extension: &[NamedLayout]) -> Vec<NamedLayout> {
+    pub async fn merge_named_layouts(base: &[NamedLayout], extension: &[NamedLayout]) -> Vec<NamedLayout> {
         let mut merged: HashMap<String, NamedLayout> = HashMap::new();
         for entry in base {
             merged.insert(entry.id.clone(), entry.clone());
@@ -873,20 +873,20 @@ pub mod layout {
     }
 
     /// 🧭️ Collects every `window_kind_id` referenced by a layout tree.
-    pub fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
+    pub async fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
         let mut ids = Vec::new();
         collect_window_kind_ids_from_root(&layout.root, &mut ids);
         ids
     }
 
-    fn collect_window_kind_ids_from_root(root: &WindowLayoutRoot, out: &mut Vec<String>) {
+    async fn collect_window_kind_ids_from_root(root: &WindowLayoutRoot, out: &mut Vec<String>) {
         match root {
             WindowLayoutRoot::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
             WindowLayoutRoot::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
         }
     }
 
-    fn collect_window_kind_ids_from_children(children: &[WindowLayoutChild], out: &mut Vec<String>) {
+    async fn collect_window_kind_ids_from_children(children: &[WindowLayoutChild], out: &mut Vec<String>) {
         for child in children {
             match child {
                 WindowLayoutChild::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
@@ -895,7 +895,7 @@ pub mod layout {
         }
     }
 
-    fn collect_window_kind_ids_from_stack(stack: &WindowLayoutStackNode, out: &mut Vec<String>) {
+    async fn collect_window_kind_ids_from_stack(stack: &WindowLayoutStackNode, out: &mut Vec<String>) {
         for window in &stack.children {
             out.push(window.window_kind_id.clone());
         }
@@ -1017,7 +1017,7 @@ pub mod layout {
 
     impl WindowMeasure {
         /// 🌳️ Builds a measure group with default slider/header fields unset.
-        pub fn measure_group(id: impl Into<String>, label: impl Into<String>, children: Vec<WindowMeasure>) -> Self {
+        pub async fn measure_group(id: impl Into<String>, label: impl Into<String>, children: Vec<WindowMeasure>) -> Self {
             Self::Group { id: id.into(), label: label.into(), default_open: None, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }
         }
     }
@@ -1031,7 +1031,7 @@ pub mod layout {
     /// currently active). The wrapper itself is a routing envelope only — never rendered — so activating a
     /// utility shows its option tree directly (no duplicate utility-name group header). Every untagged group
     /// and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level concept only.
-    pub fn partition_window_measures(measures: &[WindowMeasure], active_utility_id: Option<&str>) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
+    pub async fn partition_window_measures(measures: &[WindowMeasure], active_utility_id: Option<&str>) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
         let mut general = Vec::new();
         let mut utility_options = Vec::new();
         for measure in measures {
@@ -1284,7 +1284,7 @@ pub mod layout {
     }
 
     impl WindowEngagementSlot {
-        pub fn as_option(&self) -> Option<&WindowEngagement> {
+        pub async fn as_option(&self) -> Option<&WindowEngagement> {
             match self {
                 WindowEngagementSlot::None => None,
                 WindowEngagementSlot::Some(engagement) => Some(engagement),
@@ -1292,7 +1292,7 @@ pub mod layout {
         }
     }
 
-    pub fn default_viewport_engagement() -> WindowEngagement {
+    pub async fn default_viewport_engagement() -> WindowEngagement {
         WindowEngagement {
             session_active: Some(true),
             options: None,
@@ -1328,7 +1328,7 @@ pub mod layout {
         const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
 
         #[test]
-        fn action_descriptor_and_style_spec_serialize_to_golden_json() {
+        async fn action_descriptor_and_style_spec_serialize_to_golden_json() {
             let values = (
                 ActionDescriptor { controller_id: "ctrl".into(), action: "doThing".into(), args: Some(DslValue::Number(42.0)) },
                 ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
@@ -1341,7 +1341,7 @@ pub mod layout {
         const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
 
         #[test]
-        fn window_layout_serializes_to_golden_json() {
+        async fn window_layout_serializes_to_golden_json() {
             let layout = WindowLayout {
                 root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
                     kind: "horizontal".into(),
@@ -1366,7 +1366,7 @@ pub mod layout {
         const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"layout-grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";
 
         #[test]
-        fn window_measure_serializes_to_golden_json() {
+        async fn window_measure_serializes_to_golden_json() {
             let measures = vec![
                 WindowMeasure::Select {
                     id: "m1".into(),
@@ -1412,7 +1412,7 @@ pub mod layout {
             assert_eq!(roundtripped, measures);
         }
 
-        fn utility_scoped_group(id: &str, utility: Option<&str>, children: Vec<WindowMeasure>) -> WindowMeasure {
+        async fn utility_scoped_group(id: &str, utility: Option<&str>, children: Vec<WindowMeasure>) -> WindowMeasure {
             WindowMeasure::Group {
                 id: id.into(),
                 label: id.to_uppercase(),
@@ -1430,12 +1430,12 @@ pub mod layout {
             }
         }
 
-        fn measure_toggle(id: &str) -> WindowMeasure {
+        async fn measure_toggle(id: &str) -> WindowMeasure {
             WindowMeasure::Toggle { id: id.into(), icon_id: IconName::PanelLeft, label: Some(id.into()), pressed: true, text: None, on_change: ActionDescriptor { controller_id: "c".into(), action: "t".into(), args: None } }
         }
 
         #[test]
-        fn partition_window_measures_unwraps_matching_utility_group_children_into_utility_options() {
+        async fn partition_window_measures_unwraps_matching_utility_group_children_into_utility_options() {
             let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
             let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
             assert!(general.is_empty());
@@ -1444,7 +1444,7 @@ pub mod layout {
         }
 
         #[test]
-        fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
+        async fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
             let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
             let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill"));
             assert!(general_other.is_empty() && utility_options_other.is_empty(), "wrong active utility drops the group entirely");
@@ -1453,7 +1453,7 @@ pub mod layout {
         }
 
         #[test]
-        fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
+        async fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
             let measures = vec![
                 utility_scoped_group("grid", None, vec![]),
                 WindowMeasure::Slider {
@@ -1477,7 +1477,7 @@ pub mod layout {
         }
 
         #[test]
-        fn partition_window_measures_empty_input_roundtrips_to_empty() {
+        async fn partition_window_measures_empty_input_roundtrips_to_empty() {
             let (general, utility_options) = partition_window_measures(&[], Some("brush"));
             assert!(general.is_empty() && utility_options.is_empty());
         }
@@ -1485,7 +1485,7 @@ pub mod layout {
         const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"onChange\":null,\"onCommit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
 
         #[test]
-        fn window_engagement_serializes_to_golden_json() {
+        async fn window_engagement_serializes_to_golden_json() {
             let engagement = WindowEngagement {
                 session_active: Some(true),
                 options: Some(vec![WindowEngagementOption { id: "opt1".into(), label: Some("Option".into()), icon_id: None, pressed: Some(false), disabled: None, action: None }]),
@@ -1590,7 +1590,7 @@ pub mod utilities {
     }
 
     impl UtilityNode {
-        pub fn category(&self) -> UtilityCategory {
+        pub async fn category(&self) -> UtilityCategory {
             match self {
                 UtilityNode::Separator { .. } => UtilityCategory::Utilities,
                 UtilityNode::Button { category, .. } => category.unwrap_or(UtilityCategory::Utilities),
@@ -1599,7 +1599,7 @@ pub mod utilities {
             }
         }
 
-        pub fn with_category(mut self, category: UtilityCategory) -> Self {
+        pub async fn with_category(mut self, category: UtilityCategory) -> Self {
             match &mut self {
                 UtilityNode::Button { category: slot, .. } | UtilityNode::Toggle { category: slot, .. } | UtilityNode::Collection { category: slot, .. } => *slot = Some(category),
                 UtilityNode::Separator { .. } => {}
@@ -1608,21 +1608,21 @@ pub mod utilities {
         }
     }
 
-    pub fn utility_separator(id: impl Into<String>) -> UtilityNode {
+    pub async fn utility_separator(id: impl Into<String>) -> UtilityNode {
         UtilityNode::Separator { id: id.into(), order: None, disabled: None }
     }
 
-    pub fn utility_button(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, on_press: ActionDescriptor) -> UtilityNode {
+    pub async fn utility_button(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, on_press: ActionDescriptor) -> UtilityNode {
         let label = label.into();
         UtilityNode::Button { id: id.into(), icon_id, label: Some(label.clone()), text: None, title: Some(label), order: None, disabled: None, category: None, on_press }
     }
 
-    pub fn utility_toggle(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, pressed: bool, on_change: ActionDescriptor) -> UtilityNode {
+    pub async fn utility_toggle(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, pressed: bool, on_change: ActionDescriptor) -> UtilityNode {
         let label = label.into();
         UtilityNode::Toggle { id: id.into(), icon_id, label: Some(label.clone()), text: None, title: Some(label), order: None, pressed: Some(pressed), disabled: None, category: None, on_change }
     }
 
-    pub fn utility_collection(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, children: Vec<UtilityNode>) -> UtilityNode {
+    pub async fn utility_collection(id: impl Into<String>, icon_id: IconName, label: impl Into<String>, children: Vec<UtilityNode>) -> UtilityNode {
         let label = label.into();
         UtilityNode::Collection { id: id.into(), icon_id, label: Some(label.clone()), text: None, title: Some(label), order: None, disabled: None, category: None, children }
     }
@@ -1647,8 +1647,8 @@ pub mod utilities {
     /// utilities stay flat siblings. A group that ends with exactly one child is hoisted to a top-level toggle —
     /// a lone `group:transform`/`transform` pair must not render as two nested "Transform" rows. This is the
     /// single source of truth for the utility bar — `ArtifactApp::utilities` no longer exists.
-    pub fn derive_utility_nodes(controller_id: &str, utilities: &[DerivedUtilitySpec], active_utility_id: Option<&str>) -> Vec<UtilityNode> {
-        fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
+    pub async fn derive_utility_nodes(controller_id: &str, utilities: &[DerivedUtilitySpec], active_utility_id: Option<&str>) -> Vec<UtilityNode> {
+        async fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
             UtilityNode::Toggle {
                 id: utility.id.clone(),
                 icon_id: utility.icon_id.clone(),
@@ -1711,7 +1711,7 @@ pub mod utilities {
         const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"wrench\",\"label\":\"Utility\",\"title\":\"Utility\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runUtility\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"panel-left\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleUtility\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"folder\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
         #[test]
-        fn utility_node_serializes_to_golden_json() {
+        async fn utility_node_serializes_to_golden_json() {
             let nodes = vec![
                 UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
                 utility_button("btn1", IconName::Wrench, "Utility", ActionDescriptor { controller_id: "ctrl".into(), action: "runUtility".into(), args: None }).with_category(UtilityCategory::History),
@@ -1724,12 +1724,12 @@ pub mod utilities {
             assert_eq!(roundtripped, nodes);
         }
 
-        fn spec(id: &str, group: Option<&str>) -> DerivedUtilitySpec {
+        async fn spec(id: &str, group: Option<&str>) -> DerivedUtilitySpec {
             DerivedUtilitySpec { id: id.into(), label: id.to_uppercase(), icon_id: IconName::CircleDot, group: group.map(str::to_string), category: None }
         }
 
         #[test]
-        fn derive_utility_nodes_marks_the_active_utility_pressed() {
+        async fn derive_utility_nodes_marks_the_active_utility_pressed() {
             let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
             assert_eq!(nodes.len(), 2);
             match &nodes[0] {
@@ -1751,7 +1751,7 @@ pub mod utilities {
         }
 
         #[test]
-        fn derive_utility_nodes_groups_shared_group_into_one_collection() {
+        async fn derive_utility_nodes_groups_shared_group_into_one_collection() {
             let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("line", Some("shapes")), spec("rect", Some("shapes"))], None);
             assert_eq!(nodes.len(), 2, "one ungrouped toggle + one shapes collection");
             assert!(matches!(&nodes[0], UtilityNode::Toggle { id, .. } if id == "select"));
@@ -1767,7 +1767,7 @@ pub mod utilities {
         }
 
         #[test]
-        fn derive_utility_nodes_hoists_single_child_groups() {
+        async fn derive_utility_nodes_hoists_single_child_groups() {
             let nodes = derive_utility_nodes("ctrl", &[spec("transform", Some("transform")), spec("brush", None)], Some("transform"));
             assert_eq!(nodes.len(), 2, "lone group child is hoisted — no nested Transform/Transform pair");
             match &nodes[0] {
@@ -1812,7 +1812,7 @@ pub mod role_chrome {
     }
 
     impl ChromeRole {
-        pub fn as_str(self) -> &'static str {
+        pub async fn as_str(self) -> &'static str {
             match self {
                 ChromeRole::Viewer => "viewer",
                 ChromeRole::Editor => "editor",
@@ -1823,14 +1823,14 @@ pub mod role_chrome {
         /// `"viewer"`/`"editor"`, default `"editor"` — anything else (unset, empty, unrecognized)
         /// falls back to the frozen default rather than erroring, since a boot-time env var is not a
         /// place to hard-fail a shell.
-        pub fn from_boot_env(value: Option<&str>) -> Self {
+        pub async fn from_boot_env(value: Option<&str>) -> Self {
             match value {
                 Some("viewer") => ChromeRole::Viewer,
                 _ => ChromeRole::Editor,
             }
         }
 
-        pub fn is_read_only(self) -> bool {
+        pub async fn is_read_only(self) -> bool {
             matches!(self, ChromeRole::Viewer)
         }
     }
@@ -1841,7 +1841,7 @@ pub mod role_chrome {
     /// `"Betrachter"`/`"Editor"`. Mirrors `layout::ribbon_parent_label`'s own `(value, is_de) ->
     /// &'static str` idiom — these are framework-owned, terminology-invariant strings (no app
     /// terminology axis), same category as that function's own consumers.
-    pub fn role_title_chip_text(role: ChromeRole, is_de: bool) -> &'static str {
+    pub async fn role_title_chip_text(role: ChromeRole, is_de: bool) -> &'static str {
         match (role, is_de) {
             (ChromeRole::Viewer, false) => "Viewer",
             (ChromeRole::Viewer, true) => "Betrachter",
@@ -1851,13 +1851,13 @@ pub mod role_chrome {
     }
 
     /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
-    pub fn open_with_label_text(is_de: bool) -> &'static str {
+    pub async fn open_with_label_text(is_de: bool) -> &'static str {
         if is_de { "Öffnen mit…" } else { "Open with…" }
     }
 
     /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
     /// festlegen"`.
-    pub fn set_as_default_label_text(is_de: bool) -> &'static str {
+    pub async fn set_as_default_label_text(is_de: bool) -> &'static str {
         if is_de { "Als Standard festlegen" } else { "Set as default" }
     }
     //#endregion 🔖️FrozenStrings
@@ -1874,14 +1874,14 @@ pub mod role_chrome {
     pub const PALETTE_OPEN_ARTIFACT_WITH_VIEWER: &str = "open-artifact-with-viewer";
     pub const PALETTE_OPEN_ARTIFACT_WITH_EDITOR: &str = "open-artifact-with-editor";
 
-    fn palette_open_with_action(role: ChromeRole) -> &'static str {
+    async fn palette_open_with_action(role: ChromeRole) -> &'static str {
         match role {
             ChromeRole::Viewer => PALETTE_OPEN_ARTIFACT_WITH_VIEWER,
             ChromeRole::Editor => PALETTE_OPEN_ARTIFACT_WITH_EDITOR,
         }
     }
 
-    fn os_set_default_action(role: ChromeRole) -> &'static str {
+    async fn os_set_default_action(role: ChromeRole) -> &'static str {
         match role {
             ChromeRole::Viewer => OS_SET_DEFAULT_VIEWER,
             ChromeRole::Editor => OS_SET_DEFAULT_EDITOR,
@@ -1902,11 +1902,11 @@ pub mod role_chrome {
         pub is_default: bool,
     }
 
-    fn open_with_args(entry: &OpenWithEntry) -> DslValue {
+    async fn open_with_args(entry: &OpenWithEntry) -> DslValue {
         DslValue::Object(vec![("pluginId".into(), DslValue::String(entry.plugin_id.clone())), ("appId".into(), DslValue::String(entry.app_id.clone()))])
     }
 
-    fn open_with_entry_item(entry: &OpenWithEntry, is_de: bool) -> ContextMenuItemSpec {
+    async fn open_with_entry_item(entry: &OpenWithEntry, is_de: bool) -> ContextMenuItemSpec {
         let toggle_action = if entry.is_default { OS_CLEAR_DEFAULT_APP } else { os_set_default_action(entry.role) };
         let toggle = ContextMenuItemSpec {
             id: format!("menu.open-with.{}.{}.set-default", entry.plugin_id, entry.app_id),
@@ -1937,7 +1937,7 @@ pub mod role_chrome {
     /// entry itself dispatches `PALETTE_OPEN_ARTIFACT_WITH_VIEWER`/`_EDITOR` with `{pluginId,
     /// appId}` args. An empty `entries` list still returns the "Open with…" row with zero children —
     /// the caller decides whether to omit an empty menu.
-    pub fn open_with_menu_item(entries: &[OpenWithEntry], is_de: bool) -> ContextMenuItemSpec {
+    pub async fn open_with_menu_item(entries: &[OpenWithEntry], is_de: bool) -> ContextMenuItemSpec {
         let mut children: Vec<ContextMenuItemSpec> = Vec::new();
         for role in [ChromeRole::Viewer, ChromeRole::Editor] {
             let group: Vec<&OpenWithEntry> = entries.iter().filter(|entry| entry.role == role).collect();
@@ -1956,14 +1956,14 @@ pub mod role_chrome {
     /// every `ShellMenuAction` whose raw `kind` discriminant (`ActionKind`/`CommandKind`, see
     /// `ShellMenuAction`'s own doc) is `"Mutation"` for `ChromeRole::Viewer`; a no-op for
     /// `ChromeRole::Editor`.
-    pub fn filter_shell_menu_actions_for_role(actions: &[ShellMenuAction], role: ChromeRole) -> Vec<ShellMenuAction> {
+    pub async fn filter_shell_menu_actions_for_role(actions: &[ShellMenuAction], role: ChromeRole) -> Vec<ShellMenuAction> {
         if role == ChromeRole::Editor {
             return actions.to_vec();
         }
         actions.iter().filter(|action| action.kind != "Mutation").cloned().collect()
     }
 
-    fn disable_utility(mut utility: UtilityNode) -> UtilityNode {
+    async fn disable_utility(mut utility: UtilityNode) -> UtilityNode {
         match &mut utility {
             UtilityNode::Separator { disabled, .. } => *disabled = Some(true),
             UtilityNode::Button { disabled, .. } => *disabled = Some(true),
@@ -1978,7 +1978,7 @@ pub mod role_chrome {
     /// history vocabulary) for `ChromeRole::Viewer`; every other utility passes through unchanged.
     /// `UtilityNode` has no `Mutation` category to hide here — that vocabulary lives on
     /// `ShellMenuAction`/context-menu actions, see `filter_shell_menu_actions_for_role`.
-    pub fn apply_role_to_utilities(utilities: Vec<UtilityNode>, role: ChromeRole) -> Vec<UtilityNode> {
+    pub async fn apply_role_to_utilities(utilities: Vec<UtilityNode>, role: ChromeRole) -> Vec<UtilityNode> {
         if role == ChromeRole::Editor {
             return utilities;
         }
@@ -1994,7 +1994,7 @@ pub mod role_chrome {
         use crate::wgpu::IconName;
 
         #[test]
-        fn from_boot_env_accepts_viewer_and_falls_back_to_editor() {
+        async fn from_boot_env_accepts_viewer_and_falls_back_to_editor() {
             assert_eq!(ChromeRole::from_boot_env(Some("viewer")), ChromeRole::Viewer);
             assert_eq!(ChromeRole::from_boot_env(Some("editor")), ChromeRole::Editor);
             assert_eq!(ChromeRole::from_boot_env(Some("bogus")), ChromeRole::Editor);
@@ -2003,19 +2003,19 @@ pub mod role_chrome {
         }
 
         #[test]
-        fn title_chip_text_covers_both_roles_in_both_locales() {
+        async fn title_chip_text_covers_both_roles_in_both_locales() {
             assert_eq!(role_title_chip_text(ChromeRole::Viewer, false), "Viewer");
             assert_eq!(role_title_chip_text(ChromeRole::Viewer, true), "Betrachter");
             assert_eq!(role_title_chip_text(ChromeRole::Editor, false), "Editor");
             assert_eq!(role_title_chip_text(ChromeRole::Editor, true), "Editor");
         }
 
-        fn entry(plugin_id: &str, app_id: &str, role: ChromeRole, is_default: bool) -> OpenWithEntry {
+        async fn entry(plugin_id: &str, app_id: &str, role: ChromeRole, is_default: bool) -> OpenWithEntry {
             OpenWithEntry { plugin_id: plugin_id.into(), app_id: app_id.into(), label: app_id.into(), role, is_default }
         }
 
         #[test]
-        fn open_with_menu_item_groups_by_role_viewer_first_then_editor() {
+        async fn open_with_menu_item_groups_by_role_viewer_first_then_editor() {
             let entries = vec![entry("norm", "s.cad.cad@1/*#editor", ChromeRole::Editor, false), entry("cad", "s.cad.cad@1/*#viewer", ChromeRole::Viewer, true)];
             let menu = open_with_menu_item(&entries, false);
             assert_eq!(menu.id, "menu.open-with");
@@ -2030,7 +2030,7 @@ pub mod role_chrome {
         }
 
         #[test]
-        fn open_with_menu_item_toggle_sets_when_not_default_and_clears_when_default() {
+        async fn open_with_menu_item_toggle_sets_when_not_default_and_clears_when_default() {
             let entries = vec![entry("cad", "editor", ChromeRole::Editor, false), entry("norm", "editor-alt", ChromeRole::Editor, true)];
             let menu = open_with_menu_item(&entries, false);
             let editor_entries: Vec<_> = menu.children.unwrap().into_iter().filter(|item| item.separator != Some(true)).collect();
@@ -2043,19 +2043,19 @@ pub mod role_chrome {
         }
 
         #[test]
-        fn open_with_menu_item_localizes_headers_and_label_to_german() {
+        async fn open_with_menu_item_localizes_headers_and_label_to_german() {
             let entries = vec![entry("cad", "viewer", ChromeRole::Viewer, false)];
             let menu = open_with_menu_item(&entries, true);
             assert_eq!(menu.label.as_deref(), Some("Öffnen mit…"));
             assert_eq!(menu.children.unwrap()[1].children.as_ref().unwrap()[0].label.as_deref(), Some("Als Standard festlegen"));
         }
 
-        fn shell_action(id: &str, kind: &str) -> ShellMenuAction {
+        async fn shell_action(id: &str, kind: &str) -> ShellMenuAction {
             ShellMenuAction { id: id.into(), label: id.into(), icon: None, keys: None, kind: kind.into(), category: None, in_palette: true, arg_carrying: false }
         }
 
         #[test]
-        fn filter_shell_menu_actions_drops_mutation_kind_for_viewer_only() {
+        async fn filter_shell_menu_actions_drops_mutation_kind_for_viewer_only() {
             let actions = vec![shell_action("shell.rename", "Mutation"), shell_action("shell.zoomIn", "View")];
             let viewer = filter_shell_menu_actions_for_role(&actions, ChromeRole::Viewer);
             assert_eq!(viewer.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), vec!["shell.zoomIn"]);
@@ -2064,7 +2064,7 @@ pub mod role_chrome {
         }
 
         #[test]
-        fn apply_role_to_utilities_disables_history_only_for_viewer() {
+        async fn apply_role_to_utilities_disables_history_only_for_viewer() {
             let press = ActionDescriptor { controller_id: "history".into(), action: "undo".into(), args: None };
             let toggle = ActionDescriptor { controller_id: "select".into(), action: "toggleSelect".into(), args: None };
             let utilities = vec![utility_button("undo", IconName::RotateCcw, "Undo", press).with_category(UtilityCategory::History), utility_toggle("select", IconName::MousePointer, "Select", false, toggle)];
@@ -2416,7 +2416,7 @@ pub mod ui {
         /// 🧭️ Exhaustive accessor — a new control variant fails to compile here until wired.
         /// `&UiPresence` (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
         /// CREATION C7.6): `UiPresence` gained `peers: Vec<UiPeerMark>` and lost `Copy`.
-        pub fn presence(&self) -> &UiPresence {
+        pub async fn presence(&self) -> &UiPresence {
             match self {
                 UiControlNode::Input(n) => &n.presence,
                 UiControlNode::Select(n) => &n.presence,
@@ -2429,7 +2429,7 @@ pub mod ui {
                 UiControlNode::IconSelect(n) => &n.presence,
             }
         }
-        pub fn presence_mut(&mut self) -> &mut UiPresence {
+        pub async fn presence_mut(&mut self) -> &mut UiPresence {
             match self {
                 UiControlNode::Input(n) => &mut n.presence,
                 UiControlNode::Select(n) => &mut n.presence,
@@ -2506,7 +2506,7 @@ pub mod ui {
 
     impl UiTreeItemAction {
         /** @emoji 📍️ Row actions paint on the tree header; menu actions belong in the row context menu. */
-        pub fn placement(&self) -> UiTreeActionPlacement {
+        pub async fn placement(&self) -> UiTreeActionPlacement {
             self.placement.clone().unwrap_or_default()
         }
     }
@@ -2561,7 +2561,7 @@ pub mod ui {
 
     impl UiTreeItemNode {
         /** @emoji 🌳️ Builds a tree item with optional extensions unset. */
-        pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+        pub async fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
             Self {
                 id: id.into(),
                 label: label.into(),
@@ -2630,14 +2630,14 @@ pub mod ui {
     /// as, whether or not this particular item is currently marked; `peer_marks_for` resolves an
     /// item's own peer roster by id (called once per item, not pre-collected, since the caller's
     /// `InteractionView::peers_selecting`/`peers_hovering` are themselves per-id lookups).
-    pub fn ui_tree_stamp_presence(
+    pub async fn ui_tree_stamp_presence(
         sections: &mut [UiTreeSectionNode],
         selected: &std::collections::HashSet<String>,
         previewed: &std::collections::HashSet<String>,
         own_color: Option<u8>,
         peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>,
     ) {
-        fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
+        async fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
             for item in items {
                 item.presence.selected = selected.contains(&item.id);
                 if previewed.contains(&item.id) {
@@ -2673,7 +2673,7 @@ pub mod ui {
     //#endregion 🔖️Primitives
 
     //#region 🔖️InspectorHelpers
-    pub fn ui_inspector_all_equal<T: PartialEq>(values: &[T]) -> bool {
+    pub async fn ui_inspector_all_equal<T: PartialEq>(values: &[T]) -> bool {
         if values.len() <= 1 {
             return true;
         }
@@ -2685,7 +2685,7 @@ pub mod ui {
         pub placeholder: Option<String>,
     }
 
-    pub fn ui_inspector_mixed_text(values: &[String]) -> UiInspectorMixedText {
+    pub async fn ui_inspector_mixed_text(values: &[String]) -> UiInspectorMixedText {
         let uniform = ui_inspector_all_equal(values);
         UiInspectorMixedText { value: if uniform { values.first().cloned().unwrap_or_default() } else { String::new() }, placeholder: if uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) } }
     }
@@ -2695,12 +2695,12 @@ pub mod ui {
         pub uniform: bool,
     }
 
-    pub fn ui_inspector_mixed_number(values: &[f64]) -> UiInspectorMixedNumber {
+    pub async fn ui_inspector_mixed_number(values: &[f64]) -> UiInspectorMixedNumber {
         let uniform = ui_inspector_all_equal(values);
         UiInspectorMixedNumber { value: if uniform { *values.first().unwrap_or(&0.0) } else { f64::NAN }, uniform }
     }
 
-    pub fn ui_inspector_mixed_select(values: &[String]) -> UiInspectorMixedText {
+    pub async fn ui_inspector_mixed_select(values: &[String]) -> UiInspectorMixedText {
         ui_inspector_mixed_text(values)
     }
 
@@ -2709,16 +2709,16 @@ pub mod ui {
         pub uniform: bool,
     }
 
-    pub fn ui_inspector_mixed_toggle(values: &[bool]) -> UiInspectorMixedToggle {
+    pub async fn ui_inspector_mixed_toggle(values: &[bool]) -> UiInspectorMixedToggle {
         let uniform = ui_inspector_all_equal(values);
         UiInspectorMixedToggle { pressed: uniform && values.first().copied().unwrap_or(false), uniform }
     }
 
-    pub fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
+    pub async fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
         ui_inspector_mixed_number(values)
     }
 
-    pub fn ui_inspector_readonly_field(id: impl Into<String>, label: impl Into<Label>, value: impl Into<String>) -> UiNode {
+    pub async fn ui_inspector_readonly_field(id: impl Into<String>, label: impl Into<Label>, value: impl Into<String>) -> UiNode {
         let id = id.into();
         UiNode::Field(UiFieldNode {
             menu: None,
@@ -2749,7 +2749,7 @@ pub mod ui {
      * `values` via {@link ui_inspector_mixed_number}. `action` is cloned into both `onAbsolute` (typed
      * entry, dispatched with `{value}` merged into `args`) and `onDelta` (nudge buttons, `{delta}`) —
      * callers' patch handlers branch on whichever key the dispatched action actually carries. */
-    pub fn ui_inspector_stepper_field(id: impl Into<String>, label: impl Into<Label>, values: &[f64], step: f64, action: ActionDescriptor) -> UiNode {
+    pub async fn ui_inspector_stepper_field(id: impl Into<String>, label: impl Into<Label>, values: &[f64], step: f64, action: ActionDescriptor) -> UiNode {
         let id = id.into();
         let mixed = ui_inspector_mixed_number(values);
         UiNode::Field(UiFieldNode {
@@ -2766,7 +2766,7 @@ pub mod ui {
 
     /** @emoji 🔘️ Builds an editable boolean toggle field row, computing the mixed/uniform display from
      * `values` via {@link ui_inspector_mixed_toggle}. */
-    pub fn ui_inspector_toggle_field(id: impl Into<String>, label: impl Into<Label>, icon_id: impl Into<IconName>, values: &[bool], action: ActionDescriptor) -> UiNode {
+    pub async fn ui_inspector_toggle_field(id: impl Into<String>, label: impl Into<Label>, icon_id: impl Into<IconName>, values: &[bool], action: ActionDescriptor) -> UiNode {
         let id = id.into();
         let mixed = ui_inspector_mixed_toggle(values);
         UiNode::Field(UiFieldNode {
@@ -2787,7 +2787,7 @@ pub mod ui {
      * `axis_action(axis)` builds the per-axis `ActionDescriptor`; callers typically merge
      * `{"field": "<id>.x"}` etc. into its `args` so the patch handler can dot-path into the right
      * component with `value` (absolute) or `delta` (relative, offset-preserving across multi-select). */
-    pub fn ui_inspector_vec3_group(id: impl Into<String>, label: impl Into<Label>, values: &[[f64; 3]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
+    pub async fn ui_inspector_vec3_group(id: impl Into<String>, label: impl Into<Label>, values: &[[f64; 3]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
         let id = id.into();
         let xs: Vec<f64> = values.iter().map(|v| v[0]).collect();
         let ys: Vec<f64> = values.iter().map(|v| v[1]).collect();
@@ -2807,7 +2807,7 @@ pub mod ui {
         })
     }
 
-    pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
+    pub async fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
         let sections: Vec<UiSectionNode> = groups
             .iter()
             .filter(|group| !group.fields.is_empty())
@@ -2816,7 +2816,7 @@ pub mod ui {
         ui_declarative_sections_to_tree(&sections)
     }
 
-    pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
+    pub async fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
         let tree_sections: Vec<UiTreeSectionNode> = sections
             .iter()
             .map(|section| UiTreeSectionNode {
@@ -2861,7 +2861,7 @@ pub mod ui {
         })
     }
 
-    fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
+    async fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
         match node {
             UiNode::Text(text) => UiTreeItemNode {
                 menu: None,
@@ -2973,7 +2973,7 @@ pub mod ui {
         }
     }
 
-    fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
+    async fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         UiTreeItemNode {
             menu: None,
             id,
@@ -3030,7 +3030,7 @@ pub mod ui {
     }
 
     impl SurfaceKind {
-        pub fn as_str(self) -> &'static str {
+        pub async fn as_str(self) -> &'static str {
             match self {
                 Self::Canvas2d => "canvas-2d",
                 Self::World3d => "world-3d",
@@ -3050,7 +3050,7 @@ pub mod ui {
             }
         }
 
-        pub fn is_viewport(self) -> bool {
+        pub async fn is_viewport(self) -> bool {
             matches!(self, Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Board2d | Self::InkCanvas)
         }
     }
@@ -3127,7 +3127,7 @@ pub mod ui {
 
     impl World3dScene {
         /** @emoji 🌐️ Builds a world-3d scene with optional extensions unset. */
-        pub fn base(camera_json: String, meshes_json: String, instances_json: String, selection_json: String) -> Self {
+        pub async fn base(camera_json: String, meshes_json: String, instances_json: String, selection_json: String) -> Self {
             Self {
                 camera_json,
                 meshes_json,
@@ -3189,23 +3189,23 @@ pub mod ui {
         pub max_distance: f64,
     }
 
-    fn default_manual_lod() -> f64 {
+    async fn default_manual_lod() -> f64 {
         100.0
     }
 
-    fn default_distance_reference() -> f64 {
+    async fn default_distance_reference() -> f64 {
         100.0
     }
 
-    fn default_grid_factor() -> f64 {
+    async fn default_grid_factor() -> f64 {
         10.0
     }
 
-    fn default_true() -> bool {
+    async fn default_true() -> bool {
         true
     }
 
-    pub fn world3d_default_lod_json() -> String {
+    pub async fn world3d_default_lod_json() -> String {
         serde_json::json!({
             "automatic": true,
             "manual": 100.0,
@@ -3219,7 +3219,7 @@ pub mod ui {
         .to_string()
     }
 
-    pub fn world3d_chunking_json(chunk_size: f64, max_distance: f64) -> String {
+    pub async fn world3d_chunking_json(chunk_size: f64, max_distance: f64) -> String {
         serde_json::json!({
             "chunkSize": chunk_size,
             "maxDistance": max_distance,
@@ -3227,15 +3227,15 @@ pub mod ui {
         .to_string()
     }
 
-    pub fn world3d_default_selection_json() -> String {
+    pub async fn world3d_default_selection_json() -> String {
         r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into()
     }
 
-    pub fn world3d_default_meshes_json() -> String {
+    pub async fn world3d_default_meshes_json() -> String {
         "[]".into()
     }
 
-    pub fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> String {
+    pub async fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> String {
         serde_json::json!({
             "position": position,
             "target": target,
@@ -3320,7 +3320,7 @@ pub mod ui {
         pub zoom: f64,
     }
 
-    fn default_true_zoom() -> f64 {
+    async fn default_true_zoom() -> f64 {
         1.0
     }
 
@@ -3500,7 +3500,7 @@ pub mod ui {
 
     impl TableScene {
         /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
-        pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
+        pub async fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
             Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action: None, sort_json: None, domain_id: None }
         }
     }
@@ -3517,7 +3517,7 @@ pub mod ui {
     }
 
     /// 🧾️ Builds one `rows_json` record: an id, an optional drag payload, and typed/plain cells keyed by column id.
-    pub fn table_row_json(id: impl Into<String>, drag_payload: Option<&serde_json::Value>, cells: &[(&str, TableCell)]) -> serde_json::Value {
+    pub async fn table_row_json(id: impl Into<String>, drag_payload: Option<&serde_json::Value>, cells: &[(&str, TableCell)]) -> serde_json::Value {
         let mut row = serde_json::Map::new();
         row.insert("id".into(), serde_json::Value::String(id.into()));
         if let Some(payload) = drag_payload {
@@ -3604,56 +3604,56 @@ pub mod ui {
         pub selection_mode: String,
     }
 
-    pub fn tiled_map_default_render_mode() -> String {
+    pub async fn tiled_map_default_render_mode() -> String {
         "combined".into()
     }
 
-    pub fn tiled_map_default_vector_style() -> String {
+    pub async fn tiled_map_default_vector_style() -> String {
         "colored".into()
     }
 
-    pub fn tiled_map_default_lod_mode() -> String {
+    pub async fn tiled_map_default_lod_mode() -> String {
         "automatic".into()
     }
 
-    pub fn tiled_map_default_tile_url_template() -> String {
+    pub async fn tiled_map_default_tile_url_template() -> String {
         "/osm/{z}/{x}/{y}.png".into()
     }
 
-    pub fn tiled_map_default_vector_tile_url_template() -> String {
+    pub async fn tiled_map_default_vector_tile_url_template() -> String {
         "/vt/{z}/{x}/{y}.pbf".into()
     }
 
     /** 🗺️ Empty layer-visibility gate map: the owning plugin's engine defaults every layer id it recognizes to visible, so the framework need not enumerate app-specific layer ids. */
-    pub fn tiled_map_default_layer_visibility_json() -> String {
+    pub async fn tiled_map_default_layer_visibility_json() -> String {
         "{}".into()
     }
 
     /** 🗺️ Empty layer-stroke-scale multiplier map: the owning plugin's engine defaults every layer id it recognizes to a 1.0 multiplier, so the framework need not enumerate app-specific layer ids. */
-    pub fn tiled_map_default_layer_stroke_scale_json() -> String {
+    pub async fn tiled_map_default_layer_stroke_scale_json() -> String {
         "{}".into()
     }
 
     /** 🗺️ Empty selection: the owning plugin's engine treats a missing selection key as "none selected", so the framework need not encode app-specific feature categories. */
-    pub fn tiled_map_default_selection_json() -> String {
+    pub async fn tiled_map_default_selection_json() -> String {
         "{}".into()
     }
 
-    pub fn tiled_map_default_hover_json() -> String {
+    pub async fn tiled_map_default_hover_json() -> String {
         "null".into()
     }
 
-    pub fn tiled_map_default_selection_method() -> String {
+    pub async fn tiled_map_default_selection_method() -> String {
         "rectangle".into()
     }
 
-    pub fn tiled_map_default_selection_mode() -> String {
+    pub async fn tiled_map_default_selection_mode() -> String {
         "default".into()
     }
 
     impl TiledMapScene {
         /** @emoji 🗺️ Builds a tiled map scene with optional extensions unset. */
-        pub fn base(map_fixture_json: String, camera_json: String) -> Self {
+        pub async fn base(map_fixture_json: String, camera_json: String) -> Self {
             Self {
                 map_fixture_json,
                 camera_json,
@@ -3703,37 +3703,37 @@ pub mod ui {
         pub lod_mode: String,
     }
 
-    pub fn board2d_default_glyph_catalogs_json() -> String {
+    pub async fn board2d_default_glyph_catalogs_json() -> String {
         "{}".into()
     }
 
-    pub fn board2d_default_selection_json() -> String {
+    pub async fn board2d_default_selection_json() -> String {
         "[]".into()
     }
 
-    pub fn board2d_default_selection_method() -> String {
+    pub async fn board2d_default_selection_method() -> String {
         "rectangle".into()
     }
 
-    pub fn board2d_default_grid_factor() -> f64 {
+    pub async fn board2d_default_grid_factor() -> f64 {
         1.0
     }
 
-    pub fn board2d_default_brush_weights_json() -> String {
+    pub async fn board2d_default_brush_weights_json() -> String {
         "{}".into()
     }
 
-    pub fn board2d_default_placement_compatibility_json() -> String {
+    pub async fn board2d_default_placement_compatibility_json() -> String {
         "[]".into()
     }
 
-    pub fn board2d_default_lod_mode() -> String {
+    pub async fn board2d_default_lod_mode() -> String {
         "automatic".into()
     }
 
     impl Board2dScene {
         /** @emoji 🧩️ Builds a 2D board scene with optional extensions unset. */
-        pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
+        pub async fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
             Self {
                 fixture_json,
                 camera_json,
@@ -3767,13 +3767,13 @@ pub mod ui {
         pub interactive: bool,
     }
 
-    pub fn ink_canvas_default_selection_json() -> String {
+    pub async fn ink_canvas_default_selection_json() -> String {
         "[]".into()
     }
 
     impl InkCanvasScene {
         /** @emoji 🖊️ Builds an ink canvas scene with the default empty selection. */
-        pub fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
+        pub async fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
             Self { document_json, selection_json: ink_canvas_default_selection_json(), hovered_id: None, active_utility, view_mode, interactive }
         }
     }
@@ -3946,7 +3946,7 @@ pub mod ui {
     impl UiNode {
         /// 🧭️ Exhaustive presence accessor — adding a `UiNode` variant fails to compile here (and in
         /// `presence_mut` and `paint_node`'s match) until the new element's `presence` field is wired up.
-        pub fn presence(&self) -> &UiPresence {
+        pub async fn presence(&self) -> &UiPresence {
             match self {
                 UiNode::Stack(n) => &n.presence,
                 UiNode::Text(n) => &n.presence,
@@ -3969,7 +3969,7 @@ pub mod ui {
                 UiNode::ExternalSlot(n) => &n.presence,
             }
         }
-        pub fn presence_mut(&mut self) -> &mut UiPresence {
+        pub async fn presence_mut(&mut self) -> &mut UiPresence {
             match self {
                 UiNode::Stack(n) => &mut n.presence,
                 UiNode::Text(n) => &mut n.presence,
@@ -3995,7 +3995,7 @@ pub mod ui {
         /// 🖱️ Exhaustive context-menu-ref accessor — adding a `UiNode` variant fails to compile here
         /// (and in `menu_mut`) until the new element's `menu` field is wired up. `None` means the
         /// element bubbles right-clicks to its nearest menu-bearing ancestor.
-        pub fn menu(&self) -> Option<&UiMenuRef> {
+        pub async fn menu(&self) -> Option<&UiMenuRef> {
             match self {
                 UiNode::Stack(n) => n.menu.as_ref(),
                 UiNode::Text(n) => n.menu.as_ref(),
@@ -4018,7 +4018,7 @@ pub mod ui {
                 UiNode::ExternalSlot(n) => n.menu.as_ref(),
             }
         }
-        pub fn menu_mut(&mut self) -> &mut Option<UiMenuRef> {
+        pub async fn menu_mut(&mut self) -> &mut Option<UiMenuRef> {
             match self {
                 UiNode::Stack(n) => &mut n.menu,
                 UiNode::Text(n) => &mut n.menu,
@@ -4045,7 +4045,7 @@ pub mod ui {
 
     impl NodeGraphScene {
         /** @emoji 🕸️ Builds a node-graph scene with optional extensions unset. */
-        pub fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: NodeGraphViewport) -> Self {
+        pub async fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: NodeGraphViewport) -> Self {
             Self {
                 nodes,
                 edges,
@@ -4072,7 +4072,7 @@ pub mod ui {
 
     impl TextEditorScene {
         /** @emoji ✍️ Builds a text-editor scene with optional extensions unset. */
-        pub fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
+        pub async fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
             Self {
                 buffer,
                 language,
@@ -4095,7 +4095,7 @@ pub mod ui {
 
         /** @emoji 📖️ Builds a read-only JSON viewer scene: a pretty-printed JSON buffer, `"json"`
          * language, and `settingsJson` set to `{"readOnly":true}`. */
-        pub fn json_view(json_pretty: String) -> Self {
+        pub async fn json_view(json_pretty: String) -> Self {
             let mut scene = Self::base(json_pretty, Some("json".into()), None);
             scene.settings_json = Some(serde_json::json!({ "readOnly": true }).to_string());
             scene
@@ -4104,7 +4104,7 @@ pub mod ui {
         /** @emoji ⌨️ Builds an editable code-input scene wired to a host settings-change action:
          * `settingsJson` carries `{"readOnly":false,"onEditSettings":<ActionDescriptor>}`, fired by the
          * renderer when the user edits editor settings (font size, tab width, ...) via its own chrome. */
-        pub fn code_input(buffer: String, language: &str, on_edit_settings: &ActionDescriptor) -> Self {
+        pub async fn code_input(buffer: String, language: &str, on_edit_settings: &ActionDescriptor) -> Self {
             let mut scene = Self::base(buffer, Some(language.into()), None);
             scene.settings_json = Some(serde_json::json!({ "readOnly": false, "onEditSettings": on_edit_settings }).to_string());
             scene
@@ -4158,17 +4158,17 @@ pub mod ui {
     }
     //#endregion 🔖️SceneActions
 
-    pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
+    pub async fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: Some("standard".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, children, drop_action: None, drop_overlay: None })
     }
 
     /** @emoji 🖼️ Builds an image node rendering a source URL or path. */
-    pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Label>) -> UiNode {
+    pub async fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Label>) -> UiNode {
         UiNode::Image(UiImageNode { menu: None, id: id.into(), src: src.into(), alt, presence: UiPresence::default() })
     }
 
     /** @emoji 🎛️ Extracts the control payload of a {@link UiNode} when it is a control variant. */
-    pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
+    pub async fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
         match node {
             UiNode::Input(input) => Some(UiControlNode::Input(input.clone())),
             UiNode::Select(select) => Some(UiControlNode::Select(select.clone())),
@@ -4184,7 +4184,7 @@ pub mod ui {
     }
 
     /** @emoji 🎛️ Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
-    pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
+    pub async fn ui_control_to_node(control: UiControlNode) -> UiNode {
         match control {
             UiControlNode::Input(input) => UiNode::Input(input),
             UiControlNode::Select(select) => UiNode::Select(select),
@@ -4204,17 +4204,17 @@ pub mod ui {
         }
     }
 
-    pub fn ui_text(value: impl Into<Label>) -> UiNode {
+    pub async fn ui_text(value: impl Into<Label>) -> UiNode {
         UiNode::Text(UiTextNode { menu: None, value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     /** @emoji 🔌️ Renders a contributing program body inline at this tree position. */
-    pub fn ui_external_slot(plugin_id: impl Into<String>, app_id: impl Into<String>, body_key: impl Into<String>, params_json: impl Into<String>) -> UiNode {
+    pub async fn ui_external_slot(plugin_id: impl Into<String>, app_id: impl Into<String>, body_key: impl Into<String>, params_json: impl Into<String>) -> UiNode {
         UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: plugin_id.into(), app_id: app_id.into(), body_key: body_key.into(), params_json: params_json.into(), presence: UiPresence::default() })
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per scene-kind payload; grouping into a struct is a T2 restructure, out of scope")]
-    fn component_scene(
+    async fn component_scene(
         surface_id: impl Into<String>,
         controller_id: impl Into<String>,
         component_kind: SurfaceKind,
@@ -4256,25 +4256,25 @@ pub mod ui {
         })
     }
 
-    pub fn build_canvas_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Canvas2dScene) -> UiNode {
+    pub async fn build_canvas_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Canvas2dScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::Canvas2d, None, None, Some(scene), None, None, None, None, None, None, None, None)
     }
 
-    pub fn build_world_3d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: World3dScene) -> UiNode {
+    pub async fn build_world_3d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: World3dScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::World3d, None, None, None, Some(scene), None, None, None, None, None, None, None)
     }
 
-    pub fn build_node_graph_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: NodeGraphScene) -> UiNode {
+    pub async fn build_node_graph_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: NodeGraphScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::NodeGraph, None, None, None, None, Some(scene), None, None, None, None, None, None)
     }
 
-    pub fn build_text_editor_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TextEditorScene) -> UiNode {
+    pub async fn build_text_editor_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TextEditorScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::TextEditor, None, None, None, None, None, Some(scene), None, None, None, None, None)
     }
 
     //#region 🔖️TextIdentifierOccurrences
     /// 🔎️ Expands an offset in `text` to the bounds of the identifier (`[A-Za-z0-9_]+`) it falls in, if any.
-    pub fn text_identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
+    pub async fn text_identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
         let bytes = text.as_bytes();
         let is_ident = |byte: u8| (byte as char).is_ascii_alphanumeric() || byte == b'_';
         let mut index = offset.min(bytes.len());
@@ -4293,7 +4293,7 @@ pub mod ui {
     }
 
     /// 🔎️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
-    pub fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
+    pub async fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
         let (start, end) = text_identifier_bounds_at(text, cursor)?;
         let needle = &text[start..end];
         if needle.is_empty() {
@@ -4314,47 +4314,47 @@ pub mod ui {
     }
     //#endregion 🔖️TextIdentifierOccurrences
 
-    pub fn build_table_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TableScene) -> UiNode {
+    pub async fn build_table_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TableScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::Table, None, None, None, None, None, None, Some(scene), None, None, None, None)
     }
 
-    pub fn build_paint_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Paint2dScene) -> UiNode {
+    pub async fn build_paint_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Paint2dScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::Paint2d, None, None, None, None, None, None, None, Some(scene), None, None, None)
     }
 
-    pub fn build_virtual_file_system_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: VirtualFileSystemScene, pane_id: Option<String>, binding_id: Option<String>) -> UiNode {
+    pub async fn build_virtual_file_system_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: VirtualFileSystemScene, pane_id: Option<String>, binding_id: Option<String>) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::VirtualFileSystem, pane_id, binding_id, None, None, None, None, None, None, Some(scene), None, None)
     }
 
-    pub fn build_tiled_map_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TiledMapScene) -> UiNode {
+    pub async fn build_tiled_map_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TiledMapScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::TiledMap, None, None, None, None, None, None, None, None, None, Some(scene), None)
     }
 
-    pub fn build_board2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Board2dScene) -> UiNode {
+    pub async fn build_board2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Board2dScene) -> UiNode {
         component_scene(surface_id, controller_id, SurfaceKind::Board2d, None, None, None, None, None, None, None, None, None, None, Some(scene))
     }
 
-    pub fn build_icon_render_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: IconRenderScene) -> UiNode {
+    pub async fn build_icon_render_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: IconRenderScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::IconRender, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { icon_render: Some(scene), ..node })
     }
 
-    pub fn build_ink_canvas_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: InkCanvasScene) -> UiNode {
+    pub async fn build_ink_canvas_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: InkCanvasScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::InkCanvas, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { ink_canvas: Some(scene), ..node })
     }
 
-    pub fn build_graph_timeline_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: GraphTimelineScene) -> UiNode {
+    pub async fn build_graph_timeline_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: GraphTimelineScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::GraphTimeline, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { graph_timeline: Some(scene), ..node })
     }
 
-    pub fn build_diff_view_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: DiffViewScene) -> UiNode {
+    pub async fn build_diff_view_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: DiffViewScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::DiffView, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { diff_view: Some(scene), ..node })
     }
 
-    pub fn build_event_feed_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: EventFeedScene) -> UiNode {
+    pub async fn build_event_feed_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: EventFeedScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::EventFeed, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { event_feed: Some(scene), ..node })
     }
@@ -4362,7 +4362,7 @@ pub mod ui {
     //#region 🔖️StatusBuilders
     /** @emoji 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
      * optional call-to-action button. */
-    pub fn ui_empty_state(id: &str, title: Label, description: Option<Label>, action: Option<UiButtonNode>) -> UiNode {
+    pub async fn ui_empty_state(id: &str, title: Label, description: Option<Label>, action: Option<UiButtonNode>) -> UiNode {
         let mut children = vec![UiNode::Text(UiTextNode { menu: None, value: title, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })];
         if let Some(description) = description {
             children.push(ui_text(description));
@@ -4385,7 +4385,7 @@ pub mod ui {
     }
 
     /** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
-    pub fn ui_error_state(id: &str, message: Label, retry: Option<ActionDescriptor>) -> UiNode {
+    pub async fn ui_error_state(id: &str, message: Label, retry: Option<ActionDescriptor>) -> UiNode {
         let mut children = vec![UiNode::Text(UiTextNode { menu: None, value: message, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })];
         if let Some(retry) = retry {
             children.push(UiNode::Button(UiButtonNode {
@@ -4417,7 +4417,7 @@ pub mod ui {
     /** @emoji 🩺️ Builds a plugin-recovery panel: bilingual (en/de) crash copy plus three fixed actions —
      * restart the app (`recovery.restartApp`), disable the offending program (`recovery.disablePlugin`), or
      * open diagnostics (`recovery.showDiagnostics`). `quarantined` swaps in the host-auto-disabled copy. */
-    pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiNode {
+    pub async fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiNode {
         let title = if is_de { "Plugin-Wiederherstellung" } else { "Plugin Recovery" };
         let message = match (quarantined, is_de) {
             (true, true) => "Dieses Plugin wurde nach wiederholten Abstürzen unter Quarantäne gestellt.",
@@ -4475,7 +4475,7 @@ pub mod ui {
 
     /** @emoji 📥️ Builds a drop-zone `Stack` for importing files: `drop_overlay` supplies the hover-state
      * title/hint/accept copy, `drop_action` fires once the drop completes. */
-    pub fn ui_import_drop_zone(id: &str, title: Label, hint: Label, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
+    pub async fn ui_import_drop_zone(id: &str, title: Label, hint: Label, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
         UiNode::Stack(UiStackNode {
             menu: None,
             direction: "vertical".into(),
@@ -4499,11 +4499,11 @@ pub mod ui {
     mod ui_node_wire_format_tests {
         use super::*;
 
-        fn act(action: &str) -> ActionDescriptor {
+        async fn act(action: &str) -> ActionDescriptor {
             ActionDescriptor { controller_id: "ctrl".into(), action: action.into(), args: None }
         }
 
-        fn sample_tree() -> UiNode {
+        async fn sample_tree() -> UiNode {
             UiNode::Stack(UiStackNode {
                 menu: None,
                 direction: "vertical".into(),
@@ -4638,7 +4638,7 @@ pub mod ui {
         const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
         #[test]
-        fn ui_node_tree_serializes_to_golden_json() {
+        async fn ui_node_tree_serializes_to_golden_json() {
             let node = sample_tree();
             let json = serde_json::to_string(&node).unwrap();
             assert_eq!(json, GOLDEN_UI_NODE_TREE_JSON, "UiNode wire format drifted \u{2014} lock this in before moving the type into ui_wgpu");
@@ -4648,7 +4648,7 @@ pub mod ui {
 
         /// 🌀️ `presence.status` follows the same skip-if-default convention as `presence.selected`: the whole `presence` key is absent when fully default, and round-trips when set.
         #[test]
-        fn ui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set() {
+        async fn ui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set() {
             let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
             assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
@@ -4662,7 +4662,7 @@ pub mod ui {
 
         /// 🌀️ `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
         #[test]
-        fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
+        async fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
             let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
             assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
@@ -4676,7 +4676,7 @@ pub mod ui {
 
         /// 🚫️ `presence.state == Hidden` short-circuits everything else — round-trips like any other state.
         #[test]
-        fn ui_tree_item_hidden_state_roundtrips() {
+        async fn ui_tree_item_hidden_state_roundtrips() {
             let mut hidden = UiTreeItemNode::base("hidden1", Label::data("Hidden"));
             hidden.presence.state = UiState::Hidden;
             assert!(!hidden.presence.visible());
@@ -4689,7 +4689,7 @@ pub mod ui {
         /// 🎉️ `presence.state == Celebrating` serializes to `"celebrating"` — guards the TS/Rust `UiState`
         /// mirror staying byte-for-byte (see `ui/styling/js/index.ts`'s `UI_STATES`).
         #[test]
-        fn ui_tree_item_celebrating_state_roundtrips() {
+        async fn ui_tree_item_celebrating_state_roundtrips() {
             let mut celebrating = UiTreeItemNode::base("celebrating1", Label::data("Celebrating"));
             celebrating.presence.state = UiState::Celebrating;
             assert!(celebrating.presence.visible());
@@ -4702,8 +4702,8 @@ pub mod ui {
         /// ✨ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
         /// belt-and-braces check so a future variant can't silently drop its shared state on the wire.
         #[test]
-        fn every_ui_node_variant_serializes_a_non_default_presence() {
-            fn assert_presence_serializes(mut node: UiNode, label: &str) {
+        async fn every_ui_node_variant_serializes_a_non_default_presence() {
+            async fn assert_presence_serializes(mut node: UiNode, label: &str) {
                 *node.presence_mut() = UiPresence::selected(true);
                 let json = serde_json::to_string(&node).unwrap();
                 assert!(json.contains("\"presence\""), "{label} did not serialize a non-default presence: {json}");
@@ -4789,7 +4789,7 @@ pub mod ui {
         /// ☁ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
         /// absent when unset, round-trips (camelCase `pointsJson`) when set.
         #[test]
-        fn world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set() {
+        async fn world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set() {
             let bare = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
             assert!(!serde_json::to_string(&bare).unwrap().contains("pointsJson"));
 
@@ -4805,7 +4805,7 @@ pub mod ui {
             "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";
 
         #[test]
-        fn surface_kind_serializes_to_golden_json() {
+        async fn surface_kind_serializes_to_golden_json() {
             let kinds = vec![
                 SurfaceKind::Canvas2d,
                 SurfaceKind::World3d,
@@ -4831,7 +4831,7 @@ pub mod ui {
         const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
         #[test]
-        fn scene_records_serialize_to_golden_json() {
+        async fn scene_records_serialize_to_golden_json() {
             let scenes = (
                 Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
                 TableScene::base("[]", "[]"),
@@ -4870,7 +4870,7 @@ pub mod ui {
         const GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON: &str = "[{\"before\":\"a\",\"after\":\"b\",\"language\":\"rust\",\"mode\":\"unified\"},{\"entriesJson\":\"[]\",\"follow\":true,\"activateAction\":\"openEvent\"}]";
 
         #[test]
-        fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
+        async fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
             let scenes =
                 (DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()), domain_id: None }, EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()), domain_id: None });
             let json = serde_json::to_string(&scenes).unwrap();
@@ -4882,7 +4882,7 @@ pub mod ui {
         /// 🖱️ `UiMenuRef`/`ContextMenuItemSpec` camelCase wire shape — in particular `hover_args` must
         /// serialize as `hoverArgs` (the exact field-rename pitfall documented on `UiDirtyScope`).
         #[test]
-        fn ui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case() {
+        async fn ui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case() {
             let menu_ref = UiMenuRef { id: "row".into(), args: Some(DslValue::Object(vec![("id".into(), DslValue::String("row-1".into()))])) };
             let json = serde_json::to_string(&menu_ref).unwrap();
             assert_eq!(json, r#"{"id":"row","args":{"id":"row-1"}}"#);
@@ -4915,8 +4915,8 @@ pub mod ui {
         /// 🖱️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default
         /// — the same exhaustiveness belt-and-braces check as `every_ui_node_variant_serializes_a_non_default_presence`.
         #[test]
-        fn every_ui_node_variant_serializes_a_set_menu_ref() {
-            fn assert_menu_serializes(mut node: UiNode, label: &str) {
+        async fn every_ui_node_variant_serializes_a_set_menu_ref() {
+            async fn assert_menu_serializes(mut node: UiNode, label: &str) {
                 assert!(!serde_json::to_string(&node).unwrap().contains("\"menu\""), "{label} must omit a default menu ref");
                 *node.menu_mut() = Some(UiMenuRef { id: "m".into(), args: None });
                 let json = serde_json::to_string(&node).unwrap();
@@ -4935,39 +4935,39 @@ pub mod ui {
         }
 
         //#region 🗂️OrganizeContextMenuTests
-        fn menu_leaf(id: &str) -> ContextMenuItemSpec {
+        async fn menu_leaf(id: &str) -> ContextMenuItemSpec {
             ContextMenuItemSpec { id: id.into(), label: Some(id.into()), action: Some(id.into()), ..Default::default() }
         }
 
-        fn menu_destructive(id: &str) -> ContextMenuItemSpec {
+        async fn menu_destructive(id: &str) -> ContextMenuItemSpec {
             ContextMenuItemSpec { destructive: Some(true), ..menu_leaf(id) }
         }
 
-        fn menu_group(category: &str, children: Vec<ContextMenuItemSpec>) -> ContextMenuItemSpec {
+        async fn menu_group(category: &str, children: Vec<ContextMenuItemSpec>) -> ContextMenuItemSpec {
             ContextMenuItemSpec { id: format!("menu.group.{category}"), label: None, children: Some(children), ..Default::default() }
         }
 
-        fn menu_header(label: &str) -> ContextMenuItemSpec {
+        async fn menu_header(label: &str) -> ContextMenuItemSpec {
             ContextMenuItemSpec { id: format!("header-{label}"), label: Some(label.into()), separator: Some(true), ..Default::default() }
         }
 
-        fn menu_separator(id: &str) -> ContextMenuItemSpec {
+        async fn menu_separator(id: &str) -> ContextMenuItemSpec {
             ContextMenuItemSpec { id: id.into(), separator: Some(true), ..Default::default() }
         }
 
-        fn no_category(_id: &str) -> Option<String> {
+        async fn no_category(_id: &str) -> Option<String> {
             None
         }
 
         #[test]
-        fn organize_context_menu_emits_as_is_within_budget() {
+        async fn organize_context_menu_emits_as_is_within_budget() {
             let items = vec![menu_leaf("a"), menu_leaf("b"), menu_group("view", vec![menu_leaf("c")])];
             let organized = organize_context_menu(items.clone(), &no_category);
             assert_eq!(organized, items, "within budget with leaves already before groups, nothing is reordered: {organized:?}");
         }
 
         #[test]
-        fn organize_context_menu_puts_destructive_leaves_last_after_a_separator() {
+        async fn organize_context_menu_puts_destructive_leaves_last_after_a_separator() {
             let items = vec![menu_destructive("delete"), menu_leaf("a"), menu_leaf("b")];
             let organized = organize_context_menu(items, &no_category);
             assert_eq!(organized.len(), 4, "a separator is inserted before the destructive tail: {organized:?}");
@@ -4980,7 +4980,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_merges_same_id_groups_and_dedupes_children_by_id() {
+        async fn organize_context_menu_merges_same_id_groups_and_dedupes_children_by_id() {
             let items = vec![menu_group("view", vec![menu_leaf("zoomIn"), menu_leaf("zoomOut")]), menu_leaf("a"), menu_group("view", vec![menu_leaf("zoomOut"), menu_leaf("resetZoom")])];
             let organized = organize_context_menu(items, &no_category);
             assert_eq!(organized.iter().filter(|item| item.id == "menu.group.view").count(), 1, "only one merged row remains: {organized:?}");
@@ -4990,7 +4990,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones() {
+        async fn organize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones() {
             let items = vec![menu_separator("lead-bare"), menu_leaf("a"), menu_separator("dup-1"), menu_separator("dup-2"), menu_leaf("b"), menu_separator("trail-bare")];
             let organized = organize_context_menu(items, &no_category);
             assert_eq!(organized.len(), 3, "leading/trailing bare separators drop, the doubled run collapses to one: {organized:?}");
@@ -5001,7 +5001,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header() {
+        async fn organize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header() {
             let items = vec![menu_leaf("a"), menu_header("Recent"), menu_leaf("b")];
             let organized = organize_context_menu(items.clone(), &no_category);
             assert_eq!(organized, items, "a header is preserved in place, untouched by budget/ordering: {organized:?}");
@@ -5010,7 +5010,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last() {
+        async fn organize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last() {
             let items = vec![menu_group("mystery", vec![menu_leaf("x")]), menu_group("export", vec![menu_leaf("y")]), menu_group("view", vec![menu_leaf("z")])];
             let organized = organize_context_menu(items, &no_category);
             let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
@@ -5018,7 +5018,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_folds_overflow_groups_into_menu_group_more() {
+        async fn organize_context_menu_folds_overflow_groups_into_menu_group_more() {
             let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
             for category in ["hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform"] {
                 items.push(menu_group(category, vec![menu_leaf(&format!("{category}-child"))]));
@@ -5031,7 +5031,7 @@ pub mod ui {
         }
 
         #[test]
-        fn organize_context_menu_buckets_overflow_leaves_by_category_of() {
+        async fn organize_context_menu_buckets_overflow_leaves_by_category_of() {
             let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
             for index in 0..6 {
                 items.push(menu_leaf(&format!("overflow{index}")));
@@ -5044,7 +5044,7 @@ pub mod ui {
         }
 
         #[test]
-        fn ribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown() {
+        async fn ribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown() {
             assert_eq!(RIBBON_PARENT_CATEGORIES.len(), 20);
             for category in RIBBON_PARENT_CATEGORIES {
                 assert!(ribbon_parent_label(category, false).is_some(), "missing EN label for {category:?}");
@@ -5054,7 +5054,7 @@ pub mod ui {
         }
 
         #[test]
-        fn build_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette() {
+        async fn build_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette() {
             let actions = vec![
                 ShellMenuAction { id: "shell.rename".into(), label: "Rename".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: true, arg_carrying: true },
                 ShellMenuAction { id: "shell.hidden".into(), label: "Hidden".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: false, arg_carrying: false },

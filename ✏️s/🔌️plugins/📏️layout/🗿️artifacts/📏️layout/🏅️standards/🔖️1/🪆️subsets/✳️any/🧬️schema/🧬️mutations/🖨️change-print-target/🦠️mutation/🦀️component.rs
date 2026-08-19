@@ -13,13 +13,13 @@ pub struct ChangePrintTarget {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "print-target", kind: "change-print-target", record: "ChangedPrintTarget" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_print_target(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         super::inverse::inverse_change_print_target(self, base)
     }
-    fn label(&self) -> String {
+    async fn label(&self) -> String {
         match &self.new_print_target {
             Some(target) => format!("Set print target to \"{target}\""),
             None => "Clear print target".into(),

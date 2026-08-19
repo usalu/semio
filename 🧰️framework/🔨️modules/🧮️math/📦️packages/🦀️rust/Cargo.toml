@@ -24,6 +24,9 @@ path = "📦️glue.rs"
 # `semio-framework-geometry`'s `random` module (verified: zero `serde`/`serde_json`/`thiserror`
 # usage anywhere in this crate after the relocation).
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+# 🔀️ O1 (drop dyn dispatch, math-dedyn): `#[dyn_enum]`/`dyn_enum_close!` — every former
+# `dyn <Trait>` seam in `sampling` closes over a generated enum instead of a boxed trait object.
+semio-framework-dispatch-macros = { path = "../../../🔀️dispatch/📦️packages/🦀️rust" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

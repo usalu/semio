@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 /// `base`. Mirrors `📓️design-abi.md` §5's own `QuotaTree` inherit rule (`None` at any level defers
 /// to the next), applied here across repeated `PluginBuilder::quota(..)` calls on one builder
 /// instance instead of across the os → plugin → extension → instance tree.
-fn merge_quota_schema(base: QuotaSchema, incoming: QuotaSchema) -> QuotaSchema {
+async fn merge_quota_schema(base: QuotaSchema, incoming: QuotaSchema) -> QuotaSchema {
     QuotaSchema {
         memory_bytes: incoming.memory_bytes.or(base.memory_bytes),
         fuel_per_turn: incoming.fuel_per_turn.or(base.fuel_per_turn),
@@ -98,7 +98,7 @@ pub struct PluginBuilder<State> {
 
 impl PluginBuilder<NeedsLabel> {
     /// 🪪 Starts a plugin builder from a stable plugin id.
-    pub fn new(plugin_id: impl Into<String>) -> Self {
+    pub async fn new(plugin_id: impl Into<String>) -> Self {
         Self {
             plugin_id: plugin_id.into(),
             label: None,
@@ -131,7 +131,7 @@ impl PluginBuilder<NeedsLabel> {
     }
 
     /// 🏷️ Sets the human-readable plugin label.
-    pub fn label(self, label: impl Into<String>) -> PluginBuilder<NeedsVersion> {
+    pub async fn label(self, label: impl Into<String>) -> PluginBuilder<NeedsVersion> {
         PluginBuilder {
             plugin_id: self.plugin_id,
             label: Some(label.into()),
@@ -166,7 +166,7 @@ impl PluginBuilder<NeedsLabel> {
 
 impl PluginBuilder<NeedsVersion> {
     /// 🏷️ Sets the plugin version string.
-    pub fn version(self, version: impl Into<String>) -> PluginBuilder<Ready> {
+    pub async fn version(self, version: impl Into<String>) -> PluginBuilder<Ready> {
         PluginBuilder {
             plugin_id: self.plugin_id,
             label: self.label,
@@ -203,13 +203,13 @@ impl PluginBuilder<Ready> {
     /// 🗿️ Declares one artifact this plugin owns. Repeatable. `try_build()` walks every
     /// declared artifact in a fixed deterministic order and validates that it owns everything it
     /// declares — see `ArtifactDeclaration::preflight`.
-    pub fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
+    pub async fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
         self.artifacts.push(declaration);
         self
     }
 
     /// 🧾️ Registers one definition-only artifact through the same typed preflight registry.
-    pub fn artifact_definition(mut self, definition: crate::app::ArtifactDefinition) -> Self {
+    pub async fn artifact_definition(mut self, definition: crate::app::ArtifactDefinition) -> Self {
         self.artifact_definitions.push(definition);
         self
     }
@@ -220,13 +220,13 @@ impl PluginBuilder<Ready> {
     /// both types share the bare name `ArtifactDeclaration` at their own module scope. `try_build()`
     /// walks every declared tree and registers it atomically (preflight across every channel, then
     /// commit), additive alongside every old registration path — see `crate::app::declarations`.
-    pub fn declare_artifact(mut self, declaration: crate::app::declarations::ArtifactDeclaration) -> Self {
+    pub async fn declare_artifact(mut self, declaration: crate::app::declarations::ArtifactDeclaration) -> Self {
         self.declared_artifacts.push(declaration);
         self
     }
 
     /// 🔒️ Declares a capability requirement.
-    pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
+    pub async fn capability(mut self, capability: CapabilityRequirement) -> Self {
         if !self.capabilities.contains(&capability) {
             self.capabilities.push(capability);
         }
@@ -234,13 +234,13 @@ impl PluginBuilder<Ready> {
     }
 
     /// 🎲️ Declares local backbone read+write at plugin scope.
-    pub fn local_backbone_storage(self) -> Self {
+    pub async fn local_backbone_storage(self) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
     }
 
     /// 🎮️ Declares a plugin-owned command and its program-level handler.
-    pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
+    pub async fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
         self.commands.push((command, handler));
         self
     }
@@ -250,31 +250,31 @@ impl PluginBuilder<Ready> {
     /// through the SAME `kind` string a `spawn-job` effect names. `try_build()` folds every
     /// declared entry into `⚛️reactor/💼️jobs::register_job_kind` at bundle-install time — see that
     /// field's own doc comment for why the registry lives there rather than on `Plugin`.
-    pub fn job(mut self, kind: &'static str, run: crate::reactor::jobs::JobFn) -> Self {
+    pub async fn job(mut self, kind: &'static str, run: crate::reactor::jobs::JobFn) -> Self {
         self.jobs.push((kind, run));
         self
     }
 
     /// 🗂️ Declares one plugin-level artifact kind for library (zero-app) plugins. Repeatable.
-    pub fn artifact_kind(mut self, spec: semio_framework::ArtifactKindSpec) -> Self {
+    pub async fn artifact_kind(mut self, spec: semio_framework::ArtifactKindSpec) -> Self {
         self.artifact_kinds.push(spec);
         self
     }
 
     /// 🧭️ Declares an owned OS-media bridge or export renderer as frozen runtime authority.
-    pub fn host_media_handler(mut self, declaration: HostMediaHandlerDeclaration) -> Self {
+    pub async fn host_media_handler(mut self, declaration: HostMediaHandlerDeclaration) -> Self {
         self.host_media_handlers.push(declaration);
         self
     }
 
     /// 🌊️ Declares one immutable `flow.extension` executable descriptor for runtime catalogue merging.
-    pub fn flow_extension(mut self, declaration: FlowExtensionDeclaration) -> Self {
+    pub async fn flow_extension(mut self, declaration: FlowExtensionDeclaration) -> Self {
         self.flow_extensions.push(declaration);
         self
     }
 
     /// 🗂️ Declares an app-owned codec under a foreign document schema for the aggregate codec commit.
-    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self {
+    pub async fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self {
         self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema));
         self
     }
@@ -282,7 +282,7 @@ impl PluginBuilder<Ready> {
     /// 🔗️ Declares a direct plugin dependency this plugin requires to load — contract freeze §3/§4.
     /// Repeatable; order matters only for extensions (`ExtensionBundle::extends` must equal
     /// `dependencies[0].plugin_id`), which plain plugins have no equivalent constraint for.
-    pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
+    pub async fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
         self.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
         self
     }
@@ -290,7 +290,7 @@ impl PluginBuilder<Ready> {
     /// 🗂️ Declares one contribution of mutations/inferences onto an artifact kind owned by a
     /// dependency. Resolved against this plugin's own id and gate-checked (contract freeze §4) at
     /// `try_build()`, once every declared dependency is final.
-    pub fn contributes(mut self, contribution: ArtifactContribution) -> Self {
+    pub async fn contributes(mut self, contribution: ArtifactContribution) -> Self {
         self.contributions.push(contribution);
         self
     }
@@ -305,8 +305,8 @@ impl PluginBuilder<Ready> {
     /// STUDIOS, lane 2-0 — the bound was blocking every non-`SemanticMutation` document app, e.g.
     /// `semio-s-plugin-space`'s `SpaceApp`/`WorkflowMutation` and `semio-s-plugin-playbook-procedural`'s
     /// `ModuleApp`/`ModulePayloadMutation`, from linking at all).
-    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
-        fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    pub async fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
+        async fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             A::app_schema()
         }
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
@@ -323,7 +323,7 @@ impl PluginBuilder<Ready> {
     /// after `.document_app::<A>(app)` for a document app whose `Mutation` already derives it; skip
     /// it for the rest — they still register and route through `.document_app::<A>(app)` alone, they
     /// just do not contribute a roster row.
-    pub fn document_app_mutation_roster<A: ArtifactApp>(mut self) -> Self
+    pub async fn document_app_mutation_roster<A: ArtifactApp>(mut self) -> Self
     where
         A::Mutation: protocol::SemanticMutation<A::Snapshot>,
     {
@@ -331,7 +331,7 @@ impl PluginBuilder<Ready> {
         /// table — `try_build()` commits these into the process-wide owner mutation roster
         /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
         /// `contributor.list-artifact-mutations`.
-        fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        async fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             A::Mutation: protocol::SemanticMutation<A::Snapshot>,
         {
@@ -350,9 +350,9 @@ impl PluginBuilder<Ready> {
     /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
     /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
     /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
-    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, mut def: crate::app::AppDefinition) -> Self {
+    pub async fn viewer<V: crate::app::ArtifactViewer>(mut self, mut def: crate::app::AppDefinition) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
@@ -376,11 +376,11 @@ impl PluginBuilder<Ready> {
     /// not yet every dispatch enum. Chain right after `.viewer::<V>(def)` for a subset whose
     /// `Mutation` already derives it; skip it for the rest — they still register and route through
     /// `.viewer::<V>(def)` alone, they just do not contribute a roster row.
-    pub fn viewer_mutation_roster<V: crate::app::ArtifactViewer>(mut self) -> Self
+    pub async fn viewer_mutation_roster<V: crate::app::ArtifactViewer>(mut self) -> Self
     where
         V::Mutation: protocol::SemanticMutation<V::Snapshot>,
     {
-        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        async fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
         {
@@ -393,9 +393,9 @@ impl PluginBuilder<Ready> {
     /// ✏️ Declares a typed editor app factory (mutation-capable surface) — the `ArtifactEditor` twin
     /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`. No
     /// `SemanticMutation` bound — see `viewer` above and `editor_mutation_roster` below.
-    pub fn editor<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition) -> Self {
+    pub async fn editor<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             E::app_schema()
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
@@ -414,11 +414,11 @@ impl PluginBuilder<Ready> {
     }
 
     /// 🗂️ Opt-in: registers `E`'s owner-mutation roster — see `viewer_mutation_roster`.
-    pub fn editor_mutation_roster<E: crate::app::ArtifactEditor>(mut self) -> Self
+    pub async fn editor_mutation_roster<E: crate::app::ArtifactEditor>(mut self) -> Self
     where
         E::Mutation: protocol::SemanticMutation<E::Snapshot>,
     {
-        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        async fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
         {
@@ -432,7 +432,7 @@ impl PluginBuilder<Ready> {
     //#region 🔖️Descriptor
     /// 🚀️ Declares one activation event — when the host should spin up an instance of this plugin
     /// (`📓️design-abi.md` §2/§3). Repeatable; idempotent for a byte-identical event.
-    pub fn activation(mut self, event: ActivationEvent) -> Self {
+    pub async fn activation(mut self, event: ActivationEvent) -> Self {
         if !self.activation_events.contains(&event) {
             self.activation_events.push(event);
         }
@@ -441,7 +441,7 @@ impl PluginBuilder<Ready> {
 
     /// 🧩️ Publishes one extension point other packages may attach to (`📓️design-abi.md` §5) —
     /// replaces the old Cargo `consumes` tag. Repeatable; idempotent for a byte-identical row.
-    pub fn extension_point(mut self, declaration: ExtensionPointDeclaration) -> Self {
+    pub async fn extension_point(mut self, declaration: ExtensionPointDeclaration) -> Self {
         if !self.extension_points.contains(&declaration) {
             self.extension_points.push(declaration);
         }
@@ -452,7 +452,7 @@ impl PluginBuilder<Ready> {
     /// (`📓️design-abi.md` §5) — the NEW broker-scoped `kernel::CapabilityRequest`, not the older
     /// kernel-level `CapabilityRequirement` `.capability(..)` declares. Repeatable; idempotent for a
     /// byte-identical ask.
-    pub fn requests(mut self, request: CapabilityRequest) -> Self {
+    pub async fn requests(mut self, request: CapabilityRequest) -> Self {
         if !self.capability_requests.contains(&request) {
             self.capability_requests.push(request);
         }
@@ -462,20 +462,20 @@ impl PluginBuilder<Ready> {
     /// 📏️ Merges one resource ceiling into this plugin's own (`📓️design-abi.md` §5) — only
     /// `schema`'s `Some` fields override; repeated calls layer without clobbering fields a previous
     /// call already set (see `merge_quota_schema`).
-    pub fn quota(mut self, schema: QuotaSchema) -> Self {
+    pub async fn quota(mut self, schema: QuotaSchema) -> Self {
         self.quotas = merge_quota_schema(self.quotas, schema);
         self
     }
 
     /// 🚦️ Sets how this plugin's actor runs — default `Isolated` (`📓️design-abi.md` §5).
-    pub fn execution(mut self, mode: ExecutionMode) -> Self {
+    pub async fn execution(mut self, mode: ExecutionMode) -> Self {
         self.execution = mode;
         self
     }
 
     /// 📦️ Declares one asset bundled with this plugin, preloaded into `kernel::Event::InstanceOpen.
     /// assets` (`📓️design-abi.md` §2). Repeatable; idempotent for a byte-identical declaration.
-    pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
+    pub async fn asset(mut self, declaration: AssetDeclaration) -> Self {
         if !self.assets.contains(&declaration) {
             self.assets.push(declaration);
         }
@@ -484,12 +484,12 @@ impl PluginBuilder<Ready> {
     //#endregion 🔖️Descriptor
 
     /// 📚️ Assembles a library-only plugin through the typed boundary.
-    pub fn try_library(self) -> Result<Plugin, PluginAssemblyError> {
+    pub async fn try_library(self) -> Result<Plugin, PluginAssemblyError> {
         self.try_build()
     }
 
     /// ✅️ Builds plugin-local runtime authority before one all-registry commit.
-    pub fn try_build(self) -> Result<Plugin, PluginAssemblyError> {
+    pub async fn try_build(self) -> Result<Plugin, PluginAssemblyError> {
         let Self {
             plugin_id,
             label,
@@ -623,7 +623,7 @@ impl PluginBuilder<Ready> {
 
 impl Plugin {
     /// 🏗️ Starts a typestate plugin builder from a stable plugin id.
-    pub fn builder(plugin_id: impl Into<String>) -> PluginBuilder<NeedsLabel> {
+    pub async fn builder(plugin_id: impl Into<String>) -> PluginBuilder<NeedsLabel> {
         PluginBuilder::new(plugin_id)
     }
 }
@@ -641,7 +641,7 @@ mod plugin_builder_dependency_tests {
     /// guard, which is what actually makes the assertions about it meaningful.
     static MESH_DWG_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-    fn host_media_kind() -> semio_framework::ArtifactKindSpec {
+    async fn host_media_kind() -> semio_framework::ArtifactKindSpec {
         semio_framework::ArtifactKindSpec {
             id: "3d.builder-test".into(),
             name: "Builder Test 3D".into(),
@@ -658,12 +658,12 @@ mod plugin_builder_dependency_tests {
         }
     }
 
-    fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+    async fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
         MESH_DWG_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
         Ok(serde_json::json!({ "bridge": "counting" }))
     }
 
-    fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
+    async fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<serde_json::Value, String> {
         MESH_DWG_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
         Ok(serde_json::json!({ "bridge": "alternate" }))
     }
@@ -673,10 +673,10 @@ mod plugin_builder_dependency_tests {
         value: i32,
     }
     impl store::ArtifactPack for DependencyTestSnapshot {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
         }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
         }
     }
@@ -686,10 +686,10 @@ mod plugin_builder_dependency_tests {
         delta: i32,
     }
     impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
-        fn apply(&self, base: &DependencyTestSnapshot) -> protocol::MutationApplyResult<DependencyTestSnapshot> {
+        async fn apply(&self, base: &DependencyTestSnapshot) -> protocol::MutationApplyResult<DependencyTestSnapshot> {
             Ok(DependencyTestSnapshot { value: base.value + self.delta })
         }
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -700,20 +700,20 @@ mod plugin_builder_dependency_tests {
     }
     impl protocol::Mutation<DependencyTestSnapshot> for DependencyTestOp {
         type Diff = DependencyTestDiff;
-        fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
+        async fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
             let DependencyTestOp::Add(delta) = self;
             protocol::MutationOutcome::new(DependencyTestDiff { delta: *delta })
         }
-        fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<Self> {
+        async fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<Self> {
             let DependencyTestOp::Add(delta) = self;
             vec![DependencyTestOp::Add(-delta)]
         }
     }
     impl protocol::OpBinary for DependencyTestOp {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             Ok(serde_json::to_vec(self).expect("dependency test op always encodes"))
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
         }
     }
@@ -724,20 +724,20 @@ mod plugin_builder_dependency_tests {
     }
     impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for DependencyTestMutationKind {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-        fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
+        async fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
             planner.call(DependencyTestOp::Add(self.delta))
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             format!("Add {} to value", self.delta)
         }
     }
 
-    fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
+    async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
         ArtifactContribution::builder(target_artifact_kind).mutation::<DependencyTestSnapshot, DependencyTestOp, DependencyTestMutationKind>("dep-target.document", 1, 1).build()
     }
 
     #[test]
-    fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
+    async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
         let error = Plugin::builder("builder-test-contributor-missing-dep")
             .label("Builder Test Contributor Missing Dep")
             .version("0.1.0")
@@ -750,7 +750,7 @@ mod plugin_builder_dependency_tests {
     }
 
     #[test]
-    fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
+    async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
         let plugin = Plugin::builder("builder-test-contributor-ok")
             .label("Builder Test Contributor Ok")
             .version("0.1.0")
@@ -766,7 +766,7 @@ mod plugin_builder_dependency_tests {
     }
 
     #[test]
-    fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
+    async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
         let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
@@ -787,7 +787,7 @@ mod plugin_builder_dependency_tests {
     }
 
     #[test]
-    fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
+    async fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
         let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
@@ -807,7 +807,7 @@ mod plugin_builder_dependency_tests {
     }
 
     #[test]
-    fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
+    async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
         let manifest = FlowExtensionManifest::new("builder-test-flow", "Builder Test Flow", "0.1.0").expect("typed manifest");
         let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").expect("typed executable identity");
         let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
@@ -870,15 +870,15 @@ mod schema_stamping_tests {
         type TransientMutation = NoTransientMutation;
         type Command = NoConfigMutation;
 
-        fn initial_snapshot() -> NoConfig {
+        async fn initial_snapshot() -> NoConfig {
             NoConfig::default()
         }
 
-        fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
+        async fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
             Ok(Emit::default())
         }
 
-        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
+        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
             crate::ui_text(crate::Label::data("schema-stamp-editor"))
         }
     }
@@ -899,20 +899,20 @@ mod schema_stamping_tests {
         type TransientMutation = NoTransientMutation;
         type Command = NoConfigMutation;
 
-        fn initial_snapshot() -> NoConfig {
+        async fn initial_snapshot() -> NoConfig {
             NoConfig::default()
         }
 
-        fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+        async fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
 
-        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
+        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
             crate::ui_text(crate::Label::data("schema-stamp-viewer"))
         }
     }
 
-    fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
+    async fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
         let label = LocalizedLabel::data("Surface");
         match role {
             AppRole::Editor => Editor::builder(dialect).document(["semio", "schema-stamp-editor"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition(),
@@ -921,7 +921,7 @@ mod schema_stamping_tests {
     }
 
     #[test]
-    fn editor_stamps_document_schema_from_the_type_when_left_empty() {
+    async fn editor_stamps_document_schema_from_the_type_when_left_empty() {
         let def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
         assert!(def.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
         let plugin = Plugin::builder("builder-test-schema-stamp-editor")
@@ -935,7 +935,7 @@ mod schema_stamping_tests {
     }
 
     #[test]
-    fn editor_does_not_overwrite_an_explicitly_set_document_schema() {
+    async fn editor_does_not_overwrite_an_explicitly_set_document_schema() {
         let mut def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
         def.io.document_schema = "already-set.document".into();
         let plugin = Plugin::builder("builder-test-schema-stamp-editor-explicit")
@@ -949,7 +949,7 @@ mod schema_stamping_tests {
     }
 
     #[test]
-    fn viewer_stamps_document_schema_from_the_type_when_left_empty() {
+    async fn viewer_stamps_document_schema_from_the_type_when_left_empty() {
         let def = minimal_surface_def(VIEWER_STAMP_DIALECT, AppRole::Viewer);
         assert!(def.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
         let plugin = Plugin::builder("builder-test-schema-stamp-viewer")

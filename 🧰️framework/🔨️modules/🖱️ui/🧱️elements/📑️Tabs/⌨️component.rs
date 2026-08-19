@@ -8,7 +8,7 @@ use crate::tui::geometry::{Pos, Rect};
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{TabsState, WidgetSignal};
 
-pub(crate) fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) async fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if t.tabs.is_empty() {
         return None;
     }
@@ -25,7 +25,7 @@ pub(crate) fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSign
     }
 }
 
-pub(crate) fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Panel);
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let mut x = rect.x;

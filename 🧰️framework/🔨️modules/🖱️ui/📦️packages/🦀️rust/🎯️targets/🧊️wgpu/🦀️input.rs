@@ -74,7 +74,7 @@ pub struct PointerModifiers {
 }
 
 impl PointerModifiers {
-    pub fn ctrl_or_meta(&self) -> bool {
+    pub async fn ctrl_or_meta(&self) -> bool {
         self.ctrl || self.meta
     }
 }
@@ -150,31 +150,31 @@ impl<E> Default for InputState<E> {
 }
 
 impl<E: Clone> InputState<E> {
-    pub fn clear_frame(&mut self) {
+    pub async fn clear_frame(&mut self) {
         self.hit_targets.clear();
         self.wheel_delta = 0.0;
         self.right_click_pos = None;
     }
 
-    pub fn register_hit(&mut self, target: HitTarget<E>) {
+    pub async fn register_hit(&mut self, target: HitTarget<E>) {
         self.hit_targets.push(target);
     }
 
-    pub fn hit_at(&self, x: f32, y: f32) -> Option<&HitTarget<E>> {
+    pub async fn hit_at(&self, x: f32, y: f32) -> Option<&HitTarget<E>> {
         self.hit_targets.iter().rev().find(|target| target.rect.contains(x, y))
     }
 
-    pub fn update_hover(&mut self, x: f32, y: f32) {
+    pub async fn update_hover(&mut self, x: f32, y: f32) {
         self.pointer_x = x;
         self.pointer_y = y;
         self.hovered_id = self.hit_at(x, y).and_then(|hit| hit.control_id.clone());
     }
 
-    pub fn begin_drag(&mut self, x: f32, y: f32, button: i16, target_id: Option<String>, axis: Option<DragAxis>, kind: Option<HitKind>) {
+    pub async fn begin_drag(&mut self, x: f32, y: f32, button: i16, target_id: Option<String>, axis: Option<DragAxis>, kind: Option<HitKind>) {
         self.drag = DragState { active: true, button, start_x: x, start_y: y, current_x: x, current_y: y, target_id, axis, kind, points: vec![[x, y]] };
     }
 
-    pub fn update_drag(&mut self, x: f32, y: f32) {
+    pub async fn update_drag(&mut self, x: f32, y: f32) {
         if self.drag.active {
             self.drag.current_x = x;
             self.drag.current_y = y;
@@ -182,61 +182,61 @@ impl<E: Clone> InputState<E> {
         }
     }
 
-    pub fn end_drag(&mut self) -> DragState {
+    pub async fn end_drag(&mut self) -> DragState {
         let drag = self.drag.clone();
         self.drag = DragState::default();
         drag
     }
 
-    pub fn drain_events(&mut self) -> Vec<E> {
+    pub async fn drain_events(&mut self) -> Vec<E> {
         std::mem::take(&mut self.pending_events)
     }
 
-    pub fn drain_keys(&mut self) -> Vec<KeyAction> {
+    pub async fn drain_keys(&mut self) -> Vec<KeyAction> {
         std::mem::take(&mut self.pending_keys)
     }
 
-    pub fn queue_event(&mut self, event: E) {
+    pub async fn queue_event(&mut self, event: E) {
         self.pending_events.push(event);
     }
 
-    pub fn queue_key(&mut self, action: KeyAction) {
+    pub async fn queue_key(&mut self, action: KeyAction) {
         self.pending_keys.push(action);
     }
 
-    pub fn focus_input(&mut self, id: &str, value: &str) {
+    pub async fn focus_input(&mut self, id: &str, value: &str) {
         self.focused_id = Some(id.to_string());
         self.text_buffer = value.to_string();
         self.cursor_pos = value.len();
     }
 
-    pub fn blur_input(&mut self) {
+    pub async fn blur_input(&mut self) {
         self.focused_id = None;
         self.text_buffer.clear();
         self.cursor_pos = 0;
     }
 
-    pub fn insert_char(&mut self, ch: char) {
+    pub async fn insert_char(&mut self, ch: char) {
         if self.cursor_pos <= self.text_buffer.len() {
             self.text_buffer.insert(self.cursor_pos, ch);
             self.cursor_pos += 1;
         }
     }
 
-    pub fn backspace(&mut self) {
+    pub async fn backspace(&mut self) {
         if self.cursor_pos > 0 {
             self.cursor_pos -= 1;
             self.text_buffer.remove(self.cursor_pos);
         }
     }
 
-    pub fn delete_forward(&mut self) {
+    pub async fn delete_forward(&mut self) {
         if self.cursor_pos < self.text_buffer.len() {
             self.text_buffer.remove(self.cursor_pos);
         }
     }
 
-    pub fn move_cursor(&mut self, delta: i32) {
+    pub async fn move_cursor(&mut self, delta: i32) {
         let len = self.text_buffer.len() as i32;
         self.cursor_pos = ((self.cursor_pos as i32) + delta).clamp(0, len) as usize;
     }
@@ -256,7 +256,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn hit_at_prefers_content_registered_after_scroll_region() {
+    async fn hit_at_prefers_content_registered_after_scroll_region() {
         let mut input = InputState::<()>::default();
         let scroll = Rect::new(0.0, 0.0, 200.0, 200.0);
         let row = Rect::new(0.0, 24.0, 200.0, 24.0);

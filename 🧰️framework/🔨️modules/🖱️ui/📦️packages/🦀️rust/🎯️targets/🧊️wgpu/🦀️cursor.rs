@@ -34,7 +34,7 @@ pub struct CursorDragState {
     pub pointer_drag_kind: Option<HitKind>,
 }
 
-pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState) -> SemioCursor {
+pub async fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState) -> SemioCursor {
     if drag.tree_drag || drag.dock_drag {
         return SemioCursor::Grabbing;
     }
@@ -83,7 +83,7 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
     }
 }
 
-fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> SemioCursor {
+async fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> SemioCursor {
     match kind {
         Some(HitKind::Slider) => SemioCursor::Grabbing,
         Some(HitKind::PanelResize) => SemioCursor::EwResize,
@@ -94,7 +94,7 @@ fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> Semi
     }
 }
 
-fn axis_cursor(axis: DragAxis) -> SemioCursor {
+async fn axis_cursor(axis: DragAxis) -> SemioCursor {
     match axis {
         DragAxis::Horizontal => SemioCursor::EwResize,
         DragAxis::Vertical => SemioCursor::NsResize,
@@ -109,7 +109,7 @@ fn axis_cursor(axis: DragAxis) -> SemioCursor {
 /// active `CaptureKind` wins outright (dragging/scrolling a thumb never re-derives from whatever's
 /// merely hovered underneath), otherwise it falls back to the hovered node's own `NodeFlags`/
 /// `UiNode` variant.
-pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, capture: Option<(NodeId, CaptureKind)>) -> SemioCursor {
+pub async fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, capture: Option<(NodeId, CaptureKind)>) -> SemioCursor {
     if let Some((_, kind)) = capture {
         match kind {
             CaptureKind::Drag => return SemioCursor::Grabbing,
@@ -141,7 +141,7 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
     }
 }
 
-pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
+pub async fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
     match (cursor, dark) {
         (SemioCursor::Default, false) => "url(/asset/cursor/🔣️cursor.svg) 0 0, default",
         (SemioCursor::Default, true) => "url(/asset/cursor/🔣️cursor_dark.svg) 0 0, default",
@@ -173,7 +173,7 @@ pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
+pub async fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
     use wasm_bindgen::JsCast;
     let key = (cursor, dark);
     if last.as_ref() == Some(&key) {
@@ -187,7 +187,7 @@ pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: SemioCur
 }
 
 #[cfg(not(target_os = "wasi"))]
-pub fn apply_window_cursor(window: &winit::window::Window, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
+pub async fn apply_window_cursor(window: &winit::window::Window, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
     let key = (cursor, dark);
     if last.as_ref() == Some(&key) {
         return;
@@ -198,7 +198,7 @@ pub fn apply_window_cursor(window: &winit::window::Window, cursor: SemioCursor, 
 }
 
 #[cfg(not(target_os = "wasi"))]
-fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
+async fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
     use winit::window::CursorIcon;
     match cursor {
         SemioCursor::Default => CursorIcon::Default,
@@ -223,12 +223,12 @@ mod tests {
     use crate::wgpu::geometry::Rect;
     use std::collections::HashMap;
 
-    fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {
+    async fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {
         HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: None, kind, drag_axis: axis, drag_data: None }
     }
 
     #[test]
-    fn dock_split_horizontal_uses_ew_cursor() {
+    async fn dock_split_horizontal_uses_ew_cursor() {
         let mut target = hit(HitKind::DockSplit, Some(DragAxis::Horizontal));
         target.control_id = Some("dock.split.0.0".into());
         let cursor = resolve_semio_cursor(Some(&target), CursorDragState::default());
@@ -236,32 +236,32 @@ mod tests {
     }
 
     #[test]
-    fn dock_join_corner_uses_move_cursor() {
+    async fn dock_join_corner_uses_move_cursor() {
         let target = hit(HitKind::DockJoinCorner, Some(DragAxis::Both));
         let cursor = resolve_semio_cursor(Some(&target), CursorDragState::default());
         assert_eq!(cursor, SemioCursor::Move);
     }
 
     #[test]
-    fn dock_tab_uses_grab_cursor() {
+    async fn dock_tab_uses_grab_cursor() {
         let cursor = resolve_semio_cursor(Some(&hit(HitKind::Window, None)), CursorDragState::default());
         assert_eq!(cursor, SemioCursor::Grab);
     }
 
     #[test]
-    fn panel_resize_uses_ew_cursor() {
+    async fn panel_resize_uses_ew_cursor() {
         let cursor = resolve_semio_cursor(Some(&hit(HitKind::PanelResize, Some(DragAxis::Horizontal))), CursorDragState::default());
         assert_eq!(cursor, SemioCursor::EwResize);
     }
 
     #[test]
-    fn active_slider_drag_uses_grabbing() {
+    async fn active_slider_drag_uses_grabbing() {
         let cursor = resolve_semio_cursor::<()>(None, CursorDragState { pointer_drag_active: true, pointer_drag_axis: Some(DragAxis::Horizontal), pointer_drag_kind: Some(HitKind::Slider), ..CursorDragState::default() });
         assert_eq!(cursor, SemioCursor::Grabbing);
     }
 
     #[test]
-    fn tree_draggable_label_uses_grab() {
+    async fn tree_draggable_label_uses_grab() {
         let mut target = hit(HitKind::TreeItem, Some(DragAxis::Both));
         target.drag_data = Some(HashMap::from([("id".into(), "x".into())]));
         let cursor = resolve_semio_cursor(Some(&target), CursorDragState::default());
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn dark_theme_cursor_urls_use_dark_assets() {
+    async fn dark_theme_cursor_urls_use_dark_assets() {
         assert!(semio_cursor_css(SemioCursor::Default, true).contains("🔣️cursor_dark.svg"));
         assert!(semio_cursor_css(SemioCursor::Selectable, false).contains("🔣️cursor_selectable.svg"));
     }
@@ -280,14 +280,14 @@ mod tests {
     use crate::wgpu::events::ScrollAxis;
     use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 
-    fn leaf(node: UiNode) -> (UiTree, NodeId) {
+    async fn leaf(node: UiNode) -> (UiTree, NodeId) {
         let mut tree = UiTree::new();
         let id = tree.insert_child(None, Node::new(NodeKey::Positional(0, 0), WidgetSpec(node)));
         (tree, id)
     }
 
     #[test]
-    fn hovering_an_input_uses_the_text_cursor() {
+    async fn hovering_an_input_uses_the_text_cursor() {
         let (tree, id) = leaf(UiNode::Input(UiInputNode {
             id: "name".into(),
             input_kind: "text".into(),
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn hovering_a_drag_source_uses_the_grab_cursor() {
+    async fn hovering_a_drag_source_uses_the_grab_cursor() {
         let (mut tree, id) =
             leaf(UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None }));
         tree.node_mut(id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
@@ -314,14 +314,14 @@ mod tests {
     }
 
     #[test]
-    fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
+    async fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
         let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((dragged, CaptureKind::Drag)));
         assert_eq!(cursor, SemioCursor::Grabbing);
     }
 
     #[test]
-    fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
+    async fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
         let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((scrollable, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
         assert_eq!(cursor, SemioCursor::NsResize);

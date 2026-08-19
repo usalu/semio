@@ -1,0 +1,82 @@
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling displaydoc v0.2.5
+   Compiling futures-macro v0.3.32
+   Compiling tokio-macros v2.7.0
+   Compiling async-trait v0.1.89
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:573:55
+    |
+573 | pub async fn derive_dsl_record(input: TokenStream) -> TokenStream {
+    |                                                       ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:628:57
+    |
+628 | pub async fn derive_dsl_document(input: TokenStream) -> TokenStream {
+    |                                                         ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:711:53
+    |
+711 | pub async fn derive_dsl_diff(input: TokenStream) -> TokenStream {
+    |                                                     ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:768:55
+    |
+768 | pub async fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
+    |                                                       ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:906:52
+    |
+906 | pub async fn derive_dsl_ops(input: TokenStream) -> TokenStream {
+    |                                                    ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:925:53
+    |
+925 | pub async fn derive_dsl_enum(input: TokenStream) -> TokenStream {
+    |                                                     ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:978:54
+    |
+978 | pub async fn derive_mutations(input: TokenStream) -> TokenStream {
+    |                                                      ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+    |
+    = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+               found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: derive proc macro has incorrect signature
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1142:63
+     |
+1142 | pub async fn derive_composite_mutation(input: TokenStream) -> TokenStream {
+     |                                                               ^^^^^^^^^^^ expected `proc_macro::TokenStream`, found future
+     |
+     = note: expected signature `fn(proc_macro::TokenStream) -> proc_macro::TokenStream`
+                found signature `fn(proc_macro::TokenStream) -> impl Future<Output = proc_macro::TokenStream>`
+
+error: could not compile `semio-framework-os-kernel-dsl-derive` (lib) due to 8 previous errors
+warning: build failed, waiting for other jobs to finish...

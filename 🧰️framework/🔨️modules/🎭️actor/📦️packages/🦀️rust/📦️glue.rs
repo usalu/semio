@@ -25,14 +25,14 @@ mod kernel_host {
     #[wasm_bindgen]
     impl KernelHost {
         #[wasm_bindgen(constructor)]
-        pub fn new(shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> KernelHost {
+        pub async fn new(shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> KernelHost {
             KernelHost { inner: Kernel::new(ShardKind::WebWorker, shard_count, exclusive_reserve, grants_per_tick) }
         }
 
         /// ▶️ `activation_bytes` is a pack-encoded `(PackageId, u16 plugin_ordinal, ActorKind, Lane,
         /// Option<WindowId>, ActivationEvent)` tuple; returns the pack-encoded fresh `ActorId`.
         #[wasm_bindgen]
-        pub fn activate(&mut self, activation_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+        pub async fn activate(&mut self, activation_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
             let mut pos = 0usize;
             let package = super::component::PackageId::pack_decode(activation_bytes, &mut pos).map_err(to_js_error)?;
             let plugin_ordinal = pack::read_u16(activation_bytes, &mut pos, "activate::plugin_ordinal").map_err(to_js_error)?;
@@ -47,7 +47,7 @@ mod kernel_host {
         }
 
         #[wasm_bindgen]
-        pub fn submit(&mut self, envelope_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+        pub async fn submit(&mut self, envelope_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
             let mut pos = 0usize;
             let envelope = Envelope::pack_decode(envelope_bytes, &mut pos).map_err(to_js_error)?;
             let backpressure = self.inner.submit(&envelope);
@@ -57,7 +57,7 @@ mod kernel_host {
         }
 
         #[wasm_bindgen]
-        pub fn tick(&mut self, now_ms: u64) -> Vec<u8> {
+        pub async fn tick(&mut self, now_ms: u64) -> Vec<u8> {
             let decision: Decision = self.inner.tick(now_ms);
             let mut out = Vec::new();
             decision.pack_encode(&mut out);
@@ -65,7 +65,7 @@ mod kernel_host {
         }
 
         #[wasm_bindgen]
-        pub fn complete(&mut self, actor_bytes: &[u8], turn_result_bytes: &[u8], now_ms: u64) -> Result<(), JsError> {
+        pub async fn complete(&mut self, actor_bytes: &[u8], turn_result_bytes: &[u8], now_ms: u64) -> Result<(), JsError> {
             let mut actor_pos = 0usize;
             let actor = ActorId::pack_decode(actor_bytes, &mut actor_pos).map_err(to_js_error)?;
             let mut result_pos = 0usize;
@@ -75,18 +75,18 @@ mod kernel_host {
         }
 
         #[wasm_bindgen]
-        pub fn metrics(&self) -> Vec<u8> {
+        pub async fn metrics(&self) -> Vec<u8> {
             let mut out = Vec::new();
             self.inner.metrics().pack_encode(&mut out);
             out
         }
     }
 
-    fn to_js_error(err: pack::PackError) -> JsError {
+    async fn to_js_error(err: pack::PackError) -> JsError {
         JsError::new(&err.to_string())
     }
 
-    fn to_js_error_kernel(err: super::component::KernelError) -> JsError {
+    async fn to_js_error_kernel(err: super::component::KernelError) -> JsError {
         JsError::new(&err.to_string())
     }
 }

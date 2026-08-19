@@ -46,7 +46,7 @@ impl Inner {
     /// 🔁️ The replace-and-take-waker step `resolve`/`append_chunk` both need — factored out so the
     /// chunk-reassembly cap/done paths reuse the EXACT same resolution mechanics `resolve` already
     /// had, rather than a second hand-rolled copy.
-    fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
+    async fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
         match self.slots.get_mut(&id) {
             Some(slot @ Slot::Pending { .. }) => {
                 let Slot::Pending { waker, .. } = std::mem::replace(slot, Slot::Ready { result }) else { unreachable!() };
@@ -71,7 +71,7 @@ pub struct RequestRegistry {
 }
 
 impl RequestRegistry {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
@@ -80,7 +80,7 @@ impl RequestRegistry {
     /// the struct doc for why this exists instead of a per-request `instance` parameter on
     /// `request()` itself: `request()`'s signature is a live cross-crate contract
     /// (`🌐host/🦀️component.rs`'s `Host::call`) this packet must not break.
-    pub fn for_instance(&self, instance: u32) -> Self {
+    pub async fn for_instance(&self, instance: u32) -> Self {
         Self { inner: self.inner.clone(), instance }
     }
 
@@ -88,7 +88,7 @@ impl RequestRegistry {
     /// variant embeds its own `req: RequestId`), queues it for the next `turn-result.effects`
     /// drain, and returns a future that resolves once `resolve(id, ...)` is called from the
     /// `Event::Completed` (or job/http-chunk) routing step of `poll`.
-    pub fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
+    pub async fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
         let mut inner = self.inner.borrow_mut();
         inner.next_id += 1;
         let raw = inner.next_id;
@@ -101,7 +101,7 @@ impl RequestRegistry {
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an
     /// equivalent streaming completion) arrives. Wakes the parked task if one was already polled
     /// once (a request resolved before its future is ever polled just sits `Ready`).
-    pub fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
+    pub async fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
         let mut inner = self.inner.borrow_mut();
         let waker = inner.complete(id.0, result);
         drop(inner);
@@ -121,7 +121,7 @@ impl RequestRegistry {
     /// HTTP task is not itself cancelled by this, it just has nowhere left to deliver into. A chunk
     /// for an id that is not `Pending` (already resolved, or cancelled/dropped — see `RequestFuture`'s
     /// `Drop` impl) is a harmless no-op, same as `resolve` on an unknown id.
-    pub fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
+    pub async fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
         let mut inner = self.inner.borrow_mut();
         let outcome = match inner.slots.get_mut(&id.0) {
             Some(Slot::Pending { partial, .. }) => {
@@ -147,26 +147,26 @@ impl RequestRegistry {
     /// (`⚛️reactor/🦀️component.rs`'s `Event::HttpChunk` routing step) uses this to look up the
     /// owning instance's `QuotaSchema.message_bytes` cap. `None` once the slot is gone (already
     /// resolved or cancelled), same lifetime as every other per-id lookup here.
-    pub fn instance_of(&self, id: RequestId) -> Option<u32> {
+    pub async fn instance_of(&self, id: RequestId) -> Option<u32> {
         self.inner.borrow().instance_of.get(&id.0).copied()
     }
 
     /// 🔥️ Fire-and-forget: queues `effect` (a variant with no `req`/no completion — `Notify`,
     /// `ClipboardWrite`, `Navigate`, ...) without allocating a `RequestId` or parking anything.
-    pub fn emit(&self, effect: Effect) {
+    pub async fn emit(&self, effect: Effect) {
         self.inner.borrow_mut().outbound.push(effect);
     }
 
     /// 📤️ Drains and returns every effect queued since the last drain, in request order —
     /// `reactor::poll` calls this once per turn after the executor idles.
-    pub fn drain(&self) -> Vec<Effect> {
+    pub async fn drain(&self) -> Vec<Effect> {
         std::mem::take(&mut self.inner.borrow_mut().outbound)
     }
 
     /// 📸️ `⚛️reactor/📸️checkpoint`'s `pending_requests`: the ids still `Pending` — carried in the
     /// checkpoint pack so a restored actor's host round-trips can be identified as stale/re-run
     /// (see design-abi.md §4: async tasks are never serialised, only marked re-run-on-restore).
-    pub fn pending_ids(&self) -> Vec<RequestId> {
+    pub async fn pending_ids(&self) -> Vec<RequestId> {
         self.inner.borrow().slots.iter().filter(|(_, slot)| matches!(slot, Slot::Pending { .. })).map(|(id, _)| RequestId(*id)).collect()
     }
 
@@ -178,7 +178,7 @@ impl RequestRegistry {
     /// to observe a "cancelled" resolution — this is cleanup, not notification. Returns the number
     /// of slots removed (diagnostic only). Idempotent: an instance with no pending requests removes
     /// nothing.
-    pub fn cancel_instance(&self, instance: u32) -> usize {
+    pub async fn cancel_instance(&self, instance: u32) -> usize {
         let mut inner = self.inner.borrow_mut();
         let ids: Vec<u64> = inner.instance_of.iter().filter(|(_, owner)| **owner == instance).map(|(id, _)| *id).collect();
         for id in &ids {
@@ -239,14 +239,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn resolve_before_first_poll_leaves_the_future_immediately_ready() {
+    async fn resolve_before_first_poll_leaves_the_future_immediately_ready() {
         let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
         assert_eq!(registry.drain().len(), 1, "request() must queue exactly one effect");
         registry.resolve(RequestId(1), Ok(b"ok".to_vec()));
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
-        let mut cx = Context::from_waker(&waker);
+        let mut cx = Context::from_waker(waker);
         match future.as_mut().poll(&mut cx) {
             Poll::Ready(Ok(bytes)) => assert_eq!(bytes, b"ok"),
             Poll::Ready(Err(fault)) => panic!("expected Ok, got a fault: {fault:?}"),
@@ -255,7 +255,7 @@ mod tests {
     }
 
     #[test]
-    fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes() {
+    async fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes() {
         let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
         let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect(); // 710 bytes, non-trivial and non-uniform
@@ -265,7 +265,7 @@ mod tests {
         }
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
-        let mut cx = Context::from_waker(&waker);
+        let mut cx = Context::from_waker(waker);
         match future.as_mut().poll(&mut cx) {
             Poll::Ready(Ok(bytes)) => assert_eq!(bytes, original, "every chunk (not just the final one) must survive reassembly"),
             Poll::Ready(Err(fault)) => panic!("expected Ok, got a fault: {fault:?}"),
@@ -274,14 +274,14 @@ mod tests {
     }
 
     #[test]
-    fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
+    async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
         let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
         registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64);
         registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
-        let mut cx = Context::from_waker(&waker);
+        let mut cx = Context::from_waker(waker);
         match future.as_mut().poll(&mut cx) {
             Poll::Ready(Err(fault)) => assert_eq!(fault.code.0, "plugin.request-registry.body-too-large"),
             Poll::Ready(Ok(bytes)) => panic!("must fault over cap, not silently truncate — got {} bytes", bytes.len()),
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
+    async fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
         let registry = RequestRegistry::new();
         registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024); // never requested
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
@@ -298,7 +298,7 @@ mod tests {
         registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024); // arrives after resolve
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
-        let mut cx = Context::from_waker(&waker);
+        let mut cx = Context::from_waker(waker);
         match future.as_mut().poll(&mut cx) {
             Poll::Ready(Ok(bytes)) => assert_eq!(bytes, b"already done", "a late chunk must not clobber an already-resolved result"),
             other => panic!("expected the original resolution to stand, got {other:?}"),
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn pending_ids_reports_only_unresolved_requests() {
+    async fn pending_ids_reports_only_unresolved_requests() {
         let registry = RequestRegistry::new();
         let _first = registry.request(|req| Effect::CancelJob { job: req.0 });
         let _second = registry.request(|req| Effect::CancelJob { job: req.0 });
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_instance_removes_only_that_instances_pending_requests() {
+    async fn cancel_instance_removes_only_that_instances_pending_requests() {
         let registry = RequestRegistry::new();
         let scoped_to_7 = registry.for_instance(7);
         let scoped_to_9 = registry.for_instance(9);
@@ -333,18 +333,18 @@ mod tests {
         // resolves. The slot is gone outright (no leaked entry to poll against later).
         let mut nine = Box::pin(nine);
         let waker = futures_test_waker();
-        let mut cx = Context::from_waker(&waker);
+        let mut cx = Context::from_waker(waker);
         assert!(matches!(nine.as_mut().poll(&mut cx), Poll::Pending), "the surviving instance's request is unaffected");
     }
 
     #[test]
-    fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_no_op() {
+    async fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_no_op() {
         let registry = RequestRegistry::new();
         assert_eq!(registry.cancel_instance(42), 0);
     }
 
     #[test]
-    fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_from() {
+    async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_from() {
         let registry = RequestRegistry::new();
         let scoped = registry.for_instance(3);
         let _first = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
@@ -353,13 +353,9 @@ mod tests {
         assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
     }
 
-    fn futures_test_waker() -> Waker {
-        use std::task::{RawWaker, RawWakerVTable};
-        fn noop(_: *const ()) {}
-        fn clone(_: *const ()) -> RawWaker {
-            RawWaker::new(std::ptr::null(), &VTABLE)
-        }
-        static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, noop, noop, noop);
-        unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) }
+    // 🚫️async: E4 fn-pointer slot — Waker::noop() replaces the hand-rolled RawWakerVTable outright;
+    // no vtable fn-pointer slot survives to tag.
+    fn futures_test_waker() -> &'static Waker {
+        Waker::noop()
     }
 }

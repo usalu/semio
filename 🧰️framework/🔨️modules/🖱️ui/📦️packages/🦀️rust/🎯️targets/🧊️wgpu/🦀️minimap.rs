@@ -23,7 +23,7 @@ pub struct MinimapContentBounds {
 /// 🗺️ True when a `viewport_w`x`viewport_h` viewport at `camera_zoom` centered on
 /// `(camera_x, camera_y)` already shows the whole of `content` (within `tolerance_px` screen
 /// pixels) — the minimap should hide itself in this case.
-pub fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, tolerance_px: f64) -> bool {
+pub async fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, tolerance_px: f64) -> bool {
     let zoom = camera_zoom.max(1e-9);
     let half_w = viewport_w as f64 / (2.0 * zoom);
     let half_h = viewport_h as f64 / (2.0 * zoom);
@@ -35,7 +35,7 @@ pub fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, vi
 /// content scaled to fit `content_fit_ratio` (clamped `0.5..=0.98`) of the panel, plus the camera's
 /// current view rect mapped into minimap-local coordinates.
 #[allow(clippy::too_many_arguments, reason = "mirrors the dag board's own MinimapWidgetLayout inputs 1:1 — a struct would just move the same arity into a constructor")]
-pub fn layout(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, panel_w: f64, panel_h: f64, margin: f64, content_fit_ratio: f64) -> MinimapLayout {
+pub async fn layout(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, panel_w: f64, panel_h: f64, margin: f64, content_fit_ratio: f64) -> MinimapLayout {
     let ratio = content_fit_ratio.clamp(0.5, 0.98);
     let panel_x0 = viewport_w as f64 - margin - panel_w;
     let panel_y0 = viewport_h as f64 - margin - panel_h;
@@ -70,12 +70,12 @@ pub fn layout(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, 
 /// 🗺️ Inverse of `layout`'s world -> minimap mapping — a minimap-local screen point `(sx, sy)` back
 /// to world coordinates, given the `world_min_x`/`world_min_y`/`scale`/`map_origin_x`/`map_origin_y`
 /// a prior `layout()` call returned.
-pub fn screen_to_world(map_origin_x: f64, map_origin_y: f64, world_min_x: f64, world_min_y: f64, scale: f64, sx: f64, sy: f64) -> (f64, f64) {
+pub async fn screen_to_world(map_origin_x: f64, map_origin_y: f64, world_min_x: f64, world_min_y: f64, scale: f64, sx: f64, sy: f64) -> (f64, f64) {
     (world_min_x + (sx - map_origin_x) / scale, world_min_y + (sy - map_origin_y) / scale)
 }
 
 /// 🗺️ Point-in-axis-aligned-rect test — shared by panel/viewport hit-testing.
-pub fn point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
+pub async fn point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
     sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1
 }
 // #endregion minimap

@@ -23,14 +23,14 @@ use semio_framework::{
 /// distinct from the separate 3-segment `s.<plugin>.<artifact>` `ArtifactRef`/`ArtifactIdentity`
 /// capability-row grammar, `🚪️io/🧬️schema/🦀️component.rs`), with `"s.<plugin_id>.<suffix>"` also
 /// accepted for any dialect a plugin registers as a sub-kind of its own.
-fn owns_artifact_kind(plugin_id: &str, artifact_kind: &str) -> bool {
+async fn owns_artifact_kind(plugin_id: &str, artifact_kind: &str) -> bool {
     artifact_kind == format!("s.{plugin_id}") || artifact_kind.starts_with(&format!("s.{plugin_id}."))
 }
 
 /// 🗂️ Flattens every app's `AppIo.export_formats`/`import_formats` into one row per distinct format
 /// kind — `ContributionSet.file_types` (`📓️design-abi.md` §3), grounded in `AppIo` (E1's own doc on
 /// `manifest::FileTypeContribution`).
-fn plugin_file_types(apps: &[AppDefinition]) -> Vec<FileTypeContribution> {
+async fn plugin_file_types(apps: &[AppDefinition]) -> Vec<FileTypeContribution> {
     let mut rows: Vec<FileTypeContribution> = Vec::new();
     for app in apps {
         let mut kinds: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();
@@ -47,7 +47,7 @@ fn plugin_file_types(apps: &[AppDefinition]) -> Vec<FileTypeContribution> {
 }
 
 /// 🗂️ Flattens every app's `panel_tabs` — `ContributionSet.panels`.
-fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
+async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
     apps.iter().flat_map(|app| app.panel_tabs.iter().cloned()).collect()
 }
 
@@ -55,7 +55,7 @@ fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// owner`, `depends_on` empty, matching `ContributionSet.inference_services`'s own doc. Reads the
 /// SAME process-global registry `plugin_wire_list_artifact_inference_services` already serves; in a
 /// single-plugin wasm instance every entry with `owner == plugin_id` is this package's own.
-fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
+async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     crate::app::list_artifact_inference_services()
         .unwrap_or_default()
         .into_iter()
@@ -91,7 +91,7 @@ fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadat
 /// requires both. Populating it would mean fabricating version numbers nothing in the codebase
 /// declares, so it stays empty, the exact "not invented" discipline E1 already applied to
 /// `menus`/`themes`.
-fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Vec<ComposerEntryDescriptor>) {
+async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Vec<ComposerEntryDescriptor>) {
     let mut io_entries = Vec::new();
     let mut composer_entries = Vec::new();
     for (writes, reads) in io::list_composer_entries().unwrap_or_default() {
@@ -109,7 +109,7 @@ fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Vec<Comp
 /// 🗂️ Assembles `ContributionSet` from what `manifest` and the process-global runtime registries
 /// actually declare — see each field helper's own doc. `menus`/`themes` stay empty (E1's own survey,
 /// unchanged); `mutation_services` stays empty (see `plugin_io_contributions`'s doc).
-fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
+async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
     let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id);
     ContributionSet {
         commands: manifest.commands.clone(),
@@ -126,7 +126,7 @@ fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
     }
 }
 
-pub fn describe_plugin() -> Vec<u8> {
+pub async fn describe_plugin() -> Vec<u8> {
     let manifest = crate::plugin_runtime::plugin_manifest();
     let extras = crate::plugin_runtime::plugin_descriptor_extras();
     let contributions = plugin_contributions(&manifest);
@@ -158,7 +158,7 @@ pub fn describe_plugin() -> Vec<u8> {
 /// stay empty: extension points are published BY host plugins (`PluginBuilder::extension_point`),
 /// never by the extension attaching to one; an extension's own activation is entirely driven by the
 /// host's `ExtensionPointDeclaration.activation`, not a declaration of its own.
-pub fn describe_extension() -> Vec<u8> {
+pub async fn describe_extension() -> Vec<u8> {
     let extension = crate::plugin_runtime::extension_manifest();
     let manifest = PluginManifest {
         plugin_id: extension.extension_id,

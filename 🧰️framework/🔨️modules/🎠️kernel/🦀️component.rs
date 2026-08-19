@@ -608,7 +608,7 @@ pub struct HistoryEntry {
     pub count: u32,
 }
 
-fn history_entry_count() -> u32 {
+async fn history_entry_count() -> u32 {
     1
 }
 
@@ -1087,9 +1087,9 @@ pub enum FailureAction {
 /// ∩ the host plugin's extension-point allowance ∩ user approvals ∩ the host plugin's own
 /// effective set" — `admit_effect` is where that intersection is enforced.
 pub trait BrokerHooks {
-    fn admit_effect(&self, instance: &PluginInstanceId, effect: &Effect) -> Result<(), Fault>;
-    fn on_turn_finished(&self, instance: &PluginInstanceId, usage: &Usage);
-    fn on_breach(&self, instance: &PluginInstanceId, breach: &QuotaBreach) -> FailureAction;
-    fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange);
+    async fn admit_effect(&self, instance: &PluginInstanceId, effect: &Effect) -> Result<(), Fault>;
+    async fn on_turn_finished(&self, instance: &PluginInstanceId, usage: &Usage);
+    async fn on_breach(&self, instance: &PluginInstanceId, breach: &QuotaBreach) -> FailureAction;
+    async fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange);
 }
 //#endregion 🔖️Broker

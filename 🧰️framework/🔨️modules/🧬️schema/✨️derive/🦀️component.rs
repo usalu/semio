@@ -1,5 +1,11 @@
 //! ✨️ `semio_framework_schema_derive` — `#[derive(ArtifactSchema)]` with `#[artifact_schema]` /
 //! `#[state]` / `#[derived]` / `#[child]` / `#[link_slot]`.
+//!
+//! Whole crate is sync (E3): a proc-macro entry point's signature is language-fixed to
+//! `fn(TokenStream) -> TokenStream` and rustc rejects an `async fn` here outright (a proc macro
+//! runs inside rustc at compile time, where there is no executor to poll it). Since none of this
+//! crate's helpers do I/O, keeping every fn in the file sync — not just the tagged entry points —
+//! avoids threading `block_on` through code that has nothing to await.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -198,6 +204,7 @@ fn parse_link_roles(field: &syn::Field) -> syn::Result<Vec<String>> {
 /// (`#[child(kind = "…")]` / `#[link_slot(roles(…))]`) — one derive, since both traits describe the
 /// same struct's fields and a struct with no composition fields still needs a (trivially empty) impl.
 #[proc_macro_derive(ArtifactSchema, attributes(artifact_schema, state, derived, child, link_slot))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match expand_artifact_schema(&input) {
@@ -257,22 +264,22 @@ fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::Token
     let id_lit = syn::LitStr::new(&id, ident.span());
     Ok(quote! {
         impl ::semio_framework_schema::ArtifactSchemaFields for #ident {
-            fn artifact_schema_id() -> &'static str {
+            async fn artifact_schema_id() -> &'static str {
                 #id_lit
             }
-            fn field_states() -> &'static [(&'static str, ::semio_framework_schema::StateClass)] {
+            async fn field_states() -> &'static [(&'static str, ::semio_framework_schema::StateClass)] {
                 &[#(#field_entries),*]
             }
-            fn derived_fields() -> &'static [&'static str] {
+            async fn derived_fields() -> &'static [&'static str] {
                 &[#(#derived_entries),*]
             }
         }
 
         impl ::semio_framework_schema::ArtifactCompositionFields for #ident {
-            fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+            async fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
                 &[#(#child_entries),*]
             }
-            fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {
+            async fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {
                 &[#(#link_entries),*]
             }
         }

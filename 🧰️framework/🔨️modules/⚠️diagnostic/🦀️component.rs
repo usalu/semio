@@ -1,4 +1,5 @@
 //! ⚠️ Text errors, structured diagnostics, fault reporting, and parse limits.
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

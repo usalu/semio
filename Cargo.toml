@@ -100,6 +100,8 @@ members = [
     "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",

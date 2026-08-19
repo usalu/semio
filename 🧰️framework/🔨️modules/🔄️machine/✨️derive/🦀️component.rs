@@ -105,7 +105,7 @@ mod analyze {
     }
 
     impl Analyzer {
-        fn intern_guard(&mut self, ident: Ident) -> usize {
+        async fn intern_guard(&mut self, ident: Ident) -> usize {
             if let Some(pos) = self.guards.iter().position(|g| g == &ident) {
                 pos
             } else {
@@ -114,7 +114,7 @@ mod analyze {
             }
         }
 
-        fn intern_action(&mut self, ident: Ident) -> usize {
+        async fn intern_action(&mut self, ident: Ident) -> usize {
             if let Some(pos) = self.actions.iter().position(|a| a == &ident) {
                 pos
             } else {
@@ -123,7 +123,7 @@ mod analyze {
             }
         }
 
-        fn add_node(&mut self, name: &Ident, kind: NodeKindIr, parent: usize) -> syn::Result<usize> {
+        async fn add_node(&mut self, name: &Ident, kind: NodeKindIr, parent: usize) -> syn::Result<usize> {
             let key = name.to_string();
             if self.names.contains_key(&key) {
                 return Err(syn::Error::new(name.span(), format!("duplicate state name `{key}`")));
@@ -135,7 +135,7 @@ mod analyze {
             Ok(idx)
         }
 
-        fn build_state(&mut self, ast: StateAst, parent: usize) -> syn::Result<usize> {
+        async fn build_state(&mut self, ast: StateAst, parent: usize) -> syn::Result<usize> {
             let name = ast.name.clone().expect("nested/top-level states always carry a name");
             let kind = if ast.children.is_empty() { NodeKindIr::Atomic } else { NodeKindIr::Compound };
             let idx = self.add_node(&name, kind, parent)?;
@@ -196,7 +196,7 @@ mod analyze {
             Ok(idx)
         }
 
-        fn build_parallel(&mut self, ast: ParallelAst, parent: usize) -> syn::Result<usize> {
+        async fn build_parallel(&mut self, ast: ParallelAst, parent: usize) -> syn::Result<usize> {
             if ast.regions.len() < 2 {
                 return Err(syn::Error::new(ast.name.span(), format!("parallel state `{}` needs at least two `state` regions", ast.name)));
             }
@@ -211,7 +211,7 @@ mod analyze {
             Ok(idx)
         }
 
-        fn build_final(&mut self, ast: FinalAst, parent: usize) -> syn::Result<usize> {
+        async fn build_final(&mut self, ast: FinalAst, parent: usize) -> syn::Result<usize> {
             let idx = self.add_node(&ast.name, NodeKindIr::Final, parent)?;
             if let Some(output_fn) = ast.output {
                 self.outputs.push(output_fn);
@@ -219,7 +219,7 @@ mod analyze {
             Ok(idx)
         }
 
-        fn push_on_transitions(&mut self, source: usize, transitions: &[OnAst]) {
+        async fn push_on_transitions(&mut self, source: usize, transitions: &[OnAst]) {
             for on in transitions {
                 let guard = on.guard.clone().map(|g| self.intern_guard(g));
                 let action = on.action.clone().map(|a| self.intern_action(a));
@@ -227,7 +227,7 @@ mod analyze {
             }
         }
 
-        fn push_always_transitions(&mut self, source: usize, always: &[AlwaysAst]) {
+        async fn push_always_transitions(&mut self, source: usize, always: &[AlwaysAst]) {
             for al in always {
                 let guard = al.guard.clone().map(|g| self.intern_guard(g));
                 let action = al.action.clone().map(|a| self.intern_action(a));
@@ -240,7 +240,7 @@ mod analyze {
 
     //#region 🔖️Fingerprint
 
-    fn kind_tag(kind: &NodeKindIr) -> u8 {
+    async fn kind_tag(kind: &NodeKindIr) -> u8 {
         match kind {
             NodeKindIr::Atomic => 0,
             NodeKindIr::Compound => 1,
@@ -251,7 +251,7 @@ mod analyze {
         }
     }
 
-    fn fnv_feed(state: &mut u64, bytes: &[u8]) {
+    async fn fnv_feed(state: &mut u64, bytes: &[u8]) {
         for &b in bytes {
             *state ^= b as u64;
             *state = state.wrapping_mul(0x100000001b3);
@@ -259,7 +259,7 @@ mod analyze {
     }
 
     /// 🔢️ Hand-rolled FNV-1a over the compiled structure — no hashing crate dependency.
-    fn compute_fingerprint(nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> u64 {
+    async fn compute_fingerprint(nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> u64 {
         let mut state: u64 = 0xcbf29ce484222325;
         for node in nodes {
             fnv_feed(&mut state, node.name.as_bytes());
@@ -278,7 +278,7 @@ mod analyze {
         state
     }
 
-    fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> String {
+    async fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> String {
         let mut json = format!("{{\"id\":\"{name}\",\"states\":[");
         for (i, node) in nodes.iter().enumerate() {
             if i > 0 {
@@ -302,7 +302,7 @@ mod analyze {
 
     //#endregion 🔖️Fingerprint
 
-pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
+pub async fn analyze(ast: MachineAst) -> syn::Result<Ir> {
         let mut az = Analyzer { nodes: Vec::new(), names: HashMap::new(), guards: Vec::new(), actions: Vec::new(), outputs: Vec::new(), pending: Vec::new(), invoke_counter: 0, timer_counter: 0 };
         az.nodes.push(NodeIr { name: "root".to_string(), kind: NodeKindIr::Compound, parent: None, initial: None, children: Vec::new(), entry_actions: Vec::new(), exit_actions: Vec::new(), invokes: Vec::new(), timers: Vec::new() });
         az.names.insert("root".to_string(), 0);
@@ -381,7 +381,7 @@ mod codegen {
 
     //#region 🔖️Helpers
 
-    fn to_pascal_case(input: &str) -> String {
+    async fn to_pascal_case(input: &str) -> String {
         input
             .split('_')
             .map(|part| {
@@ -394,12 +394,12 @@ mod codegen {
             .collect()
     }
 
-    fn node_id_lit(index: usize) -> TokenStream {
+    async fn node_id_lit(index: usize) -> TokenStream {
         let lit = index as u16;
         quote! { machine::NodeId(#lit) }
     }
 
-    fn node_kind_tokens(kind: &NodeKindIr) -> TokenStream {
+    async fn node_kind_tokens(kind: &NodeKindIr) -> TokenStream {
         match kind {
             NodeKindIr::Atomic => quote! { machine::NodeKind::Atomic },
             NodeKindIr::Compound => quote! { machine::NodeKind::Compound },
@@ -410,7 +410,7 @@ mod codegen {
         }
     }
 
-    fn trigger_tokens(trigger: &TriggerIr) -> TokenStream {
+    async fn trigger_tokens(trigger: &TriggerIr) -> TokenStream {
         match trigger {
             TriggerIr::Event(idx) => {
                 let lit = *idx as u16;
@@ -432,7 +432,7 @@ mod codegen {
 
     //#region 🔖️NodeDef
 
-    fn node_def_tokens(node: &NodeIr, doc_index: usize) -> TokenStream {
+    async fn node_def_tokens(node: &NodeIr, doc_index: usize) -> TokenStream {
         let stable_id = &node.name;
         let kind = node_kind_tokens(&node.kind);
         let parent = match node.parent {
@@ -488,7 +488,7 @@ mod codegen {
 
     //#region 🔖️TransitionDef
 
-    fn transition_def_tokens(transition: &TransitionIr, doc_index: usize) -> TokenStream {
+    async fn transition_def_tokens(transition: &TransitionIr, doc_index: usize) -> TokenStream {
         let source = node_id_lit(transition.source);
         let trigger = trigger_tokens(&transition.trigger);
         let guard = match transition.guard {
@@ -526,7 +526,7 @@ mod codegen {
 
     //#region 🔖️Event
 
-    fn event_variant_def_tokens(variant: &EventVariantAst) -> TokenStream {
+    async fn event_variant_def_tokens(variant: &EventVariantAst) -> TokenStream {
         match variant {
             EventVariantAst::Unit(name) => quote! { #name },
             EventVariantAst::Struct(name, fields) => {
@@ -537,7 +537,7 @@ mod codegen {
         }
     }
 
-    fn event_id_arm_tokens(event_name: &syn::Ident, index: usize, variant: &EventVariantAst) -> TokenStream {
+    async fn event_id_arm_tokens(event_name: &syn::Ident, index: usize, variant: &EventVariantAst) -> TokenStream {
         let lit = index as u16;
         match variant {
             EventVariantAst::Unit(name) => quote! { #event_name::#name => machine::EventId(#lit) },
@@ -553,7 +553,7 @@ mod codegen {
 
     //#region 🔖️Emit
 
-    pub fn emit(ir: &Ir) -> TokenStream {
+    pub async fn emit(ir: &Ir) -> TokenStream {
         let mod_name = &ir.machine_name;
         let marker_name = format_ident!("{}", to_pascal_case(&ir.machine_name.to_string()));
         let event_name = &ir.event_name;
@@ -608,13 +608,13 @@ mod codegen {
                 impl machine::StatechartEvent for #event_name {
                     const EVENT_COUNT: u16 = #event_count;
 
-                    fn event_id(&self) -> machine::EventId {
+                    async fn event_id(&self) -> machine::EventId {
                         match self {
                             #(#event_id_arms),*
                         }
                     }
 
-                    fn event_name(id: machine::EventId) -> &'static str {
+                    async fn event_name(id: machine::EventId) -> &'static str {
                         match id.0 {
                             #(#event_name_arms,)*
                             _ => "?",
@@ -634,7 +634,7 @@ mod codegen {
                     type Effect = #effect_ty;
                     type Config = machine::BitSet<#word_count>;
 
-                    fn definition() -> &'static machine::MachineDefinition<Self> {
+                    async fn definition() -> &'static machine::MachineDefinition<Self> {
                         static DEF: machine::MachineDefinition<#marker_name> = machine::MachineDefinition {
                             id: #machine_name_str,
                             nodes: &[ #(#node_defs),* ],
@@ -724,7 +724,7 @@ mod parse {
     }
 
     impl EventVariantAst {
-        pub fn name(&self) -> &Ident {
+        pub async fn name(&self) -> &Ident {
             match self {
                 EventVariantAst::Unit(name) | EventVariantAst::Struct(name, _) | EventVariantAst::Tuple(name, _) => name,
             }
@@ -791,21 +791,21 @@ mod parse {
 
     //#region 🔖️Parse
 
-    fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    async fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
         input.parse::<Token![:]>()?;
         let ty = input.parse::<Type>()?;
         input.parse::<Token![;]>()?;
         Ok(ty)
     }
 
-    fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    async fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
         input.parse::<Token![:]>()?;
         let ident = input.parse::<Ident>()?;
         input.parse::<Token![;]>()?;
         Ok(ident)
     }
 
-    fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    async fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
         let name = input.parse::<Ident>()?;
         let content;
         braced!(content in input);
@@ -847,7 +847,7 @@ mod parse {
         Ok((name, variants))
     }
 
-    fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    async fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
         let delay_lit = input.parse::<LitInt>()?;
         let delay_ms: u64 = delay_lit.base10_parse()?;
         input.parse::<Token![=>]>()?;
@@ -862,7 +862,7 @@ mod parse {
         Ok(AfterAst { delay_ms, target, action })
     }
 
-    fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    async fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
         let event = input.parse::<Ident>()?;
         let guard = if input.peek(Token![if]) {
             input.parse::<Token![if]>()?;
@@ -888,7 +888,7 @@ mod parse {
         Ok(OnAst { event, guard, target, action, internal })
     }
 
-    fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    async fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
         let guard = if input.peek(Token![if]) {
             input.parse::<Token![if]>()?;
             Some(input.parse::<Ident>()?)
@@ -907,7 +907,7 @@ mod parse {
         Ok(AlwaysAst { guard, target, action })
     }
 
-    fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    async fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
         let name = input.parse::<Ident>()?;
         let deep = if input.peek(kw::deep) {
             input.parse::<kw::deep>()?;
@@ -920,7 +920,7 @@ mod parse {
         Ok(HistoryAst { name, deep })
     }
 
-    fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    async fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
         let content;
         braced!(content in input);
         let mut state = StateAst { name, ..StateAst::default() };
@@ -969,7 +969,7 @@ mod parse {
         Ok(state)
     }
 
-    fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    async fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
         let name = input.parse::<Ident>()?;
         if input.peek(Token![;]) {
             input.parse::<Token![;]>()?;
@@ -989,7 +989,7 @@ mod parse {
         Ok(FinalAst { name, output })
     }
 
-    fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    async fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
         let name = input.parse::<Ident>()?;
         let content;
         braced!(content in input);
@@ -1105,7 +1105,7 @@ use syn::DeriveInput;
 /// 🪄️ Compiles a `machine <name> { .. }` declaration into a `pub mod <name> { .. }`
 /// with a dense static [`machine::MachineDefinition`], a generated event enum, and a
 /// `states` module of `NodeId` consts.
-pub fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+pub async fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let ast: parse::MachineAst = syn::parse2(input)?;
     let ir = analyze::analyze(ast)?;
     Ok(codegen::emit(&ir))
@@ -1113,7 +1113,7 @@ pub fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_ma
 
 /// 🪄️ Implements `machine::StatechartEvent` for a consumer-authored enum, for use with
 /// hand-authored `MachineDefinition` tables (i.e. without the `statechart!` DSL).
-pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+pub async fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let data = match &input.data {
         syn::Data::Enum(e) => e,
@@ -1138,13 +1138,13 @@ pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::
         impl machine::StatechartEvent for #name {
             const EVENT_COUNT: u16 = #count;
 
-            fn event_id(&self) -> machine::EventId {
+            async fn event_id(&self) -> machine::EventId {
                 match self {
                     #(#id_arms),*
                 }
             }
 
-            fn event_name(id: machine::EventId) -> &'static str {
+            async fn event_name(id: machine::EventId) -> &'static str {
                 match id.0 {
                     #(#name_arms,)*
                     _ => "?",
@@ -1156,7 +1156,7 @@ pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::
 
 /// 🪄️ Implements `machine::StatechartSchema` for a consumer-authored context struct —
 /// embeds a field name/type manifest consumed by TypeScript generation tooling.
-pub fn expand_statechart_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+pub async fn expand_statechart_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let data = match &input.data {
         syn::Data::Struct(s) => s,
@@ -1196,7 +1196,7 @@ impl syn::parse::Parse for ExportWasmMachineAst {
 /// 🪄️ wasm-bindgen can't export generics, so a concrete consumer machine invokes this
 /// in its own `🔖️WasmBridge` region to emit a `#[wasm_bindgen]`-exported class wrapping
 /// one `<machine_path>` instance: `new/sendJson/tick/snapshotJson/restoreJson/manifestJson/onEffect`.
-pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+pub async fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let ast: ExportWasmMachineAst = syn::parse2(input)?;
     let machine_path = &ast.machine_path;
     let class_name = syn::Ident::new(&ast.js_name.value(), ast.js_name.span());
@@ -1210,7 +1210,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
         #[wasm_bindgen::prelude::wasm_bindgen]
         impl #class_name {
             #[wasm_bindgen::prelude::wasm_bindgen(constructor)]
-            pub fn new(input_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
+            pub async fn new(input_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Input: for<'de> serde::Deserialize<'de>,
             {
@@ -1231,7 +1231,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = sendJson)]
-            pub fn send_json(&self, event_json: &str) -> Result<(), wasm_bindgen::JsValue>
+            pub async fn send_json(&self, event_json: &str) -> Result<(), wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Event: for<'de> serde::Deserialize<'de>,
                 <#machine_path as machine::Machine>::Effect: serde::Serialize,
@@ -1252,7 +1252,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             /// Fires any `after`-timers/invokes whose deadline has passed. Call this
             /// from a JS-side `setInterval`/`requestAnimationFrame` loop.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = tick)]
-            pub fn tick(&self) {
+            pub async fn tick(&self) {
                 let due = self.host.borrow_mut().due_timers();
                 for (_actor, timer) in due {
                     let mut snapshot = self.snapshot.borrow_mut();
@@ -1267,7 +1267,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = snapshotJson)]
-            pub fn snapshot_json(&self) -> Result<String, wasm_bindgen::JsValue>
+            pub async fn snapshot_json(&self) -> Result<String, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Context: serde::Serialize,
             {
@@ -1279,7 +1279,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = restoreJson)]
-            pub fn restore_json(snapshot_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
+            pub async fn restore_json(snapshot_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Context: for<'de> serde::Deserialize<'de>,
             {
@@ -1300,12 +1300,12 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             /// Static — the manifest doesn't depend on any instance, so tooling can
             /// read it (for TypeScript generation) without constructing a machine.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = manifestJson)]
-            pub fn manifest_json() -> String {
+            pub async fn manifest_json() -> String {
                 <#machine_path as machine::Machine>::definition().manifest_json.to_string()
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = onEffect)]
-            pub fn on_effect(&self, callback: js_sys::Function) {
+            pub async fn on_effect(&self, callback: js_sys::Function) {
                 self.host.borrow_mut().set_effect_callback(callback);
             }
         }
@@ -1320,7 +1320,7 @@ mod tests {
     use quote::quote;
 
     #[test]
-    fn statechart_expands_minimal_machine_to_valid_rust() {
+    async fn statechart_expands_minimal_machine_to_valid_rust() {
         let input = quote! {
             machine toggle {
                 context: ToggleContext;
@@ -1343,7 +1343,7 @@ mod tests {
     }
 
     #[test]
-    fn statechart_rejects_duplicate_state_names() {
+    async fn statechart_rejects_duplicate_state_names() {
         let input = quote! {
             machine dup {
                 context: Ctx;
@@ -1362,7 +1362,7 @@ mod tests {
     }
 
     #[test]
-    fn statechart_rejects_unknown_initial_state() {
+    async fn statechart_rejects_unknown_initial_state() {
         let input = quote! {
             machine bad_initial {
                 context: Ctx;
@@ -1380,7 +1380,7 @@ mod tests {
     }
 
     #[test]
-    fn statechart_rejects_unknown_transition_target() {
+    async fn statechart_rejects_unknown_transition_target() {
         let input = quote! {
             machine bad_target {
                 context: Ctx;
@@ -1398,7 +1398,7 @@ mod tests {
     }
 
     #[test]
-    fn statechart_rejects_compound_without_initial() {
+    async fn statechart_rejects_compound_without_initial() {
         let input = quote! {
             machine bad_compound {
                 context: Ctx;
@@ -1418,7 +1418,7 @@ mod tests {
     }
 
     #[test]
-    fn statechart_expands_hierarchical_parallel_history_machine() {
+    async fn statechart_expands_hierarchical_parallel_history_machine() {
         let input = quote! {
             machine media {
                 context: MediaContext;
@@ -1467,7 +1467,7 @@ mod tests {
     }
 
     #[test]
-    fn derive_statechart_event_expands_mixed_variant_kinds() {
+    async fn derive_statechart_event_expands_mixed_variant_kinds() {
         let input: DeriveInput = syn::parse_quote! {
             enum Ev {
                 Unit,
@@ -1483,7 +1483,7 @@ mod tests {
     }
 
     #[test]
-    fn derive_statechart_event_rejects_non_enum() {
+    async fn derive_statechart_event_rejects_non_enum() {
         let input: DeriveInput = syn::parse_quote! {
             struct NotAnEnum;
         };
@@ -1492,7 +1492,7 @@ mod tests {
     }
 
     #[test]
-    fn derive_statechart_schema_expands_named_fields() {
+    async fn derive_statechart_schema_expands_named_fields() {
         let input: DeriveInput = syn::parse_quote! {
             struct Ctx {
                 order_id: String,
@@ -1507,7 +1507,7 @@ mod tests {
     }
 
     #[test]
-    fn export_wasm_machine_expands_to_valid_rust() {
+    async fn export_wasm_machine_expands_to_valid_rust() {
         let input = quote! { checkout::Checkout, "CheckoutMachine" };
         let expanded = expand_export_wasm_machine(input).expect("expansion should succeed");
         syn::parse2::<syn::File>(quote! { #expanded }).expect("expanded code should parse as valid Rust items");

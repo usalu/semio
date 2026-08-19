@@ -1,0 +1,34 @@
+### --lib
+410 +     fn now_ms(&self) -> impl std::future::Future<Output = u64> + Send;
+    |
+
+warning: `semio-framework-async` (lib) generated 6 warnings
+    Finished `dev` profile [unoptimized] target(s) in 13.18s
+LIB_EXIT=
+### --all-targets
+    |
+
+warning: `semio-framework-async` (lib) generated 6 warnings
+warning: `semio-framework-async` (lib test) generated 6 warnings (6 duplicates)
+    Finished `dev` profile [unoptimized] target(s) in 19.17s
+ALLT_EXIT=
+### test
+test component::tests::thread_plan_low_core_counts_oversubscribe_but_never_zero_a_role ... ok
+test component::tests::thread_plan_shards_and_io_workers_never_exceed_their_ceilings ... ok
+test component::tests::thread_budget_checkout_debug_panics_on_overdraw - should panic ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_async
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TEST_EXIT=
+### macro crate
+    Checking quote v1.0.45
+    Checking syn v2.0.117
+    Checking semio-framework-async-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 2.48s
+MAC_EXIT=

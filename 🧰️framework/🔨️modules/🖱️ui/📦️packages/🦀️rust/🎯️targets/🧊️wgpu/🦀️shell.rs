@@ -58,12 +58,12 @@ pub struct Shell {
 
 impl Shell {
     /// 🌱️ An empty shell: no layout applied yet, no navbar items, no role chrome.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None, window_kind_icons: std::collections::HashMap::new(), window_roles: std::collections::HashMap::new(), locale: Locale::default() }
     }
 
     /// 🪟️ Maps window kind ids to Lucide icon ids for tab-cap painting in `set_window_layout`.
-    pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+    pub async fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
         self.window_kind_icons = icons;
     }
 
@@ -73,34 +73,34 @@ impl Shell {
     /// layout is already set (re-runs `set_window_layout`'s build with the current layout), so a late
     /// role resolution (e.g. the artifact finished opening after the tab already rendered) still
     /// repaints the chrome without a caller having to re-supply the whole layout.
-    pub fn set_window_role(&mut self, window_id: impl Into<String>, role: ChromeRole) {
+    pub async fn set_window_role(&mut self, window_id: impl Into<String>, role: ChromeRole) {
         self.window_roles.insert(window_id.into(), role);
         self.rebuild_if_layout_present();
     }
 
     /// 👁️✏️ The reverse of `set_window_role` — a window with no known role again, e.g. its
     /// artifact/app session closed.
-    pub fn clear_window_role(&mut self, window_id: &str) {
+    pub async fn clear_window_role(&mut self, window_id: &str) {
         if self.window_roles.remove(window_id).is_some() {
             self.rebuild_if_layout_present();
         }
     }
 
     /// 👁️✏️ The role currently associated with `window_id`, if any.
-    pub fn window_role(&self, window_id: &str) -> Option<ChromeRole> {
+    pub async fn window_role(&self, window_id: &str) -> Option<ChromeRole> {
         self.window_roles.get(window_id).copied()
     }
 
     /// 🌐️ Sets the locale role-chrome strings resolve against; re-paints the current layout's chrome
     /// immediately, same as `set_window_role`.
-    pub fn set_locale(&mut self, locale: Locale) {
+    pub async fn set_locale(&mut self, locale: Locale) {
         if self.locale != locale {
             self.locale = locale;
             self.rebuild_if_layout_present();
         }
     }
 
-    fn rebuild_if_layout_present(&mut self) {
+    async fn rebuild_if_layout_present(&mut self) {
         if let Some(layout) = self.layout.clone() {
             self.set_window_layout(layout);
         }
@@ -116,7 +116,7 @@ impl Shell {
     /// role chrome painted into its window-cap: the frozen title-chip text appended to its label
     /// (contract freeze §5) and, for `ChromeRole::Viewer`, a lock icon standing in for the read-only
     /// badge (this widget vocabulary has one icon slot per window cap, see `build_window`).
-    pub fn set_window_layout(&mut self, layout: WindowLayout) {
+    pub async fn set_window_layout(&mut self, layout: WindowLayout) {
         let mut tree = UiTree::new();
         let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("shell.root".into()), WidgetSpec(root_stack())));
         tree.mark_dirty(root_id, NodeFlags::DIRTY_LAYOUT);
@@ -130,27 +130,27 @@ impl Shell {
     /// 🧭️ Minimal stub: stores whatever navbar-relevant labels the host provides. A full navbar data
     /// model and pixel-perfect chrome painting are deferred to a later milestone — getting the tree
     /// integration point right matters more than the visual right now.
-    pub fn set_navbar(&mut self, items: Vec<String>) {
+    pub async fn set_navbar(&mut self, items: Vec<String>) {
         self.navbar = items;
     }
 
     /// 📖️ The declarative layout last applied via `set_window_layout`, if any.
-    pub fn window_layout(&self) -> Option<&WindowLayout> {
+    pub async fn window_layout(&self) -> Option<&WindowLayout> {
         self.layout.as_ref()
     }
 
     /// 🌳️ Read access to the shell's retained tree, for a later `engine` facade to layout/paint/route.
-    pub fn tree(&self) -> &UiTree {
+    pub async fn tree(&self) -> &UiTree {
         &self.tree
     }
 
     /// 🌳️ Mutable access to the shell's retained tree.
-    pub fn tree_mut(&mut self) -> &mut UiTree {
+    pub async fn tree_mut(&mut self) -> &mut UiTree {
         &mut self.tree
     }
 
     /// 🧭️ The stub navbar item labels currently set via `set_navbar`.
-    pub fn navbar(&self) -> &[String] {
+    pub async fn navbar(&self) -> &[String] {
         &self.navbar
     }
 
@@ -159,7 +159,7 @@ impl Shell {
     /// *same* window-cap emits `TabActivated`. Stubbed: no `PanelDragStarted`/`PanelDropped` are
     /// emitted yet — drag-to-reorder needs drop-zone geometry this milestone doesn't compute
     /// (documented gap, deferred to Phase 4's shell carve-over).
-    pub fn dispatch(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
+    pub async fn dispatch(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
         let mut out = Vec::new();
         let Some(root) = self.tree.root else { return out };
         match event {
@@ -188,7 +188,7 @@ impl Default for Shell {
     }
 }
 
-fn root_stack() -> UiNode {
+async fn root_stack() -> UiNode {
     UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("shell.root".into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
 }
 
@@ -203,14 +203,14 @@ struct ShellPaintContext<'a> {
     locale: Locale,
 }
 
-fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot, ctx: &ShellPaintContext<'_>) {
+async fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot, ctx: &ShellPaintContext<'_>) {
     match root {
         WindowLayoutRoot::Axis(axis) => build_axis(tree, parent, axis, 0, ctx),
         WindowLayoutRoot::Stack(stack) => build_stack(tree, parent, stack, 0, ctx),
     }
 }
 
-fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
+async fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
     let spec =
         UiNode::Stack(UiStackNode { direction: axis.kind.clone(), gap: Some("none".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_AXIS, ordinal), WidgetSpec(spec)));
@@ -225,7 +225,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
 
 /// 🗂️ A tab group: a `Stack` container marked `CLIPS_CHILDREN` (its content clips to its own bounds)
 /// whose children are the window-cap `Button` leaves built by `build_window`.
-fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
+async fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
     let spec = UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_STACK, ordinal), WidgetSpec(spec)));
     if let Some(node) = tree.node_mut(id) {
@@ -244,7 +244,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
 /// `ctx.window_roles` gets the frozen title-chip text (`role_title_chip_text`) appended to its
 /// label, and — for `ChromeRole::Viewer` only — its icon swaps to a lock, standing in for the
 /// read-only badge (this leaf has exactly one icon slot, see `UiButtonNode`).
-fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
+async fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
     let _ = ordinal;
     let window_id = window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone());
     let title = window.title.clone().unwrap_or_else(|| window.window_kind_id.clone());
@@ -274,11 +274,11 @@ mod tests {
     use crate::wgpu::text::FontAtlas;
     use crate::wgpu::theme::Theme;
 
-    fn single_window_layout(window_kind_id: &str) -> WindowLayout {
+    async fn single_window_layout(window_kind_id: &str) -> WindowLayout {
         crate::wgpu::even_window_layout(&[window_kind_id.to_string()])
     }
 
-    fn run_layout(shell: &mut Shell) {
+    async fn run_layout(shell: &mut Shell) {
         let root = shell.tree().root.expect("set_window_layout must produce a root");
         let mut engine = LayoutEngine::new();
         let mut atlas = FontAtlas::builtin();
@@ -286,12 +286,12 @@ mod tests {
         engine.compute(shell.tree_mut(), root, &mut atlas, &theme, 400.0, 400.0);
     }
 
-    fn count_nodes(tree: &UiTree, id: NodeId) -> usize {
+    async fn count_nodes(tree: &UiTree, id: NodeId) -> usize {
         1 + tree.children(id).map(|child| count_nodes(tree, child)).sum::<usize>()
     }
 
     #[test]
-    fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape() {
+    async fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
 
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn set_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_not_panic() {
+    async fn set_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_not_panic() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
         let first_count = count_nodes(shell.tree(), shell.tree().root.unwrap());
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
+    async fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
         run_layout(&mut shell);
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab() {
+    async fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
         run_layout(&mut shell);
@@ -341,7 +341,7 @@ mod tests {
         assert!(up.is_empty(), "releasing outside every hit target must not activate a tab");
     }
 
-    fn only_window_button(shell: &Shell) -> UiButtonNode {
+    async fn only_window_button(shell: &Shell) -> UiButtonNode {
         let root = shell.tree().root.expect("expected a root node");
         let tab_group = shell.tree().children(root).next().expect("expected a tab-group child");
         let window_leaf = shell.tree().children(tab_group).next().expect("expected a window leaf");
@@ -352,7 +352,7 @@ mod tests {
     }
 
     #[test]
-    fn a_window_with_no_role_paints_no_role_chrome() {
+    async fn a_window_with_no_role_paints_no_role_chrome() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
         let button = only_window_button(&shell);
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn set_window_role_viewer_appends_the_title_chip_and_swaps_to_the_lock_icon() {
+    async fn set_window_role_viewer_appends_the_title_chip_and_swaps_to_the_lock_icon() {
         let mut shell = Shell::new();
         shell.set_window_role("app.viewport", ChromeRole::Viewer);
         shell.set_window_layout(single_window_layout("app.viewport"));
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn set_window_role_editor_appends_the_title_chip_but_keeps_the_window_kind_icon() {
+    async fn set_window_role_editor_appends_the_title_chip_but_keeps_the_window_kind_icon() {
         let mut shell = Shell::new();
         shell.set_window_kind_icons(std::collections::HashMap::from([("app.viewport".to_string(), IconName::Folder)]));
         shell.set_window_role("app.viewport", ChromeRole::Editor);
@@ -382,7 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn set_window_role_after_the_layout_is_already_set_repaints_immediately() {
+    async fn set_window_role_after_the_layout_is_already_set_repaints_immediately() {
         let mut shell = Shell::new();
         shell.set_window_layout(single_window_layout("app.viewport"));
         assert_eq!(only_window_button(&shell).label.as_str(), "app.viewport", "no role yet");
@@ -395,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    fn set_locale_de_resolves_the_german_title_chip() {
+    async fn set_locale_de_resolves_the_german_title_chip() {
         let mut shell = Shell::new();
         shell.set_window_role("app.viewport", ChromeRole::Viewer);
         shell.set_locale(Locale::De);

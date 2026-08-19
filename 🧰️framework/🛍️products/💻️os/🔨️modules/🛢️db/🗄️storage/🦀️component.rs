@@ -1,8 +1,8 @@
 //! 🗄️ `db_storage` — the pluggable storage substrate seam for the `db` crate family: the trait
-//! family (`DbStorage`, `WalStorage`, `SnapshotStorage`, `PayloadStorage`, `CatalogStorage`,
+//! family (`WalStorage`, `SnapshotStorage`, `PayloadStorage`, `CatalogStorage`,
 //! `IndexStorage`, `LeaseStorage`) every backend (this crate's `MemoryStorage`/`FsStorage`, plus
-//! the sibling `db_storage_sqlite`/`db_storage_postgres`/`db_storage_neo4j` crates) implements
-//! identically, so `db_engine`/the `db` facade select a backend via `Arc<dyn DbStorage>` at
+//! the sibling `db_storage_sqlite`/`db_storage_postgres`/`db_storage_neo4j` modules) implements
+//! identically, so `db_engine`/the `db` facade select a backend via [`DbBackend`] at
 //! `Database::open` rather than at compile time. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
@@ -15,21 +15,30 @@
 //! fencing semantics of their own. This keeps the trait family stable while the format built on
 //! top of it (owned by `db_wal`/`db_snapshot`/`db_index`) can evolve independently.
 //!
-//! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
-//! every sub-trait method returns a [`DbFuture`] — a boxed, borrowed, `Send` future — rather than a
-//! bare `Result`. This is deliberately NOT `async fn` in trait: `Arc<dyn DbStorage>` is this
-//! family's universal consumption shape (selected once at `Database::open`, held behind a trait
-//! object everywhere downstream), and AFIT is not dyn-compatible. This mirrors
-//! `semio_framework_async::HostFuture` (that type is `'static`; `DbFuture` is `'a`-bound to the
-//! call's own borrowed arguments, since every call here is driven to completion by its caller —
-//! there is no detached-spawn path on this trait family). Backends split two ways:
-//! genuinely-async drivers (`db_storage_postgres`'s `sqlx`, `db_storage_neo4j`'s `neo4rs`) wrap
-//! their already-async bodies in `Box::pin(async move { .. })` directly; genuinely-blocking
+//! ⏳️ **Async-first, zero-dyn (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet
+//! `db-dedyn`, ruling **O1**)**: every sub-trait method is a plain `async fn` returning
+//! `Result<T, DbError>` directly — never a boxed `dyn Future` in trait-method return position
+//! (ruling **R1**; that shape, `DbFuture<'a, T> = Pin<Box<dyn Future<..> + 'a>>`, was this family's
+//! PREVIOUS state and is now deleted). Because `async fn` in a trait is not `dyn`-compatible, the
+//! old `Arc<dyn DbStorage>`/`&dyn WalStorage` seams are gone too: [`DbBackend`] is a concrete enum
+//! naming every backend (this crate has exactly one layer, so no layering problem — see
+//! `//#region 🔖️DbBackend`), and its accessors return concrete facet-ref enums
+//! ([`WalRef`]/[`SnapshotRef`]/[`PayloadRef`]/[`CatalogRef`]/[`IndexRef`]/[`LeaseRef`]) instead of
+//! trait objects. `Send` on a spawned future is therefore obtained STRUCTURALLY, from the concrete
+//! enum variant the compiler already knows at every call site — never from a `+ Send` bound on a
+//! trait method (ruling **R3**). `#![allow(async_fn_in_trait)]` at the crate root suppresses the
+//! resulting "auto trait bounds" lint (ruling **R7**): that lint's suggested fix
+//! (`-> impl Future<..> + Send`) is exactly the bound R3 forbids.
+//!
+//! Backends split two ways: genuinely-async drivers (`db_storage_postgres`'s `sqlx`,
+//! `db_storage_neo4j`'s `neo4rs`) simply `.await` their already-async bodies; genuinely-blocking
 //! backends (this crate's own `FsStorage`, plus the sibling `db_storage_sqlite`) cross the
 //! sync/async boundary via `semio_framework_async::HostAsyncRuntime::run_blocking` and this
 //! crate's own dependency-free [`run_blocking_op`] bridge — never a private `tokio::runtime`
 //! (this crate names no `tokio` at all; see the repo's "`tokio` only in `🛎️services`" rule).
-//! `MemoryStorage` (no real I/O) wraps its bodies in already-`Ready` futures.
+//! `MemoryStorage` (no real I/O) simply resolves immediately. `HostAsyncRuntime`'s own impls live
+//! ABOVE this crate (`TokioHostRuntime` in `🛎️services`), so callers that hold one thread it through
+//! as a generic `R: HostAsyncRuntime` parameter rather than another `DbBackend` enum arm.
 //!
 //! 🧊️ `FsStorage` (this crate's zero-touch default, behind the default `fs` feature) is native-only
 //! (`std::fs`) and `#[cfg(not(target_arch = "wasm32"))]`-gated, mirroring `pack`'s own `pack_io`
@@ -54,14 +63,6 @@ use semio_framework_async::{HostAsyncRuntime, OperationContext, ScopeHandle, Tra
 /// length before trying to allocate it.
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 //#endregion 🔖️Limits
-
-//#region 🔖️DbFuture
-/// @emoji ⏳️ A boxed, `Send`, borrowed future carrying this crate's own `Result<T, DbError>` — see
-/// the module doc's "Async-first" section for why this shape (not `async fn` in trait, not
-/// `semio_framework_async::HostFuture`'s `'static` bound) is what every `db_storage` sub-trait
-/// method returns.
-pub type DbFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, DbError>> + Send + 'a>>;
-//#endregion 🔖️DbFuture
 
 //#region 🔖️BlockingBridge
 /// @emoji 🌉️ Shared state behind [`OneshotSender`]/[`OneshotReceiver`] — a single `Option<T>` slot
@@ -123,37 +124,49 @@ impl<T> Future for OneshotReceiver<T> {
 /// actor/trace identity of their own (that context lives one layer up, at whoever `.await`s this
 /// future), so `actor`/`generation`/`trace` are always the zero value here — only `cancel`
 /// (inherited from `scope`) is real.
-pub(crate) async fn run_blocking_op<T, F>(runtime: &dyn HostAsyncRuntime, scope: &ScopeHandle, work: F) -> T
+pub(crate) async fn run_blocking_op<T, F, R>(runtime: &R, scope: &ScopeHandle, work: F) -> T
 where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
+    R: HostAsyncRuntime,
 {
     let (tx, rx) = oneshot::<T>();
     let ctx = OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };
-    runtime.run_blocking(
-        scope,
-        ctx,
-        Box::new(move || {
-            let result = work();
-            tx.send(result);
-        }),
-    );
+    runtime
+        .run_blocking(
+            scope,
+            ctx,
+            Box::new(move || {
+                let result = work();
+                tx.send(result);
+            }),
+        )
+        .await;
     rx.await
 }
 
-/// @emoji ✅️ Test-only: every `DbFuture` this crate's own backends (`MemoryStorage`, and
-/// `FsStorage` driven by `semio_framework_async::testkit::ManualRuntime`, whose `run_blocking`
-/// executes synchronously) hand back is already `Ready` the instant it's first polled — there is
-/// no real async wait anywhere in a unit test. This drives one to completion without needing a
-/// real executor, mirroring `semio_framework_async`'s own `ManualRuntime` test helper.
+/// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every future
+/// this crate's own backends (`MemoryStorage`, and `FsStorage`/`DbBackend` driven by
+/// `semio_framework_async::testkit::ManualRuntime`, whose `run_blocking` executes synchronously)
+/// hand back is already `Ready` the instant it's first polled — there is no real async wait
+/// anywhere in a unit test. This drives one to completion without needing a real executor,
+/// mirroring `semio_framework_async`'s own `ManualRuntime` test helper. The crate's single such
+/// bridge (R2 E5: "at most one per crate"); [`block_on_ready`] is a thin `Result`-shaped wrapper
+/// over it, not a second one.
 #[cfg(test)]
-fn block_on_ready<'a, T>(mut fut: DbFuture<'a, T>) -> Result<T, DbError> {
+fn poll_once<T>(fut: impl Future<Output = T>) -> T {
+    let mut fut = std::pin::pin!(fut);
     let waker = std::task::Waker::noop();
     let mut cx = std::task::Context::from_waker(&waker);
     match fut.as_mut().poll(&mut cx) {
         std::task::Poll::Ready(value) => value,
         std::task::Poll::Pending => panic!("db_storage test helper expected an already-ready future"),
     }
+}
+
+#[cfg(test)]
+fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
+    poll_once(fut)
 }
 //#endregion 🔖️BlockingBridge
 
@@ -182,42 +195,42 @@ pub struct StorageCapabilities {
 pub trait WalStorage: Send + Sync {
     /// @emoji 🆕️ Creates a new, empty, unsealed segment `index` for `document`. Errors
     /// `AlreadyExists` if `index` already exists for `document`.
-    fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()>;
+    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 
     /// @emoji ➕️ Appends `bytes` to the active segment `index`, returning the segment's new total
     /// length. Errors `NotFound` if the segment doesn't exist, `InvalidArgument` if it is sealed.
-    fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64>;
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError>;
 
     /// @emoji 🔒️ Forces everything appended to segment `index` so far to the durability level
     /// implied by `class` — a no-op for `Memory`/`Os` (per `DurabilityClass`'s own
     /// doc: `Os` only promises "handed to the OS", not `fsync`ed), a real flush-to-disk for
     /// `Fsync`/`Quorum` (replication itself is `db_cluster`'s concern, not this trait's).
-    fn sync<'a>(&'a self, document: &'a ArtifactId, index: u64, class: DurabilityClass) -> DbFuture<'a, ()>;
+    async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError>;
 
     /// @emoji 🏁️ Marks segment `index` sealed: no further `append`/`truncate_tail` may target it.
     /// Errors `NotFound` if the segment doesn't exist. Idempotent if already sealed.
-    fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()>;
+    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads `range` of segment `index`'s bytes. Errors `NotFound` if the segment
     /// doesn't exist, `InvalidArgument` if `range` extends past the segment's current length.
-    fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>>;
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 📏️ The current length in bytes of segment `index`.
-    fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64>;
+    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError>;
 
     /// @emoji 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
     /// if `document` has no WAL yet.
-    fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>>;
+    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji ✂️ Truncates the ACTIVE (unsealed) segment `index` down to `new_len` bytes — the
     /// crash-recovery primitive for discarding a torn/uncommitted tail write. Errors
     /// `InvalidArgument` if the segment is sealed or if `new_len` exceeds its current length
     /// (this trait never extends a segment via truncation).
-    fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()>;
+    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError>;
 
     /// @emoji 🗑️ Deletes segment `index` entirely (both its bytes and seal marker), e.g. after
     /// `db_compact` has folded it into a later generation. Idempotent if already absent.
-    fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()>;
+    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️WalStorage
 
@@ -230,21 +243,21 @@ pub trait SnapshotStorage: Send + Sync {
     /// history. Overwrites if the same `(document, generation)` is written twice (the caller's
     /// responsibility to pick a fresh generation number per the contract's
     /// `Footer.prev_footer_offset` incremental-generation chain).
-    fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()>;
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads generation `generation`'s complete bytes. Errors `NotFound` if absent.
-    fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>>;
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 🥇️ The highest generation number stored for `document`, or `None` if it has no
     /// snapshot yet.
-    fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>>;
+    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError>;
 
     /// @emoji 📋️ Every generation number stored for `document`, ascending.
-    fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>>;
+    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji 🗑️ Deletes generation `generation`, e.g. once `db_compact`'s retention policy
     /// supersedes it. Idempotent if already absent.
-    fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()>;
+    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️SnapshotStorage
 
@@ -255,21 +268,21 @@ pub trait SnapshotStorage: Send + Sync {
 pub trait PayloadStorage: Send + Sync {
     /// @emoji ➕️ Stores `bytes` (if not already present — `put` is idempotent under content
     /// equality) and returns its `blake3` `ContentHash`.
-    fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash>;
+    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError>;
 
     /// @emoji 📖️ Reads the payload stored under `hash`. Errors `NotFound` if absent.
-    fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>>;
+    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError>;
 
     /// @emoji ❓️ True iff a payload is stored under `hash`, without reading it.
-    fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool>;
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError>;
 
     /// @emoji 🗑️ Deletes the payload stored under `hash` — `db_compact`'s ref-traced payload GC.
     /// Idempotent if already absent.
-    fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()>;
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError>;
 
     /// @emoji 📏️ The byte length of the payload stored under `hash`, without reading it. Errors
     /// `NotFound` if absent.
-    fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64>;
+    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError>;
 }
 //#endregion 🔖️PayloadStorage
 
@@ -280,14 +293,14 @@ pub trait PayloadStorage: Send + Sync {
 pub trait CatalogStorage: Send + Sync {
     /// @emoji 📖️ The current root bytes and the `EpochFence` they were written under, or `None`
     /// if `cas_root` has never succeeded yet (a fresh, empty `DbStorage`).
-    fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>>;
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError>;
 
     /// @emoji ✅️ Compare-and-swap: succeeds only if `expected` matches the epoch of the currently
     /// stored root (or `EpochFence::INITIAL` if no root has ever been written), in which case the
     /// root becomes `new_bytes` under the next epoch (`expected.next()`), which is returned.
     /// Fails `DbError::Fenced` on any mismatch — a writer that lost leadership never silently
     /// overwrites a newer root.
-    fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence>;
+    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError>;
 }
 //#endregion 🔖️CatalogStorage
 
@@ -297,17 +310,17 @@ pub trait CatalogStorage: Send + Sync {
 pub trait IndexStorage: Send + Sync {
     /// @emoji ✍️ Durably writes `bytes` as run `run_id` of `document`'s index. Overwrites if the
     /// same `(document, run_id)` is written twice.
-    fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()>;
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads run `run_id`'s complete bytes. Errors `NotFound` if absent.
-    fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>>;
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError>;
 
     /// @emoji 📋️ Every run id stored for `document`, ascending.
-    fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>>;
+    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
 
     /// @emoji 🗑️ Deletes run `run_id`, e.g. after `db_index`'s merge policy folds it into a
     /// larger run. Idempotent if already absent.
-    fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()>;
+    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError>;
 }
 //#endregion 🔖️IndexStorage
 
@@ -332,44 +345,710 @@ pub trait LeaseStorage: Send + Sync {
     /// resource's current `EpochFence` — unchanged on re-acquire by the same holder, bumped
     /// (`.next()`) on a genuine hand-off from an expired or absent lease. Errors `Conflict` if
     /// another holder's lease on `resource` has not yet expired.
-    fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence>;
+    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError>;
 
     /// @emoji ♻️ Extends `holder`'s existing, unexpired lease on `resource` to `now_ms + ttl_ms`.
     /// `fence` must match the lease's current `EpochFence` (`DbError::Fenced` otherwise) and
     /// `holder` must match the current holder (`DbError::Unauthorized` otherwise). Errors
     /// `NotFound`/`Unavailable` if no lease (or an already-expired one) exists on `resource`.
-    fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()>;
+    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError>;
 
     /// @emoji 🕊️ Voluntarily releases `holder`'s lease on `resource` early (`fence` and `holder`
     /// must match, same rules as `renew`), immediately freeing `resource` for another `acquire`
     /// (which will still bump the epoch, since a hand-off occurred).
-    fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()>;
+    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError>;
 
     /// @emoji 👀️ The current unexpired lease on `resource` as of `now_ms`, or `None` if unheld or
     /// expired (an expired lease is reported as absent, never as stale data).
-    fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>>;
+    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError>;
 }
 //#endregion 🔖️LeaseStorage
 
-//#region 🔖️DbStorage
+//#region 🔖️DbBackend
 /// @emoji 🧰️ The umbrella storage substrate handle `db_engine`/the `db` facade hold as
-/// `Arc<dyn DbStorage>` (selected at `Database::open`, never compile-time-only per the contract).
-/// One concrete backend (`MemoryStorage`, `FsStorage`, or a sibling `db_storage_*` crate)
-/// implements every sub-trait plus this accessor trait, typically by implementing each sub-trait
-/// directly on itself and returning `self` from every accessor. The accessors and `capabilities`
-/// stay synchronous — they are pure, in-memory dispatch/description, never I/O.
-pub trait DbStorage: Send + Sync {
-    fn wal(&self) -> &dyn WalStorage;
-    fn snapshot(&self) -> &dyn SnapshotStorage;
-    fn payload(&self) -> &dyn PayloadStorage;
-    fn catalog(&self) -> &dyn CatalogStorage;
-    fn index(&self) -> &dyn IndexStorage;
-    fn lease(&self) -> &dyn LeaseStorage;
+/// `Arc<DbBackend<R>>` (selected at `Database::open`, never compile-time-only per the contract).
+/// Replaces the old `Arc<dyn DbStorage>` seam per ruling **O1** (drop dyn dispatch): every
+/// former `&dyn WalStorage`/etc. accessor becomes a concrete facet-ref enum
+/// ([`WalRef`]/[`SnapshotRef`]/[`PayloadRef`]/[`CatalogRef`]/[`IndexRef`]/[`LeaseRef`]) instead, so
+/// `R`'s `Send`-ness is derived STRUCTURALLY at every spawn site (ruling **R3**) — never via a
+/// `+ Send` bound on a trait method. `R` is generic rather than another enum arm because its
+/// concrete impls (`TokioHostRuntime`, …) live in crates ABOVE this one (`🛎️services`).
+pub enum DbBackend<R: HostAsyncRuntime> {
+    Memory(MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(crate::db_storage_neo4j::Neo4jStorage),
+    Fault(Box<crate::db_testkit::FaultStorage<R>>),
+}
+
+impl<R: HostAsyncRuntime> DbBackend<R> {
+    /// @emoji 🔀️ This backend's [`WalRef`] facet — replaces the old `&dyn WalStorage`.
+    pub async fn wal(&self) -> WalRef<'_, R> {
+        match self {
+            Self::Memory(s) => WalRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => WalRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => WalRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => WalRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => WalRef::Neo4j(s),
+            Self::Fault(s) => WalRef::Fault(&**s),
+        }
+    }
+
+    /// @emoji 🔀️ This backend's [`SnapshotRef`] facet — replaces the old `&dyn SnapshotStorage`.
+    pub async fn snapshot(&self) -> SnapshotRef<'_, R> {
+        match self {
+            Self::Memory(s) => SnapshotRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => SnapshotRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => SnapshotRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => SnapshotRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => SnapshotRef::Neo4j(s),
+            Self::Fault(s) => SnapshotRef::Fault(&**s),
+        }
+    }
+
+    /// @emoji 🔀️ This backend's [`PayloadRef`] facet — replaces the old `&dyn PayloadStorage`.
+    pub async fn payload(&self) -> PayloadRef<'_, R> {
+        match self {
+            Self::Memory(s) => PayloadRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => PayloadRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => PayloadRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => PayloadRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => PayloadRef::Neo4j(s),
+            Self::Fault(s) => PayloadRef::Fault(&**s),
+        }
+    }
+
+    /// @emoji 🔀️ This backend's [`CatalogRef`] facet — replaces the old `&dyn CatalogStorage`.
+    pub async fn catalog(&self) -> CatalogRef<'_, R> {
+        match self {
+            Self::Memory(s) => CatalogRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => CatalogRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => CatalogRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => CatalogRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => CatalogRef::Neo4j(s),
+            Self::Fault(s) => CatalogRef::Fault(&**s),
+        }
+    }
+
+    /// @emoji 🔀️ This backend's [`IndexRef`] facet — replaces the old `&dyn IndexStorage`.
+    pub async fn index(&self) -> IndexRef<'_, R> {
+        match self {
+            Self::Memory(s) => IndexRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => IndexRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => IndexRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => IndexRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => IndexRef::Neo4j(s),
+            Self::Fault(s) => IndexRef::Fault(&**s),
+        }
+    }
+
+    /// @emoji 🔀️ This backend's [`LeaseRef`] facet — replaces the old `&dyn LeaseStorage`.
+    pub async fn lease(&self) -> LeaseRef<'_, R> {
+        match self {
+            Self::Memory(s) => LeaseRef::Memory(s),
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => LeaseRef::Fs(s),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => LeaseRef::Sqlite(s),
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => LeaseRef::Postgres(s),
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => LeaseRef::Neo4j(s),
+            Self::Fault(s) => LeaseRef::Fault(&**s),
+        }
+    }
 
     /// @emoji 🎚️ What this concrete backend actually supports.
-    fn capabilities(&self) -> StorageCapabilities;
+    pub async fn capabilities(&self) -> StorageCapabilities {
+        match self {
+            Self::Memory(s) => s.capabilities().await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.capabilities().await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.capabilities().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.capabilities().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.capabilities().await,
+            Self::Fault(s) => s.capabilities().await,
+        }
+    }
 }
-//#endregion 🔖️DbStorage
+//#endregion 🔖️DbBackend
+
+//#region 🔖️WalRef
+/// @emoji 🔀️ [`DbBackend::wal`]'s return shape — the enum that replaces
+/// `&dyn WalStorage` per ruling **O1**.
+pub enum WalRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
+    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.create_segment(document, index).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.create_segment(document, index).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.create_segment(document, index).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.create_segment(document, index).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.create_segment(document, index).await,
+            Self::Fault(s) => s.create_segment(document, index).await,
+        }
+    }
+
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+        match self {
+            Self::Memory(s) => s.append(document, index, bytes).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.append(document, index, bytes).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.append(document, index, bytes).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.append(document, index, bytes).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.append(document, index, bytes).await,
+            Self::Fault(s) => s.append(document, index, bytes).await,
+        }
+    }
+
+    async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.sync(document, index, class).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.sync(document, index, class).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.sync(document, index, class).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.sync(document, index, class).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.sync(document, index, class).await,
+            Self::Fault(s) => s.sync(document, index, class).await,
+        }
+    }
+
+    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.seal(document, index).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.seal(document, index).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.seal(document, index).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.seal(document, index).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.seal(document, index).await,
+            Self::Fault(s) => s.seal(document, index).await,
+        }
+    }
+
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+        match self {
+            Self::Memory(s) => s.read(document, index, range).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.read(document, index, range).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.read(document, index, range).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.read(document, index, range).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.read(document, index, range).await,
+            Self::Fault(s) => s.read(document, index, range).await,
+        }
+    }
+
+    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
+        match self {
+            Self::Memory(s) => s.segment_len(document, index).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.segment_len(document, index).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.segment_len(document, index).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.segment_len(document, index).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.segment_len(document, index).await,
+            Self::Fault(s) => s.segment_len(document, index).await,
+        }
+    }
+
+    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        match self {
+            Self::Memory(s) => s.list_segments(document).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.list_segments(document).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.list_segments(document).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.list_segments(document).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.list_segments(document).await,
+            Self::Fault(s) => s.list_segments(document).await,
+        }
+    }
+
+    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.truncate_tail(document, index, new_len).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.truncate_tail(document, index, new_len).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.truncate_tail(document, index, new_len).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.truncate_tail(document, index, new_len).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.truncate_tail(document, index, new_len).await,
+            Self::Fault(s) => s.truncate_tail(document, index, new_len).await,
+        }
+    }
+
+    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.delete_segment(document, index).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.delete_segment(document, index).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.delete_segment(document, index).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.delete_segment(document, index).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.delete_segment(document, index).await,
+            Self::Fault(s) => s.delete_segment(document, index).await,
+        }
+    }
+}
+//#endregion 🔖️WalRef
+
+//#region 🔖️SnapshotRef
+/// @emoji 🔀️ [`DbBackend::snapshot`]'s return shape — the enum that replaces
+/// `&dyn SnapshotStorage` per ruling **O1**.
+pub enum SnapshotRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.write_generation(document, generation, bytes).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.write_generation(document, generation, bytes).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.write_generation(document, generation, bytes).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.write_generation(document, generation, bytes).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.write_generation(document, generation, bytes).await,
+            Self::Fault(s) => s.write_generation(document, generation, bytes).await,
+        }
+    }
+
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+        match self {
+            Self::Memory(s) => s.read_generation(document, generation).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.read_generation(document, generation).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.read_generation(document, generation).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.read_generation(document, generation).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.read_generation(document, generation).await,
+            Self::Fault(s) => s.read_generation(document, generation).await,
+        }
+    }
+
+    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
+        match self {
+            Self::Memory(s) => s.latest_generation(document).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.latest_generation(document).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.latest_generation(document).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.latest_generation(document).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.latest_generation(document).await,
+            Self::Fault(s) => s.latest_generation(document).await,
+        }
+    }
+
+    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        match self {
+            Self::Memory(s) => s.list_generations(document).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.list_generations(document).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.list_generations(document).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.list_generations(document).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.list_generations(document).await,
+            Self::Fault(s) => s.list_generations(document).await,
+        }
+    }
+
+    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.delete_generation(document, generation).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.delete_generation(document, generation).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.delete_generation(document, generation).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.delete_generation(document, generation).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.delete_generation(document, generation).await,
+            Self::Fault(s) => s.delete_generation(document, generation).await,
+        }
+    }
+}
+//#endregion 🔖️SnapshotRef
+
+//#region 🔖️PayloadRef
+/// @emoji 🔀️ [`DbBackend::payload`]'s return shape — the enum that replaces
+/// `&dyn PayloadStorage` per ruling **O1**.
+pub enum PayloadRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
+    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+        match self {
+            Self::Memory(s) => s.put(bytes).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.put(bytes).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.put(bytes).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.put(bytes).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.put(bytes).await,
+            Self::Fault(s) => s.put(bytes).await,
+        }
+    }
+
+    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+        match self {
+            Self::Memory(s) => s.get(hash).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.get(hash).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.get(hash).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.get(hash).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.get(hash).await,
+            Self::Fault(s) => s.get(hash).await,
+        }
+    }
+
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+        match self {
+            Self::Memory(s) => s.contains(hash).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.contains(hash).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.contains(hash).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.contains(hash).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.contains(hash).await,
+            Self::Fault(s) => s.contains(hash).await,
+        }
+    }
+
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.delete(hash).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.delete(hash).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.delete(hash).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.delete(hash).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.delete(hash).await,
+            Self::Fault(s) => s.delete(hash).await,
+        }
+    }
+
+    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+        match self {
+            Self::Memory(s) => s.len(hash).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.len(hash).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.len(hash).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.len(hash).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.len(hash).await,
+            Self::Fault(s) => s.len(hash).await,
+        }
+    }
+}
+//#endregion 🔖️PayloadRef
+
+//#region 🔖️CatalogRef
+/// @emoji 🔀️ [`DbBackend::catalog`]'s return shape — the enum that replaces
+/// `&dyn CatalogStorage` per ruling **O1**.
+pub enum CatalogRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+        match self {
+            Self::Memory(s) => s.read_root().await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.read_root().await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.read_root().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.read_root().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.read_root().await,
+            Self::Fault(s) => s.read_root().await,
+        }
+    }
+
+    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
+        match self {
+            Self::Memory(s) => s.cas_root(expected, new_bytes).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.cas_root(expected, new_bytes).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.cas_root(expected, new_bytes).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.cas_root(expected, new_bytes).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.cas_root(expected, new_bytes).await,
+            Self::Fault(s) => s.cas_root(expected, new_bytes).await,
+        }
+    }
+}
+//#endregion 🔖️CatalogRef
+
+//#region 🔖️IndexRef
+/// @emoji 🔀️ [`DbBackend::index`]'s return shape — the enum that replaces
+/// `&dyn IndexStorage` per ruling **O1**.
+pub enum IndexRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.write_run(document, run_id, bytes).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.write_run(document, run_id, bytes).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.write_run(document, run_id, bytes).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.write_run(document, run_id, bytes).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.write_run(document, run_id, bytes).await,
+            Self::Fault(s) => s.write_run(document, run_id, bytes).await,
+        }
+    }
+
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+        match self {
+            Self::Memory(s) => s.read_run(document, run_id).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.read_run(document, run_id).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.read_run(document, run_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.read_run(document, run_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.read_run(document, run_id).await,
+            Self::Fault(s) => s.read_run(document, run_id).await,
+        }
+    }
+
+    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+        match self {
+            Self::Memory(s) => s.list_runs(document).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.list_runs(document).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.list_runs(document).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.list_runs(document).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.list_runs(document).await,
+            Self::Fault(s) => s.list_runs(document).await,
+        }
+    }
+
+    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.delete_run(document, run_id).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.delete_run(document, run_id).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.delete_run(document, run_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.delete_run(document, run_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.delete_run(document, run_id).await,
+            Self::Fault(s) => s.delete_run(document, run_id).await,
+        }
+    }
+}
+//#endregion 🔖️IndexRef
+
+//#region 🔖️LeaseRef
+/// @emoji 🔀️ [`DbBackend::lease`]'s return shape — the enum that replaces
+/// `&dyn LeaseStorage` per ruling **O1**.
+pub enum LeaseRef<'a, R: HostAsyncRuntime> {
+    Memory(&'a MemoryStorage),
+    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    Fs(&'a FsStorage<R>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    #[cfg(feature = "postgres")]
+    Postgres(&'a crate::db_storage_postgres::PostgresStorage),
+    #[cfg(feature = "neo4j")]
+    Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
+    Fault(&'a crate::db_testkit::FaultStorage<R>),
+}
+
+impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
+    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+        match self {
+            Self::Memory(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            Self::Fault(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+        }
+    }
+
+    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            Self::Fault(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+        }
+    }
+
+    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+        match self {
+            Self::Memory(s) => s.release(resource, holder, fence).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.release(resource, holder, fence).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.release(resource, holder, fence).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.release(resource, holder, fence).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.release(resource, holder, fence).await,
+            Self::Fault(s) => s.release(resource, holder, fence).await,
+        }
+    }
+
+    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+        match self {
+            Self::Memory(s) => s.current(resource, now_ms).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.current(resource, now_ms).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.current(resource, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.current(resource, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.current(resource, now_ms).await,
+            Self::Fault(s) => s.current(resource, now_ms).await,
+        }
+    }
+}
+//#endregion 🔖️LeaseRef
 
 //#region 🔖️Memory
 /// @emoji 🧠️ One in-process, non-durable segment of a document's WAL — `bytes` plus whether
@@ -383,7 +1062,7 @@ struct MemWalSegment {
 /// touches a filesystem. Not durable (`capabilities().durable == false`) — the backend for unit
 /// tests and `db_testkit`'s deterministic simulation runtime, never for a real deployment. Every
 /// trait method body below is synchronous (no real I/O to await), so it is simply wrapped in an
-/// already-`Ready` `Box::pin(async move { .. })` per the module doc's "Async-first" section.
+/// already-`Ready` `{ .. }` per the module doc's "Async-first" section.
 #[derive(Default)]
 pub struct MemoryStorage {
     wal: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, MemWalSegment>>>,
@@ -408,8 +1087,7 @@ impl MemoryStorage {
 }
 
 impl WalStorage for MemoryStorage {
-    fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let mut wal = lock(&self.wal);
             let segments = wal.entry(document.clone()).or_default();
             if segments.contains_key(&index) {
@@ -417,11 +1095,9 @@ impl WalStorage for MemoryStorage {
             }
             segments.insert(index, MemWalSegment { bytes: Vec::new(), sealed: false });
             Ok(())
-        })
-    }
+        }
 
-    fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             let mut wal = lock(&self.wal);
             let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             if segment.sealed {
@@ -429,25 +1105,21 @@ impl WalStorage for MemoryStorage {
             }
             segment.bytes.extend_from_slice(bytes);
             Ok(segment.bytes.len() as u64)
-        })
-    }
+        }
 
-    fn sync<'a>(&'a self, _document: &'a ArtifactId, _index: u64, _class: DurabilityClass) -> DbFuture<'a, ()> {
+    async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ Nothing is ever persisted, so every durability class is trivially satisfied in-process.
-        Box::pin(async { Ok(()) })
+        { Ok(()) }
     }
 
-    fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let mut wal = lock(&self.wal);
             let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             segment.sealed = true;
             Ok(())
-        })
-    }
+        }
 
-    fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
             let wal = lock(&self.wal);
             let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
@@ -457,28 +1129,22 @@ impl WalStorage for MemoryStorage {
                 return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", segment.bytes.len())));
             }
             Ok(segment.bytes[start..end].to_vec())
-        })
-    }
+        }
 
-    fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let wal = lock(&self.wal);
             let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             Ok(segment.bytes.len() as u64)
-        })
-    }
+        }
 
-    fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let wal = lock(&self.wal);
             let mut indices: Vec<u64> = wal.get(document).map(|segments| segments.keys().copied().collect()).unwrap_or_default();
             indices.sort_unstable();
             Ok(indices)
-        })
-    }
+        }
 
-    fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let mut wal = lock(&self.wal);
             let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             if segment.sealed {
@@ -490,107 +1156,81 @@ impl WalStorage for MemoryStorage {
             }
             segment.bytes.truncate(new_len);
             Ok(())
-        })
-    }
+        }
 
-    fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let mut wal = lock(&self.wal);
             if let Some(segments) = wal.get_mut(document) {
                 segments.remove(&index);
             }
             Ok(())
-        })
-    }
+        }
 }
 
 impl SnapshotStorage for MemoryStorage {
-    fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             let mut snapshots = lock(&self.snapshots);
             snapshots.entry(document.clone()).or_default().insert(generation, bytes.to_vec());
             Ok(())
-        })
-    }
+        }
 
-    fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let snapshots = lock(&self.snapshots);
             snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
-        })
-    }
+        }
 
-    fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
-        Box::pin(async move {
+    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let snapshots = lock(&self.snapshots);
             Ok(snapshots.get(document).and_then(|generations| generations.keys().max().copied()))
-        })
-    }
+        }
 
-    fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let snapshots = lock(&self.snapshots);
             let mut generations: Vec<u64> = snapshots.get(document).map(|generations| generations.keys().copied().collect()).unwrap_or_default();
             generations.sort_unstable();
             Ok(generations)
-        })
-    }
+        }
 
-    fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let mut snapshots = lock(&self.snapshots);
             if let Some(generations) = snapshots.get_mut(document) {
                 generations.remove(&generation);
             }
             Ok(())
-        })
-    }
+        }
 }
 
 impl PayloadStorage for MemoryStorage {
-    fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
-        Box::pin(async move {
+    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
             let hash = ContentHash(*blake3::hash(bytes).as_bytes());
             let mut payloads = lock(&self.payloads);
             payloads.entry(hash).or_insert_with(|| bytes.to_vec());
             Ok(hash)
-        })
-    }
+        }
 
-    fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let payloads = lock(&self.payloads);
             payloads.get(hash).cloned().ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
-        })
-    }
+        }
 
-    fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
-        Box::pin(async move { Ok(lock(&self.payloads).contains_key(hash)) })
-    }
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> { Ok(lock(&self.payloads).contains_key(hash)) }
 
-    fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
             lock(&self.payloads).remove(hash);
             Ok(())
-        })
-    }
+        }
 
-    fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let payloads = lock(&self.payloads);
             payloads.get(hash).map(|bytes| bytes.len() as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
-        })
-    }
+        }
 }
 
 impl CatalogStorage for MemoryStorage {
-    fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
-        Box::pin(async move { Ok(lock(&self.catalog).clone()) })
-    }
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> { Ok(lock(&self.catalog).clone()) }
 
-    fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
-        Box::pin(async move {
+    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
             check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
             let mut catalog = lock(&self.catalog);
             let current_fence = catalog.as_ref().map_or(EpochFence::INITIAL, |(_, fence)| *fence);
@@ -598,49 +1238,39 @@ impl CatalogStorage for MemoryStorage {
             let new_fence = expected.next();
             *catalog = Some((new_bytes.to_vec(), new_fence));
             Ok(new_fence)
-        })
-    }
+        }
 }
 
 impl IndexStorage for MemoryStorage {
-    fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             let mut runs = lock(&self.index_runs);
             runs.entry(document.clone()).or_default().insert(run_id, bytes.to_vec());
             Ok(())
-        })
-    }
+        }
 
-    fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let runs = lock(&self.index_runs);
             runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
-        })
-    }
+        }
 
-    fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let runs = lock(&self.index_runs);
             let mut ids: Vec<u64> = runs.get(document).map(|runs| runs.keys().copied().collect()).unwrap_or_default();
             ids.sort_unstable();
             Ok(ids)
-        })
-    }
+        }
 
-    fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let mut runs = lock(&self.index_runs);
             if let Some(runs) = runs.get_mut(document) {
                 runs.remove(&run_id);
             }
             Ok(())
-        })
-    }
+        }
 }
 
 impl LeaseStorage for MemoryStorage {
-    fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
-        Box::pin(async move {
+    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let mut leases = lock(&self.leases);
             let fence = match leases.get(resource) {
                 Some(info) if now_ms < info.expires_at_ms => {
@@ -654,11 +1284,9 @@ impl LeaseStorage for MemoryStorage {
             };
             leases.insert(resource.to_string(), LeaseInfo { resource: resource.to_string(), holder: holder.to_string(), fence, expires_at_ms: now_ms + ttl_ms });
             Ok(fence)
-        })
-    }
+        }
 
-    fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
             let mut leases = lock(&self.leases);
             let info = leases.get_mut(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
             if now_ms >= info.expires_at_ms {
@@ -670,11 +1298,9 @@ impl LeaseStorage for MemoryStorage {
             fence.check(info.fence)?;
             info.expires_at_ms = now_ms + ttl_ms;
             Ok(())
-        })
-    }
+        }
 
-    fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
             let mut leases = lock(&self.leases);
             let info = leases.get(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
             if info.holder != holder {
@@ -683,43 +1309,17 @@ impl LeaseStorage for MemoryStorage {
             fence.check(info.fence)?;
             leases.remove(resource);
             Ok(())
-        })
-    }
+        }
 
-    fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
-        Box::pin(async move {
+    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             let leases = lock(&self.leases);
             Ok(leases.get(resource).filter(|info| now_ms < info.expires_at_ms).cloned())
-        })
-    }
+        }
 }
 
-impl DbStorage for MemoryStorage {
-    fn wal(&self) -> &dyn WalStorage {
-        self
-    }
-
-    fn snapshot(&self) -> &dyn SnapshotStorage {
-        self
-    }
-
-    fn payload(&self) -> &dyn PayloadStorage {
-        self
-    }
-
-    fn catalog(&self) -> &dyn CatalogStorage {
-        self
-    }
-
-    fn index(&self) -> &dyn IndexStorage {
-        self
-    }
-
-    fn lease(&self) -> &dyn LeaseStorage {
-        self
-    }
-
-    fn capabilities(&self) -> StorageCapabilities {
+impl MemoryStorage {
+    /// @emoji 🎚️ Pure in-memory: never durable, always CAS-capable.
+    pub async fn capabilities(&self) -> StorageCapabilities {
         StorageCapabilities { durable: false, max_durability: DurabilityClass::Memory, supports_fsync: false, supports_cas: true }
     }
 }
@@ -738,7 +1338,7 @@ impl DbStorage for MemoryStorage {
 /// blocking the calling async task's own thread — see the module doc's "Async-first" section.
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
 mod fs_storage {
-    use super::{run_blocking_op, ByteRange, ContentHash, DbError, DbFuture, DbStorage, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
+    use super::{run_blocking_op, ByteRange, ContentHash, DbError, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use super::check_len;
     use semio_framework_async::{HostAsyncRuntime, ScopeHandle};
@@ -881,23 +1481,28 @@ mod fs_storage {
     /// `runtime`/`scope` are what every trait method dispatches its blocking body through (see
     /// module doc); both are `Clone`d into each method's `'static` blocking closure since
     /// `HostAsyncRuntime::run_blocking` requires one.
-    pub struct FsStorage {
+    pub struct FsStorage<R: HostAsyncRuntime> {
         root: PathBuf,
         catalog_lock: Arc<Mutex<()>>,
         lease_lock: Arc<Mutex<()>>,
-        runtime: Arc<dyn HostAsyncRuntime>,
+        runtime: Arc<R>,
         scope: ScopeHandle,
     }
 
-    impl FsStorage {
+    impl<R: HostAsyncRuntime> FsStorage<R> {
         /// @emoji 🚀️ Opens (creating if absent) a `FsStorage` rooted at `root`, dispatching every
         /// subsequent trait call's blocking body through `runtime`'s `run_blocking`, scoped to
         /// `scope`. The initial `create_dir_all` here is a one-time, small, synchronous mkdir at
-        /// construction time — not part of any `DbStorage` trait method's hot path, so (unlike
-        /// every trait method below) it does not go through `run_blocking_op`.
-        pub fn open(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, root: &Path) -> Result<Self, DbError> {
+        /// construction time — not part of any storage trait method's hot path, so (unlike every
+        /// trait method below) it does not go through `run_blocking_op`.
+        pub async fn open(runtime: Arc<R>, scope: ScopeHandle, root: &Path) -> Result<Self, DbError> {
             std::fs::create_dir_all(root).map_err(io_err)?;
             Ok(Self { root: root.to_path_buf(), catalog_lock: Arc::new(Mutex::new(())), lease_lock: Arc::new(Mutex::new(())), runtime, scope })
+        }
+
+        /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — the on-disk default.
+        pub async fn capabilities(&self) -> StorageCapabilities {
+            StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
         }
     }
 
@@ -905,8 +1510,8 @@ mod fs_storage {
     /// in: a single-threaded, strictly-sequential process (`db_cli`'s one-subcommand-then-exit
     /// binary) or a frozen synchronous entry point (`db_engine::Database::open_at`). `run_blocking`
     /// runs `work` inline on the calling thread rather than spawning a worker — with no second task
-    /// in flight there is nothing to protect from blocking, and the resulting `DbFuture` is already
-    /// `Ready` the first time its caller polls it.
+    /// in flight there is nothing to protect from blocking, so every method here resolves the first
+    /// time its caller polls it.
     ///
     /// 🎯️ Deliberately lives here, beside the `FsStorage` that requires it, rather than being
     /// re-derived per caller: `db_cli` and `db_engine` both need exactly this and nothing more, and
@@ -916,7 +1521,7 @@ mod fs_storage {
     pub struct InlineRuntime;
 
     impl HostAsyncRuntime for InlineRuntime {
-        fn open_scope(&self, owner: semio_framework_async::ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+        async fn open_scope(&self, owner: semio_framework_async::ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
             let cancel = match parent {
                 Some(parent) => parent.cancel.child(),
                 None => semio_framework_async::CancelToken::root(),
@@ -924,45 +1529,47 @@ mod fs_storage {
             ScopeHandle { id: semio_framework_async::ScopeId(0), owner, cancel }
         }
 
-        fn spawn_scoped(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, fut: semio_framework_async::HostFuture<()>) {
-            crate::db_actor::block_on(fut);
+        async fn spawn_scoped(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, fut: semio_framework_async::HostFuture<()>) {
+            // 🎯️ Already running on an async context by definition (this method is itself
+            // `async fn`) — a "no concurrency" runtime spawns by simply awaiting inline, so this
+            // replaces what used to be a `db_actor::block_on(fut)` bridge (R4: every non-sanctioned
+            // `block_on` becomes a real `.await`).
+            fut.await;
         }
 
-        fn run_blocking(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, work: Box<dyn FnOnce() + Send>) {
+        async fn run_blocking(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, work: Box<dyn FnOnce() + Send>) {
             work();
         }
 
-        fn sleep_until(&self, _deadline_ms: u64) -> semio_framework_async::HostFuture<()> {
-            Box::pin(std::future::ready(()))
+        async fn sleep_until(&self, _deadline_ms: u64) {}
+
+        async fn cancel_scope(&self, _owner: &semio_framework_async::ScopeOwner, _grace_ms: u64) -> semio_framework_async::ScopeDrainReport {
+            semio_framework_async::ScopeDrainReport::default()
         }
 
-        fn cancel_scope(&self, _owner: &semio_framework_async::ScopeOwner, _grace_ms: u64) -> semio_framework_async::HostFuture<semio_framework_async::ScopeDrainReport> {
-            Box::pin(std::future::ready(semio_framework_async::ScopeDrainReport::default()))
-        }
-
-        fn now_ms(&self) -> u64 {
+        async fn now_ms(&self) -> u64 {
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |since| since.as_millis() as u64)
         }
     }
 
-    impl FsStorage {
+    impl FsStorage<InlineRuntime> {
         /// @emoji 🚀️ [`FsStorage::open`] with an [`InlineRuntime`] and a fresh scope owned by
         /// `owner` already threaded through — the whole async bridge in one call, for the two
         /// callers that have no runtime of their own to pass.
-        pub fn open_inline(owner: &'static str, root: &Path) -> Result<Self, DbError> {
-            let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(InlineRuntime);
-            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service(owner), None);
-            FsStorage::open(runtime, scope, root)
+        pub async fn open_inline(owner: &'static str, root: &Path) -> Result<Self, DbError> {
+            let runtime: Arc<InlineRuntime> = Arc::new(InlineRuntime);
+            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service(owner), None).await;
+            FsStorage::open(runtime, scope, root).await
         }
     }
 
-    impl WalStorage for FsStorage {
-        fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> WalStorage for FsStorage<R> {
+        async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
@@ -974,16 +1581,16 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
+        async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     if sealed_marker_path(&dir, index).exists() {
@@ -995,20 +1602,20 @@ mod fs_storage {
                     file.metadata().map_err(io_err).map(|meta| meta.len())
                 })
                 .await
-            })
+            }
         }
 
-        fn sync<'a>(&'a self, document: &'a ArtifactId, index: u64, class: DurabilityClass) -> DbFuture<'a, ()> {
+        async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
             // 🎯️ `Memory`/`Os` are satisfied by the ordinary `write(2)` `append` already performed;
             // only `Fsync`/`Quorum` need this trait to force data to physical storage.
             if matches!(class, DurabilityClass::Memory | DurabilityClass::Os) {
-                return Box::pin(async { Ok(()) });
+                return { Ok(()) };
             }
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
@@ -1016,15 +1623,15 @@ mod fs_storage {
                     file.sync_all().map_err(io_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
@@ -1035,18 +1642,18 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
+        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             if let Err(err) = check_len(range.len, MAX_READ_BYTES, "wal_storage::read") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
@@ -1065,38 +1672,38 @@ mod fs_storage {
                     Ok(buf)
                 })
                 .await
-            })
+            }
         }
 
-        fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
+        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
                 })
                 .await
-            })
+            }
         }
 
-        fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await })
+            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await }
         }
 
-        fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
+        async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     if sealed_marker_path(&dir, index).exists() {
@@ -1111,15 +1718,15 @@ mod fs_storage {
                     file.set_len(new_len).map_err(io_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
@@ -1133,18 +1740,18 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
 
-    impl SnapshotStorage for FsStorage {
-        fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> SnapshotStorage for FsStorage<R> {
+        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = snapshot_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
@@ -1152,15 +1759,15 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
+        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = snapshot_dir(&root, &document)?;
                     let path = generation_path(&dir, generation);
@@ -1169,31 +1776,31 @@ mod fs_storage {
                     std::fs::read(&path).map_err(io_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
+        async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await })
+            { run_blocking_op(&*runtime, &scope, move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await }
         }
 
-        fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await })
+            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await }
         }
 
-        fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
+        async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = snapshot_dir(&root, &document)?;
                     let path = generation_path(&dir, generation);
@@ -1203,20 +1810,20 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
 
-    impl PayloadStorage for FsStorage {
-        fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
+    impl<R: HostAsyncRuntime> PayloadStorage for FsStorage<R> {
+        async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let root = self.root.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
                     let path = payload_path(&root, &hash);
@@ -1229,15 +1836,15 @@ mod fs_storage {
                     Ok(hash)
                 })
                 .await
-            })
+            }
         }
 
-        fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
+        async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = payload_path(&root, &hash);
                     let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("payload {hash} not found")))?;
@@ -1245,23 +1852,23 @@ mod fs_storage {
                     std::fs::read(&path).map_err(io_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
+        async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
             let root = self.root.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || Ok(payload_path(&root, &hash).exists())).await })
+            { run_blocking_op(&*runtime, &scope, move || Ok(payload_path(&root, &hash).exists())).await }
         }
 
-        fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
+        async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
             let root = self.root.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = payload_path(&root, &hash);
                     if path.exists() {
@@ -1270,42 +1877,42 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
+        async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let root = self.root.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = payload_path(&root, &hash);
                     std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("payload {hash} not found")))
                 })
                 .await
-            })
+            }
         }
     }
 
-    impl CatalogStorage for FsStorage {
-        fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
+    impl<R: HostAsyncRuntime> CatalogStorage for FsStorage<R> {
+        async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let root = self.root.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || read_root_sync(&root)).await })
+            { run_blocking_op(&*runtime, &scope, move || read_root_sync(&root)).await }
         }
 
-        fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
+        async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
             if let Err(err) = check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let root = self.root.clone();
             let new_bytes = new_bytes.to_vec();
             let catalog_lock = self.catalog_lock.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     // 🎯️ In-process serialization only: two OS processes racing on the same `root` could
                     // both pass this `expected.check` before either renames its `write_atomic` temp file
@@ -1328,7 +1935,7 @@ mod fs_storage {
                     Ok(new_fence)
                 })
                 .await
-            })
+            }
         }
     }
 
@@ -1348,14 +1955,14 @@ mod fs_storage {
         Ok(Some((bytes[8..].to_vec(), EpochFence { epoch: u64::from_le_bytes(epoch_bytes) })))
     }
 
-    impl IndexStorage for FsStorage {
-        fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> IndexStorage for FsStorage<R> {
+        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = index_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
@@ -1363,15 +1970,15 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
+        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = index_dir(&root, &document)?;
                     let path = run_path(&dir, run_id);
@@ -1380,23 +1987,23 @@ mod fs_storage {
                     std::fs::read(&path).map_err(io_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await })
+            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await }
         }
 
-        fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
+        async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let dir = index_dir(&root, &document)?;
                     let path = run_path(&dir, run_id);
@@ -1406,19 +2013,19 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
 
-    impl LeaseStorage for FsStorage {
-        fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
+    impl<R: HostAsyncRuntime> LeaseStorage for FsStorage<R> {
+        async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let root = self.root.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -1436,17 +2043,17 @@ mod fs_storage {
                     Ok(fence)
                 })
                 .await
-            })
+            }
         }
 
-        fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
+        async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -1462,17 +2069,17 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
+        async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
             let root = self.root.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -1487,16 +2094,16 @@ mod fs_storage {
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
+        async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             let root = self.root.clone();
             let resource = resource.to_string();
             let lease_lock = self.lease_lock.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -1506,37 +2113,7 @@ mod fs_storage {
                     }
                 })
                 .await
-            })
-        }
-    }
-
-    impl DbStorage for FsStorage {
-        fn wal(&self) -> &dyn WalStorage {
-            self
-        }
-
-        fn snapshot(&self) -> &dyn SnapshotStorage {
-            self
-        }
-
-        fn payload(&self) -> &dyn PayloadStorage {
-            self
-        }
-
-        fn catalog(&self) -> &dyn CatalogStorage {
-            self
-        }
-
-        fn index(&self) -> &dyn IndexStorage {
-            self
-        }
-
-        fn lease(&self) -> &dyn LeaseStorage {
-            self
-        }
-
-        fn capabilities(&self) -> StorageCapabilities {
-            StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
+            }
         }
     }
 
@@ -1552,7 +2129,7 @@ mod tests {
     use super::*;
 
     //#region 🔖️WalStorage
-    fn exercise_wal_storage(storage: &dyn WalStorage) {
+    fn exercise_wal_storage(storage: &impl WalStorage) {
         let document: ArtifactId = "doc-wal".into();
 
         block_on_ready(storage.create_segment(&document, 0)).unwrap();
@@ -1600,7 +2177,7 @@ mod tests {
     //#endregion 🔖️WalStorage
 
     //#region 🔖️SnapshotStorage
-    fn exercise_snapshot_storage(storage: &dyn SnapshotStorage) {
+    fn exercise_snapshot_storage(storage: &impl SnapshotStorage) {
         let document: ArtifactId = "doc-snap".into();
         assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), None);
 
@@ -1631,7 +2208,7 @@ mod tests {
     //#endregion 🔖️SnapshotStorage
 
     //#region 🔖️PayloadStorage
-    fn exercise_payload_storage(storage: &dyn PayloadStorage) {
+    fn exercise_payload_storage(storage: &impl PayloadStorage) {
         let bytes = b"a payload blob that gets content-addressed";
         let hash_a = block_on_ready(storage.put(bytes)).unwrap();
         let hash_b = block_on_ready(storage.put(bytes)).unwrap();
@@ -1664,7 +2241,7 @@ mod tests {
     //#endregion 🔖️PayloadStorage
 
     //#region 🔖️CatalogStorage
-    fn exercise_catalog_storage(storage: &dyn CatalogStorage) {
+    fn exercise_catalog_storage(storage: &impl CatalogStorage) {
         assert_eq!(block_on_ready(storage.read_root()).unwrap(), None);
 
         let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).unwrap();
@@ -1694,7 +2271,7 @@ mod tests {
     //#endregion 🔖️CatalogStorage
 
     //#region 🔖️IndexStorage
-    fn exercise_index_storage(storage: &dyn IndexStorage) {
+    fn exercise_index_storage(storage: &impl IndexStorage) {
         let document: ArtifactId = "doc-index".into();
         block_on_ready(storage.write_run(&document, 0, b"run-zero")).unwrap();
         block_on_ready(storage.write_run(&document, 1, b"run-one")).unwrap();
@@ -1719,7 +2296,7 @@ mod tests {
     //#endregion 🔖️IndexStorage
 
     //#region 🔖️LeaseStorage
-    fn exercise_lease_storage(storage: &dyn LeaseStorage) {
+    fn exercise_lease_storage(storage: &impl LeaseStorage) {
         let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).unwrap();
         assert_eq!(fence_1, EpochFence::INITIAL);
 
@@ -1764,15 +2341,15 @@ mod tests {
     }
     //#endregion 🔖️LeaseStorage
 
-    //#region 🔖️DbStorage
+    //#region 🔖️DbBackend
     #[test]
-    fn memory_storage_db_storage_accessors_and_capabilities() {
-        let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(MemoryStorage::new());
+    fn memory_storage_db_backend_accessors_and_capabilities() {
+        let storage: DbBackend<InlineRuntime> = DbBackend::Memory(MemoryStorage::new());
         let document: ArtifactId = "doc-umbrella".into();
-        block_on_ready(storage.wal().create_segment(&document, 0)).unwrap();
-        block_on_ready(storage.catalog().cas_root(EpochFence::INITIAL, b"root")).unwrap();
+        block_on_ready(poll_once(storage.wal()).create_segment(&document, 0)).unwrap();
+        block_on_ready(poll_once(storage.catalog()).cas_root(EpochFence::INITIAL, b"root")).unwrap();
 
-        let capabilities = storage.capabilities();
+        let capabilities = poll_once(storage.capabilities());
         assert!(!capabilities.durable);
         assert_eq!(capabilities.max_durability, DurabilityClass::Memory);
         assert!(capabilities.supports_cas);
@@ -1780,18 +2357,18 @@ mod tests {
 
     #[cfg(feature = "fs")]
     #[test]
-    fn fs_storage_db_storage_accessors_and_capabilities() {
-        let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(fs_scratch("umbrella"));
+    fn fs_storage_db_backend_accessors_and_capabilities() {
+        let storage: DbBackend<semio_framework_async::testkit::ManualRuntime> = DbBackend::Fs(fs_scratch("umbrella"));
         let document: ArtifactId = "doc-umbrella".into();
-        block_on_ready(storage.index().write_run(&document, 0, b"run")).unwrap();
-        assert_eq!(block_on_ready(storage.index().read_run(&document, 0)).unwrap(), b"run");
+        block_on_ready(poll_once(storage.index()).write_run(&document, 0, b"run")).unwrap();
+        assert_eq!(block_on_ready(poll_once(storage.index()).read_run(&document, 0)).unwrap(), b"run");
 
-        let capabilities = storage.capabilities();
+        let capabilities = poll_once(storage.capabilities());
         assert!(capabilities.durable);
         assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
         assert!(capabilities.supports_fsync);
     }
-    //#endregion 🔖️DbStorage
+    //#endregion 🔖️DbBackend
 
     //#region 🔖️Fs
     #[cfg(feature = "fs")]
@@ -1804,13 +2381,13 @@ mod tests {
     /// storage hands back resolves on its very first poll — [`block_on_ready`] above never
     /// actually parks.
     #[cfg(feature = "fs")]
-    fn fs_scratch(name: &str) -> FsStorage {
+    fn fs_scratch(name: &str) -> FsStorage<semio_framework_async::testkit::ManualRuntime> {
         let pid = std::process::id();
         let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("db_storage_test_{name}_{pid}_{counter}"));
-        let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-        let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None);
-        FsStorage::open(runtime, scope, &dir).unwrap()
+        let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
+        let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
+        poll_once(FsStorage::open(runtime, scope, &dir)).unwrap()
     }
 
     #[cfg(feature = "fs")]
@@ -1835,16 +2412,16 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("db_storage_test_reopen_{pid}_{counter}"));
 
         {
-            let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None);
-            let storage = FsStorage::open(runtime, scope, &dir).unwrap();
+            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
+            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
+            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).unwrap();
             let document: ArtifactId = "doc-reopen".into();
             block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).unwrap();
         }
         {
-            let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None);
-            let storage = FsStorage::open(runtime, scope, &dir).unwrap();
+            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
+            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
+            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).unwrap();
             let document: ArtifactId = "doc-reopen".into();
             assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"persisted across reopen");
         }

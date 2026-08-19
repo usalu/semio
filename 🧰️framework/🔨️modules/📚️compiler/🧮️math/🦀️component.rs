@@ -47,13 +47,13 @@ pub struct MathBox {
 }
 
 impl MathBox {
-    fn empty() -> Self {
+    async fn empty() -> Self {
         Self::default()
     }
 
     /// @emoji ➕️ Offsets every item in `self` by `(dx, dy)` — used when placing an already-built box
     /// inside a larger one.
-    fn translated(mut self, dx: f32, dy: f32) -> Self {
+    async fn translated(mut self, dx: f32, dy: f32) -> Self {
         for item in &mut self.items {
             match item {
                 PlacedItem::Glyph { x, y, .. } | PlacedItem::Rule { x, y, .. } | PlacedItem::Image { x, y, .. } => {
@@ -84,15 +84,15 @@ const GRID_GAP_EM: f32 = 0.3;
 //#endregion 🔖️Model
 
 //#region 🔖️Units
-fn em(font: &Font<'_>, units: i32) -> f32 {
+async fn em(font: &Font<'_>, units: i32) -> f32 {
     units as f32 / font.units_per_em() as f32
 }
 
-fn mc_em(font: &Font<'_>, value: i16) -> f32 {
+async fn mc_em(font: &Font<'_>, value: i16) -> f32 {
     em(font, value as i32)
 }
 
-fn scale_down(percent: i16) -> f32 {
+async fn scale_down(percent: i16) -> f32 {
     (percent as f32 / 100.0).clamp(0.05, 1.0)
 }
 //#endregion 🔖️Units
@@ -101,7 +101,7 @@ fn scale_down(percent: i16) -> f32 {
 /// @emoji 🔤️ Multi-letter identifiers that resolve to a single symbol glyph, shaped via the Math
 /// font (so they render in the font's own italic/symbol design, matching `sin`-style upright names'
 /// *opposite* treatment below). Not exhaustive — grows as real usage needs more.
-fn named_symbol(name: &str) -> Option<char> {
+async fn named_symbol(name: &str) -> Option<char> {
     Some(match name {
         "alpha" => 'α',
         "beta" => 'β',
@@ -167,12 +167,12 @@ fn named_symbol(name: &str) -> Option<char> {
 
 /// @emoji 🔤️ Multi-letter identifiers that render upright via the text (serif) font, per math
 /// typesetting convention for named functions.
-fn is_upright_function_name(name: &str) -> bool {
+async fn is_upright_function_name(name: &str) -> bool {
     matches!(name, "sin" | "cos" | "tan" | "cot" | "sec" | "csc" | "sinh" | "cosh" | "tanh" | "lim" | "log" | "ln" | "exp" | "min" | "max" | "det" | "gcd" | "arg" | "sup" | "inf" | "mod" | "dim" | "ker" | "hom")
 }
 
 /// @emoji 😀️ A curated common-name subset of emoji shortcodes — not exhaustive, grows with usage.
-fn emoji_codepoint(name: &str) -> Option<char> {
+async fn emoji_codepoint(name: &str) -> Option<char> {
     Some(match name {
         "rocket" => '🚀',
         "star" => '⭐',
@@ -197,7 +197,7 @@ fn emoji_codepoint(name: &str) -> Option<char> {
 //#region 🔖️Atoms
 /// @emoji ✍️ Shapes `text` against `font`'s own vocabulary and returns a box for the run, with
 /// per-glyph bounding boxes (not blanket font ascender/descender) sizing `height`/`depth`.
-fn text_box(font: &Font<'_>, font_kind: FontKind, text: &str) -> MathBox {
+async fn text_box(font: &Font<'_>, font_kind: FontKind, text: &str) -> MathBox {
     let run = crate::text::shape(font, text);
     let mut items = Vec::with_capacity(run.glyphs.len());
     let mut x = 0.0f32;
@@ -216,16 +216,16 @@ fn text_box(font: &Font<'_>, font_kind: FontKind, text: &str) -> MathBox {
     MathBox { width: x, height: height.max(0.0), depth: depth.max(0.0), items }
 }
 
-fn char_box(font: &Font<'_>, font_kind: FontKind, ch: char) -> MathBox {
+async fn char_box(font: &Font<'_>, font_kind: FontKind, ch: char) -> MathBox {
     let mut buf = [0u8; 4];
     text_box(font, font_kind, ch.encode_utf8(&mut buf))
 }
 
-fn number_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
+async fn number_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
-fn quoted_text_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
+async fn quoted_text_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
@@ -234,7 +234,7 @@ fn quoted_text_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
 /// synthetic slant); a known multi-letter name resolves via [`named_symbol`] (also Math font); a
 /// known function name renders upright via the Serif font; anything else falls back to the Math
 /// font for the whole run (a reasonable, documented best effort for unknown multi-letter symbols).
-fn symbol_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
+async fn symbol_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
     if name.chars().count() == 1 {
         let ch = name.chars().next().expect("checked count == 1");
         return char_box(fonts.math, FontKind::Math, ch);
@@ -250,7 +250,7 @@ fn symbol_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
 
 const EMOJI_PIXELS_PER_EM: u16 = 96;
 
-fn raster_glyph_box(raster: crate::text::RasterGlyph) -> MathBox {
+async fn raster_glyph_box(raster: crate::text::RasterGlyph) -> MathBox {
     // CBDT strikes are square raster images meant to sit on the baseline at roughly cap-height —
     // approximate as a 1em x 1em box (matches how NotoColorEmoji is used elsewhere in this repo's
     // icon codec: a fixed square glyph slot), scaled from the strike's own pixel size.
@@ -258,7 +258,7 @@ fn raster_glyph_box(raster: crate::text::RasterGlyph) -> MathBox {
     MathBox { width: size_em, height: size_em * 0.8, depth: size_em * 0.2, items: vec![PlacedItem::Image { data: raster.data, x: 0.0, y: -size_em * 0.2, width: size_em, height: size_em }] }
 }
 
-fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
+async fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
     let Some(ch) = emoji_codepoint(name) else {
         // Unknown shortcode: render the `:name:` source literally via the serif font rather than
         // silently dropping it — a visible fallback beats a blank box.
@@ -280,13 +280,13 @@ fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
 /// [`crate::syntax::parse_formula`]-driven layout, this never fails and never interprets `text`'s
 /// characters as notation syntax (`_ ; < > !` included) — appropriate since arbitrary text is not
 /// guaranteed to be valid math notation and shouldn't be rejected or misparsed as such.
-pub fn layout_raw_text(fonts: &FontContext<'_>, text: &str) -> MathBox {
+pub async fn layout_raw_text(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
 /// @emoji 💻️ Shapes arbitrary `text` via the Mono font — for monospace code/source snippets, same
 /// non-parsing guarantee as [`layout_raw_text`].
-pub fn layout_raw_code(fonts: &FontContext<'_>, text: &str) -> MathBox {
+pub async fn layout_raw_code(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.mono, FontKind::Mono, text)
 }
 
@@ -298,7 +298,7 @@ pub fn layout_raw_code(fonts: &FontContext<'_>, text: &str) -> MathBox {
 /// (defensive — not expected to trigger against this specific font). Unlike [`MathNode::Emoji`]
 /// (a curated `:shortcode:` name resolved through [`emoji_codepoint`]), this accepts any text the
 /// caller already resolved to a concrete Unicode emoji string.
-pub fn layout_raw_emoji(fonts: &FontContext<'_>, text: &str) -> MathBox {
+pub async fn layout_raw_emoji(fonts: &FontContext<'_>, text: &str) -> MathBox {
     let run = crate::text::shape(fonts.emoji, text);
     let mut items = Vec::with_capacity(run.glyphs.len());
     let mut x = 0.0f32;
@@ -329,7 +329,7 @@ pub fn layout_raw_emoji(fonts: &FontContext<'_>, text: &str) -> MathBox {
 //#region 🔖️Combinators
 /// @emoji ↔️ Lays `children` left to right along a shared baseline (each child's own `y = 0` is the
 /// baseline), summing widths and combining `height`/`depth` as the max over all children.
-fn hbox(children: Vec<MathBox>) -> MathBox {
+async fn hbox(children: Vec<MathBox>) -> MathBox {
     let mut out = MathBox::empty();
     let mut x = 0.0f32;
     for child in children {
@@ -348,7 +348,7 @@ fn hbox(children: Vec<MathBox>) -> MathBox {
 /// @emoji ↕️ Stacks `top` above `bottom` on one shared center column, `gap` apart (vertical
 /// whitespace between `top`'s depth and `bottom`'s height), returning the combined box with
 /// `axis_y` as the resulting box's own baseline-relative placement of the stack's vertical center.
-fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> MathBox {
+async fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> MathBox {
     let width = top.width.max(bottom.width);
     let top_x = (width - top.width) / 2.0;
     let bottom_x = (width - bottom.width) / 2.0;
@@ -371,7 +371,7 @@ fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> Math
 //#endregion 🔖️Combinators
 
 //#region 🔖️Scripts
-fn layout_scripted(fonts: &FontContext<'_>, base: MathBox, script: MathBox, superscript: bool) -> MathBox {
+async fn layout_scripted(fonts: &FontContext<'_>, base: MathBox, script: MathBox, superscript: bool) -> MathBox {
     let Some(constants) = crate::text::math_constants(fonts.math) else {
         // No MATH table (shouldn't happen with the vendored Math font, but never panic on a
         // missing optional table): fall back to a fixed 60% scale-down and a simple half-height shift.
@@ -399,7 +399,7 @@ fn layout_scripted(fonts: &FontContext<'_>, base: MathBox, script: MathBox, supe
     out
 }
 
-fn scale_box(mut box_: MathBox, factor: f32) -> MathBox {
+async fn scale_box(mut box_: MathBox, factor: f32) -> MathBox {
     for item in &mut box_.items {
         match item {
             PlacedItem::Glyph { x, y, scale_y, .. } => {
@@ -428,10 +428,10 @@ fn scale_box(mut box_: MathBox, factor: f32) -> MathBox {
 }
 
 trait WithExtentFromShift {
-    fn with_extent_from_shift(self, shift: f32) -> Self;
+    async fn with_extent_from_shift(self, shift: f32) -> Self;
 }
 impl WithExtentFromShift for MathBox {
-    fn with_extent_from_shift(mut self, shift: f32) -> Self {
+    async fn with_extent_from_shift(mut self, shift: f32) -> Self {
         if shift >= 0.0 {
             self.height += shift;
         } else {
@@ -447,7 +447,7 @@ impl WithExtentFromShift for MathBox {
 /// `target_extent` (em units); falls back to `(base_glyph_id, natural_scale)` with a computed
 /// `scale_y` when the font declares no variant tall enough (or none at all) — the documented
 /// glyph-scale fallback in place of full non-linear assembly.
-fn pick_vertical_stretch(font: &Font<'_>, base_glyph_id: u16, target_extent: f32) -> (u16, f32) {
+async fn pick_vertical_stretch(font: &Font<'_>, base_glyph_id: u16, target_extent: f32) -> (u16, f32) {
     let target_units = (target_extent * font.units_per_em() as f32) as i64;
     let variants = crate::text::math_stretch_variants(font, base_glyph_id, true);
     if let Some(variant) = variants.iter().find(|v| v.advance as i64 >= target_units) {
@@ -471,7 +471,7 @@ fn pick_vertical_stretch(font: &Font<'_>, base_glyph_id: u16, target_extent: f32
 /// with a naive symmetric height/depth split — visually wrong for every glyph here, since none of
 /// them are vertically symmetric around their own origin (a radical's origin sits near its bottom
 /// tip, not its middle).
-fn stretched_glyph_box(font: &Font<'_>, font_kind: FontKind, glyph_id: u16, target_extent: f32, center_y: f32) -> MathBox {
+async fn stretched_glyph_box(font: &Font<'_>, font_kind: FontKind, glyph_id: u16, target_extent: f32, center_y: f32) -> MathBox {
     let (variant_id, scale_y) = pick_vertical_stretch(font, glyph_id, target_extent);
     let natural_width = font.glyph_hor_advance(variant_id).map_or(0.5, |a| em(font, a as i32));
     let (_, y_min, _, y_max) = font.glyph_bounding_box(variant_id).unwrap_or((0, 0, 0, font.units_per_em() as i16));
@@ -486,11 +486,11 @@ fn stretched_glyph_box(font: &Font<'_>, font_kind: FontKind, glyph_id: u16, targ
 //#endregion 🔖️Stretch
 
 //#region 🔖️Structures
-fn layout_group(fonts: &FontContext<'_>, inner: &MathNode) -> MathBox {
+async fn layout_group(fonts: &FontContext<'_>, inner: &MathNode) -> MathBox {
     layout(fonts, inner)
 }
 
-fn layout_paren(fonts: &FontContext<'_>, open: char, inner: &MathNode) -> MathBox {
+async fn layout_paren(fonts: &FontContext<'_>, open: char, inner: &MathNode) -> MathBox {
     let close = if open == '(' { ')' } else { ']' };
     let inner_box = layout(fonts, inner);
     delimited(fonts, open, close, inner_box)
@@ -498,7 +498,7 @@ fn layout_paren(fonts: &FontContext<'_>, open: char, inner: &MathNode) -> MathBo
 
 /// @emoji 📎️ Wraps `inner` in a matching stretchy delimiter pair, sized to `inner`'s own
 /// height+depth, vertically centered on the math axis.
-fn delimited(fonts: &FontContext<'_>, open: char, close: char, inner: MathBox) -> MathBox {
+async fn delimited(fonts: &FontContext<'_>, open: char, close: char, inner: MathBox) -> MathBox {
     let axis = crate::text::math_constants(fonts.math).map_or(0.25, |c| mc_em(fonts.math, c.axis_height));
     let target = (inner.height - axis).abs().max((inner.depth + axis).abs()) * 2.0;
     let target = target.max(inner.height + inner.depth).max(0.1);
@@ -509,7 +509,7 @@ fn delimited(fonts: &FontContext<'_>, open: char, close: char, inner: MathBox) -
     hbox(vec![left, inner, right])
 }
 
-fn layout_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> MathBox {
     match name {
         "frac" => layout_fraction(fonts, rows),
         "sqrt" => layout_radical(fonts, None, rows.first().and_then(|r| r.first())),
@@ -524,12 +524,12 @@ fn layout_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> M
     }
 }
 
-fn layout_delimited_single(fonts: &FontContext<'_>, open: char, close: char, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_delimited_single(fonts: &FontContext<'_>, open: char, close: char, rows: &[Vec<MathNode>]) -> MathBox {
     let inner = rows.first().and_then(|r| r.first()).map_or_else(MathBox::empty, |n| layout(fonts, n));
     delimited(fonts, open, close, inner)
 }
 
-fn layout_fraction(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_fraction(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     let numerator = rows.first().and_then(|r| r.first()).map_or_else(MathBox::empty, |n| layout(fonts, n));
     let denominator = rows.first().and_then(|r| r.get(1)).map_or_else(MathBox::empty, |n| layout(fonts, n));
     let Some(constants) = crate::text::math_constants(fonts.math) else {
@@ -553,7 +553,7 @@ fn layout_fraction(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
 }
 
 /// @emoji √ Radical: `degree` is `Some` only for `root(degree, radicand)`.
-fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: Option<&MathNode>) -> MathBox {
+async fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: Option<&MathNode>) -> MathBox {
     let inner = radicand.map_or_else(MathBox::empty, |n| layout(fonts, n));
     let Some(constants) = crate::text::math_constants(fonts.math) else {
         return delimited(fonts, '(', ')', inner); // never reached with the vendored Math font
@@ -594,7 +594,7 @@ fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: 
 
 /// @emoji ˆ Accent (`hat`/`bar`/`vec`/`dot`/`ddot`/`tilde`): places a combining accent glyph over
 /// `base`, centered on `base`'s own `MathTopAccentAttachment` (or its horizontal midpoint).
-fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNode>) -> MathBox {
+async fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNode>) -> MathBox {
     let base = base_node.map_or_else(MathBox::empty, |n| layout(fonts, n));
     let accent_ch = match kind {
         "hat" => '\u{0302}',
@@ -631,7 +631,7 @@ fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNod
 
 /// @emoji 🔍️ Best-effort: only single-character `Symbol` bases have a resolvable glyph id for a
 /// `MathTopAccentAttachment` lookup; anything else falls back to the horizontal-midpoint default.
-fn base_glyph_id_for_top_accent(fonts: &FontContext<'_>, node: &MathNode) -> Option<u16> {
+async fn base_glyph_id_for_top_accent(fonts: &FontContext<'_>, node: &MathNode) -> Option<u16> {
     match node {
         MathNode::Symbol(name) if name.chars().count() == 1 => fonts.math.glyph_index(name.chars().next().expect("checked count == 1")),
         _ => None,
@@ -640,7 +640,7 @@ fn base_glyph_id_for_top_accent(fonts: &FontContext<'_>, node: &MathNode) -> Opt
 
 /// @emoji 🔢️ Any `name(...)` call this crate doesn't special-case: render `name` upright, followed
 /// by its rows/cells wrapped in stretchy parens, comma/semicolon separated — never a silent drop.
-fn layout_generic_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_generic_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode>]) -> MathBox {
     let label = text_box(fonts.serif, FontKind::Serif, name);
     let comma = text_box(fonts.serif, FontKind::Serif, ", ");
     let semicolon = text_box(fonts.serif, FontKind::Serif, "; ");
@@ -668,7 +668,7 @@ fn layout_generic_call(fonts: &FontContext<'_>, name: &str, rows: &[Vec<MathNode
 
 /// @emoji ▦️ A grid of cells (rows × columns), each own-laid-out and column/row aligned by max
 /// extent, `GRID_GAP_EM` apart — shared by `mat` (bracketed, optional delimiter pair) and `cases`.
-fn layout_grid(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_grid(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     let cell_boxes: Vec<Vec<MathBox>> = rows.iter().map(|row| row.iter().map(|cell| layout(fonts, cell)).collect()).collect();
     let column_count = cell_boxes.iter().map(|r| r.len()).max().unwrap_or(0);
     let mut column_widths = vec![0.0f32; column_count];
@@ -704,7 +704,7 @@ fn layout_grid(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     out
 }
 
-fn layout_matrix(fonts: &FontContext<'_>, rows: &[Vec<MathNode>], delimiters: Option<(char, char)>) -> MathBox {
+async fn layout_matrix(fonts: &FontContext<'_>, rows: &[Vec<MathNode>], delimiters: Option<(char, char)>) -> MathBox {
     let grid = layout_grid(fonts, rows);
     match delimiters {
         Some((open, close)) => delimited(fonts, open, close, grid),
@@ -712,7 +712,7 @@ fn layout_matrix(fonts: &FontContext<'_>, rows: &[Vec<MathNode>], delimiters: Op
     }
 }
 
-fn layout_cases(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
+async fn layout_cases(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     let grid = layout_grid(fonts, rows);
     let brace_id = fonts.math.glyph_index('{').unwrap_or(0);
     let target = grid.height + grid.depth;
@@ -723,14 +723,14 @@ fn layout_cases(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
 //#endregion 🔖️Structures
 
 //#region 🔖️Sequence
-fn spacing_before(op: BinOp) -> f32 {
+async fn spacing_before(op: BinOp) -> f32 {
     match op {
         BinOp::Add | BinOp::Sub | BinOp::Div => THIN_SPACE_EM,
         BinOp::Eq | BinOp::Ne | BinOp::Le | BinOp::Ge | BinOp::Lt | BinOp::Gt | BinOp::Arrow => MEDIUM_SPACE_EM,
     }
 }
 
-fn layout_binop(fonts: &FontContext<'_>, op: BinOp, lhs: &MathNode, rhs: &MathNode) -> MathBox {
+async fn layout_binop(fonts: &FontContext<'_>, op: BinOp, lhs: &MathNode, rhs: &MathNode) -> MathBox {
     let lhs_box = layout(fonts, lhs);
     let op_box = char_box(fonts.math, FontKind::Math, op_char(op));
     let rhs_box = layout(fonts, rhs);
@@ -739,7 +739,7 @@ fn layout_binop(fonts: &FontContext<'_>, op: BinOp, lhs: &MathNode, rhs: &MathNo
     hbox(vec![lhs_box, spacer.clone(), op_box, spacer, rhs_box])
 }
 
-fn op_char(op: BinOp) -> char {
+async fn op_char(op: BinOp) -> char {
     match op {
         BinOp::Add => '+',
         BinOp::Sub => '−',
@@ -754,7 +754,7 @@ fn op_char(op: BinOp) -> char {
     }
 }
 
-fn layout_sequence(fonts: &FontContext<'_>, items: &[crate::syntax::SeqItem]) -> MathBox {
+async fn layout_sequence(fonts: &FontContext<'_>, items: &[crate::syntax::SeqItem]) -> MathBox {
     let mut children = Vec::with_capacity(items.len() * 2);
     for (i, item) in items.iter().enumerate() {
         if i > 0 {
@@ -776,7 +776,7 @@ fn layout_sequence(fonts: &FontContext<'_>, items: &[crate::syntax::SeqItem]) ->
 //#region 🔖️Entry
 /// @emoji 🎯️ Lays out any [`MathNode`] into a [`MathBox`] — the crate's main entry point, called
 /// recursively by every structure above for sub-expressions.
-pub fn layout(fonts: &FontContext<'_>, node: &MathNode) -> MathBox {
+pub async fn layout(fonts: &FontContext<'_>, node: &MathNode) -> MathBox {
     match node {
         MathNode::Number(text) => number_box(fonts, text),
         MathNode::Symbol(name) => symbol_box(fonts, name),
@@ -799,7 +799,7 @@ mod tests {
     use super::*;
     use crate::syntax::parse_formula;
 
-    fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>) -> R) -> R {
+    async fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>) -> R) -> R {
         let fonts = crate::world::embedded_fonts();
         let math = Font::from_bytes(fonts.math, 0).expect("parse math font");
         let serif = Font::from_bytes(fonts.serif, 0).expect("parse serif font");
@@ -809,13 +809,13 @@ mod tests {
         f(&ctx)
     }
 
-    fn layout_src(fonts: &FontContext<'_>, src: &str) -> MathBox {
+    async fn layout_src(fonts: &FontContext<'_>, src: &str) -> MathBox {
         let node = parse_formula(src).unwrap_or_else(|e| panic!("parse {src:?} failed: {e}"));
         layout(fonts, &node)
     }
 
     #[test]
-    fn simple_symbol_has_positive_width_and_at_least_one_glyph() {
+    async fn simple_symbol_has_positive_width_and_at_least_one_glyph() {
         with_fonts(|fonts| {
             let node = MathNode::Symbol("x".to_string());
             let box_ = layout(fonts, &node);
@@ -825,7 +825,7 @@ mod tests {
     }
 
     #[test]
-    fn superscript_is_narrower_and_shifted_above_the_baseline() {
+    async fn superscript_is_narrower_and_shifted_above_the_baseline() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, "x^2");
             assert!(box_.width > 0.0);
@@ -836,7 +836,7 @@ mod tests {
     }
 
     #[test]
-    fn subscript_extends_the_depth_not_the_height() {
+    async fn subscript_extends_the_depth_not_the_height() {
         with_fonts(|fonts| {
             let base_only = layout_src(fonts, "x");
             let subscripted = layout_src(fonts, "x_1");
@@ -845,7 +845,7 @@ mod tests {
     }
 
     #[test]
-    fn fraction_stacks_numerator_over_denominator_around_the_axis() {
+    async fn fraction_stacks_numerator_over_denominator_around_the_axis() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, "frac(a, b)");
             assert!(box_.height > 0.0 && box_.depth > 0.0, "a fraction must have both height and depth: {box_:?}");
@@ -855,7 +855,7 @@ mod tests {
     }
 
     #[test]
-    fn sqrt_draws_a_radical_sign_and_a_top_rule() {
+    async fn sqrt_draws_a_radical_sign_and_a_top_rule() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, "sqrt(x)");
             let rule_count = box_.items.iter().filter(|item| matches!(item, PlacedItem::Rule { .. })).count();
@@ -865,7 +865,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_lays_out_a_grid_wrapped_in_parens() {
+    async fn matrix_lays_out_a_grid_wrapped_in_parens() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, "mat(1, 2; 3, 4)");
             // 4 number glyphs + 2 stretchy paren glyphs.
@@ -874,7 +874,7 @@ mod tests {
     }
 
     #[test]
-    fn stretchy_parens_are_taller_for_taller_content() {
+    async fn stretchy_parens_are_taller_for_taller_content() {
         with_fonts(|fonts| {
             let short = layout_src(fonts, "(x)");
             let tall = layout_src(fonts, "(frac(a, b))");
@@ -883,7 +883,7 @@ mod tests {
     }
 
     #[test]
-    fn emoji_shortcode_places_an_image_item() {
+    async fn emoji_shortcode_places_an_image_item() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, ":rocket:");
             assert_eq!(box_.items.len(), 1);
@@ -892,7 +892,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_emoji_shortcode_falls_back_to_visible_text_not_a_blank_box() {
+    async fn unknown_emoji_shortcode_falls_back_to_visible_text_not_a_blank_box() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, ":not-a-real-shortcode:");
             assert!(!box_.items.is_empty(), "an unresolved shortcode must still render something visible");
@@ -901,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_operator_inserts_visible_spacing_between_operands() {
+    async fn binary_operator_inserts_visible_spacing_between_operands() {
         with_fonts(|fonts| {
             let plain_sum = hbox(vec![layout_src(fonts, "x"), layout_src(fonts, "y")]);
             let spaced_sum = layout_src(fonts, "x + y");
@@ -910,7 +910,7 @@ mod tests {
     }
 
     #[test]
-    fn accent_adds_height_above_the_base() {
+    async fn accent_adds_height_above_the_base() {
         with_fonts(|fonts| {
             let base = layout_src(fonts, "x");
             let accented = layout_src(fonts, "hat(x)");
@@ -919,7 +919,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_call_name_renders_the_name_and_wrapped_args_rather_than_silently_dropping() {
+    async fn unknown_call_name_renders_the_name_and_wrapped_args_rather_than_silently_dropping() {
         with_fonts(|fonts| {
             let box_ = layout_src(fonts, "mystery(x, y)");
             assert!(!box_.items.is_empty());
@@ -928,7 +928,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_raw_text_shapes_arbitrary_strings_without_parsing_notation_syntax() {
+    async fn layout_raw_text_shapes_arbitrary_strings_without_parsing_notation_syntax() {
         with_fonts(|fonts| {
             // `_ ; < > !` are all special characters in math notation — a raw-text caller must be
             // able to include them literally, which `layout_raw_text` (no parser involved) allows.
@@ -939,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_raw_emoji_places_a_raster_image_for_a_known_glyph() {
+    async fn layout_raw_emoji_places_a_raster_image_for_a_known_glyph() {
         with_fonts(|fonts| {
             let box_ = layout_raw_emoji(fonts, "🚀");
             assert_eq!(box_.items.len(), 1);
@@ -948,7 +948,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_raw_code_shapes_via_the_mono_font() {
+    async fn layout_raw_code_shapes_via_the_mono_font() {
         with_fonts(|fonts| {
             let box_ = layout_raw_code(fonts, "fn main() {}");
             assert!(box_.width > 0.0);

@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx, Puzzle3dTargetVo
 use serde_json::{json, Value};
 use std::sync::atomic::Ordering;
 
-pub fn add_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub async fn add_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let Some(origin) = args.and_then(|value| value.get("origin")).and_then(value_as_vec3) else {
         return;
     };

@@ -23,16 +23,16 @@ impl Rgba {
         Self { r, g, b, a }
     }
 
-    pub fn from_srgb8(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub async fn from_srgb8(r: u8, g: u8, b: u8, a: u8) -> Self {
         let [lr, lg, lb, la] = ui_styling::color::rgba8_to_linear(r, g, b, a);
         Self::new(lr, lg, lb, la)
     }
 
-    fn from_chrome(c: &[f32; 4]) -> Self {
+    async fn from_chrome(c: &[f32; 4]) -> Self {
         Self::new(c[0], c[1], c[2], c[3])
     }
 
-    pub fn with_alpha(self, a: f32) -> Self {
+    pub async fn with_alpha(self, a: f32) -> Self {
         Self::new(self.r, self.g, self.b, a)
     }
 }
@@ -144,17 +144,17 @@ impl Default for Theme {
     }
 }
 
-fn chrome_px(ui_spacing_mult: f64) -> f32 {
+async fn chrome_px(ui_spacing_mult: f64) -> f32 {
     (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
 }
 
-fn panel_width(ui_spacing_mult: f64) -> f32 {
+async fn panel_width(ui_spacing_mult: f64) -> f32 {
     (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
 }
 
 //#region 🔖️Presence
 /// 🎨️ HSL (`h` degrees, `s`/`l` `[0, 1]`) → sRGB8888, standard sector conversion.
-fn hsl_to_srgb8(h: u16, s: f64, l: f64) -> (u8, u8, u8) {
+async fn hsl_to_srgb8(h: u16, s: f64, l: f64) -> (u8, u8, u8) {
     let h = f64::from(h).rem_euclid(360.0);
     let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
     let x = c * (1.0 - ((h / 60.0).rem_euclid(2.0) - 1.0).abs());
@@ -171,13 +171,13 @@ fn hsl_to_srgb8(h: u16, s: f64, l: f64) -> (u8, u8, u8) {
     (to_u8(r1), to_u8(g1), to_u8(b1))
 }
 
-fn presence_rgba(hsl: PresenceHsl) -> Rgba {
+async fn presence_rgba(hsl: PresenceHsl) -> Rgba {
     let (r, g, b) = hsl_to_srgb8(hsl.h, hsl.s, hsl.l);
     Rgba::from_srgb8(r, g, b, 255)
 }
 //#endregion 🔖️Presence
 
-fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) -> Theme {
+async fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) -> Theme {
     Theme {
         background: Rgba::from_chrome(&chrome.base),
         panel: Rgba::from_chrome(&chrome.level_panel),
@@ -240,15 +240,15 @@ fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) 
 }
 
 impl Theme {
-    pub fn light() -> Self {
+    pub async fn light() -> Self {
         from_chrome(&CHROME_LIGHT, PresenceAppearance::Light)
     }
 
-    pub fn dark() -> Self {
+    pub async fn dark() -> Self {
         from_chrome(&CHROME_DARK, PresenceAppearance::Dark)
     }
 
-    pub fn for_name(name: AppearanceName) -> Self {
+    pub async fn for_name(name: AppearanceName) -> Self {
         match name {
             AppearanceName::Light => Self::light(),
             AppearanceName::Dark => Self::dark(),
@@ -257,7 +257,7 @@ impl Theme {
 
     //#region 🔖️LevelSurfaces
     /// 🪜️ Plain per-level fill (no blur/alpha) — `ui-surface`'s wgpu counterpart.
-    pub fn surface(&self, level: Level) -> Rgba {
+    pub async fn surface(&self, level: Level) -> Rgba {
         self.level_bg[level.index()]
     }
 
@@ -265,7 +265,7 @@ impl Theme {
     /// and blur steps up per level index (`ui/styling/🔣️tokens.json`'s `levels` block:
     /// `alpha(k) = 1 - k * glassAlphaStep`, `blur(k) = k * glassBlurStepPx`), read from
     /// `ui_styling::levels` constants — never a per-tier lookup table.
-    pub fn glass(&self, level: Level) -> GlassStyle {
+    pub async fn glass(&self, level: Level) -> GlassStyle {
         let k = level.index() as f32;
         GlassStyle { tint: self.level_bg[level.index()], alpha: 1.0 - k * levels::GLASS_ALPHA_STEP as f32, blur_px: k * levels::GLASS_BLUR_STEP_PX as f32, saturate: self.glass_saturate }
     }
@@ -278,12 +278,12 @@ impl Theme {
     /// (`light()`/`dark()`), so the swatches are already correct for whichever `self` is; the full
     /// per-cycle desaturate/lighten shift for `index / 12 >= 1` is `presence_bar::presence_color`'s job
     /// for callers that need it directly.
-    pub fn presence_color(&self, index: u8) -> Rgba {
+    pub async fn presence_color(&self, index: u8) -> Rgba {
         self.presence[(index % 12) as usize]
     }
     //#endregion 🔖️Presence
 
-    pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
+    pub async fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
         (blur_px / 4.0).log2().max(0.0).min(max_mip as f32)
     }
 }

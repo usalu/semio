@@ -1,7 +1,7 @@
 //! 🆔 Pack identity types and segment kind constants.
 
 //#region 🔖️Ids
-/// @emoji 🔑️ A blake3 content hash (32 bytes), formatted as lowercase hex via `Display`.
+/// @emoji 🔑️ A blake3 content hash (32 bytes).await, formatted as lowercase hex via `Display`.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContentHash(pub [u8; 32]);
 
@@ -68,8 +68,8 @@ mod tests {
     use super::*;
 
     //#region 🔖️Ids
-    #[test]
-    fn content_hash_display_is_lowercase_hex() {
+    #[semio_framework_async_macros::async_test]
+    async fn content_hash_display_is_lowercase_hex() {
         let mut bytes = [0u8; 32];
         bytes[0] = 0xAB;
         bytes[31] = 0x0F;
@@ -81,8 +81,8 @@ mod tests {
         assert_eq!(text, text.to_lowercase());
     }
 
-    #[test]
-    fn segment_kind_constants_match_contract() {
+    #[semio_framework_async_macros::async_test]
+    async fn segment_kind_constants_match_contract() {
         assert_eq!(KIND_END, 0x00);
         assert_eq!(KIND_MANIFEST, 0x01);
         assert_eq!(KIND_SCHEMA, 0x02);

@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(map.len(), 1);
 
         let memory_storage = storage::MemoryStorage::new();
-        let _: &dyn DbStorage = &memory_storage;
+        let _: storage::DbBackend<storage::InlineRuntime> = storage::DbBackend::Memory(memory_storage);
 
         assert_eq!(wal::WAL_SEGMENT_HEADER, 0x40);
         assert!(wal::is_wal_record_kind(wal::WAL_COMMAND));

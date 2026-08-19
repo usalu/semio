@@ -1,0 +1,1192 @@
+[
+ {
+  "name": "Sobject",
+  "uses": 131,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🦀️component.rs",
+  "line": 644,
+  "methods": 37,
+  "async_methods": 37,
+  "impls": 3,
+  "impl_crates": [
+   "semio-s-plugin-animate"
+  ]
+ },
+ {
+  "name": "SpaceMember",
+  "uses": 101,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+  "line": 6480,
+  "methods": 25,
+  "async_methods": 25,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "HostAsyncRuntime",
+  "uses": 47,
+  "decl": "🧰️framework/🔨️modules/⏳️async/🦀️component.rs",
+  "line": 356,
+  "methods": 6,
+  "async_methods": 6,
+  "impls": 4,
+  "impl_crates": [
+   "semio-framework-async",
+   "semio-framework-os-kernel-db",
+   "semio-framework-os-services",
+   "semio-hub"
+  ]
+ },
+ {
+  "name": "DbStorage",
+  "uses": 39,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 361,
+  "methods": 7,
+  "async_methods": 7,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "LogitsProcessor",
+  "uses": 38,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2579,
+  "methods": 8,
+  "async_methods": 8,
+  "impls": 34,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "BrepKernel",
+  "uses": 34,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs",
+  "line": 140,
+  "methods": 92,
+  "async_methods": 92,
+  "impls": 1,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "IndexStorage",
+  "uses": 25,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 297,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "NationalAnnex",
+  "uses": 25,
+  "decl": "✏️s/🔌️plugins/📕️norm/📄️artifact/🦀️component.rs",
+  "line": 213,
+  "methods": 9,
+  "async_methods": 9,
+  "impls": 2,
+  "impl_crates": [
+   "semio-s-plugin-norm"
+  ]
+ },
+ {
+  "name": "OsBackbonePort",
+  "uses": 24,
+  "decl": "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs",
+  "line": 778,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os"
+  ]
+ },
+ {
+  "name": "ErasedProjection",
+  "uses": 22,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🦀️component.rs",
+  "line": 206,
+  "methods": 7,
+  "async_methods": 7,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "Animation",
+  "uses": 22,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs",
+  "line": 24,
+  "methods": 9,
+  "async_methods": 9,
+  "impls": 43,
+  "impl_crates": [
+   "semio-s-plugin-animate"
+  ]
+ },
+ {
+  "name": "LeaseStorage",
+  "uses": 21,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 329,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "CommandSink",
+  "uses": 20,
+  "decl": "🧰️framework/🔨️modules/🔄️machine/🦀️component.rs",
+  "line": 639,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-machine",
+   "semio-s-plugin-draw-fsm"
+  ]
+ },
+ {
+  "name": "Constraint",
+  "uses": 20,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2601,
+  "methods": 10,
+  "async_methods": 10,
+  "impls": 10,
+  "impl_crates": [
+   "semio-framework-math",
+   "semio-s-plugin-procedural"
+  ]
+ },
+ {
+  "name": "QueryableGraph",
+  "uses": 20,
+  "decl": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/🦀️component.rs",
+  "line": 80,
+  "methods": 7,
+  "async_methods": 7,
+  "impls": 5,
+  "impl_crates": [
+   "semio-framework-graph",
+   "semio-s-plugin-cad",
+   "semio-s-plugin-trinity"
+  ]
+ },
+ {
+  "name": "Element",
+  "uses": 20,
+  "decl": "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs",
+  "line": 85,
+  "methods": 8,
+  "async_methods": 8,
+  "impls": 13,
+  "impl_crates": [
+   "?"
+  ]
+ },
+ {
+  "name": "PluginApp",
+  "uses": 19,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+  "line": 9690,
+  "methods": 51,
+  "async_methods": 51,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-plugin"
+  ]
+ },
+ {
+  "name": "WalStorage",
+  "uses": 19,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 182,
+  "methods": 9,
+  "async_methods": 9,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "RandomSource",
+  "uses": 18,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 1104,
+  "methods": 8,
+  "async_methods": 8,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "GuestRuntime",
+  "uses": 18,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs",
+  "line": 512,
+  "methods": 9,
+  "async_methods": 9,
+  "impls": 4,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "Emit",
+  "uses": 15,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🕸️version-graph/🦀️component.rs",
+  "line": 121,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 5,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "Operator",
+  "uses": 14,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs",
+  "line": 643,
+  "methods": 1,
+  "async_methods": 0,
+  "impls": 138,
+  "impl_crates": [
+   "semio-framework-os-flow",
+   "semio-framework-os-kernel-neural-engine",
+   "semio-s-imperative",
+   "semio-s-plugin-flow-extension-bim",
+   "semio-s-plugin-flow-extension-brep",
+   "semio-s-plugin-flow-extension-dictionary",
+   "semio-s-plugin-flow-extension-draw",
+   "semio-s-plugin-flow-extension-list",
+   "semio-s-plugin-flow-extension-logic",
+   "semio-s-plugin-flow-extension-math",
+   "semio-s-plugin-flow-extension-primitive",
+   "semio-s-plugin-flow-extension-text",
+   "semio-s-plugin-imperative-effect",
+   "semio-s-plugin-imperative-logic",
+   "semio-s-plugin-imperative-math",
+   "semio-s-plugin-imperative-text"
+  ]
+ },
+ {
+  "name": "SnapshotStorage",
+  "uses": 13,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 228,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "BlobStore",
+  "uses": 12,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs",
+  "line": 372,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 5,
+  "impl_crates": [
+   "semio-framework-os-kernel",
+   "semio-framework-os-run",
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "MachineCatalog",
+  "uses": 11,
+  "decl": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
+  "line": 282,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 10,
+  "impl_crates": [
+   "semio-s-plugin-process",
+   "semio-s-plugin-process-concrete",
+   "semio-s-plugin-process-metal",
+   "semio-s-plugin-process-robotic",
+   "semio-s-plugin-process-wood"
+  ]
+ },
+ {
+  "name": "Backbone",
+  "uses": 10,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+  "line": 6184,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "TokenTextAdapter",
+  "uses": 9,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 1288,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "PayloadStorage",
+  "uses": 9,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 255,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "CatalogStorage",
+  "uses": 9,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs",
+  "line": 280,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "SpaceBackbonePort",
+  "uses": 9,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️component.rs",
+  "line": 1328,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "TokenSampler",
+  "uses": 7,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2594,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 4,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "HttpBody",
+  "uses": 7,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
+  "line": 651,
+  "methods": 1,
+  "async_methods": 0,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-services"
+  ]
+ },
+ {
+  "name": "AuditSink",
+  "uses": 7,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📒️audit/🦀️component.rs",
+  "line": 99,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "HubDirectory",
+  "uses": 7,
+  "decl": "🌎️hub/📇️directory/🦀️component.rs",
+  "line": 508,
+  "methods": 28,
+  "async_methods": 28,
+  "impls": 3,
+  "impl_crates": [
+   "semio-hub"
+  ]
+ },
+ {
+  "name": "PayloadSource",
+  "uses": 5,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs",
+  "line": 476,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "PayloadSink",
+  "uses": 5,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs",
+  "line": 485,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "Migration",
+  "uses": 5,
+  "decl": "🧰️framework/🔨️modules/🔄️machine/🦀️component.rs",
+  "line": 1303,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-machine",
+   "semio-s-plugin-draw-fsm"
+  ]
+ },
+ {
+  "name": "StopCondition",
+  "uses": 5,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2623,
+  "methods": 6,
+  "async_methods": 6,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "Decider",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/🦀️component.rs",
+  "line": 103,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "DirectoryWsConnection",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs",
+  "line": 83,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "HttpTransport",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
+  "line": 671,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 6,
+  "impl_crates": [
+   "semio-framework-os-kernel",
+   "semio-framework-os-services"
+  ]
+ },
+ {
+  "name": "RouterEffectHandler",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 379,
+  "methods": 1,
+  "async_methods": 0,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "VersionGraph",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🕸️version-graph/🦀️component.rs",
+  "line": 34,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "ArtifactChannel",
+  "uses": 5,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔀️dispatch/🦀️component.rs",
+  "line": 99,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "ResourceResolver",
+  "uses": 4,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs",
+  "line": 497,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "SamplingObserver",
+  "uses": 4,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2641,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "PrincipalResolver",
+  "uses": 4,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🛡️policy/🦀️component.rs",
+  "line": 215,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "QueryHandler",
+  "uses": 4,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs",
+  "line": 211,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 0,
+  "impl_crates": []
+ },
+ {
+  "name": "AuthzHook",
+  "uses": 4,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs",
+  "line": 394,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "ChildStoreFactory",
+  "uses": 4,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+  "line": 527,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-kernel",
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "SourcingModule",
+  "uses": 4,
+  "decl": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs",
+  "line": 369,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 4,
+  "impl_crates": [
+   "semio-s-plugin-sourcing"
+  ]
+ },
+ {
+  "name": "RandomAccessPayload",
+  "uses": 3,
+  "decl": "🧰️framework/🔨️modules/🚪️io/🦀️component.rs",
+  "line": 470,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "Collective",
+  "uses": 3,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 2657,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "DocumentAuthority",
+  "uses": 3,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs",
+  "line": 197,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 0,
+  "impl_crates": []
+ },
+ {
+  "name": "JoinHandleLike",
+  "uses": 3,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs",
+  "line": 703,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "BackbonePort",
+  "uses": 3,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+  "line": 6189,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 5,
+  "impl_crates": [
+   "semio-framework-os",
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "GatewayBackend",
+  "uses": 3,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs",
+  "line": 514,
+  "methods": 7,
+  "async_methods": 7,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "AgentRunner",
+  "uses": 3,
+  "decl": "🧰️framework/🛍️products/🦑️repo/🎮️commands/🌊️workflow/🦀️component.rs",
+  "line": 224,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 4,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "ActionHandler",
+  "uses": 2,
+  "decl": "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs",
+  "line": 9,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework"
+  ]
+ },
+ {
+  "name": "Denoiser",
+  "uses": 2,
+  "decl": "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️component.rs",
+  "line": 6935,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-math"
+  ]
+ },
+ {
+  "name": "Saga",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/🦀️component.rs",
+  "line": 439,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "ProjectionStore",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs",
+  "line": 292,
+  "methods": 6,
+  "async_methods": 6,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "AuthorityStore",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs",
+  "line": 117,
+  "methods": 12,
+  "async_methods": 12,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "ServerModule",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️component.rs",
+  "line": 161,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "ShardTransport",
+  "uses": 2,
+  "decl": "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs",
+  "line": 2107,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 7,
+  "impl_crates": [
+   "semio-framework-actor",
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "EnvelopeInjector",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 192,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "BackboneTransport",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 453,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "CapabilityChecker",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 421,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "StorageBackend",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 397,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "EffectMetricsRecorder",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️component.rs",
+  "line": 518,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "ThreadSpawner",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs",
+  "line": 696,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "QuerySource",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs",
+  "line": 544,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "FullTextLookup",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs",
+  "line": 570,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "BackboneChannelPort",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+  "line": 6291,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 0,
+  "impl_crates": []
+ },
+ {
+  "name": "AsyncHttpTransport",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
+  "line": 661,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-services"
+  ]
+ },
+ {
+  "name": "ToolRegistry",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs",
+  "line": 276,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "ResourceRegistry",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs",
+  "line": 373,
+  "methods": 5,
+  "async_methods": 5,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "PromptRegistry",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🦀️component.rs",
+  "line": 470,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-mcp"
+  ]
+ },
+ {
+  "name": "DashboardTransport",
+  "uses": 2,
+  "decl": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs",
+  "line": 461,
+  "methods": 0,
+  "async_methods": 0,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-repo-cli"
+  ]
+ },
+ {
+  "name": "Part21Preamble",
+  "uses": 2,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📐️part21/🦀️component.rs",
+  "line": 664,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "CiTest",
+  "uses": 2,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🔗️causal-internals/🦀️component.rs",
+  "line": 493,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "TextRenderer",
+  "uses": 2,
+  "decl": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔤️text/🦀️component.rs",
+  "line": 469,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-s-plugin-animate"
+  ]
+ },
+ {
+  "name": "SoftConstraint",
+  "uses": 2,
+  "decl": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs",
+  "line": 11,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 0,
+  "impl_crates": []
+ },
+ {
+  "name": "SessionStore",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️component.rs",
+  "line": 437,
+  "methods": 4,
+  "async_methods": 4,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-server"
+  ]
+ },
+ {
+  "name": "MediaCache",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs",
+  "line": 118,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-run"
+  ]
+ },
+ {
+  "name": "ConflictOracle",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️preview/🦀️component.rs",
+  "line": 201,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "Signer",
+  "uses": 1,
+  "decl": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/🦀️component.rs",
+  "line": 16,
+  "methods": 3,
+  "async_methods": 3,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "SignatureVerifier",
+  "uses": 1,
+  "decl": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/🦀️component.rs",
+  "line": 23,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "ConsistencyResolver",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs",
+  "line": 276,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-kernel-db"
+  ]
+ },
+ {
+  "name": "CompletionSink",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
+  "line": 1349,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 2,
+  "impl_crates": [
+   "semio-framework-os-services",
+   "semio-framework-plugin-host"
+  ]
+ },
+ {
+  "name": "DynEngine",
+  "uses": 1,
+  "decl": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs",
+  "line": 43,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-framework-os-kernel"
+  ]
+ },
+ {
+  "name": "MeshExporter",
+  "uses": 1,
+  "decl": "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs",
+  "line": 817,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-mesh-engine"
+  ]
+ },
+ {
+  "name": "MeshImporter",
+  "uses": 1,
+  "decl": "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs",
+  "line": 823,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 3,
+  "impl_crates": [
+   "semio-framework-mesh-engine"
+  ]
+ },
+ {
+  "name": "SolidExporter",
+  "uses": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs",
+  "line": 1475,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 4,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "SolidImporter",
+  "uses": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs",
+  "line": 1481,
+  "methods": 2,
+  "async_methods": 2,
+  "impls": 4,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ },
+ {
+  "name": "ScriptRuntime",
+  "uses": 1,
+  "decl": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs",
+  "line": 543,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-s-plugin-norm"
+  ]
+ },
+ {
+  "name": "Compressor",
+  "uses": 1,
+  "decl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️entropy-internals/🦀️component.rs",
+  "line": 6044,
+  "methods": 1,
+  "async_methods": 1,
+  "impls": 1,
+  "impl_crates": [
+   "semio-s-plugin-stdio"
+  ]
+ }
+]

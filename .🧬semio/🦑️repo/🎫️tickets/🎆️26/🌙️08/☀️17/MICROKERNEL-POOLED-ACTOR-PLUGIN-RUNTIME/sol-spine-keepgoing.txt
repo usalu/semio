@@ -1,0 +1,359 @@
+    Checking zerofrom v0.1.8
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking num-bigint v0.4.6
+    Checking mio v1.2.1
+    Checking socket2 v0.6.4
+    Checking futures-task v0.3.32
+    Checking slab v0.4.12
+    Checking futures-sink v0.3.32
+    Checking scopeguard v1.2.0
+   Compiling inflections v1.1.1
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1137:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1163:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1182:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1197:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1206:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1216:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1238:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1248:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1261:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1271:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1284:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1297:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1359:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1370:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1475:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1517:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1574:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1584:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1254:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1290:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:80:23: error[E0728]: `await` is only allowed inside `async` functions and blocks: only allowed inside `async` functions and blocks
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:234:32: error[E0728]: `await` is only allowed inside `async` functions and blocks: only allowed inside `async` functions and blocks
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1420:28: error[E0728]: `await` is only allowed inside `async` functions and blocks: only allowed inside `async` functions and blocks
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:44:47: error[E0053]: method `serialize_bool` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:300:68: error[E0053]: method `deserialize_any` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:468:68: error[E0053]: method `deserialize_any` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:48:43: error[E0053]: method `serialize_i8` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:329:71: error[E0053]: method `deserialize_option` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:52:45: error[E0053]: method `serialize_i16` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:337:126: error[E0053]: method `deserialize_enum` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:352:100: error[E0053]: method `deserialize_newtype_struct` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:56:45: error[E0053]: method `serialize_i32` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:60:45: error[E0053]: method `serialize_i64` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:64:43: error[E0053]: method `serialize_u8` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:68:45: error[E0053]: method `serialize_u16` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:72:45: error[E0053]: method `serialize_u32` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:76:45: error[E0053]: method `serialize_u64` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:80:45: error[E0053]: method `serialize_f32` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:84:45: error[E0053]: method `serialize_f64` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:88:47: error[E0053]: method `serialize_char` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:92:46: error[E0053]: method `serialize_str` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:96:49: error[E0053]: method `serialize_bytes` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:100:38: error[E0053]: method `serialize_none` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:104:72: error[E0053]: method `serialize_some` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:108:38: error[E0053]: method `serialize_unit` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:112:66: error[E0053]: method `serialize_unit_struct` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:116:111: error[E0053]: method `serialize_unit_variant` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:120:103: error[E0053]: method `serialize_newtype_struct` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:419:68: error[E0053]: method `deserialize_any` has an incompatible type for trait: expected `Result<<V as Visitor<'de>>::Value, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:124:148: error[E0053]: method `serialize_newtype_variant` has an incompatible type for trait: expected `Result<DslValue, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:128:57: error[E0053]: method `serialize_seq` has an incompatible type for trait: expected `Result<SeqSerializer, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:132:51: error[E0053]: method `serialize_tuple` has an incompatible type for trait: expected `Result<SeqSerializer, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:136:79: error[E0053]: method `serialize_tuple_struct` has an incompatible type for trait: expected `Result<SeqSerializer, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:140:124: error[E0053]: method `serialize_tuple_variant` has an incompatible type for trait: expected `Result<TupleVariantSerializer, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:144:57: error[E0053]: method `serialize_map` has an incompatible type for trait: expected `Result<MapSerializer, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:148:73: error[E0053]: method `serialize_struct` has an incompatible type for trait: expected `Result<MapSerializer, SerdeError>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:152:125: error[E0053]: method `serialize_struct_variant` has an incompatible type for trait: expected `Result<StructVariantSerializer, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:12:20: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:76: error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied: the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:31: error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied: the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:153:86: error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied: the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:323:5: error[E0277]: the trait bound `impl Future<Output = Fault>: serde::Deserialize<'de>` is not satisfied: the trait `Deserialize<'_>` is not implemented for `impl Future<Output = Fault>`
+    Checking ref-cast v1.0.25
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:320:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:320:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:324:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:324:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:140:20: error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied: the trait `diagnostic::_::_serde::Deserializer<'_>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🦀️component.rs:140:5: error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied: the trait `diagnostic::_::_serde::Deserializer<'_>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:64:155: error[E0277]: `?` couldn't convert the error to `codec::component::PackError`: the trait `From<impl Future<Output = codec::component::PackError>>` is not implemented for `codec::component::PackError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:66:139: error[E0277]: `?` couldn't convert the error to `codec::component::PackError`: the trait `From<impl Future<Output = codec::component::PackError>>` is not implemented for `codec::component::PackError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:57:33: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:64:79: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:66:93: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:69:53: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:81:38: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:165:34: error[E0369]: cannot multiply `impl Future<Output = i64>` by `{integer}`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:264:43: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:252:32: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:270:46: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔢️scalar/🦀️component.rs:339:9: error[E0308]: mismatched types: expected `Result<&str, PackError>`, found `Result<&str, impl Future<Output = ...>>`
+    Checking zip v2.4.2
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:312:28: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:279:133: error[E0308]: mismatched types: expected `Option<MutationId>`, found associated type
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:293:44: error[E0608]: cannot index into a value of type `impl Future<Output = Vec<MutationId>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:294:75: error[E0308]: mismatched types: expected associated type, found `Vec<MutationId>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:295:75: error[E0308]: mismatched types: expected `Option<ActorId>`, found associated type
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:296:66: error[E0308]: mismatched types: expected `Option<HybridLogicalTimestamp>`, found associated type
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:296:100: error[E0308]: mismatched types: expected `HybridLogicalTimestamp`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:297:27: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<Vec<u8>, wire::codec::ProtocolError>>`
+    Checking futures-util v0.3.32
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:298:101: error[E0599]: no method named `transpose` found for enum `std::option::Option<impl Future<Output = Result<Vec<u8>, wire::codec::ProtocolError>>>` in the current scope: method not found in `std::option::Option<impl Future<Output = Result<Vec<u8>, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:303:17: error[E0308]: mismatched types: expected `Vec<MutationId>`, found associated type
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:178:55: error[E0277]: a value of type `Result<Vec<Vec<u8>>, wire::codec::ProtocolError>` cannot be built from an iterator over elements of type `impl Future<Output = Result<Vec<u8>, wire::codec::ProtocolError>>`: value of type `Result<Vec<Vec<u8>>, wire::codec::ProtocolError>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<Vec<u8>, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:190:68: error[E0277]: a value of type `Result<Vec<causal::MutationEnvelope>, wire::codec::ProtocolError>` cannot be built from an iterator over elements of type `impl Future<Output = Result<causal::MutationEnvelope, wire::codec::ProtocolError>>`: value of type `Result<Vec<causal::MutationEnvelope>, wire::codec::ProtocolError>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<causal::MutationEnvelope, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:208:104: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:238:108: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:260:104: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:279:54: error[E0277]: a value of type `Result<Vec<AckStage>, wire::codec::ProtocolError>` cannot be built from an iterator over elements of type `impl Future<Output = Result<AckStage, wire::codec::ProtocolError>>`: value of type `Result<Vec<AckStage>, wire::codec::ProtocolError>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<AckStage, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:289:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:290:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:291:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:292:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:293:33: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:294:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:295:27: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:296:27: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:297:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:300:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:301:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:302:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:305:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:306:54: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:309:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:310:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:311:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:312:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:315:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:316:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:319:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:320:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:322:38: error[E0308]: mismatched types: expected future, found integer
+    Checking getrandom v0.3.4
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:324:5: error[E0308]: mismatched types: expected `Vec<u8>`, found `Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:329:92: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:330:141: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:332:105: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:362:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:363:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:364:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:365:61: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:366:41: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:369:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:370:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:371:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:374:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:375:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:378:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:379:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+    Checking lock_api v0.4.14
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:380:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:381:54: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:384:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:385:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:386:33: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:387:54: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:390:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:391:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:392:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:393:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:394:32: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:397:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:398:29: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:401:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:402:43: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:405:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:406:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:407:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:410:22: error[E0308]: mismatched types: expected future, found integer
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:411:30: error[E0308]: mismatched types: expected `&mut Vec<u8>`, found `&mut Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:412:22: error[E0308]: mismatched types: expected future, found `u8`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:415:5: error[E0308]: mismatched types: expected `Vec<u8>`, found `Vec<impl Future<Output = u8>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:420:92: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:421:141: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:423:105: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:757:108: error[E0277]: `?` couldn't convert the error to `wire::codec::ProtocolError`: the trait `From<impl Future<Output = wire::codec::ProtocolError>>` is not implemented for `wire::codec::ProtocolError`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:762:105: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<f64, wire::codec::ProtocolError>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:762:135: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<f64, wire::codec::ProtocolError>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:762:165: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<f64, wire::codec::ProtocolError>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:806:65: error[E0277]: a value of type `Result<Vec<PresenceWindowView>, wire::codec::ProtocolError>` cannot be built from an iterator over elements of type `impl Future<Output = Result<PresenceWindowView, wire::codec::ProtocolError>>`: value of type `Result<Vec<PresenceWindowView>, wire::codec::ProtocolError>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<PresenceWindowView, wire::codec::ProtocolError>>>`
+    Checking num-rational v0.4.2
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1326:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1331:36: error[E0308]: mismatched types: expected `&BTreeMap<String, Vec<String>>`, found `&impl Future<Output = ...>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1407:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1407:37: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1423:21: error[E0308]: `if` and `else` have incompatible types: expected `Vec<String>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1497:17: error[E0382]: use of moved value: `closure`: value used here after move
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1550:103: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1559:95: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1607:53: error[E0277]: a value of type `Result<Vec<std::string::String>, wire::codec::ProtocolError>` cannot be built from an iterator over elements of type `impl Future<Output = Result<std::string::String, wire::codec::ProtocolError>>`: value of type `Result<Vec<std::string::String>, wire::codec::ProtocolError>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<std::string::String, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1636:84: error[E0277]: a value of type `Result<Vec<_>, _>` cannot be built from an iterator over elements of type `impl Future<Output = Result<PresenceDomain, wire::codec::ProtocolError>>`: value of type `Result<Vec<_>, _>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<PresenceDomain, wire::codec::ProtocolError>>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:46:5: error[E0502]: cannot borrow `buf` as mutable because it is also borrowed as immutable: mutable borrow occurs here
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:56:18: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:69:19: error[E0277]: can't compare `u32` with `impl Future<Output = u32>`: no implementation for `u32 == impl Future<Output = u32>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:135:43: error[E0271]: expected `varint_width` to return `{integer}`, but it returns `impl Future<Output = u64>`: expected integer, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:176:52: error[E0271]: expected `varint_width` to return `{integer}`, but it returns `impl Future<Output = u64>`: expected integer, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:32: error[E0369]: cannot add `u64` to `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:213:19: error[E0277]: can't compare `u32` with `impl Future<Output = u32>`: no implementation for `u32 == impl Future<Output = u32>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:404:24: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = [u8; HEADER_SIZE]>`
+    Checking tokio v1.52.3
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:405:37: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = [u8; HEADER_SIZE]>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:423:9: error[E0502]: cannot borrow `self.sink` as mutable because it is also borrowed as immutable: mutable borrow occurs here
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:447:84: error[E0308]: mismatched types: expected `&[u8]`, found `&...`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:563:19: error[E0277]: can't compare `u32` with `impl Future<Output = u32>`: no implementation for `u32 == impl Future<Output = u32>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:630:18: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:636:18: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:682:138: error[E0369]: cannot subtract `u64` from `impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🦀️component.rs:47:48: error[E0277]: cannot add `impl Future<Output = u64>` to `u64`: no implementation for `u64 + impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🦀️component.rs:87:71: error[E0277]: cannot add `impl Future<Output = u64>` to `u64`: no implementation for `u64 + impl Future<Output = u64>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🦀️component.rs:88:34: error[E0308]: mismatched types: expected `&[_]`, found `&impl Future<Output = [u8; 32]>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:262:9: error[E0308]: mismatched types: expected `ByteWriter`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1140:23: error[E0308]: `match` arms have incompatible types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1148:23: error[E0308]: `match` arms have incompatible types: expected `Vec<String>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1151:23: error[E0308]: `match` arms have incompatible types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1157:60: error[E0308]: mismatched types: expected `Vec<String>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:864:70: error[E0308]: mismatched types: expected `Result<<__S as Serializer>::Ok, ...>`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1175:23: error[E0308]: `match` arms have incompatible types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:61:9: error[E0308]: mismatched types: expected `FaultCode`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:864:70: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<Option<Vec<u8>>, ...>>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️component.rs:91:24: error[E0599]: `impl Future<Output = (u64, u64, u64)>` is not an iterator: `impl Future<Output = (u64, u64, u64)>` is not an iterator
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:404:35: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:511:26: error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied: the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:518:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:518:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:522:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:377:58: error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied: the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:279:12: error[E0308]: mismatched types: expected `DslValue`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:408:26: error[E0277]: the trait bound `&mut impl Future<Output = ValueDeserializer>: serde::de::Deserializer<'de>` is not satisfied: the trait `diagnostic::_::_serde::Deserializer<'de>` is not implemented for `&mut impl Future<Output = ValueDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:404:35: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:522:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>: serde::de::SeqAccess<'de>` is not satisfied: the trait `SeqAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::SeqAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:531:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:531:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:219:12: error[E0308]: mismatched types: expected `DslValue`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:536:25: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../🌱️value/🔀️serde/🦀️component.rs:536:40: error[E0277]: the trait bound `impl Future<Output = dsl_value_serde::MapAccessDeserializer>: serde::de::MapAccess<'de>` is not satisfied: the trait `MapAccess<'_>` is not implemented for `impl Future<Output = dsl_value_serde::MapAccessDeserializer>`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:38: error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:9: error[E0308]: mismatched types: expected `Fault`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:223:9: error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:38: error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:9: error[E0308]: mismatched types: expected `Fault`, found future
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:229:9: error[E0277]: the trait bound `diagnostic::FaultCode: From<impl Future<Output = diagnostic::FaultCode>>` is not satisfied: unsatisfied trait bound
+   Compiling gltf-derive v1.4.1
+warning: `semio-framework-replication` (lib) generated 20 warnings
+error: could not compile `semio-framework-replication` (lib) due to 209 previous errors; 20 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+    Checking zerocopy v0.8.48
+    Checking yoke v0.8.2
+   Compiling ahash v0.8.12
+    Checking parking_lot_core v0.9.12
+   Compiling wasm-metadata v0.247.0
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking num-iter v0.1.46
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:382:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:391:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:399:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:405:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:410:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    Checking num-complex v0.4.6
+warning: `semio-framework-async` (lib) generated 6 warnings
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+    Checking aho-corasick v1.1.4
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:573:55: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:628:57: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:711:53: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:768:55: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:906:52: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:925:53: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:978:54: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1142:63: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+error: could not compile `semio-framework-os-kernel-dsl-derive` (lib) due to 8 previous errors
+   Compiling wit-bindgen-rust v0.57.1
+    Checking once_cell v1.21.4
+    Checking borrow-or-share v0.2.4
+    Checking bit-vec v0.8.0
+    Checking zerovec v0.11.6
+    Checking zerotrie v0.2.4
+   Compiling heck v0.5.0
+    Checking regex-syntax v0.8.10
+   Compiling wit-component v0.247.0
+    Checking num v0.4.3
+    Checking fluent-uri v0.3.2
+    Checking bit-set v0.8.0
+    Checking parking_lot v0.12.5
+    Checking tinystr v0.8.3
+    Checking potential_utf v0.1.5
+   Compiling wit-bindgen-core v0.57.1
+    Checking regex-automata v0.4.14
+    Checking gltf-json v1.4.1
+   Compiling prettyplease v0.2.37
+   Compiling serde_derive_internals v0.29.1
+    Checking percent-encoding v2.3.2
+    Checking outref v0.5.2
+    Checking icu_locale_core v2.2.0
+    Checking icu_collections v2.2.0
+   Compiling schemars v0.8.22
+    Checking byteorder v1.5.0
+    Checking vsimd v0.8.0
+   Compiling wit-bindgen-rust-macro v0.57.1
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking uuid v1.23.4
+    Checking referencing v0.29.1
+    Checking fancy-regex v0.14.0
+    Checking fraction v0.15.4
+    Checking icu_provider v2.2.0
+   Compiling schemars_derive v0.8.22
+    Checking email_address v0.2.9
+    Checking gltf v1.4.1
+   Compiling macro-string v0.2.0
+    Checking uuid-simd v0.8.0
+    Checking bytecount v0.6.9
+   Compiling wit-bindgen v0.57.1
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking dyn-clone v1.0.20
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking icu_normalizer v2.2.0
+    Checking icu_properties v2.2.0
+    Checking num-cmp v0.1.0
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:50:40: error[E0369]: cannot multiply `impl Future<Output = usize>` by `{integer}`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:95:20: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:107:16: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:160:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:163:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:222:30: error[E0308]: mismatched types: expected `&mut Vec<[f32; 3]>`, found `&mut Vec<impl Future<Output = [f32; 3]>>`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:223:30: error[E0308]: mismatched types: expected `&mut Vec<[f32; 3]>`, found `&mut Vec<impl Future<Output = [f32; 3]>>`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:224:30: error[E0308]: mismatched types: expected `&mut Vec<[f32; 3]>`, found `&mut Vec<impl Future<Output = [f32; 3]>>`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:239:9: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:329:13: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:330:13: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:374:9: warning: variable does not need to be mutable
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:387:5: error[E0382]: use of moved value: `mesh`: value used here after move
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:541:9: error[E0277]: `impl Future<Output = usize>` doesn't implement `std::fmt::Display`: `impl Future<Output = usize>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:542:9: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:543:9: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:568:27: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:643:30: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Vec<u32>>` in the current scope: method not found in `impl Future<Output = Vec<u32>>`
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:653:49: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:653:27: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:654:45: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:654:25: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:655:33: error[E0599]: `impl Future<Output = Vec<u32>>` is not an iterator: `impl Future<Output = Vec<u32>>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:652:25: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:672:38: error[E0382]: use of moved value: `matrix`: value used here after move
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:742:22: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:743:26: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:747:30: error[E0277]: `impl Future<Output = [f32; 3]>` is not an iterator: `impl Future<Output = [f32; 3]>` is not an iterator
+🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:734:26: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u32`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+warning: `semio-framework-mesh-engine` (lib) generated 1 warning
+error: could not compile `semio-framework-mesh-engine` (lib) due to 28 previous errors; 1 warning emitted
+   Compiling semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📦️glue.rs:201:60: error: derive proc macro has incorrect signature: expected `proc_macro::TokenStream`, found future
+error: could not compile `semio-framework-schema-derive` (lib) due to 1 previous error
+    Checking bitflags v2.11.1
+    Checking idna_adapter v1.2.2
+    Checking idna v1.1.0
+    Checking jsonschema v0.29.1
+EXIT=101

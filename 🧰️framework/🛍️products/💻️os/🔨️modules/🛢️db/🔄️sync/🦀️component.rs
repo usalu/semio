@@ -80,7 +80,7 @@ pub struct ArtifactSyncState {
 
 /// @emoji 🔁️ Replays `document`'s entire currently-retained WAL via `db_wal::replay_document` and
 /// derives its `ArtifactSyncState` — see the struct's doc for exactly how each field is derived.
-pub async fn replay_sync_state(storage: &dyn db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
+pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
     let records = db_wal::replay_document(storage, &document).await?;
     let mut commands = Vec::new();
     let mut command_digests: Vec<[u8; 32]> = Vec::new();
@@ -211,7 +211,7 @@ pub enum BootstrapPlan {
 /// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
 /// prior frontier at all) against `state`, consulting `snapshots` only when the replica's
 /// `head_seq` has fallen behind `state.floor_head_seq`.
-pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &dyn db_storage::SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
+pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_storage::SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
     let replica_head_seq = replica.map_or(0, |frontier| frontier.head_seq);
     if replica_head_seq >= state.floor_head_seq {
         let missing = match replica {
@@ -289,24 +289,24 @@ pub fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, session_id
 /// `RuntimeFrontierSummary`, `None` for a totally fresh replica — see module doc for why this
 /// crate reads `Hello.frontier` rather than decoding `Hello.resume_token`), and lowers it to a
 /// `WelcomeResponse`.
-pub async fn handle_hello(
-    storage: &dyn DbStorage,
+pub async fn handle_hello<R: semio_framework_async::HostAsyncRuntime>(
+    storage: &db_storage::DbBackend<R>,
     document: ArtifactId,
     hello_frontier: Option<&protocol::RuntimeFrontierSummary>,
     session_id: String,
     origin: &protocol::ActorId,
     snapshot_chunk_bytes: usize,
 ) -> Result<WelcomeResponse, DbError> {
-    let state = replay_sync_state(storage.wal(), document).await?;
+    let state = replay_sync_state(&storage.wal().await, document).await?;
     let replica = hello_frontier.map(from_frontier_summary);
-    let plan = decide_bootstrap(&state, storage.snapshot(), replica.as_ref()).await?;
+    let plan = decide_bootstrap(&state, &storage.snapshot().await, replica.as_ref()).await?;
     build_welcome(&state, &plan, session_id, origin, snapshot_chunk_bytes)
 }
 
 /// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
 /// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
-pub async fn handle_frontier_advertise(storage: &dyn db_storage::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
+pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
     let state = replay_sync_state(storage, document).await?;
     let replica = from_frontier_summary(advertised);
     let missing = missing_commands(&state, &replica)?;
@@ -587,6 +587,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3);
+        let storage = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
@@ -609,6 +610,7 @@ mod tests {
         seed_wal(&storage, &document, 2);
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
         let hello_frontier = state_frontier_summary(&state);
+        let storage = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&hello_frontier), "session-2".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
@@ -627,6 +629,7 @@ mod tests {
         publish_snapshot_marker(&storage, &document, 9, floor_frontier);
         let big_snapshot = vec![7u8; 10];
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot)).unwrap();
+        let storage = db_storage::DbBackend::Memory(storage);
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&stale_hello_frontier), "session-3".to_string(), &protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
@@ -645,6 +648,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 1);
+        let storage = db_storage::DbBackend::Memory(storage);
         assert!(matches!(db_actor::block_on(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
     }
 

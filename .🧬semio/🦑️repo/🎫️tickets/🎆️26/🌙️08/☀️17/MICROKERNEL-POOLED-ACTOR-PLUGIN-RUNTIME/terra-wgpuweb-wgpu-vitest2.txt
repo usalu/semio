@@ -1,0 +1,14 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu
+
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧪️index.test.ts > framework renderer wgpu plugin bridge > builds a JS bridge whose manifest() is synchronous JSON, matching ProgramBridge.rs's Reflect::get(handle, "manifest") contract 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧪️index.test.ts > framework renderer wgpu plugin bridge > forwards createApp/destroyApp by identity 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧪️index.test.ts > framework renderer wgpu plugin bridge > unwraps handleAction's contextJson third argument down to just its viewState before calling the typed handle — ProgramBridge.rs passes {viewState, actor} JSON, not the bare view state 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧪️index.test.ts > framework renderer wgpu plugin bridge > bridges render() through JSON round-tripping 0ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  15:37:35
+   Duration  400ms (transform 229ms, setup 0ms, import 270ms, tests 3ms, environment 0ms)
+
+EXIT:0

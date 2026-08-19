@@ -49,15 +49,15 @@ impl wasmtime_wasi::WasiView for DescribeHostState {
 }
 
 impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
-    fn log(&mut self, level: String, message: String) {
+    async fn log(&mut self, level: String, message: String) {
         eprintln!("[describe:{level}] {message}");
     }
 
-    fn now_ms(&mut self) -> i64 {
+    async fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
     }
 
-    fn trace_span(&mut self, name: String) {
+    async fn trace_span(&mut self, name: String) {
         eprintln!("[describe:trace] {name}");
     }
 }
@@ -92,13 +92,13 @@ impl std::fmt::Display for DescribeError {
 /// `semio-framework-hash` (a different, Merkle-oriented content-addressing scheme with a different
 /// hex alphabet) — package consumers outside this repo (registries, CI caches) expect literal
 /// SHA-256 for a `*_sha256`-named field.
-fn sha256_hex(bytes: &[u8]) -> String {
+async fn sha256_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(bytes);
     hex_encode(&hasher.finalize())
 }
 
-fn hex_encode(bytes: &[u8]) -> String {
+async fn hex_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
         out.push_str(&format!("{byte:02x}"));
@@ -116,7 +116,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 /// handed to it. A future caller that has both files can re-run with a lower-level flag; documented
 /// here rather than silently left as an empty string (which would make the registry `check` gate's
 /// `hashes.wasm_sha256` verification the only one ever meaningfully populated).
-pub fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
+pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
     let wasm_bytes = fs::read(wasm_path).map_err(|error| DescribeError(format!("reading {}: {error}", wasm_path.display())))?;
 
     let mut config = wasmtime::Config::new();
@@ -178,7 +178,7 @@ pub fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDes
 //#region 🔖️Cli
 /// ⌨️ `describe <component.wasm> --out <dir>` — the only subcommand this crate has. Returns the
 /// process exit code (0 success, 1 a `describe_component` failure, 2 a usage error).
-pub fn run(args: Vec<String>) -> i32 {
+pub async fn run(args: Vec<String>) -> i32 {
     let mut rest = args.into_iter();
     match rest.next().as_deref() {
         Some("describe") => run_describe(rest.collect()),
@@ -193,7 +193,7 @@ pub fn run(args: Vec<String>) -> i32 {
     }
 }
 
-fn run_describe(args: Vec<String>) -> i32 {
+async fn run_describe(args: Vec<String>) -> i32 {
     let mut wasm_path: Option<PathBuf> = None;
     let mut out_dir: Option<PathBuf> = None;
     let mut iter = args.into_iter();
@@ -236,28 +236,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sha256_hex_matches_known_vector() {
+    async fn sha256_hex_matches_known_vector() {
         // "" -> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (well-known empty-input SHA-256)
         assert_eq!(sha256_hex(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     #[test]
-    fn run_with_no_args_returns_usage_exit_code() {
+    async fn run_with_no_args_returns_usage_exit_code() {
         assert_eq!(run(Vec::new()), 2);
     }
 
     #[test]
-    fn run_with_unknown_command_returns_usage_exit_code() {
+    async fn run_with_unknown_command_returns_usage_exit_code() {
         assert_eq!(run(vec!["not-describe".to_string()]), 2);
     }
 
     #[test]
-    fn run_describe_without_out_flag_returns_usage_exit_code() {
+    async fn run_describe_without_out_flag_returns_usage_exit_code() {
         assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string()]), 2);
     }
 
     #[test]
-    fn run_describe_on_missing_file_returns_failure_exit_code() {
+    async fn run_describe_on_missing_file_returns_failure_exit_code() {
         let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]);
         assert_eq!(code, 1);
     }

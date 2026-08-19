@@ -1,0 +1,217 @@
+{
+ "totals": {
+  "reverted": 34,
+  "kept_local": 19,
+  "scanned_fns": 53
+ },
+ "by_trait": {
+  "Serializer": 28,
+  "Deserializer": 6
+ },
+ "edits": [
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 44,
+   "trait": "Serializer",
+   "fn": "serialize_bool"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 48,
+   "trait": "Serializer",
+   "fn": "serialize_i8"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 52,
+   "trait": "Serializer",
+   "fn": "serialize_i16"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 56,
+   "trait": "Serializer",
+   "fn": "serialize_i32"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 60,
+   "trait": "Serializer",
+   "fn": "serialize_i64"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 64,
+   "trait": "Serializer",
+   "fn": "serialize_u8"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 68,
+   "trait": "Serializer",
+   "fn": "serialize_u16"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 72,
+   "trait": "Serializer",
+   "fn": "serialize_u32"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 76,
+   "trait": "Serializer",
+   "fn": "serialize_u64"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 80,
+   "trait": "Serializer",
+   "fn": "serialize_f32"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 84,
+   "trait": "Serializer",
+   "fn": "serialize_f64"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 88,
+   "trait": "Serializer",
+   "fn": "serialize_char"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 92,
+   "trait": "Serializer",
+   "fn": "serialize_str"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 96,
+   "trait": "Serializer",
+   "fn": "serialize_bytes"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 100,
+   "trait": "Serializer",
+   "fn": "serialize_none"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 104,
+   "trait": "Serializer",
+   "fn": "serialize_some"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 108,
+   "trait": "Serializer",
+   "fn": "serialize_unit"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 112,
+   "trait": "Serializer",
+   "fn": "serialize_unit_struct"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 116,
+   "trait": "Serializer",
+   "fn": "serialize_unit_variant"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 120,
+   "trait": "Serializer",
+   "fn": "serialize_newtype_struct"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 124,
+   "trait": "Serializer",
+   "fn": "serialize_newtype_variant"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 128,
+   "trait": "Serializer",
+   "fn": "serialize_seq"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 132,
+   "trait": "Serializer",
+   "fn": "serialize_tuple"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 136,
+   "trait": "Serializer",
+   "fn": "serialize_tuple_struct"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 140,
+   "trait": "Serializer",
+   "fn": "serialize_tuple_variant"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 144,
+   "trait": "Serializer",
+   "fn": "serialize_map"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 148,
+   "trait": "Serializer",
+   "fn": "serialize_struct"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 152,
+   "trait": "Serializer",
+   "fn": "serialize_struct_variant"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 300,
+   "trait": "Deserializer",
+   "fn": "deserialize_any"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 329,
+   "trait": "Deserializer",
+   "fn": "deserialize_option"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 337,
+   "trait": "Deserializer",
+   "fn": "deserialize_enum"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 352,
+   "trait": "Deserializer",
+   "fn": "deserialize_newtype_struct"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 419,
+   "trait": "Deserializer",
+   "fn": "deserialize_any"
+  },
+  {
+   "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔀️serde/🦀️component.rs",
+   "line": 468,
+   "trait": "Deserializer",
+   "fn": "deserialize_any"
+  }
+ ]
+}

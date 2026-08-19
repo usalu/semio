@@ -1,0 +1,90 @@
+package semio:turnharness@0.1.0;
+
+/// 🧪️ terra-async-harness-spike (Q1-Q6). Standalone WIT world, NOT the production `semio:framework`
+/// package — a REDUCED copy of the real `🔌️plugin/🧬️schema/📜️component.wit`'s `interface pure` /
+/// `interface reactor` / `interface jobs` / `interface checkpoint`, field-for-field on every
+/// record/variant that survived the reduction, plus one host-controlled `interface hostasync`
+/// standing in for the real `interface host-async`'s 24 imports (this harness needs exactly two
+/// behaviours: resolves-on-host-signal and never-resolves-until-dropped — see the mission's Q1/Q2).
+/// `event`/`turn-status`/`turn-result` are reduced to exactly what Q1/Q3/Q5 need instead of the real
+/// ~30-variant `event` / 5-field `budget`. Real schema read: `🔌️plugin/🧬️schema/📜️component.wit`
+/// lines 823-1050 (`git log` shows this is the CURRENT shape, already past the S9 spike's
+/// `jobs`/`checkpoint` sync->async fix predicted in `📓️terra-probe-spikes-report.md`).
+
+/// mirrors real `interface pure` (component.wit:823-827) — the only import real `world actor`
+/// itself carries.
+interface pure {
+  log: async func(level: string, message: string);
+  now-ms: async func() -> s64;
+}
+
+/// 🧪️ Q1/Q2/Q4: a reduced, host-controlled analogue of real `interface host-async`
+/// (component.wit:887-953, 24 imports) — this harness needs exactly two behaviours: one that
+/// resolves once the host explicitly signals it from OUTSIDE the guest's call (Q1: "guest awaits a
+/// host import mid-turn, host resolves it, turn-result comes back intact"), and one that never
+/// resolves on its own, existing purely so its host-side future's `Drop` can be observed (Q2:
+/// cancellation requires dropping the Store).
+interface hostasync {
+  wait-signal: async func(id: u32) -> u32;
+  hang: async func(id: u32) -> u32;
+}
+
+/// 🧪️ field-for-field copy of real `interface reactor` (component.wit:837-864) on `budget` /
+/// `turn-status` / `turn-result` / `poll`'s own signature; `event` reduced from the real ~30-variant
+/// enum to exactly the 4 shapes Q1/Q3/Q5 need.
+interface reactor {
+  record budget {
+    fuel: u64,
+    deadline-ms: u32,
+  }
+  variant turn-status {
+    idle,
+    more-work,
+    faulted(string),
+  }
+  record turn-result {
+    status: turn-status,
+    fuel-used: u64,
+  }
+  variant event {
+    tick,
+    /// 🧪️ Q1: on receipt, guest calls `hostasync.wait-signal(id)` and awaits it mid-`poll`.
+    await-signal(u32),
+    /// 🧪️ Q2: on receipt, guest calls `hostasync.hang(id)` — never resolves on its own.
+    await-hang(u32),
+    /// 🧪️ Q3/Q5: CPU-bound loop, zero host-import calls (S1c's own isolation discipline), `iters`
+    /// iterations, `std::hint::black_box`'d guest-side so LLVM cannot strength-reduce it away.
+    burn(u64),
+  }
+  poll: async func(events: list<event>, budget: budget) -> result<turn-result, string>;
+}
+
+/// 🧪️ field-for-field copy of real `interface jobs` (component.wit:980-995).
+interface jobs {
+  record job-budget {
+    fuel: u64,
+    deadline-ms: u32,
+  }
+  variant job-step {
+    running,
+    done(u32),
+    failed(string),
+  }
+  start-job: async func(job: u64, kind: string, input: u32) -> result<_, string>;
+  step-job: async func(job: u64, budget: job-budget) -> result<job-step, string>;
+  cancel-job: async func(job: u64);
+}
+
+/// 🧪️ field-for-field copy of real `interface checkpoint` (component.wit:1003-1008).
+interface checkpoint {
+  checkpoint: async func() -> list<u8>;
+  restore: async func(state: list<u8>) -> result<_, string>;
+}
+
+world turnharness {
+  import pure;
+  import hostasync;
+  export reactor;
+  export jobs;
+  export checkpoint;
+}

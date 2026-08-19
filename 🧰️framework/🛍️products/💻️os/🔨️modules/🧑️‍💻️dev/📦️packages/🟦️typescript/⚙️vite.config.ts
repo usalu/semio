@@ -60,7 +60,13 @@ const resolvedPlaygroundAssets = isHostPluginFilter(plugin) ? PLAYGROUND_BUILD_T
  * deps every plugin's `🟨️host-shim.js` imports. Falls back to "every crate" for an unresolved/unknown
  * filter rather than shipping nothing. */
 const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
-const pluginModuleDirNames = isHostPluginFilter(plugin) || !resolvedPluginId ? undefined : ["_vendor", resolvedPluginId];
+// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (wgpu-web-shard): `_shard` is `🌐plugin-web-materialize.ts`'s
+// generated `🟨️shard-worker.js` bundle — every actor of every plugin now activates through the ONE pooled
+// shard-worker pool (`ShardClient`/`ActivationRegistry`, design-runtime.md §1/§3), not a per-plugin
+// worker, so a single-variant production build needs this directory copied regardless of which plugin
+// `resolvedPluginId` names. Omitting it meant `dist/plugin-modules/_shard/🟨️shard-worker.js` was never
+// copied and every single-variant production build 404s the shard worker at first plugin activation.
+const pluginModuleDirNames = isHostPluginFilter(plugin) || !resolvedPluginId ? undefined : ["_vendor", "_shard", resolvedPluginId];
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
 export default defineConfig({

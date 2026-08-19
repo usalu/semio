@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-async-macros"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Proc-macro #[async_test]: keeps a test fn's literal `async fn` in source (the repo's universal-async convention) while expanding it to a plain #[test] harness that drives the body through an inline, dependency-free block_on — the fix for the ~16k `#[test] async fn` sites the universal-async codemod left uncompilable."
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_async_macros"
+proc-macro = true
+path = "📦️glue.rs"
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"

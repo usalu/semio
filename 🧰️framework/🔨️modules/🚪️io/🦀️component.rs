@@ -49,7 +49,7 @@ pub enum SourceSpanError {
 
 impl SourceSpan {
     /// 🔎️ Validates the range and its optional human-facing coordinate as one owned boundary.
-    pub fn validate(&self) -> Result<(), SourceSpanError> {
+    pub async fn validate(&self) -> Result<(), SourceSpanError> {
         if self.resource.trim().is_empty() {
             return Err(SourceSpanError::MissingResource);
         }
@@ -75,7 +75,7 @@ pub struct AnchoredSyntax {
 
 impl AnchoredSyntax {
     /// 🔎️ Confirms an anchor retains exactly the source range it claims.
-    pub fn validate(&self) -> Result<(), CodecFailure> {
+    pub async fn validate(&self) -> Result<(), CodecFailure> {
         if self.anchor.trim().is_empty() {
             return Err(CodecFailure::error("io.codec.empty-anchor", "source anchor is empty"));
         }
@@ -105,7 +105,7 @@ pub struct ArtifactCodecResult<T> {
 
 impl<T> ArtifactCodecResult<T> {
     /// 🔐️ Validates retained lossless records and their deterministic anchor ownership.
-    pub fn validate_lossless(&self) -> Result<(), CodecFailure> {
+    pub async fn validate_lossless(&self) -> Result<(), CodecFailure> {
         let mut anchors = std::collections::BTreeSet::new();
         for anchor in &self.anchors {
             if !anchors.insert(anchor.anchor.clone()) {
@@ -128,20 +128,20 @@ impl<T> ArtifactCodecResult<T> {
     }
 
     /// 📏️ Orders retained opaque records independently of insertion or registry order.
-    pub fn canonical_opaque_extensions(&self) -> Vec<&OpaqueExtension> {
+    pub async fn canonical_opaque_extensions(&self) -> Vec<&OpaqueExtension> {
         let mut extensions = self.opaque_extensions.iter().collect::<Vec<_>>();
         extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
         extensions
     }
 
     /// 🧭️ Applies the deterministic source-record order required by canonical codec output.
-    pub fn canonicalize(&mut self) {
+    pub async fn canonicalize(&mut self) {
         self.anchors.sort_by(|a, b| (a.anchor.as_str(), a.span.byte_start, a.span.byte_end).cmp(&(b.anchor.as_str(), b.span.byte_start, b.span.byte_end)));
         self.opaque_extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
     }
 
     /// 🧭️ Verifies the representation promise attached to a completed codec result.
-    pub fn validate_representation(&self, representation: CodecRepresentation) -> Result<(), CodecFailure> {
+    pub async fn validate_representation(&self, representation: CodecRepresentation) -> Result<(), CodecFailure> {
         self.validate_lossless()?;
         if representation == CodecRepresentation::Canonical {
             let mut canonical = self.anchors.iter().collect::<Vec<_>>();
@@ -183,7 +183,7 @@ pub struct CodecFailure {
 
 impl CodecFailure {
     /// 🛑️ Builds one structured error without coupling this contract to a parser implementation.
-    pub fn error(code: impl Into<String>, message: impl Into<String>) -> Self {
+    pub async fn error(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self { diagnostics: vec![CodecDiagnostic { code: code.into(), severity: CodecSeverity::Error, message: message.into(), primary_span: None, related_spans: Vec::new() }] }
     }
 }
@@ -213,17 +213,17 @@ pub struct CancellationToken(std::sync::Arc<std::sync::atomic::AtomicBool>);
 
 impl CancellationToken {
     /// 🌱️ Creates an active cancellation token.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// 🛑️ Cancels every context sharing this token.
-    pub fn cancel(&self) {
+    pub async fn cancel(&self) {
         self.0.store(true, std::sync::atomic::Ordering::Release);
     }
 
     /// 🔎️ Reads cancellation with acquire semantics.
-    pub fn is_cancelled(&self) -> bool {
+    pub async fn is_cancelled(&self) -> bool {
         self.0.load(std::sync::atomic::Ordering::Acquire)
     }
 }
@@ -293,17 +293,17 @@ pub struct CodecBudget {
 
 impl CodecBudget {
     /// 🌱️ Creates a fresh counter from caller-owned limits and cancellation.
-    pub fn new(limits: CodecLimits, cancellation: CancellationToken) -> Self {
+    pub async fn new(limits: CodecLimits, cancellation: CancellationToken) -> Self {
         Self { limits, cancellation, consumption: CodecConsumption::default() }
     }
 
     /// 🔎️ Returns work already consumed by this invocation.
-    pub fn consumption(&self) -> CodecConsumption {
+    pub async fn consumption(&self) -> CodecConsumption {
         self.consumption
     }
 
     /// 🛑️ Fails immediately when the caller has cancelled this operation.
-    pub fn ensure_active(&self) -> Result<(), CodecFailure> {
+    pub async fn ensure_active(&self) -> Result<(), CodecFailure> {
         if self.cancellation.is_cancelled() {
             return Err(CodecFailure::error("io.codec.cancelled", "codec operation cancelled"));
         }
@@ -311,31 +311,31 @@ impl CodecBudget {
     }
 
     /// 📥️ Charges streaming input bytes before retaining or processing them.
-    pub fn charge_read(&mut self, bytes: u64) -> Result<(), CodecFailure> {
+    pub async fn charge_read(&mut self, bytes: u64) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         Self::charge(&mut self.consumption.read_bytes, bytes, self.limits.max_read_bytes, "read-bytes")
     }
 
     /// 📤️ Charges output bytes before a host sink accepts them.
-    pub fn charge_write(&mut self, bytes: u64) -> Result<(), CodecFailure> {
+    pub async fn charge_write(&mut self, bytes: u64) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         Self::charge(&mut self.consumption.written_bytes, bytes, self.limits.max_written_bytes, "written-bytes")
     }
 
     /// ⚙️ Charges deterministic implementation work units.
-    pub fn charge_work(&mut self, units: u64) -> Result<(), CodecFailure> {
+    pub async fn charge_work(&mut self, units: u64) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         Self::charge(&mut self.consumption.work_units, units, self.limits.max_work_units, "work-units")
     }
 
     /// 🧱️ Charges a logical allocation before allocating externally supplied data.
-    pub fn charge_allocation(&mut self, allocations: u64) -> Result<(), CodecFailure> {
+    pub async fn charge_allocation(&mut self, allocations: u64) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         Self::charge(&mut self.consumption.allocations, allocations, self.limits.max_allocations, "allocations")
     }
 
     /// 🪆️ Enters a bounded parser or encoder recursion frame.
-    pub fn enter_recursion(&mut self) -> Result<(), CodecFailure> {
+    pub async fn enter_recursion(&mut self) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         if self.consumption.recursion_depth >= self.limits.max_recursion_depth {
             return Err(CodecFailure::error("io.codec.recursion-exhausted", format!("recursion budget {} exhausted", self.limits.max_recursion_depth)));
@@ -346,13 +346,13 @@ impl CodecBudget {
     }
 
     /// 🪆️ Leaves one parser or encoder recursion frame.
-    pub fn leave_recursion(&mut self) -> Result<(), CodecFailure> {
+    pub async fn leave_recursion(&mut self) -> Result<(), CodecFailure> {
         self.ensure_active()?;
         self.consumption.recursion_depth = self.consumption.recursion_depth.checked_sub(1).ok_or_else(|| CodecFailure::error("io.codec.recursion-underflow", "codec left a recursion frame it did not enter"))?;
         Ok(())
     }
 
-    fn charge(used: &mut u64, increment: u64, limit: u64, resource: &str) -> Result<(), CodecFailure> {
+    async fn charge(used: &mut u64, increment: u64, limit: u64, resource: &str) -> Result<(), CodecFailure> {
         let next = used.checked_add(increment).ok_or_else(|| CodecFailure::error("io.codec.budget-overflow", format!("{resource} counter overflow")))?;
         if next > limit {
             return Err(CodecFailure::error("io.codec.budget-exhausted", format!("{resource} budget {limit} exhausted by request for {increment}")));
@@ -372,26 +372,26 @@ pub struct DecodeContext {
 
 impl DecodeContext {
     /// 🌱️ Starts one decode invocation.
-    pub fn new(policy: DecodePolicy) -> Self {
+    pub async fn new(policy: DecodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget, resolver: None }
     }
 
     /// 🔗️ Starts one decode invocation with the host-owned external resource resolver.
-    pub fn with_resolver(policy: DecodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
+    pub async fn with_resolver(policy: DecodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget, resolver: Some(resolver) }
     }
 
     /// 🌊️ Creates the only codec-facing bounded view over a payload source.
-    pub fn source<'source>(&'source mut self, source: &'source mut dyn PayloadSource) -> CodecResult<BoundedPayloadSource<'source>> {
+    pub async fn source<'source>(&'source mut self, source: &'source mut dyn PayloadSource) -> CodecResult<BoundedPayloadSource<'source>> {
         source.span().validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid payload source span: {error:?}")))?;
         self.budget.ensure_active()?;
         Ok(CodecOutput { value: BoundedPayloadSource { source, context: self }, diagnostics: Vec::new() })
     }
 
     /// 🔗️ Resolves one external source exclusively through the host-owned resolver.
-    pub fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context>> {
+    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context>> {
         self.budget.ensure_active()?;
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "decode context has no resource resolver"))?;
         let resolved = resolver.resolve_decode(request)?;
@@ -400,7 +400,7 @@ impl DecodeContext {
     }
 
     /// ✅️ Finalizes a decode result only when its requested representation is valid.
-    pub fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
+    pub async fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
         self.budget.charge_work(1)?;
         if self.policy.representation == CodecRepresentation::Canonical {
             result.canonicalize();
@@ -420,25 +420,25 @@ pub struct EncodeContext {
 
 impl EncodeContext {
     /// 🌱️ Starts one encode invocation.
-    pub fn new(policy: EncodePolicy) -> Self {
+    pub async fn new(policy: EncodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget, resolver: None }
     }
 
     /// 🔗️ Starts one encode invocation with the host-owned external resource resolver.
-    pub fn with_resolver(policy: EncodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
+    pub async fn with_resolver(policy: EncodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget, resolver: Some(resolver) }
     }
 
     /// 🚰️ Creates the only codec-facing bounded view over a payload sink.
-    pub fn sink<'sink>(&'sink mut self, sink: &'sink mut dyn PayloadSink) -> CodecResult<BoundedPayloadSink<'sink>> {
+    pub async fn sink<'sink>(&'sink mut self, sink: &'sink mut dyn PayloadSink) -> CodecResult<BoundedPayloadSink<'sink>> {
         self.budget.ensure_active()?;
         Ok(CodecOutput { value: BoundedPayloadSink { sink, context: self }, diagnostics: Vec::new() })
     }
 
     /// 🔗️ Resolves one host-owned encoded resource destination.
-    pub fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context>> {
+    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context>> {
         self.budget.ensure_active()?;
         let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "encode context has no resource resolver"))?;
         let resolved = resolver.resolve_encode(request)?;
@@ -446,7 +446,7 @@ impl EncodeContext {
     }
 
     /// ✅️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
-    pub fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
+    pub async fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
         self.budget.charge_work(1)?;
         if self.policy.representation == CodecRepresentation::Canonical {
             result.canonicalize();
@@ -468,22 +468,22 @@ pub struct PayloadSniff {
 
 /// 🧭️ Optional random-access view over a streaming source.
 pub trait RandomAccessPayload: Send + Sync {
-    fn len(&self) -> CodecResult<u64>;
-    fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    async fn len(&self) -> CodecResult<u64>;
+    async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
 }
 
 /// 🌊️ A forward-only source which may additionally expose random access.
 pub trait PayloadSource: Send {
-    fn span(&self) -> SourceSpan;
-    fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
-    fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
+    async fn span(&self) -> SourceSpan;
+    async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    async fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
         None
     }
 }
 
 /// 🚰️ A streaming output sink.
 pub trait PayloadSink: Send {
-    fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
 }
 
 /// 🔗️ Resource request expressed without tying codecs to a filesystem, HTTP client, or host API.
@@ -495,8 +495,8 @@ pub struct ResourceRequest {
 
 /// 🧭️ Resolves a resource into the common streaming/random-access source contract.
 pub trait ResourceResolver: Send + Sync {
-    fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>>;
-    fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>>;
+    async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>>;
+    async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>>;
 }
 
 /// 🔒️ Host-owned bounded random-access view exposed to codecs.
@@ -507,20 +507,20 @@ pub struct BoundedRandomAccessPayload<'a> {
 
 impl BoundedRandomAccessPayload<'_> {
     /// 📏️ Reads the declared resource length while checking cancellation.
-    pub fn len(&mut self) -> CodecResult<u64> {
+    pub async fn len(&mut self) -> CodecResult<u64> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         self.source.len()
     }
 
     /// 🎯️ Reads at one exact offset without letting codecs bypass read/work limits.
-    pub fn read_at(&mut self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
+    pub async fn read_at(&mut self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
         let allowed = self.permitted(output.len())?;
         let result = self.source.read_at(offset, &mut output[..allowed])?;
         self.charge_result(result.value, allowed)
     }
 
-    fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
+    async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
@@ -531,7 +531,7 @@ impl BoundedRandomAccessPayload<'_> {
         Ok(permitted)
     }
 
-    fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
+    async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
             return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
         }
@@ -548,19 +548,19 @@ pub struct BoundedPayloadSource<'a> {
 
 impl BoundedPayloadSource<'_> {
     /// 📥️ Reads one bounded streaming chunk and charges its actual retained bytes.
-    pub fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
+    pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
         let allowed = self.permitted(output.len())?;
         let result = self.source.read_chunk(&mut output[..allowed])?;
         self.charge_result(result.value, allowed)
     }
 
     /// 🎯️ Opens a bounded random-access view when the source supports it.
-    pub fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
+    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
         let source = self.source.random_access()?;
         Some(BoundedRandomAccessPayload { source, context: self.context })
     }
 
-    fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
+    async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
@@ -571,7 +571,7 @@ impl BoundedPayloadSource<'_> {
         Ok(permitted)
     }
 
-    fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
+    async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
             return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
         }
@@ -588,18 +588,18 @@ pub struct ResolvedPayloadSource<'a> {
 
 impl ResolvedPayloadSource<'_> {
     /// 📥️ Reads one bounded streaming chunk from a resolved source.
-    pub fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
+    pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
         let allowed = self.permitted(output.len())?;
         let result = self.source.read_chunk(&mut output[..allowed])?;
         self.charge_result(result.value, allowed)
     }
 
     /// 🎯️ Opens bounded random access when this resolved source supports it.
-    pub fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
+    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
         Some(BoundedRandomAccessPayload { source: self.source.random_access()?, context: self.context })
     }
 
-    fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
+    async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
         self.context.budget.ensure_active()?;
         self.context.budget.charge_work(1)?;
         let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
@@ -610,7 +610,7 @@ impl ResolvedPayloadSource<'_> {
         Ok(permitted)
     }
 
-    fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
+    async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
             return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
         }
@@ -627,7 +627,7 @@ pub struct BoundedPayloadSink<'a> {
 
 impl BoundedPayloadSink<'_> {
     /// 📤️ Writes one bounded chunk while charging work, allocation, and output bytes first.
-    pub fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
+    pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
         self.context.budget.charge_work(1)?;
         self.context.budget.charge_allocation(input.len() as u64)?;
         self.context.budget.charge_write(input.len() as u64)?;
@@ -643,7 +643,7 @@ pub struct ResolvedPayloadSink<'a> {
 
 impl ResolvedPayloadSink<'_> {
     /// 📤️ Writes one budgeted chunk to a resolved destination.
-    pub fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
+    pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
         self.context.budget.charge_work(1)?;
         self.context.budget.charge_allocation(input.len() as u64)?;
         self.context.budget.charge_write(input.len() as u64)?;
@@ -657,18 +657,18 @@ impl ResolvedPayloadSink<'_> {
 pub trait PayloadCodec: Send + Sync {
     type Payload;
 
-    fn sniff(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<PayloadSniff>;
-    fn decode_payload(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<Self::Payload>;
-    fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_>) -> CodecResult<()>;
+    async fn sniff(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<PayloadSniff>;
+    async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<Self::Payload>;
+    async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_>) -> CodecResult<()>;
 }
 
 /// 🗿️ Semantic artifact codec layered over a transport `PayloadCodec` implementation.
 pub trait ArtifactCodec: PayloadCodec {
     type Artifact;
 
-    fn dialect(&self) -> &ArtifactDialect;
-    fn decode_artifact(&self, payload: Self::Payload, context: &mut DecodeContext) -> CodecResult<Self::Artifact>;
-    fn encode_artifact(&self, artifact: &Self::Artifact, context: &mut EncodeContext) -> CodecResult<Self::Payload>;
+    async fn dialect(&self) -> &ArtifactDialect;
+    async fn decode_artifact(&self, payload: Self::Payload, context: &mut DecodeContext) -> CodecResult<Self::Artifact>;
+    async fn encode_artifact(&self, artifact: &Self::Artifact, context: &mut EncodeContext) -> CodecResult<Self::Payload>;
 }
 //#endregion 🧬️Codecs
 //#endregion 🔐️CodecContracts
@@ -755,23 +755,75 @@ pub type ComposeFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = 
 /// returns a future instead of the future's own eventual output.
 pub type AsyncComposeFn = for<'a> fn(&'a [ErasedComposeSource]) -> ComposeFuture<'a>;
 
+/// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`io-thunks`, R1/R2 E4): wraps an `async fn(&[
+/// ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>` in a macro-generated, non-
+/// capturing `fn` thunk that coerces to `AsyncComposeFn` — an `async fn` item's pointer type is
+/// unnameable, so `compose: some_async_fn` can never coerce into a `ComposerEntry.compose` row
+/// directly. The wrapped function itself keeps the literal `async` keyword the universal-async
+/// decree (`📌️important.md` O1) requires; only the macro-generated `__thunk` is sync, and it is
+/// invisible in source (R2 E4's "macro-generated" escape hatch — no per-site `// 🚫️async:` tag
+/// needed). `$crate::` so this also works from every OTHER crate's `ComposerEntry` construction
+/// site once `fleet-codemods` rolls it out fleet-wide (the 163 sites this ticket's `io-thunks`
+/// packet does NOT touch — see `compose-thunk-rewrite.py` in the ticket folder).
+#[macro_export]
+macro_rules! compose_thunk {
+    ($f:path) => {{
+        // 🚫️async: E4 fn-pointer slot
+        fn __thunk<'a>(s: &'a [$crate::ErasedComposeSource]) -> $crate::ComposeFuture<'a> {
+            Box::pin($f(s))
+        }
+        __thunk
+    }};
+}
+
+/// 🌀️ `compose_thunk!`'s twin for `io_mechanism::IoEntry.run` — wraps an
+/// `async fn(&IoPayload) -> IoResult<IoPayload>` in a macro-generated E4 thunk that resolves it
+/// synchronously via `resolve_ready` (unlike `compose_thunk!`, `IoEntry.run` is genuinely
+/// non-future-returning: every codec body here runs to completion without suspending, see
+/// `resolve_ready`'s own doc comment).
+#[macro_export]
+macro_rules! io_run_thunk {
+    ($f:path) => {{
+        // 🚫️async: E4 fn-pointer slot
+        fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::IoResult<$crate::io_schema::IoPayload> {
+            $crate::io::resolve_ready($f(payload))
+        }
+        __thunk
+    }};
+}
+
+/// 🌀️ `io_run_thunk!`'s twin for `io_mechanism::IoEntry.sniff` — wraps an
+/// `async fn(&IoPayload) -> Confidence`.
+#[macro_export]
+macro_rules! io_sniff_thunk {
+    ($f:path) => {{
+        // 🚫️async: E4 fn-pointer slot
+        fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::Confidence {
+            $crate::io::resolve_ready($f(payload))
+        }
+        __thunk
+    }};
+}
+
 /// 🌉️ Resolves a future that is guaranteed Ready on its very first poll. Every artifact-IO codec
 /// body in this tree runs synchronously to completion internally — `io-async-signatures` made the
 /// SIGNATURES uniformly async without adding any real suspension point anywhere in a codec body
 /// (a later packet owns real scheduler-driven awaiting); this bridges the handful of call sites
 /// that must stay synchronous themselves (existing sync tests, the `wire_artifact_compose` ABI
 /// boundary, whose export shape a real wasm async-component-model isn't yet safe to change — see
-/// `📌️important.md` rule 9) back onto that guarantee. Panics rather than silently blocking if the
-/// guarantee is ever violated by a future edit that adds a real await point.
+/// `📌️important.md` rule 9, and every `IoEntry.run`/`.sniff`/`ComposerEntry`-adjacent E4 thunk in
+/// this file) back onto that guarantee. Panics rather than silently blocking if the guarantee is
+/// ever violated by a future edit that adds a real await point.
+// 🚫️async: E5 executor bridge — the whole point of this function is to be CALLABLE from a
+// synchronous context (a bare `fn`-pointer thunk cannot itself be `async` and still coerce into an
+// `IoEntry.run`/`AsyncComposeFn`-shaped slot), so `resolve_ready` itself must stay a plain `fn`; the
+// codemod that made it `async fn` — and its two `RawWakerVTable` helpers, which cannot be async at
+// all since `RawWakerVTable::new` requires bare `unsafe fn` pointers — broke exactly this property.
+// Matches `poll_ready` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs`.
 pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
-    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
-    fn noop(_: *const ()) {}
-    fn clone_raw(_: *const ()) -> RawWaker {
-        RawWaker::new(std::ptr::null(), &VTABLE)
-    }
-    static VTABLE: RawWakerVTable = RawWakerVTable::new(clone_raw, noop, noop, noop);
-    let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
-    let mut cx = Context::from_waker(&waker);
+    use std::task::{Context, Poll};
+    let waker = std::task::Waker::noop();
+    let mut cx = Context::from_waker(waker);
     let mut boxed = Box::pin(fut);
     match boxed.as_mut().poll(&mut cx) {
         Poll::Ready(value) => value,
@@ -811,7 +863,7 @@ pub struct IoKey {
 impl IoKey {
     /// 🗝️ Build a key from an (owner, counterpart) pair already resolved to the right
     /// perspective by the caller -- see the two call sites in `register_composer_entries`.
-    fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
+    async fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
         IoKey {
             artifact_kind: owner.artifact_kind.to_string(),
             standard: owner.standard.0.to_string(),
@@ -826,7 +878,7 @@ impl IoKey {
 
 static IO_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<IoKey, &'static ComposerEntry>>> = std::sync::OnceLock::new();
 
-fn io_registry() -> &'static RwLock<BTreeMap<IoKey, &'static ComposerEntry>> {
+async fn io_registry() -> &'static RwLock<BTreeMap<IoKey, &'static ComposerEntry>> {
     IO_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
 }
 
@@ -863,11 +915,15 @@ fn same_composer_entry(left: &ComposerEntry, right: &ComposerEntry) -> bool {
     left.writes == right.writes && left.reads == right.reads && std::ptr::fn_addr_eq(left.compose, right.compose)
 }
 
-fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
+async fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
     let mut proposed: BTreeMap<IoKey, &'entry ComposerEntry> = BTreeMap::new();
     for entry in entries {
         for &source in entry.reads {
-            for key in [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import), IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export)] {
+            let keys = [
+                IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import).await,
+                IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export).await,
+            ];
+            for key in keys {
                 if let Some(existing) = proposed.get(&key) {
                     if !same_composer_entry(existing, entry) {
                         return Err(IoRegistryRegistrationError::Conflict(IoRegistryConflict { key }));
@@ -881,7 +937,7 @@ fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry Com
     Ok(proposed)
 }
 
-fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
+async fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
     for (key, entry) in proposed {
         if let Some(existing) = registry.get(key) {
             if !same_composer_entry(existing, entry) {
@@ -894,45 +950,45 @@ fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>,
 
 /// 🔬️ Verifies a static composer table against all established keys without mutating the registry.
 #[must_use]
-pub fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    preflight_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
+pub async fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    preflight_composer_entry_refs(&entries.iter().collect::<Vec<_>>()).await
 }
 
 /// 🔬️ Verifies independently declared static composers as one atomic candidate set.
 #[must_use]
-pub fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub async fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    preflight_composer_entry_refs_in_assembly(&assembly, entries)
+    preflight_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies composers while one artifact assembly owns the shared publication barrier.
 #[must_use]
-pub fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let proposed = composer_entries_by_key(entries.iter().copied())?;
-    let registry = io_registry().read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    validate_composer_entries(&registry, &proposed)
+pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let proposed = composer_entries_by_key(entries.iter().copied()).await?;
+    let registry = io_registry().await.read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&registry, &proposed).await
 }
 
 /// 📌️ Registers one artifact's composer entries atomically. Re-registering the exact static entry
 /// is idempotent; a different entry for any exact key fails and leaves the registry unchanged.
 #[must_use]
-pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
+pub async fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    register_composer_entry_refs(&entries.iter().collect::<Vec<_>>()).await
 }
 
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
 #[must_use]
-pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub async fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_composer_entry_refs_in_assembly(&assembly, entries)
+    register_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
 /// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
 #[must_use]
-pub fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let proposed = composer_entries_by_key(entries.iter().copied())?;
-    let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    validate_composer_entries(&reg, &proposed)?;
+pub async fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    let proposed = composer_entries_by_key(entries.iter().copied()).await?;
+    let mut reg = io_registry().await.write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&reg, &proposed).await?;
     for (key, entry) in proposed {
         reg.entry(key).or_insert(entry);
     }
@@ -949,8 +1005,8 @@ pub struct IoResolveError {
 /// 🔎️ Look up the composer entry for one exact (artifact/standard/subset, direction,
 /// format/standard/subset) coordinate. No silent defaulting — callers with a partially-specified
 /// query (unknown standard/subset) must enumerate `dialects_for` first and choose explicitly.
-pub fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
-    let reg = io_registry().read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
+pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
+    let reg = io_registry().await.read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
     reg.get(key).copied().ok_or_else(|| IoResolveError {
         message: format!("no composer registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset),
         candidates: reg.keys().filter(|k| k.artifact_kind == key.artifact_kind).cloned().collect(),
@@ -960,10 +1016,10 @@ pub fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
 
 /// 📚️ Lists every dialect one artifact can move data through in a given direction.
 #[must_use]
-pub fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
-    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
+    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
-    dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
+    dialects.sort_by_key(|dialect| resolve_ready(ArtifactDialect::from(*dialect).to_coordinate()));
     dialects.dedup();
     Ok(dialects)
 }
@@ -973,8 +1029,8 @@ pub fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<D
 /// guess `standard: "1", subset: "*"` should enumerate this instead and pick explicitly, the same
 /// "no silent defaulting" policy `resolve` already documents.
 #[must_use]
-pub fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<IoKey>, IoRegistryUnavailable> {
-    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+pub async fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<IoKey>, IoRegistryUnavailable> {
+    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     Ok(reg.keys().filter(|key| key.artifact_kind == artifact_kind && key.direction == direction).cloned().collect())
 }
 
@@ -982,11 +1038,11 @@ pub fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Io
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
 /// registered locally, each carrying the full `reads` list).
 #[must_use]
-pub fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDialect>)>, IoRegistryUnavailable> {
-    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+pub async fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDialect>)>, IoRegistryUnavailable> {
+    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut seen: BTreeMap<String, &'static ComposerEntry> = BTreeMap::new();
     for entry in reg.values() {
-        seen.entry(ArtifactDialect::from(entry.writes).to_coordinate()).or_insert(*entry);
+        seen.entry(ArtifactDialect::from(entry.writes).to_coordinate().await).or_insert(*entry);
     }
     Ok(seen.into_values().map(|entry| (ArtifactDialect::from(entry.writes), entry.reads.iter().map(|&d| ArtifactDialect::from(d)).collect())).collect())
 }
@@ -1027,7 +1083,7 @@ pub struct IoFallbackRegistrationError {
 /// should reach it (host boot / guest `ensure_plugin_initialized`). Re-registration is idempotent
 /// only for the same descriptor and executable identity; every other race is a typed conflict.
 #[must_use]
-pub fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<(), IoFallbackRegistrationError> {
+pub async fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<(), IoFallbackRegistrationError> {
     match IO_FALLBACK.get() {
         Some(existing) if existing.identity == dispatcher.identity && std::sync::Arc::ptr_eq(&existing.dispatch, &dispatcher.dispatch) => Ok(()),
         Some(existing) => Err(IoFallbackRegistrationError { established_identity: existing.identity.clone(), incoming_identity: dispatcher.identity }),
@@ -1045,17 +1101,17 @@ pub fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<()
 /// SAME `IoResolveError`-shaped message as a local-only `resolve` when nothing (local or
 /// fallback) has the key, so existing error-message-matching callers don't need to change.
 pub async fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    match resolve(key) {
-        Ok(entry) => validate_composed_subset((entry.compose)(sources).await?),
+    match resolve(key).await {
+        Ok(entry) => validate_composed_subset((entry.compose)(sources).await?).await,
         Err(local_err) => match IO_FALLBACK.get().and_then(|dispatcher| (dispatcher.dispatch)(key, sources)) {
-            Some(fallback) => validate_composed_subset(fallback.await?),
+            Some(fallback) => validate_composed_subset(fallback.await?).await,
             None => Err(ComposeError { message: local_err.message, diagnostics: Vec::new() }),
         },
     }
 }
 
-fn validate_composed_subset(mut composed: ComposedArtifact) -> Result<ComposedArtifact, ComposeError> {
-    run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(|error| ComposeError { message: format!("subset validation failed: {error:?}"), diagnostics: Vec::new() })?;
+async fn validate_composed_subset(mut composed: ComposedArtifact) -> Result<ComposedArtifact, ComposeError> {
+    run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).await.map_err(|error| ComposeError { message: format!("subset validation failed: {error:?}"), diagnostics: Vec::new() })?;
     Ok(composed)
 }
 
@@ -1093,7 +1149,7 @@ pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedCompos
 /// erasure already does one layer up), so this module never needs to know the concrete type.
 pub trait SubsetValidator {
     const DIALECT: Dialect;
-    fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+    async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
 }
 
 /// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how
@@ -1105,13 +1161,19 @@ pub struct SubsetValidatorEntry {
 
 /// 🎹️ Erases a typed `SubsetValidator` impl into a `SubsetValidatorEntry` row -- the
 /// `ComposerEntry::of::<C>()`-style helper for this trait.
-pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
-    SubsetValidatorEntry { dialect: V::DIALECT, validate: V::validate }
+pub async fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
+    // 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
+    // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
+    // to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.
+    fn validate<V: SubsetValidator>(payload: &IoPayload) -> Vec<Diagnostic> {
+        resolve_ready(V::validate(payload))
+    }
+    SubsetValidatorEntry { dialect: V::DIALECT, validate: validate::<V> }
 }
 
 static SUBSET_VALIDATOR_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>>> = std::sync::OnceLock::new();
 
-fn subset_validator_registry() -> &'static RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>> {
+async fn subset_validator_registry() -> &'static RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>> {
     SUBSET_VALIDATOR_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
 }
 
@@ -1145,33 +1207,33 @@ pub enum SubsetValidationError {
     Unavailable(IoRegistryUnavailable),
 }
 
-fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
+async fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
     left.dialect == right.dialect && std::ptr::fn_addr_eq(left.validate, right.validate)
 }
 
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
 #[must_use]
-pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
-    register_subset_validators(&[entry])
+pub async fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
+    register_subset_validators(&[entry]).await
 }
 
-fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let mut proposed: BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry> = BTreeMap::new();
     for entry in entries {
         let dialect = ArtifactDialect::from(entry.dialect);
-        match proposed.get(&dialect) {
-            Some(existing) if same_subset_validator_entry(existing, entry) => {}
-            Some(_) => return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect })),
-            None => {
-                proposed.insert(dialect, entry);
+        if let Some(existing) = proposed.get(&dialect) {
+            if same_subset_validator_entry(existing, entry).await {
+                continue;
             }
+            return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect }));
         }
+        proposed.insert(dialect, entry);
     }
-    for (dialect, entry) in proposed {
-        match registry.get(&dialect) {
-            Some(existing) if same_subset_validator_entry(existing, entry) => {}
-            Some(_) => return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect })),
-            None => {}
+    for (dialect, entry) in &proposed {
+        if let Some(existing) = registry.get(dialect) {
+            if !same_subset_validator_entry(existing, entry).await {
+                return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect: *dialect }));
+            }
         }
     }
     Ok(())
@@ -1179,30 +1241,30 @@ fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static Subs
 
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
 #[must_use]
-pub fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub async fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    preflight_subset_validators_in_assembly(&assembly, entries)
+    preflight_subset_validators_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies subset validators while one artifact assembly owns the shared publication barrier.
 #[must_use]
-pub fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
-    validate_subset_validators(&registry, entries)
+pub async fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let registry = subset_validator_registry().await.read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&registry, entries).await
 }
 
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
 #[must_use]
-pub fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub async fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_subset_validators_in_assembly(&assembly, entries)
+    register_subset_validators_in_assembly(&assembly, entries).await
 }
 
 /// 📌️ Publishes preflighted subset validators while one artifact assembly owns the shared barrier.
 #[must_use]
-pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
-    validate_subset_validators(&reg, entries)?;
+pub async fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+    let mut reg = subset_validator_registry().await.write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&reg, entries).await?;
     for entry in entries {
         let dialect = ArtifactDialect::from(entry.dialect);
         if !reg.contains_key(&dialect) {
@@ -1214,8 +1276,8 @@ pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssembl
 
 /// 📚️ Every dialect key currently registered in `SUBSET_VALIDATOR_REGISTRY`.
 #[must_use]
-pub fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, SubsetValidatorRegistryError> {
-    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+pub async fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, SubsetValidatorRegistryError> {
+    let registry = subset_validator_registry().await.read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     Ok(registry.values().map(|entry| entry.dialect).collect())
 }
 
@@ -1238,11 +1300,11 @@ pub fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, Subse
 /// coordinate. Still never hard-fails here: the receiving side of a cross-plugin wire compose may
 /// legitimately not host the owning plugin's validator locally, and a missing validator is exactly
 /// the kind of thing a diagnostic (not a dispatch error) exists to surface.
-fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostics: &mut Vec<Diagnostic>) -> Result<(), SubsetValidationError> {
+async fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostics: &mut Vec<Diagnostic>) -> Result<(), SubsetValidationError> {
     if dialect.subset == SubsetId::ANY {
         return Ok(());
     }
-    let reg = subset_validator_registry().read().map_err(|_| SubsetValidationError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    let reg = subset_validator_registry().await.read().map_err(|_| SubsetValidationError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     match reg.get(&ArtifactDialect::from(dialect)) {
         Some(entry) => diagnostics.extend((entry.validate)(payload)),
         None => return Err(SubsetValidationError::Missing { dialect: ArtifactDialect::from(dialect) }),
@@ -1263,7 +1325,7 @@ pub enum IoFidelityClass {
 }
 
 impl IoFidelityClass {
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         match self {
             Self::Exact => "exact",
             Self::Canonical => "canonical",
@@ -1272,7 +1334,7 @@ impl IoFidelityClass {
         }
     }
 
-    pub fn parse(s: &str) -> Result<Self, String> {
+    pub async fn parse(s: &str) -> Result<Self, String> {
         match s {
             "exact" => Ok(Self::Exact),
             "canonical" => Ok(Self::Canonical),
@@ -1283,7 +1345,7 @@ impl IoFidelityClass {
     }
 
     /// Ordered strength: Exact > Canonical > Semantic > Lossy
-    pub fn rank(self) -> u8 {
+    pub async fn rank(self) -> u8 {
         match self {
             Self::Exact => 3,
             Self::Canonical => 2,
@@ -1303,7 +1365,7 @@ pub struct IoFidelityDeclaration {
 }
 
 impl IoFidelityDeclaration {
-    pub fn validate(&self) -> Result<(), String> {
+    pub async fn validate(&self) -> Result<(), String> {
         if self.class != IoFidelityClass::Lossy && !self.drops.is_empty() {
             return Err("drops must be empty unless fidelity is lossy".into());
         }
@@ -1319,22 +1381,22 @@ mod io_fidelity_tests {
     use super::*;
 
     #[test]
-    fn io_fidelity_class_parse_and_rank() {
-        assert_eq!(IoFidelityClass::parse("exact").unwrap(), IoFidelityClass::Exact);
-        assert_eq!(IoFidelityClass::parse("lossy").unwrap(), IoFidelityClass::Lossy);
-        assert!(IoFidelityClass::parse("bogus").is_err());
-        assert!(IoFidelityClass::Exact.rank() > IoFidelityClass::Canonical.rank());
-        assert!(IoFidelityClass::Canonical.rank() > IoFidelityClass::Semantic.rank());
-        assert!(IoFidelityClass::Semantic.rank() > IoFidelityClass::Lossy.rank());
-        assert_eq!(IoFidelityClass::Exact.as_str(), "exact");
+    async fn io_fidelity_class_parse_and_rank() {
+        assert_eq!(IoFidelityClass::parse("exact").await.unwrap(), IoFidelityClass::Exact);
+        assert_eq!(IoFidelityClass::parse("lossy").await.unwrap(), IoFidelityClass::Lossy);
+        assert!(IoFidelityClass::parse("bogus").await.is_err());
+        assert!(IoFidelityClass::Exact.rank().await > IoFidelityClass::Canonical.rank().await);
+        assert!(IoFidelityClass::Canonical.rank().await > IoFidelityClass::Semantic.rank().await);
+        assert!(IoFidelityClass::Semantic.rank().await > IoFidelityClass::Lossy.rank().await);
+        assert_eq!(IoFidelityClass::Exact.as_str().await, "exact");
     }
 
     #[test]
-    fn io_fidelity_declaration_validate() {
-        IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec![] }.validate().unwrap();
-        assert!(IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec!["x".into()] }.validate().is_err());
-        IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec!["meta.author".into()] }.validate().unwrap();
-        assert!(IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec![] }.validate().is_err());
+    async fn io_fidelity_declaration_validate() {
+        IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec![] }.validate().await.unwrap();
+        assert!(IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec!["x".into()] }.validate().await.is_err());
+        IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec!["meta.author".into()] }.validate().await.unwrap();
+        assert!(IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec![] }.validate().await.is_err());
     }
 }
 //#endregion 🔖️IoFidelity
@@ -1427,7 +1489,7 @@ fn ensure_wire_bytes(operation: &'static str, bytes: &[u8]) -> Result<(), IoWire
     Ok(())
 }
 
-fn validate_wire_dialect(operation: &'static str, dialect: &ArtifactDialect) -> Result<(), IoWireError> {
+async fn validate_wire_dialect(operation: &'static str, dialect: &ArtifactDialect) -> Result<(), IoWireError> {
     for (name, value) in [("artifact_kind", &dialect.artifact_kind), ("standard", &dialect.standard), ("subset", &dialect.subset)] {
         if value.is_empty() || value.len() > MAX_IO_WIRE_DIALECT_COMPONENT_BYTES || value.bytes().any(|byte| byte.is_ascii_whitespace() || byte.is_ascii_control() || matches!(byte, b'@' | b'/' | b'!')) {
             return Err(IoWireError::Limit { operation, detail: format!("invalid bounded dialect {name}") });
@@ -1436,7 +1498,7 @@ fn validate_wire_dialect(operation: &'static str, dialect: &ArtifactDialect) -> 
     Ok(())
 }
 
-fn validate_wire_payload(operation: &'static str, payload: &IoPayload) -> Result<(), IoWireError> {
+async fn validate_wire_payload(operation: &'static str, payload: &IoPayload) -> Result<(), IoWireError> {
     let bytes = match payload {
         IoPayload::Text(text) => text.len(),
         IoPayload::Binary(bytes) => bytes.len(),
@@ -1447,7 +1509,7 @@ fn validate_wire_payload(operation: &'static str, payload: &IoPayload) -> Result
     Ok(())
 }
 
-fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
+async fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
     for value in [&key.artifact_kind, &key.standard, &key.subset, &key.format_kind, &key.format_standard, &key.format_subset] {
         if value.is_empty() || value.len() > MAX_IO_WIRE_DIALECT_COMPONENT_BYTES || value.bytes().any(|byte| byte.is_ascii_whitespace() || byte.is_ascii_control()) {
             return Err(IoWireError::Limit { operation: "io-key", detail: "key component is empty or exceeds the bounded wire grammar".to_string() });
@@ -1456,14 +1518,14 @@ fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
     Ok(())
 }
 
-fn encode_wire_json<T: Serialize>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
+async fn encode_wire_json<T: Serialize>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
     let bytes = serde_json::to_vec(value).map_err(|error| IoWireError::Encode { operation, message: error.to_string() })?;
     ensure_wire_bytes(operation, &bytes)?;
     Ok(bytes)
 }
 
-fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
-    validate_wire_dialect("dialect", dialect)?;
+async fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
+    validate_wire_dialect("dialect", dialect).await?;
     static INTERNED: std::sync::OnceLock<RwLock<HashMap<ArtifactDialect, Dialect>>> = std::sync::OnceLock::new();
     let table = INTERNED.get_or_init(|| RwLock::new(HashMap::new()));
     if let Some(found) = table.read().map_err(|_| IoWireError::InternUnavailable)?.get(dialect) {
@@ -1485,15 +1547,15 @@ fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
 /// interning its dialect via `intern_dialect`. The receiving-side half of `wire_artifact_compose`
 /// — used by a guest's `io_dispatch` fallback hook once `host.io-compose` returns.
 #[must_use]
-pub fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, IoWireError> {
+pub async fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, IoWireError> {
     ensure_wire_bytes("composed-artifact", bytes)?;
     let wire: WireComposedArtifact = serde_json::from_slice(bytes).map_err(|error| IoWireError::Decode { operation: "composed-artifact", message: error.to_string() })?;
-    validate_wire_dialect("composed-artifact", &wire.dialect)?;
-    validate_wire_payload("composed-artifact", &wire.payload)?;
+    validate_wire_dialect("composed-artifact", &wire.dialect).await?;
+    validate_wire_payload("composed-artifact", &wire.payload).await?;
     if wire.diagnostics.len() > MAX_IO_WIRE_SOURCES {
         return Err(IoWireError::Limit { operation: "composed-artifact", detail: "too many diagnostics".to_string() });
     }
-    Ok(ComposedArtifact { dialect: intern_dialect(&wire.dialect)?, payload: wire.payload, diagnostics: wire.diagnostics, confidence: wire.confidence })
+    Ok(ComposedArtifact { dialect: intern_dialect(&wire.dialect).await?, payload: wire.payload, diagnostics: wire.diagnostics, confidence: wire.confidence })
 }
 
 /// 🌉️ Encodes this process's own composer roster (`list_composer_entries`) as JSON bytes — the
@@ -1503,9 +1565,9 @@ pub fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, I
 /// either way, so swapping the wire encoding later needs no ABI change, and this module has no
 /// existing dependency on `store`/`dsl`'s pack machinery worth introducing just for this.
 #[must_use]
-pub fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
-    let entries = list_composer_entries().map_err(IoWireError::Registry)?;
-    encode_wire_json("composer-entry-list", &entries)
+pub async fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
+    let entries = list_composer_entries().await.map_err(IoWireError::Registry)?;
+    encode_wire_json("composer-entry-list", &entries).await
 }
 
 /// 🌉️ Decodes a wire `(IoKey, Vec<WireComposeSource>)` request and composes it against THIS
@@ -1517,27 +1579,27 @@ pub fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
 /// other fallible call on this ABI surfaces errors (a `Fault`, not structured data) — see
 /// `migrate-artifact`'s `plugin-error` for the existing precedent.
 #[must_use]
-pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
+pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
     ensure_wire_bytes("io-key", key_bytes)?;
     ensure_wire_bytes("compose-source", sources_bytes)?;
     let key: IoKey = serde_json::from_slice(key_bytes).map_err(|error| IoWireError::Decode { operation: "io-key", message: error.to_string() })?;
-    validate_wire_key(&key)?;
+    validate_wire_key(&key).await?;
     let wire_sources: Vec<WireComposeSource> = serde_json::from_slice(sources_bytes).map_err(|error| IoWireError::Decode { operation: "compose-source", message: error.to_string() })?;
     if wire_sources.len() > MAX_IO_WIRE_SOURCES {
         return Err(IoWireError::Limit { operation: "compose-source", detail: format!("{} sources exceeds {MAX_IO_WIRE_SOURCES}", wire_sources.len()) });
     }
-    let entry = resolve(&key).map_err(|error| error.unavailable.map(IoWireError::Registry).unwrap_or_else(|| IoWireError::Resolve(error.message)))?;
+    let entry = resolve(&key).await.map_err(|error| error.unavailable.map(IoWireError::Registry).unwrap_or_else(|| IoWireError::Resolve(error.message)))?;
     let mut sources = Vec::with_capacity(wire_sources.len());
     for wire in wire_sources {
-        validate_wire_dialect("compose-source", &wire.dialect)?;
-        validate_wire_payload("compose-source", &wire.payload)?;
-        let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, wire.dialect.to_coordinate())))?;
+        validate_wire_dialect("compose-source", &wire.dialect).await?;
+        validate_wire_payload("compose-source", &wire.payload).await?;
+        let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, resolve_ready(wire.dialect.to_coordinate()))))?;
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
     match resolve_ready((entry.compose)(&sources)) {
         Ok(mut composed) => {
-            run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(IoWireError::Subset)?;
-            encode_wire_json("composed-artifact", &WireComposedArtifact::from(composed))
+            run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).await.map_err(IoWireError::Subset)?;
+            encode_wire_json("composed-artifact", &WireComposedArtifact::from(composed)).await
         }
         Err(error) => Err(IoWireError::Resolve(error.message)),
     }
@@ -1618,17 +1680,17 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
 #[must_use]
-pub fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+pub async fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_format_descriptors_in_assembly(&assembly, descriptors)
+    register_format_descriptors_in_assembly(&assembly, descriptors).await
 }
 
 /// 📌️ Publishes preflighted format rows while one artifact assembly owns the shared barrier.
 #[must_use]
-pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
-    let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).map_err(FormatRegistryError::Conflict)?;
+pub async fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).await.map_err(FormatRegistryError::Conflict)?;
     let mut registry = format_catalog().write().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)?;
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).await.map_err(FormatRegistryError::Conflict)?;
     for (key, descriptor) in proposed {
         registry.entry(key).or_insert(descriptor);
     }
@@ -1637,25 +1699,25 @@ pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemb
 
 /// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
 #[must_use]
-pub fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+pub async fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    preflight_format_descriptors_in_assembly(&assembly, rows)
+    preflight_format_descriptors_in_assembly(&assembly, rows).await
 }
 
 /// 🔬️ Verifies format rows while one artifact assembly owns the shared publication barrier.
 #[must_use]
-pub fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
-    let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).map_err(FormatRegistryError::Conflict)?;
+pub async fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).await.map_err(FormatRegistryError::Conflict)?;
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).await.map_err(FormatRegistryError::Conflict)
 }
 
-fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>), FormatRegistryConflict> {
+async fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>), FormatRegistryConflict> {
     let mut proposed: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
     let mut proposed_by_kind: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
     for row in descriptors {
-        let row = canonicalize_format_descriptor(row)?;
-        for key in format_descriptor_keys(&row) {
+        let row = canonicalize_format_descriptor(row).await?;
+        for key in format_descriptor_keys(&row).await {
             if let Some(existing) = proposed.get(&key) {
                 if existing != &row {
                     return Err(FormatRegistryConflict::Identity { key, established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
@@ -1675,7 +1737,7 @@ fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescript
     Ok((proposed, proposed_by_kind))
 }
 
-fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
+async fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
     row.kind_id = row.kind_id.trim().to_string();
     row.short_id = row.short_id.trim().to_string();
     if row.kind_id.is_empty() || row.short_id.is_empty() {
@@ -1714,11 +1776,11 @@ fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDes
     Ok(row)
 }
 
-fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
+async fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
     row.mimes.iter().map(String::as_str)
 }
 
-fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
+async fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
     let mut established_by_kind: BTreeMap<String, &FormatDescriptor> = BTreeMap::new();
     for descriptor in registry.values() {
         established_by_kind.entry(descriptor.kind_id.clone()).or_insert(descriptor);
@@ -1735,8 +1797,8 @@ fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, pr
                     }
                 }
             }
-            for existing_mime in format_mimes(existing) {
-                for row_mime in format_mimes(row) {
+            for existing_mime in format_mimes(existing).await {
+                for row_mime in format_mimes(row).await {
                     if existing_mime == row_mime {
                         return Err(FormatRegistryConflict::Mime { mime: row_mime.to_string(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
                     }
@@ -1754,27 +1816,27 @@ fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, pr
     Ok(())
 }
 
-fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String> + '_ {
+async fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String> + '_ {
     std::iter::once(row.kind_id.clone()).chain(std::iter::once(row.short_id.clone())).chain(row.aliases.iter().cloned())
 }
 
 /// 🔎️ Resolves a format by its `kind_id`, `short_id`, or registered alias.
 #[must_use]
-pub fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
+pub async fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     Ok(registry.get(kind_or_short_or_alias).cloned())
 }
 
 /// 🏷️ Normalize any recognized form (kind id, short id, alias) to the canonical `kind_id`.
 #[must_use]
-pub fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegistryError> {
-    Ok(format_descriptor(input)?.map(|descriptor| descriptor.kind_id))
+pub async fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegistryError> {
+    Ok(format_descriptor(input).await?.map(|descriptor| descriptor.kind_id))
 }
 
 /// 🗂️ File-picker `accept` filter (comma-joined extensions) for a list of kind/short/alias
 /// strings -- the generic successor to `mesh::stdio_accept_filter`.
 #[must_use]
-pub fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
+pub async fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     let mut extensions = Vec::new();
     for kind_id in kind_ids {
@@ -1795,14 +1857,17 @@ pub struct ArtifactAssemblyRegistryPlan {
 
 impl ArtifactAssemblyRegistryPlan {
     /// 🌱️ Starts an empty plan; callers append every owned registry row before committing once.
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new() }
     }
 }
 
 impl Default for ArtifactAssemblyRegistryPlan {
+    // 🐛️ terra-io-thunks: `Default::default` is E1 (externally-declared trait, fixed sync
+    // signature) so it cannot `.await` `Self::new()` — builds the empty plan directly instead of
+    // routing through the (now correctly `async`) constructor.
     fn default() -> Self {
-        Self::new()
+        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new() }
     }
 }
 
@@ -1831,16 +1896,16 @@ impl std::error::Error for ArtifactAssemblyRegistryError {}
 /// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
 /// fallible operation after the first registry mutation.
 #[must_use]
-pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
+pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
     let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(ArtifactAssemblyRegistryError::Store)?;
-    let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" })))?;
-    let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
+    let mut composers = io_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::Composer(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" })))?;
+    let mut subset_validators = subset_validator_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
     let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
-    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).map_err(ArtifactAssemblyRegistryError::Composer)?;
-    validate_composer_entries(&composers, &proposed_composers).map_err(ArtifactAssemblyRegistryError::Composer)?;
-    validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
-    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).await.map_err(ArtifactAssemblyRegistryError::Composer)?;
+    validate_composer_entries(&composers, &proposed_composers).await.map_err(ArtifactAssemblyRegistryError::Composer)?;
+    validate_subset_validators(&subset_validators, &plan.subset_validators).await.map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
+    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
     store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(ArtifactAssemblyRegistryError::Store)?;
     for (key, entry) in proposed_composers {
         composers.entry(key).or_insert(entry);
@@ -1859,7 +1924,7 @@ pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssembly
 /// per distinct `kind_id`, sorted for determinism) -- the generic successor to
 /// `mesh::stdio_mimes_csv`.
 #[must_use]
-pub fn formats_csv() -> Result<String, FormatRegistryError> {
+pub async fn formats_csv() -> Result<String, FormatRegistryError> {
     let reg = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     let mut seen: BTreeMap<&str, &FormatDescriptor> = BTreeMap::new();
     for row in reg.values() {
@@ -1867,7 +1932,7 @@ pub fn formats_csv() -> Result<String, FormatRegistryError> {
     }
     let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
     for row in seen.into_values() {
-        let mimes = format_mimes(row).collect::<Vec<_>>();
+        let mimes = format_mimes(row).await.collect::<Vec<_>>();
         for extension in &row.extensions {
             for mime in mimes.iter().copied().chain(std::iter::once("").take(usize::from(mimes.is_empty()))) {
                 out.push_str(mime);
@@ -1906,7 +1971,7 @@ mod tests {
     const HOP1_INTO: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop1.into", standard: StandardId("1"), subset: SubsetId("*") };
     const HOP2_INTO: Dialect = Dialect { artifact_kind: "test.io-compose-via.hop2.into", standard: StandardId("1"), subset: SubsetId("*") };
 
-    fn hop_text(sources: &[ErasedComposeSource]) -> Result<String, ComposeError> {
+    async fn hop_text(sources: &[ErasedComposeSource]) -> Result<String, ComposeError> {
         match sources {
             [one] => Ok(match &one.payload {
                 IoPayload::Text(t) => t.clone(),
@@ -1916,39 +1981,41 @@ mod tests {
         }
     }
 
-    fn compose_hop1(sources: &[ErasedComposeSource]) -> ComposeFuture<'_> {
-        Box::pin(async move {
-            let text = hop_text(sources)?;
-            Ok(ComposedArtifact { dialect: HOP1_INTO, payload: IoPayload::Text(format!("hop1({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
-        })
+    // 🐛️ terra-io-thunks: these were `async fn .. -> ComposeFuture<'_>` — an async fn ITSELF
+    // returning the boxed-future type is the "double future" shape R1 bans (calling it produces a
+    // `Future<Output = ComposeFuture>`, not a `ComposeFuture`); it also could never satisfy
+    // `AsyncComposeFn` even if it did typecheck, since an async fn's pointer type is unnameable.
+    // Real `async fn -> Result<ComposedArtifact, ComposeError>` plus `compose_thunk!` at the
+    // `ComposerEntry` construction sites below is the fix (see that macro's own doc comment).
+    async fn compose_hop1(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let text = hop_text(sources).await?;
+        Ok(ComposedArtifact { dialect: HOP1_INTO, payload: IoPayload::Text(format!("hop1({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
     }
 
-    fn compose_hop2(sources: &[ErasedComposeSource]) -> ComposeFuture<'_> {
-        Box::pin(async move {
-            let text = hop_text(sources)?;
-            Ok(ComposedArtifact { dialect: HOP2_INTO, payload: IoPayload::Text(format!("hop2({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
-        })
+    async fn compose_hop2(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let text = hop_text(sources).await?;
+        Ok(ComposedArtifact { dialect: HOP2_INTO, payload: IoPayload::Text(format!("hop2({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
     }
 
     static HOP1_READS: [Dialect; 1] = [HOP1_FROM];
     static HOP2_READS: [Dialect; 1] = [HOP1_INTO];
 
-    static ENTRIES: [ComposerEntry; 2] = [ComposerEntry { writes: HOP1_INTO, reads: &HOP1_READS, compose: compose_hop1 }, ComposerEntry { writes: HOP2_INTO, reads: &HOP2_READS, compose: compose_hop2 }];
+    static ENTRIES: [ComposerEntry; 2] = [ComposerEntry { writes: HOP1_INTO, reads: &HOP1_READS, compose: compose_thunk!(compose_hop1) }, ComposerEntry { writes: HOP2_INTO, reads: &HOP2_READS, compose: compose_thunk!(compose_hop2) }];
 
     const CONFLICT_FROM: Dialect = Dialect { artifact_kind: "test.io-registry-conflict.from", standard: StandardId("1"), subset: SubsetId("*") };
     const CONFLICT_INTO: Dialect = Dialect { artifact_kind: "test.io-registry-conflict.into", standard: StandardId("1"), subset: SubsetId("*") };
     static CONFLICT_READS: [Dialect; 1] = [CONFLICT_FROM];
-    static CONFLICT_FIRST: ComposerEntry = ComposerEntry { writes: CONFLICT_INTO, reads: &CONFLICT_READS, compose: compose_hop1 };
-    static CONFLICT_SECOND: ComposerEntry = ComposerEntry { writes: CONFLICT_INTO, reads: &CONFLICT_READS, compose: compose_hop2 };
+    static CONFLICT_FIRST: ComposerEntry = ComposerEntry { writes: CONFLICT_INTO, reads: &CONFLICT_READS, compose: compose_thunk!(compose_hop1) };
+    static CONFLICT_SECOND: ComposerEntry = ComposerEntry { writes: CONFLICT_INTO, reads: &CONFLICT_READS, compose: compose_thunk!(compose_hop2) };
 
     /// 🌉️🌉️ hub = HOP1_INTO (resolved directly from the seed source), target = HOP2_INTO
     /// (resolved from hub's own composed output alone) — the exact 2-hop shape `io_compose_via`'s
     /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
     #[test]
-    fn io_compose_via_chains_two_registered_hops() {
-        let _ = register_composer_entries(&ENTRIES).expect("register two-hop test entries");
-        let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import);
-        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
+    async fn io_compose_via_chains_two_registered_hops() {
+        let _ = register_composer_entries(&ENTRIES).await.expect("register two-hop test entries");
+        let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import).await;
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import).await;
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
 
         let result = resolve_ready(io_compose_via(&hub_key, &target_key, &sources)).expect("2-hop compose over real registered entries should succeed");
@@ -1962,9 +2029,9 @@ mod tests {
     /// ⚠️ The hub hop itself failing (no registered entry) must surface as the hub's own
     /// `ComposeError`, never silently attempt the target hop with stale/absent data.
     #[test]
-    fn io_compose_via_surfaces_hub_resolve_failure() {
-        let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import);
-        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
+    async fn io_compose_via_surfaces_hub_resolve_failure() {
+        let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import).await;
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import).await;
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
         let err = match resolve_ready(io_compose_via(&unregistered_hub, &target_key, &sources)) {
             Err(err) => err,
@@ -1974,19 +2041,19 @@ mod tests {
     }
 
     #[test]
-    fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
-        let _ = register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).expect("first owner registers");
-        assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]), Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
-        let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).expect_err("a second owner for the same IO key must fail") {
+    async fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
+        let _ = register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).await.expect("first owner registers");
+        assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]).await, Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
+        let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).await.expect_err("a second owner for the same IO key must fail") {
             IoRegistryRegistrationError::Conflict(conflict) => conflict,
             IoRegistryRegistrationError::Unavailable(error) => panic!("registry unavailable: {error:?}"),
         };
-        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_FROM, CONFLICT_INTO, IoDirection::Export));
-        let resolved = resolve(&conflict.key).expect("first owner remains resolvable");
+        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_FROM, CONFLICT_INTO, IoDirection::Export).await);
+        let resolved = resolve(&conflict.key).await.expect("first owner remains resolvable");
         assert!(std::ptr::eq(resolved, &CONFLICT_FIRST));
     }
 
-    fn format_descriptor_fixture(kind_id: &str, short_id: &str, mimes: &[&str], extensions: &[&str]) -> FormatDescriptor {
+    async fn format_descriptor_fixture(kind_id: &str, short_id: &str, mimes: &[&str], extensions: &[&str]) -> FormatDescriptor {
         FormatDescriptor {
             kind_id: kind_id.to_string(),
             short_id: short_id.to_string(),
@@ -2002,37 +2069,37 @@ mod tests {
     }
 
     #[test]
-    fn format_registry_allows_an_unregistered_mime_and_rejects_duplicate_claims() {
-        let txt = format_descriptor_fixture("test.format.txt", "txt", &["text/plain"], &[".txt"]);
-        let epw = format_descriptor_fixture("test.format.epw", "epw", &[], &[".epw"]);
-        preflight_format_descriptors(&[txt.clone(), epw.clone()]).expect("preflight accepts unclaimed distinct format metadata without mutation");
-        assert!(format_descriptor("test.format.epw").expect("catalog availability").is_none(), "preflight must not publish a descriptor");
-        register_format_descriptors(vec![txt.clone(), epw.clone()]).expect("txt MIME and EPW's absent MIME are unambiguous");
-        assert!(format_mimes(&epw).next().is_none());
-        assert!(format_mimes(&format_descriptor("test.format.epw").expect("catalog availability").expect("EPW descriptor")).next().is_none());
+    async fn format_registry_allows_an_unregistered_mime_and_rejects_duplicate_claims() {
+        let txt = format_descriptor_fixture("test.format.txt", "txt", &["text/plain"], &[".txt"]).await;
+        let epw = format_descriptor_fixture("test.format.epw", "epw", &[], &[".epw"]).await;
+        preflight_format_descriptors(&[txt.clone(), epw.clone()]).await.expect("preflight accepts unclaimed distinct format metadata without mutation");
+        assert!(format_descriptor("test.format.epw").await.expect("catalog availability").is_none(), "preflight must not publish a descriptor");
+        register_format_descriptors(vec![txt.clone(), epw.clone()]).await.expect("txt MIME and EPW's absent MIME are unambiguous");
+        assert!(format_mimes(&epw).await.next().is_none());
+        assert!(format_mimes(&format_descriptor("test.format.epw").await.expect("catalog availability").expect("EPW descriptor")).await.next().is_none());
 
-        let duplicate_step = format_descriptor_fixture("test.format.step-duplicate", "step-duplicate", &["application/step", "APPLICATION/STEP"], &[".step", ".stp", ".STEP"]);
+        let duplicate_step = format_descriptor_fixture("test.format.step-duplicate", "step-duplicate", &["application/step", "APPLICATION/STEP"], &[".step", ".stp", ".STEP"]).await;
         assert!(
-            matches!(register_format_descriptors(vec![duplicate_step]), Err(FormatRegistryError::Conflict(FormatRegistryConflict::Invalid { .. }))),
+            matches!(register_format_descriptors(vec![duplicate_step]).await, Err(FormatRegistryError::Conflict(FormatRegistryConflict::Invalid { .. }))),
             "claims that normalize to the same MIME or extension must reject instead of being silently deduplicated"
         );
-        let step = format_descriptor_fixture("test.format.step", "step", &["application/step"], &[".step", ".stp"]);
-        register_format_descriptors(vec![step]).expect("plural representation claims register when each identity is distinct");
-        let step = format_descriptor("test.format.step").expect("catalog availability").expect("STEP descriptor");
+        let step = format_descriptor_fixture("test.format.step", "step", &["application/step"], &[".step", ".stp"]).await;
+        register_format_descriptors(vec![step]).await.expect("plural representation claims register when each identity is distinct");
+        let step = format_descriptor("test.format.step").await.expect("catalog availability").expect("STEP descriptor");
         assert_eq!(step.mimes, ["application/step"]);
         assert_eq!(step.extensions, [".step", ".stp"]);
-        assert_eq!(format_accept_filter(&["test.format.step"]).expect("catalog availability"), ".step,.stp");
-        assert!(matches!(format_accept_filter(&["test.format.unknown"]), Err(FormatRegistryError::Unknown { input }) if input == "test.format.unknown"));
-        assert!(formats_csv().expect("catalog availability").contains("application/step,.step"));
+        assert_eq!(format_accept_filter(&["test.format.step"]).await.expect("catalog availability"), ".step,.stp");
+        assert!(matches!(format_accept_filter(&["test.format.unknown"]).await, Err(FormatRegistryError::Unknown { input }) if input == "test.format.unknown"));
+        assert!(formats_csv().await.expect("catalog availability").contains("application/step,.step"));
 
-        let first = format_descriptor_fixture("test.format.mime-first", "mime-first", &["application/x-wave0-conflict"], &[".first"]);
-        let second = format_descriptor_fixture("test.format.mime-second", "mime-second", &["application/x-wave0-conflict"], &[".second"]);
-        register_format_descriptors(vec![first]).expect("first MIME owner registers");
-        assert!(matches!(register_format_descriptors(vec![second]), Err(FormatRegistryError::Conflict(FormatRegistryConflict::Mime { mime, .. })) if mime == "application/x-wave0-conflict"));
+        let first = format_descriptor_fixture("test.format.mime-first", "mime-first", &["application/x-wave0-conflict"], &[".first"]).await;
+        let second = format_descriptor_fixture("test.format.mime-second", "mime-second", &["application/x-wave0-conflict"], &[".second"]).await;
+        register_format_descriptors(vec![first]).await.expect("first MIME owner registers");
+        assert!(matches!(register_format_descriptors(vec![second]).await, Err(FormatRegistryError::Conflict(FormatRegistryConflict::Mime { mime, .. })) if mime == "application/x-wave0-conflict"));
     }
 
     #[test]
-    fn codec_budget_enforces_limits_and_shared_cancellation() {
+    async fn codec_budget_enforces_limits_and_shared_cancellation() {
         let cancellation = CancellationToken::new();
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 2, max_allocations: 1, max_recursion_depth: 1 }, cancellation: cancellation.clone() };
         let mut context = DecodeContext::new(policy);
@@ -2051,17 +2118,17 @@ mod tests {
     }
 
     impl TestPayload {
-        fn new(bytes: &[u8], resource: &str) -> Self {
+        async fn new(bytes: &[u8], resource: &str) -> Self {
             Self { bytes: bytes.to_vec(), cursor: 0, span: SourceSpan { resource: resource.to_string(), byte_start: 0, byte_end: bytes.len() as u64, line: Some(1), column: Some(1) } }
         }
     }
 
     impl RandomAccessPayload for TestPayload {
-        fn len(&self) -> CodecResult<u64> {
+        async fn len(&self) -> CodecResult<u64> {
             Ok(CodecOutput { value: self.bytes.len() as u64, diagnostics: Vec::new() })
         }
 
-        fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
+        async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
             let start = usize::try_from(offset).map_err(|_| CodecFailure::error("test.offset", "offset does not fit usize"))?;
             let available = match self.bytes.get(start..) {
                 Some(available) => available,
@@ -2074,11 +2141,11 @@ mod tests {
     }
 
     impl PayloadSource for TestPayload {
-        fn span(&self) -> SourceSpan {
+        async fn span(&self) -> SourceSpan {
             self.span.clone()
         }
 
-        fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
+        async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
             let available = &self.bytes[self.cursor..];
             let count = available.len().min(output.len());
             output[..count].copy_from_slice(&available[..count]);
@@ -2086,7 +2153,7 @@ mod tests {
             Ok(CodecOutput { value: count, diagnostics: Vec::new() })
         }
 
-        fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
+        async fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
             Some(self)
         }
     }
@@ -2094,7 +2161,7 @@ mod tests {
     struct TestSink;
 
     impl PayloadSink for TestSink {
-        fn write_chunk(&mut self, _input: &[u8]) -> CodecResult<()> {
+        async fn write_chunk(&mut self, _input: &[u8]) -> CodecResult<()> {
             Ok(CodecOutput { value: (), diagnostics: Vec::new() })
         }
     }
@@ -2102,17 +2169,17 @@ mod tests {
     struct TestResolver;
 
     impl ResourceResolver for TestResolver {
-        fn resolve_decode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>> {
+        async fn resolve_decode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>> {
             Ok(CodecOutput { value: Box::new(TestPayload::new(b"resolved", "resolver://decode")), diagnostics: Vec::new() })
         }
 
-        fn resolve_encode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>> {
+        async fn resolve_encode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>> {
             Ok(CodecOutput { value: Box::new(TestSink), diagnostics: Vec::new() })
         }
     }
 
     #[test]
-    fn codec_context_bounds_streaming_random_access_recursion_and_resolved_resources() {
+    async fn codec_context_bounds_streaming_random_access_recursion_and_resolved_resources() {
         let limits = CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 16, max_allocations: 4, max_recursion_depth: 1 };
         let resolver = std::sync::Arc::new(TestResolver);
         let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone());
@@ -2136,7 +2203,7 @@ mod tests {
     }
 
     #[test]
-    fn resolved_resources_cannot_outlive_their_cancellation_budget() {
+    async fn resolved_resources_cannot_outlive_their_cancellation_budget() {
         let cancellation = CancellationToken::new();
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits::default(), cancellation: cancellation.clone() };
         let resolver = std::sync::Arc::new(TestResolver);
@@ -2148,7 +2215,7 @@ mod tests {
     }
 
     #[test]
-    fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() {
+    async fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() {
         assert!(matches!(wire_decode_composed_artifact(&vec![b' '; MAX_IO_WIRE_BYTES + 1]), Err(IoWireError::Limit { operation: "composed-artifact", .. })));
         let wire = WireComposedArtifact {
             dialect: ArtifactDialect { artifact_kind: "x".repeat(MAX_IO_WIRE_DIALECT_COMPONENT_BYTES + 1), standard: "1".into(), subset: "*".into() },
@@ -2161,7 +2228,7 @@ mod tests {
     }
 
     #[test]
-    fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order() {
+    async fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order() {
         let invalid = SourceSpan { resource: String::new(), byte_start: 3, byte_end: 2, line: Some(1), column: None };
         assert!(invalid.validate().is_err());
         let result = ArtifactCodecResult {
@@ -2189,20 +2256,20 @@ mod tests {
     /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three
     /// dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab.
     #[test]
-    fn artifact_kind_id_accepts_canonical_grammar() {
+    async fn artifact_kind_id_accepts_canonical_grammar() {
         for kind in ["s.stdio.stl", "s.stdio.semio"] {
-            assert!(is_canonical_artifact_kind(kind), "{kind:?} should be canonical");
-            ArtifactKindId::parse(kind).unwrap_or_else(|e| panic!("{kind:?} should parse: {e}"));
+            assert!(is_canonical_artifact_kind(kind).await, "{kind:?} should be canonical");
+            ArtifactKindId::parse(kind).await.unwrap_or_else(|e| panic!("{kind:?} should parse: {e}"));
         }
     }
 
     /// ⚠️ Reject table covering: missing `s.` prefix, non-canonical vocabulary, uppercase, emoji,
     /// too few/too many segments, empty segment, leading hyphen.
     #[test]
-    fn artifact_kind_id_rejects_non_canonical_grammar() {
+    async fn artifact_kind_id_rejects_non_canonical_grammar() {
         for kind in ["stdio.stl", "3d.cad", "data.🏛️program", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
-            assert!(!is_canonical_artifact_kind(kind), "{kind:?} should be rejected");
-            assert!(ArtifactKindId::parse(kind).is_err(), "{kind:?} should fail to parse");
+            assert!(!is_canonical_artifact_kind(kind).await, "{kind:?} should be rejected");
+            assert!(ArtifactKindId::parse(kind).await.is_err(), "{kind:?} should fail to parse");
         }
     }
 
@@ -2210,7 +2277,7 @@ mod tests {
     /// and dashes (must not be mistaken for dialect-coordinate delimiters since only the FIRST
     /// `!` is significant).
     #[test]
-    fn artifact_ref_uri_round_trips() {
+    async fn artifact_ref_uri_round_trips() {
         let cases = [
             ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.stl".to_string(), standard: "1".to_string(), subset: "*".to_string() } },
             ArtifactRef { artifact_id: "doc.v2-final.draft".to_string(), dialect: ArtifactDialect { artifact_kind: "s.norm.en-1994-1".to_string(), standard: "2024".to_string(), subset: "cc6".to_string() } },
@@ -2224,7 +2291,7 @@ mod tests {
 
     /// 🔁️ Exact expected shape of `to_uri`, pinned so the format doesn't silently drift.
     #[test]
-    fn artifact_ref_to_uri_matches_expected_shape() {
+    async fn artifact_ref_to_uri_matches_expected_shape() {
         let artifact_ref = ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
         assert_eq!(artifact_ref.to_uri(), "abc123!s.stdio.gif@87a/*");
     }
@@ -2232,7 +2299,7 @@ mod tests {
     /// ⚠️ `parse_uri` rejects a missing `!` and an empty artifact id, mirroring
     /// `parse_coordinate`'s own empty-component rejection.
     #[test]
-    fn artifact_ref_parse_uri_rejects_malformed_input() {
+    async fn artifact_ref_parse_uri_rejects_malformed_input() {
         assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").is_err(), "missing '!' should fail");
         assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").is_err(), "empty artifact id should fail");
     }
@@ -2262,7 +2329,7 @@ pub mod io_mechanism {
     pub trait Serializer<S> {
         const INTO: Dialect;
         const FIDELITY: IoFidelity;
-        fn serialize(from: &S) -> IoResult<IoPayload>;
+        async fn serialize(from: &S) -> IoResult<IoPayload>;
     }
 
     /// 🎹️ A typed foreign-payload → native-value decoder. `FROM`/`FIDELITY` are the foreign
@@ -2277,10 +2344,10 @@ pub mod io_mechanism {
         const FROM: Dialect;
         const FIDELITY: IoFidelity;
         const CONFORMANCE: Option<fn(&S) -> Vec<Diagnostic>> = None;
-        fn sniff(_payload: &IoPayload) -> Confidence {
+        async fn sniff(_payload: &IoPayload) -> Confidence {
             Confidence::None
         }
-        fn deserialize(payload: &IoPayload) -> IoResult<S>;
+        async fn deserialize(payload: &IoPayload) -> IoResult<S>;
     }
     //#endregion 🔖️Traits
 
@@ -2295,7 +2362,7 @@ pub mod io_mechanism {
         pub run: fn(&IoPayload) -> IoResult<IoPayload>,
     }
 
-    fn same_io_entry(left: &IoEntry, right: &IoEntry) -> bool {
+    async fn same_io_entry(left: &IoEntry, right: &IoEntry) -> bool {
         let same_sniff = match (left.sniff, right.sniff) {
             (Some(a), Some(b)) => std::ptr::fn_addr_eq(a, b),
             (None, None) => true,
@@ -2308,7 +2375,7 @@ pub mod io_mechanism {
             && std::ptr::fn_addr_eq(left.run, right.run)
     }
 
-    fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
+    async fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
         IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }
     }
     //#endregion 🔖️Entry
@@ -2319,9 +2386,13 @@ pub mod io_mechanism {
 
     static IO_MECHANISM_REGISTRY: std::sync::OnceLock<RwLock<EntryMap>> = std::sync::OnceLock::new();
 
-    fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
+    async fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
         IO_MECHANISM_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
     }
+    // 🐛️ terra-io-thunks: every call site below awaits this before `.read()`/`.write()` — the
+    // codemod that added `async` here left all five callers unfixed (the `no .await needed` case
+    // insert-await.py handles cannot help: cargo never reached this file to emit the diagnostic,
+    // see 📓️terra-io-thunks-report.md).
 
     /// ⚠️ A duplicate `(from, into)` registration for a genuinely different entry, or a poisoned
     /// registry lock.
@@ -2332,34 +2403,43 @@ pub mod io_mechanism {
     }
 
     impl std::fmt::Display for IoRegistryError {
+        // 🐛️ terra-io-thunks: `Display::fmt` is E1 (fixed sync signature) so it cannot `.await`
+        // the now-`async` `ArtifactDialect::to_coordinate` — `resolve_ready` bridges it exactly
+        // like every other forced-sync call site in this file (`to_coordinate` never truly
+        // suspends).
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", from.to_coordinate(), into.to_coordinate()),
+                Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", super::resolve_ready(from.to_coordinate()), super::resolve_ready(into.to_coordinate())),
                 Self::Unavailable => f.write_str("io mechanism registry unavailable"),
             }
         }
     }
     impl std::error::Error for IoRegistryError {}
 
-    fn build_proposed(entries: &[&'static IoEntry]) -> Result<EntryMap, IoRegistryError> {
+    // 🐛️ terra-io-thunks: was a plain `fn` calling the now-async `same_io_entry` from an
+    // unawaitable match guard (E0308: expected bool, found future). `build_proposed` is a regular
+    // helper, not a fn-pointer slot, so per R2's O1 it keeps the literal `async` keyword rather
+    // than staying sync — restructured off the match guard so the `.await` has a plain expression
+    // position to live in.
+    async fn build_proposed(entries: &[&'static IoEntry]) -> Result<EntryMap, IoRegistryError> {
         let mut proposed: EntryMap = BTreeMap::new();
         for entry in entries {
             let key = (ArtifactDialect::from(entry.from), ArtifactDialect::from(entry.into));
-            match proposed.get(&key) {
-                Some(existing) if same_io_entry(existing, entry) => {}
-                Some(_) => return Err(IoRegistryError::Duplicate { from: key.0, into: key.1 }),
-                None => {
-                    proposed.insert(key, entry);
+            if let Some(existing) = proposed.get(&key) {
+                if same_io_entry(existing, entry).await {
+                    continue;
                 }
+                return Err(IoRegistryError::Duplicate { from: key.0, into: key.1 });
             }
+            proposed.insert(key, entry);
         }
         Ok(proposed)
     }
 
-    fn validate_against(existing: &EntryMap, proposed: &EntryMap) -> Result<(), IoRegistryError> {
+    async fn validate_against(existing: &EntryMap, proposed: &EntryMap) -> Result<(), IoRegistryError> {
         for (key, entry) in proposed {
             if let Some(current) = existing.get(key) {
-                if !same_io_entry(current, entry) {
+                if !same_io_entry(current, entry).await {
                     return Err(IoRegistryError::Duplicate { from: key.0.clone(), into: key.1.clone() });
                 }
             }
@@ -2375,11 +2455,11 @@ pub mod io_mechanism {
     /// `registration_is_all_or_nothing` below); re-registering the identical static entry is
     /// idempotent, mirroring `register_composer_entries`.
     #[must_use]
-    pub fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
+    pub async fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
         let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;
-        let proposed = build_proposed(&entries.iter().collect::<Vec<_>>())?;
-        let mut registry = io_mechanism_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
-        validate_against(&registry, &proposed)?;
+        let proposed = build_proposed(&entries.iter().collect::<Vec<_>>()).await?;
+        let mut registry = io_mechanism_registry().await.write().map_err(|_| IoRegistryError::Unavailable)?;
+        validate_against(&registry, &proposed).await?;
         for (key, entry) in proposed {
             registry.entry(key).or_insert(entry);
         }
@@ -2388,7 +2468,10 @@ pub mod io_mechanism {
     //#endregion 🔖️Registry
 
     //#region 🔖️Route
-    fn walk_routes(registry: &EntryMap, current: &ArtifactDialect, into: &ArtifactDialect, remaining_hops: u8, path: &mut Vec<&'static IoEntry>, visited: &mut BTreeSet<ArtifactDialect>, candidates: &mut Vec<Vec<&'static IoEntry>>) {
+    // 🐛️ terra-io-thunks: recursive `async fn` needs its own recursive call boxed (E0733) — the
+    // codemod added `async` to a self-recursive traversal without that step. `Box::pin(..).await`
+    // is the standard idiom, not an E-class exception (nothing here is a fn-pointer slot).
+    async fn walk_routes(registry: &EntryMap, current: &ArtifactDialect, into: &ArtifactDialect, remaining_hops: u8, path: &mut Vec<&'static IoEntry>, visited: &mut BTreeSet<ArtifactDialect>, candidates: &mut Vec<Vec<&'static IoEntry>>) {
         if remaining_hops == 0 {
             return;
         }
@@ -2402,20 +2485,20 @@ pub mod io_mechanism {
                 candidates.push(path.clone());
             } else {
                 visited.insert(next.clone());
-                walk_routes(registry, &next, into, remaining_hops - 1, path, visited, candidates);
+                Box::pin(walk_routes(registry, &next, into, remaining_hops - 1, path, visited, candidates)).await;
                 visited.remove(&next);
             }
             path.pop();
         }
     }
 
-    fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
+    async fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
         let min_fidelity = route.iter().map(|entry| entry.fidelity.rank()).min().unwrap_or(0);
-        let joined = route.iter().map(|entry| ArtifactDialect::from(entry.into).to_coordinate()).collect::<Vec<_>>().join(",");
+        let joined = route.iter().map(|entry| super::resolve_ready(ArtifactDialect::from(entry.into).to_coordinate())).collect::<Vec<_>>().join(",");
         (std::cmp::Reverse(min_fidelity), route.len(), joined)
     }
 
-    fn rank_to_fidelity(rank: u8) -> IoFidelity {
+    async fn rank_to_fidelity(rank: u8) -> IoFidelity {
         match rank {
             3 => IoFidelity::Exact,
             2 => IoFidelity::Canonical,
@@ -2430,38 +2513,52 @@ pub mod io_mechanism {
     /// every dialect visited after `from`. Sorting the FULL candidate set at the end (rather than
     /// short-circuiting on the first hit) plus the registry already being a `BTreeMap` (whose
     /// iteration order never depends on insertion order) together give `route_is_deterministic`.
-    fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+    // 🐛️ terra-io-thunks: `Vec::sort_by`'s comparator is a plain synchronous `FnMut` (std's fixed
+    // signature, not ours to make async) so it can never itself call the now-`async`
+    // `route_rank`/`rank_to_fidelity`/`descriptor_of` — those stay `async fn` per O1 (they are
+    // regular helpers, not fn-pointer slots) and this function awaits them into plain values FIRST,
+    // then sorts/maps over the already-resolved data synchronously.
+    async fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
         let max_hops = max_hops.min(3);
         if max_hops == 0 {
-            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate().await, into.to_coordinate().await), diagnostics: Vec::new() });
         }
         let mut candidates: Vec<Vec<&'static IoEntry>> = Vec::new();
         let mut path: Vec<&'static IoEntry> = Vec::new();
         let mut visited: BTreeSet<ArtifactDialect> = BTreeSet::new();
         visited.insert(from.clone());
-        walk_routes(registry, from, into, max_hops, &mut path, &mut visited, &mut candidates);
+        walk_routes(registry, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
         if candidates.is_empty() {
-            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate().await, into.to_coordinate().await), diagnostics: Vec::new() });
         }
-        candidates.sort_by(|a, b| route_rank(a).cmp(&route_rank(b)));
-        let best = candidates.into_iter().next().expect("candidates checked non-empty above");
-        let fidelity = rank_to_fidelity(best.iter().map(|entry| entry.fidelity.rank()).min().expect("a route has at least one hop"));
-        Ok(IoOutcome::clean(IoRoute { hops: best.iter().map(|entry| descriptor_of(entry)).collect(), fidelity }))
+        let mut ranked = Vec::with_capacity(candidates.len());
+        for route in candidates {
+            let rank = route_rank(&route).await;
+            ranked.push((rank, route));
+        }
+        ranked.sort_by(|a, b| a.0.cmp(&b.0));
+        let best = ranked.into_iter().next().expect("candidates checked non-empty above").1;
+        let fidelity = rank_to_fidelity(best.iter().map(|entry| entry.fidelity.rank()).min().expect("a route has at least one hop")).await;
+        let mut hops = Vec::with_capacity(best.len());
+        for entry in &best {
+            hops.push(descriptor_of(entry).await);
+        }
+        Ok(IoOutcome::clean(IoRoute { hops, fidelity }))
     }
 
     /// 🌉️ `resolve_route` against the process-wide registry.
-    pub fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
-        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
-        resolve_route(&registry, from, into, max_hops)
+    pub async fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+        let registry = io_mechanism_registry().await.read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        resolve_route(&registry, from, into, max_hops).await
     }
 
-    fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+    async fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
         let mut current = payload;
         let mut diagnostics = Vec::new();
         for hop in &route.hops {
             let key = (hop.from.clone(), hop.into.clone());
-            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate()), diagnostics: Vec::new() })?;
-            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.message), diagnostics: error.diagnostics })?;
+            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", super::resolve_ready(hop.from.to_coordinate()), super::resolve_ready(hop.into.to_coordinate())), diagnostics: Vec::new() })?;
+            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", super::resolve_ready(hop.from.to_coordinate()), super::resolve_ready(hop.into.to_coordinate()), error.message), diagnostics: error.diagnostics })?;
             current = outcome.value;
             diagnostics.extend(outcome.diagnostics);
         }
@@ -2470,14 +2567,14 @@ pub mod io_mechanism {
 
     /// 🌉️ Folds `IoEntry::run` along every hop of `route`, accumulating diagnostics; on failure
     /// the `IoError.message` names which hop (by dialect coordinates) failed.
-    pub fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
-        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
-        resolve_run(&registry, route, payload)
+    pub async fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+        let registry = io_mechanism_registry().await.read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        resolve_run(&registry, route, payload).await
     }
     //#endregion 🔖️Route
 
     //#region 🔖️Identify
-    fn resolve_identify(registry: &EntryMap, payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
+    async fn resolve_identify(registry: &EntryMap, payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
         let carrier = ArtifactDialect::from(match payload {
             IoPayload::Binary(_) => CARRIER_BINARY,
             IoPayload::Text(_) => CARRIER_TEXT,
@@ -2488,25 +2585,33 @@ pub mod io_mechanism {
             .filter_map(|entry| entry.sniff.map(|sniff| (ArtifactDialect::from(entry.into), sniff(payload))))
             .filter(|(_, confidence)| *confidence != Confidence::None)
             .collect();
-        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
+        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| super::resolve_ready(a.0.to_coordinate()).cmp(&super::resolve_ready(b.0.to_coordinate()))));
         found
     }
 
     /// 🔍️ Runs `sniff` of every entry whose `from` is the carrier dialect matching `payload`'s own
     /// variant (`CARRIER_BINARY` for `Binary`, `CARRIER_TEXT` for `Text` — never both), drops
     /// `Confidence::None`, sorts by confidence (descending) then coordinate (ascending).
-    pub fn io_identify(payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
-        match io_mechanism_registry().read() {
-            Ok(registry) => resolve_identify(&registry, payload),
+    pub async fn io_identify(payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
+        match io_mechanism_registry().await.read() {
+            Ok(registry) => resolve_identify(&registry, payload).await,
             Err(_) => Vec::new(),
         }
     }
 
     /// 📇️ Every registered entry, erased to owned descriptors — the WIT `list-io-entries` guest
-    /// export body and the TS `IoEntryDescriptor[]` mirror both use this shape.
-    pub fn io_entries() -> Vec<IoEntryDescriptor> {
-        match io_mechanism_registry().read() {
-            Ok(registry) => registry.values().map(|entry| descriptor_of(entry)).collect(),
+    /// export body and the TS `IoEntryDescriptor[]` mirror both use this shape. Builds the vec with
+    /// a plain `for` loop rather than `.map(..).collect()` because `descriptor_of` is `async` and a
+    /// `Iterator::map` closure (std's fixed `FnMut` signature) cannot itself await.
+    pub async fn io_entries() -> Vec<IoEntryDescriptor> {
+        match io_mechanism_registry().await.read() {
+            Ok(registry) => {
+                let mut descriptors = Vec::with_capacity(registry.len());
+                for entry in registry.values() {
+                    descriptors.push(descriptor_of(entry).await);
+                }
+                descriptors
+            }
             Err(_) => Vec::new(),
         }
     }
@@ -2521,13 +2626,17 @@ pub mod io_mechanism {
     /// `fn` pointer parameter threaded through a closure, which `IoEntry.run`'s bare-`fn`-pointer
     /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
     /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code.
-    pub fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
+    pub async fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare, non-capturing `fn` pointer;
+        // `Serializer::serialize` stays `async fn` (a real trait method) and this thunk drives it
+        // to completion synchronously via `resolve_ready` (io-async-signatures already documents
+        // every codec body here as suspension-free).
         fn run<S: store::ArtifactPack, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
             let IoPayload::Binary(bytes) = payload else {
                 return Err(IoError { message: "serializer_entry: expected a binary native payload".to_string(), diagnostics: Vec::new() });
             };
             let value = S::decode_pack(bytes).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
-            T::serialize(&value)
+            super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
     }
@@ -2535,28 +2644,35 @@ pub mod io_mechanism {
     /// 🎹️ `serializer_entry`'s twin for a DSL-text-native `S` (`store::ArtifactDsl` instead of
     /// `store::ArtifactPack`) — together the smallest constructor pair covering both halves of the
     /// payload law's native encoding (pack XOR DSL).
-    pub fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
+    pub async fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above.
         fn run<S: store::ArtifactDsl, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
             let IoPayload::Text(text) = payload else {
                 return Err(IoError { message: "serializer_entry_text: expected a text native payload".to_string(), diagnostics: Vec::new() });
             };
             let value = S::parse_dsl(text).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
-            T::serialize(&value)
+            super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
     }
 
+    // 🚫️async: E4 fn-pointer slot — `IoEntry.sniff` is a bare `fn` pointer; `Deserializer::sniff`
+    // stays `async fn` (it has a default body and may be overridden with real decode logic) and
+    // this thunk resolves it synchronously via `resolve_ready`.
     fn deserializer_sniff<S, T: Deserializer<S>>(payload: &IoPayload) -> Confidence {
-        T::sniff(payload)
+        super::resolve_ready(T::sniff(payload))
     }
 
     /// 🎹️ Builds an `IoEntry` from a `Deserializer<S>` impl for a binary-pack-native `S`. Runs
     /// `T::CONFORMANCE` (D5's `SubsetValidator` replacement) after a successful deserialize,
     /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
     /// below proves the diagnostics reach the caller.
-    pub fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub async fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+        // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above; `T::CONFORMANCE` is
+        // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
+        // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
         fn run<S: store::ArtifactPack, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
-            let outcome = T::deserialize(payload)?;
+            let outcome = super::resolve_ready(T::deserialize(payload))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
@@ -2567,9 +2683,10 @@ pub mod io_mechanism {
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
-    pub fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub async fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+        // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
         fn run<S: store::ArtifactDsl, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
-            let outcome = T::deserialize(payload)?;
+            let outcome = super::resolve_ready(T::deserialize(payload))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
@@ -2597,120 +2714,123 @@ pub mod io_mechanism {
         const D: Dialect = Dialect { artifact_kind: "test.io-mechanism.d", standard: StandardId("1"), subset: SubsetId("*") };
         const E: Dialect = Dialect { artifact_kind: "test.io-mechanism.e", standard: StandardId("1"), subset: SubsetId("*") };
 
+        // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare `fn` pointer and this test double
+        // never suspends, so it needs no `resolve_ready` wrapping either.
         fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
             Ok(IoOutcome::clean(payload.clone()))
         }
 
-        fn key(from: Dialect, into: Dialect) -> EntryKey {
+        async fn key(from: Dialect, into: Dialect) -> EntryKey {
             (ArtifactDialect::from(from), ArtifactDialect::from(into))
         }
 
         #[test]
-        fn route_is_deterministic() {
+        async fn route_is_deterministic() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
 
             let mut order1: EntryMap = BTreeMap::new();
-            order1.insert(key(A, B), &AB);
-            order1.insert(key(B, C), &BC);
+            order1.insert(key(A, B).await, &AB);
+            order1.insert(key(B, C).await, &BC);
 
             let mut order2: EntryMap = BTreeMap::new();
-            order2.insert(key(B, C), &BC);
-            order2.insert(key(A, B), &AB);
+            order2.insert(key(B, C).await, &BC);
+            order2.insert(key(A, B).await, &AB);
 
-            let route1 = resolve_route(&order1, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists");
-            let route2 = resolve_route(&order2, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists");
+            let route1 = resolve_route(&order1, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).await.expect("route exists");
+            let route2 = resolve_route(&order2, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).await.expect("route exists");
             assert_eq!(route1.value, route2.value, "route must not depend on registration order");
         }
 
         #[test]
-        fn route_respects_max_hops() {
+        async fn route_respects_max_hops() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static CD: IoEntry = IoEntry { from: C, into: D, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static DE: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             let mut registry: EntryMap = BTreeMap::new();
-            registry.insert(key(A, B), &AB);
-            registry.insert(key(B, C), &BC);
-            registry.insert(key(C, D), &CD);
-            registry.insert(key(D, E), &DE);
+            registry.insert(key(A, B).await, &AB);
+            registry.insert(key(B, C).await, &BC);
+            registry.insert(key(C, D).await, &CD);
+            registry.insert(key(D, E).await, &DE);
 
-            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 2).is_err(), "3 hops must fail a max_hops of 2");
-            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 3).is_ok(), "3 hops must succeed at the max_hops=3 ceiling");
-            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(E), 10).is_err(), "4 hops must fail even when the caller asks for 10 — max_hops is hard-clamped to 3");
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 2).await.is_err(), "3 hops must fail a max_hops of 2");
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 3).await.is_ok(), "3 hops must succeed at the max_hops=3 ceiling");
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(E), 10).await.is_err(), "4 hops must fail even when the caller asks for 10 — max_hops is hard-clamped to 3");
         }
 
         #[test]
-        fn route_never_cycles() {
+        async fn route_never_cycles() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             let mut registry: EntryMap = BTreeMap::new();
-            registry.insert(key(A, B), &AB);
-            registry.insert(key(B, A), &BA);
-            registry.insert(key(B, C), &BC);
+            registry.insert(key(A, B).await, &AB);
+            registry.insert(key(B, A).await, &BA);
+            registry.insert(key(B, C).await, &BC);
 
-            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists despite a cycle in the graph");
+            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).await.expect("route exists despite a cycle in the graph");
             assert_eq!(route.value.hops.len(), 2, "the cycle edge B->A must never appear in the winning route");
         }
 
         #[test]
-        fn route_prefers_higher_minimum_fidelity() {
+        async fn route_prefers_higher_minimum_fidelity() {
             static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             let mut registry: EntryMap = BTreeMap::new();
-            registry.insert(key(A, C), &DIRECT);
-            registry.insert(key(A, B), &AB);
-            registry.insert(key(B, C), &BC);
+            registry.insert(key(A, C).await, &DIRECT);
+            registry.insert(key(A, B).await, &AB);
+            registry.insert(key(B, C).await, &BC);
 
-            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists").value;
+            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).await.expect("route exists").value;
             assert_eq!(route.fidelity, IoFidelity::Exact, "the 2-hop all-Exact route must beat the shorter 1-hop Lossy direct route");
             assert_eq!(route.hops.len(), 2);
         }
 
         #[test]
-        fn identify_only_sniffs_carriers() {
+        async fn identify_only_sniffs_carriers() {
+            // 🚫️async: E4 fn-pointer slot
             fn always_high(_: &IoPayload) -> Confidence {
                 Confidence::High
             }
             static CARRIER_ENTRY: IoEntry = IoEntry { from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
             static NON_CARRIER_ENTRY: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
             let mut registry: EntryMap = BTreeMap::new();
-            registry.insert(key(CARRIER_TEXT, A), &CARRIER_ENTRY);
-            registry.insert(key(B, C), &NON_CARRIER_ENTRY);
+            registry.insert(key(CARRIER_TEXT, A).await, &CARRIER_ENTRY);
+            registry.insert(key(B, C).await, &NON_CARRIER_ENTRY);
 
-            let found = resolve_identify(&registry, &IoPayload::Text("hello".to_string()));
+            let found = resolve_identify(&registry, &IoPayload::Text("hello".to_string())).await;
             assert_eq!(found, vec![(ArtifactDialect::from(A), Confidence::High)], "only the carrier-origin entry may be sniffed");
         }
 
         #[test]
-        fn duplicate_entry_is_a_typed_error() {
+        async fn duplicate_entry_is_a_typed_error() {
             static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
 
             let mut existing: EntryMap = BTreeMap::new();
-            existing.insert(key(A, B), &ENTRY_A);
+            existing.insert(key(A, B).await, &ENTRY_A);
 
-            let same = build_proposed(&[&ENTRY_A]).unwrap();
-            assert!(validate_against(&existing, &same).is_ok(), "re-registering the identical entry is idempotent");
+            let same = build_proposed(&[&ENTRY_A]).await.unwrap();
+            assert!(validate_against(&existing, &same).await.is_ok(), "re-registering the identical entry is idempotent");
 
-            let different = build_proposed(&[&ENTRY_B]).unwrap();
-            assert!(matches!(validate_against(&existing, &different), Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
+            let different = build_proposed(&[&ENTRY_B]).await.unwrap();
+            assert!(matches!(validate_against(&existing, &different).await, Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
         }
 
         #[test]
-        fn registration_is_all_or_nothing() {
+        async fn registration_is_all_or_nothing() {
             static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
             static FRESH: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
 
             let mut existing: EntryMap = BTreeMap::new();
-            existing.insert(key(A, B), &ORIGINAL);
+            existing.insert(key(A, B).await, &ORIGINAL);
 
-            let proposed = build_proposed(&[&CONFLICTING, &FRESH]).expect("the batch is internally conflict-free");
-            assert!(matches!(validate_against(&existing, &proposed), Err(IoRegistryError::Duplicate { .. })), "one conflicting key must fail the whole batch");
-            assert!(!existing.contains_key(&key(D, E)), "FRESH must not leak into the registry as a side effect of a failed validation");
+            let proposed = build_proposed(&[&CONFLICTING, &FRESH]).await.expect("the batch is internally conflict-free");
+            assert!(matches!(validate_against(&existing, &proposed).await, Err(IoRegistryError::Duplicate { .. })), "one conflicting key must fail the whole batch");
+            assert!(!existing.contains_key(&key(D, E).await), "FRESH must not leak into the registry as a side effect of a failed validation");
             assert_eq!(existing.len(), 1, "existing registry state must be untouched by a failed validation");
         }
 
@@ -2720,7 +2840,7 @@ pub mod io_mechanism {
             const FIDELITY: IoFidelity = IoFidelity::Exact;
             const CONFORMANCE: Option<fn(&serde_json::Value) -> Vec<Diagnostic>> = Some(flag_non_object);
 
-            fn deserialize(payload: &IoPayload) -> IoResult<serde_json::Value> {
+            async fn deserialize(payload: &IoPayload) -> IoResult<serde_json::Value> {
                 let IoPayload::Text(text) = payload else {
                     return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
                 };
@@ -2729,13 +2849,16 @@ pub mod io_mechanism {
             }
         }
 
+        // 🚫️async: E4 fn-pointer slot — assigned directly into `Deserializer::CONFORMANCE`, a plain
+        // `Option<fn(&S) -> Vec<Diagnostic>>` const (see that trait's own doc comment for why it
+        // cannot be a closure or an `async fn` item).
         fn flag_non_object(value: &serde_json::Value) -> Vec<Diagnostic> {
             if value.is_object() { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")] }
         }
 
         #[test]
-        fn conformance_runs_after_deserialize() {
-            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A);
+        async fn conformance_runs_after_deserialize() {
+            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A).await;
 
             let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
             assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");

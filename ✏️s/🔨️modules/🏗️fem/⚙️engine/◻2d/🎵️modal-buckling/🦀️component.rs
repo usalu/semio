@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// `analyses::build_dof_map`, which isn't `pub`, following the same precedent that module's own doc
 /// comment sets for `lib.rs`'s private `build_dof_map`) used to unpack a raw mode-shape `VecD` back
 /// into per-node `[f64;6]` values.
-fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String, Dof)> {
+async fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String, Dof)> {
     let mut order = Vec::new();
     for node in nodes {
         let mut active: Vec<Dof> = Vec::new();
@@ -34,7 +34,7 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 }
 
 /// 🎵️ Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub fn fem2d_modal(doc: &Fem2dSnapshot) -> Result<crate::analyses::ModalResult, Fem2dError> {
+pub async fn fem2d_modal(doc: &Fem2dSnapshot) -> Result<crate::analyses::ModalResult, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -45,7 +45,7 @@ pub fn fem2d_modal(doc: &Fem2dSnapshot) -> Result<crate::analyses::ModalResult, 
 /// `mode_index`'s shape `VecD` into a friendly per-node `[f64;6]` displacement map (see `mode_dof_order`),
 /// ready to feed the same deformed-shape rendering the results window already uses for static results.
 /// Returns `(frequency_hz, node_id -> displacement values)`.
-pub fn fem2d_modal_mode_values(doc: &Fem2dSnapshot, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
+pub async fn fem2d_modal_mode_values(doc: &Fem2dSnapshot, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
@@ -67,7 +67,7 @@ type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, crate::an
 /// geometry plus the ONE named `case_id`'s `analyses::LoadCase`, mirroring `fem2d_solve_all`'s
 /// per-case load translation (nodal/member-UDL/area loads), erroring `"load case not found: {case_id}"`
 /// if `case_id` isn't in `doc.load_cases`.
-fn buckling_inputs(doc: &Fem2dSnapshot, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
+async fn buckling_inputs(doc: &Fem2dSnapshot, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let member_node_ids: std::collections::HashSet<String> = doc.nodes.iter().map(|n| n.id.clone()).collect();
     let nodes: Vec<Node> = nodes.into_iter().filter(|n| member_node_ids.contains(&n.id)).collect();
@@ -89,7 +89,7 @@ fn buckling_inputs(doc: &Fem2dSnapshot, case_id: &str) -> Result<BucklingInputs,
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub fn fem2d_buckling(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::analyses::BucklingResult, Fem2dError> {
+pub async fn fem2d_buckling(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::analyses::BucklingResult, Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
     crate::analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem2dError::from)
@@ -98,7 +98,7 @@ pub fn fem2d_buckling(doc: &Fem2dSnapshot, case_id: &str) -> Result<crate::analy
 /// 🌉️ Richer buckling entry point: mirrors `fem2d_modal_mode_values` — solves the same buckling
 /// analysis as `fem2d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub fn fem2d_buckling_mode_values(doc: &Fem2dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
+pub async fn fem2d_buckling_mode_values(doc: &Fem2dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
@@ -119,7 +119,7 @@ mod tests {
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖️Fixtures
-    fn simply_supported_beam_doc() -> Fem2dSnapshot {
+    async fn simply_supported_beam_doc() -> Fem2dSnapshot {
         Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![crate::artifacts::fem2d::FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
@@ -135,7 +135,7 @@ mod tests {
 
     /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
     /// document nodes.
-    fn rectangle_region_doc() -> Fem2dSnapshot {
+    async fn rectangle_region_doc() -> Fem2dSnapshot {
         Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
@@ -151,7 +151,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     #[test]
-    fn fem2d_modal_returns_requested_mode_count() {
+    async fn fem2d_modal_returns_requested_mode_count() {
         let doc = rectangle_region_doc();
         let result = fem2d_modal(&doc).expect("modal solves");
         assert_eq!(result.frequencies_hz.len(), doc.analysis.modal_count);
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn fem2d_modal_mode_values_returns_node_displacements() {
+    async fn fem2d_modal_mode_values_returns_node_displacements() {
         let doc = simply_supported_beam_doc();
         let (freq, values) = fem2d_modal_mode_values(&doc, 0).expect("modal mode values solves");
         assert!(freq.is_finite() && freq >= 0.0);
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn fem2d_buckling_returns_requested_mode_count() {
+    async fn fem2d_buckling_returns_requested_mode_count() {
         let doc = simply_supported_beam_doc();
         let result = fem2d_buckling(&doc, "dead").expect("buckling solves");
         assert_eq!(result.factors.len(), doc.analysis.buckling_count);
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn fem2d_buckling_mode_values_returns_node_displacements() {
+    async fn fem2d_buckling_mode_values_returns_node_displacements() {
         let doc = simply_supported_beam_doc();
         let (factor, values) = fem2d_buckling_mode_values(&doc, "dead", 0).expect("buckling mode values solves");
         assert!(factor.is_finite());
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn fem2d_buckling_unknown_case_errors() {
+    async fn fem2d_buckling_unknown_case_errors() {
         let doc = simply_supported_beam_doc();
         let err = fem2d_buckling(&doc, "missing").err().expect("expected error");
         assert!(err.to_string().contains("load case not found"), "unexpected error: {err}");

@@ -78,16 +78,16 @@ pub mod queryable {
     // #region 🔖️QueryableGraph
     /// 🕸️ Read-only graph surface for Jack query execution.
     pub trait QueryableGraph {
-        fn manifest(&self) -> Option<&GraphManifest>;
-        fn node_ids(&self) -> Vec<String>;
-        fn node_kind(&self, id: &str) -> Option<String>;
-        fn node_name(&self, id: &str) -> Option<String>;
-        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue>;
-        fn edges(&self) -> Vec<QueryableEdge>;
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
+        async fn manifest(&self) -> Option<&GraphManifest>;
+        async fn node_ids(&self) -> Vec<String>;
+        async fn node_kind(&self, id: &str) -> Option<String>;
+        async fn node_name(&self, id: &str) -> Option<String>;
+        async fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue>;
+        async fn edges(&self) -> Vec<QueryableEdge>;
+        async fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
     }
 
-    pub fn manifest_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for id in graph.node_ids() {
             if let Some(kind) = graph.node_kind(id.as_str()) {
@@ -102,7 +102,7 @@ pub mod queryable {
         kinds.into_iter().collect()
     }
 
-    pub fn manifest_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for edge in graph.edges() {
             kinds.insert(edge.kind.clone());
@@ -115,7 +115,7 @@ pub mod queryable {
         kinds.into_iter().collect()
     }
 
-    pub fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
         let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
         for id in graph.node_ids() {
             for key in ["label", "text"] {
@@ -132,7 +132,7 @@ pub mod queryable {
         props.into_iter().collect()
     }
 
-    pub fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for edge in graph.edges() {
             if let Some(port) = &edge.source_port {
@@ -152,11 +152,11 @@ pub mod queryable {
     // #endregion 🔖️QueryableGraph
 
     // #region 🔖️BoardQueryableGraph
-    fn json_to_property_bag(value: &Value) -> PropertyBag {
+    async fn json_to_property_bag(value: &Value) -> PropertyBag {
         serde_json::from_value(value.clone()).unwrap_or_default()
     }
 
-    fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
+    async fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
         if let Some(node_id) = handle_to_node.get(endpoint) {
             return (node_id.clone(), None);
         }
@@ -186,7 +186,7 @@ pub mod queryable {
     }
 
     impl BoardQueryableGraph {
-        pub fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
+        pub async fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
             let raw: Value = serde_json::from_str(json)?;
             let manifest = manifest_id.and_then(manifest_by_id).or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id)).or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
             let mut nodes = BTreeMap::new();
@@ -233,15 +233,15 @@ pub mod queryable {
             Ok(Self { manifest, nodes, edges, raw_fixture: raw })
         }
 
-        pub fn from_dag_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+        pub async fn from_dag_fixture_json(json: &str) -> Result<Self, GraphDslError> {
             Self::from_fixture_json(json, Some("flow-dag"))
         }
 
-        pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+        pub async fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
             Self::from_fixture_json(json, Some("puzzle2d-default"))
         }
 
-        pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+        pub async fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
             let raw: Value = serde_json::from_str(json)?;
             let mut fixture = raw.clone();
             if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
@@ -266,29 +266,29 @@ pub mod queryable {
             Self::from_fixture_json(&serde_json::to_string(&fixture)?, Some("puzzle3d-default"))
         }
 
-        pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+        pub async fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
             Self::from_fixture_json(json, Some("puzzle5d-default"))
         }
     }
 
     impl QueryableGraph for BoardQueryableGraph {
-        fn manifest(&self) -> Option<&GraphManifest> {
+        async fn manifest(&self) -> Option<&GraphManifest> {
             self.manifest.as_ref()
         }
 
-        fn node_ids(&self) -> Vec<String> {
+        async fn node_ids(&self) -> Vec<String> {
             self.nodes.keys().cloned().collect()
         }
 
-        fn node_kind(&self, id: &str) -> Option<String> {
+        async fn node_kind(&self, id: &str) -> Option<String> {
             self.nodes.get(id).map(|(kind, _, _)| kind.clone())
         }
 
-        fn node_name(&self, id: &str) -> Option<String> {
+        async fn node_name(&self, id: &str) -> Option<String> {
             self.nodes.get(id).map(|(_, name, _)| name.clone())
         }
 
-        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+        async fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
             let (_, name, properties) = self.nodes.get(id)?;
             match key {
                 "id" => Some(PropertyValue::String(id.to_string())),
@@ -299,11 +299,11 @@ pub mod queryable {
             }
         }
 
-        fn edges(&self) -> Vec<QueryableEdge> {
+        async fn edges(&self) -> Vec<QueryableEdge> {
             self.edges.clone()
         }
 
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+        async fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
             let mut fixture = self.raw_fixture.clone();
             if let Some(nodes) = fixture.get_mut("nodes").and_then(|v| v.as_array_mut()) {
                 nodes.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| node_ids.contains(id)));
@@ -355,7 +355,7 @@ pub mod wire {
     // #region 🔖️PropertyBridge
     /// 🌉️ `crate::manifest::PropertyValue` <-> `dsl_core::DslValue` — the two crates'
     /// dynamic-JSON-equivalent literal types are structurally identical, so this is a pure reshape.
-    fn dsl_value_from_property_value(value: &PropertyValue) -> dsl_core::DslValue {
+    async fn dsl_value_from_property_value(value: &PropertyValue) -> dsl_core::DslValue {
         match value {
             PropertyValue::Null => dsl_core::DslValue::Null,
             PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
@@ -366,7 +366,7 @@ pub mod wire {
         }
     }
 
-    fn property_value_from_dsl_value(value: &dsl_core::DslValue) -> PropertyValue {
+    async fn property_value_from_dsl_value(value: &dsl_core::DslValue) -> PropertyValue {
         match value {
             dsl_core::DslValue::Null => PropertyValue::Null,
             dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
@@ -377,11 +377,11 @@ pub mod wire {
         }
     }
 
-    fn properties_to_dsl_object(properties: &PropertyBag) -> dsl_core::DslValue {
+    async fn properties_to_dsl_object(properties: &PropertyBag) -> dsl_core::DslValue {
         dsl_core::DslValue::Object(properties.iter().map(|(k, v)| (k.clone(), dsl_value_from_property_value(v))).collect())
     }
 
-    fn properties_from_dsl_value(value: &dsl_core::DslValue) -> PropertyBag {
+    async fn properties_from_dsl_value(value: &dsl_core::DslValue) -> PropertyBag {
         match value {
             dsl_core::DslValue::Object(entries) => entries.iter().map(|(k, v)| (k.clone(), property_value_from_dsl_value(v))).collect(),
             _ => PropertyBag::new(),
@@ -390,7 +390,7 @@ pub mod wire {
     // #endregion 🔖️PropertyBridge
 
     // #region 🔖️WireLiteral
-    fn render_wire_line(value: &dsl_core::WireValue) -> String {
+    async fn render_wire_line(value: &dsl_core::WireValue) -> String {
         let mut writer = dsl_core::Writer::new();
         dsl_core::print_shape(&dsl_core::FieldValue::Wire(value.clone()), &dsl_core::Shape::Wire, &mut writer);
         writer.render(dsl_core::JoinMode::Inline)
@@ -398,7 +398,7 @@ pub mod wire {
 
     /// 📝️ Render wire-literal text from neutral node/edge rows, one unified `dsl_core::Wire`
     /// statement per line.
-    pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
+    pub async fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
         for node in nodes {
             let value = dsl_core::WireValue { from: dsl_core::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() }, edge: None, edge_label: dsl_core::WireEdgeLabel::default(), properties: properties_to_dsl_object(&node.properties) };
@@ -424,7 +424,7 @@ pub mod wire {
     /// module's own DAG domain rule on top: an edge's ports are mandatory on BOTH ends (the
     /// shared grammar itself leaves ports optional on every endpoint — that's the engine's
     /// business, not a syntax difference this module should encode into the lexer/parser).
-    pub fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
+    pub async fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         for line in text.lines() {
@@ -452,7 +452,7 @@ pub mod wire {
         use super::*;
 
         #[test]
-        fn wire_literal_roundtrip_simple() {
+        async fn wire_literal_roundtrip_simple() {
             // 🩹️ unified grammar: port names are `dsl_core` idents (must start with a letter or
             // `_`, never a digit) — the old port name `"3d"` is no longer lexable, renamed `"d3"`.
             let nodes = vec![WireNode { id: "p".into(), kind: "Puzzle3d".into(), port: None, properties: PropertyBag::new() }];
@@ -465,7 +465,7 @@ pub mod wire {
         }
 
         #[test]
-        fn wire_literal_undirected() {
+        async fn wire_literal_undirected() {
             let edges = vec![WireEdge { from: "a".into(), from_port: "out".into(), to: "b".into(), to_port: "in".into(), directed: false, properties: PropertyBag::new() }];
             let text = wire_literal_from_dag(&[], &edges);
             assert!(text.contains('@'));
@@ -473,7 +473,7 @@ pub mod wire {
         }
 
         #[test]
-        fn wire_literal_with_properties() {
+        async fn wire_literal_with_properties() {
             let mut props = PropertyBag::new();
             props.insert("value".into(), PropertyValue::Number(3.0));
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
@@ -484,7 +484,7 @@ pub mod wire {
         }
 
         #[test]
-        fn wire_literal_nested_object_and_array_properties() {
+        async fn wire_literal_nested_object_and_array_properties() {
             let mut inner = PropertyBag::new();
             inner.insert("y".into(), PropertyValue::Bool(true));
             let mut props = PropertyBag::new();
@@ -497,14 +497,14 @@ pub mod wire {
         }
 
         #[test]
-        fn wire_literal_from_dag_unknown_node_kind_defaults_to_node() {
+        async fn wire_literal_from_dag_unknown_node_kind_defaults_to_node() {
             let edges = vec![WireEdge { from: "missing".into(), from_port: "out".into(), to: "also-missing".into(), to_port: "in".into(), directed: true, properties: PropertyBag::new() }];
             let text = wire_literal_from_dag(&[], &edges);
             assert_eq!(text, "missing:node@out->also-missing:node@in");
         }
 
         #[test]
-        fn dag_from_wire_literal_rejects_unterminated_string() {
+        async fn dag_from_wire_literal_rejects_unterminated_string() {
             // 🩹️ unified syntax: double-quoted properties, `key="value"` (never `key: 'value'`).
             let err = dag_from_wire_literal("n:kind{prop=\"unterminated").unwrap_err();
             assert!(matches!(err, GraphDslError::Lex(_)));
@@ -512,7 +512,7 @@ pub mod wire {
         }
 
         #[test]
-        fn dag_from_wire_literal_rejects_unexpected_char() {
+        async fn dag_from_wire_literal_rejects_unexpected_char() {
             // 🩹️ `#` is now a legitimate comment starter (unified with the rest of the DSL engine),
             // so the "genuinely unrecognized character" trigger moved to `?`, which is outside
             // `dsl_core`'s alphabet in every mode.
@@ -522,13 +522,13 @@ pub mod wire {
         }
 
         #[test]
-        fn dag_from_wire_literal_rejects_edge_missing_target_port() {
+        async fn dag_from_wire_literal_rejects_edge_missing_target_port() {
             let err = dag_from_wire_literal("a:kind@out->b:kind").unwrap_err();
             assert!(matches!(err, GraphDslError::EdgeTargetMissingPort));
         }
 
         #[test]
-        fn dag_from_wire_literal_rejects_edge_missing_source_port() {
+        async fn dag_from_wire_literal_rejects_edge_missing_source_port() {
             // 🆕️ the unified grammar itself leaves the source port optional (unlike the old
             // hand-rolled parser, which could never even reach an edge without one) — this
             // module's own DAG domain rule must now catch it explicitly.
@@ -537,7 +537,7 @@ pub mod wire {
         }
 
         #[test]
-        fn dag_from_wire_literal_parses_bool_and_null_properties() {
+        async fn dag_from_wire_literal_parses_bool_and_null_properties() {
             // 🩹️ unified syntax: space-separated `key=value` pairs, no commas, no colons.
             let (nodes, _) = dag_from_wire_literal("n:kind{on=true off=false empty=null}").unwrap();
             let props = &nodes[0].properties;
@@ -547,19 +547,19 @@ pub mod wire {
         }
 
         #[test]
-        fn dag_from_wire_literal_parses_double_quoted_string_properties() {
+        async fn dag_from_wire_literal_parses_double_quoted_string_properties() {
             let (nodes, _) = dag_from_wire_literal("n:kind{label=\"hello world\"}").unwrap();
             assert_eq!(nodes[0].properties.get("label"), Some(&PropertyValue::String("hello world".to_string())));
         }
 
         #[test]
-        fn dag_from_wire_literal_rejects_malformed_properties() {
+        async fn dag_from_wire_literal_rejects_malformed_properties() {
             let err = dag_from_wire_literal("n:kind{prop 1}").unwrap_err();
             assert!(matches!(err, GraphDslError::Lex(_)));
         }
 
         #[test]
-        fn dag_from_wire_literal_accepts_back_arrow_sugar_and_normalizes_direction() {
+        async fn dag_from_wire_literal_accepts_back_arrow_sugar_and_normalizes_direction() {
             // 🆕️ `<-` is accepted sugar, normalized to the same stored/parsed shape as `->` with
             // endpoints swapped — `dsl_core::parse_wire`'s law, inherited for free.
             let (_, edges) = dag_from_wire_literal("b:kind@in<-a:kind@out").unwrap();
@@ -573,7 +573,7 @@ pub mod wire {
         }
 
         #[test]
-        fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
+        async fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
             // 🆕️ unified undirected sigil is `--`, not the old single `-`.
             let (_, edges) = dag_from_wire_literal("a:x@out--b:y@in").unwrap();
             assert_eq!(edges.len(), 1);
@@ -583,7 +583,7 @@ pub mod wire {
         }
 
         #[test]
-        fn wire_literal_from_dag_round_trips_through_unified_double_quoted_syntax() {
+        async fn wire_literal_from_dag_round_trips_through_unified_double_quoted_syntax() {
             let mut props = PropertyBag::new();
             props.insert("label".into(), PropertyValue::String("hi".into()));
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
@@ -709,11 +709,11 @@ pub struct QueryResult {
 }
 
 impl QueryResult {
-    pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
+    pub async fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
         Self { kind: QueryResultKind::Table, columns, rows, graph_fixture_json: None }
     }
 
-    pub fn graph(columns: Vec<String>, graph_fixture_json: String) -> Self {
+    pub async fn graph(columns: Vec<String>, graph_fixture_json: String) -> Self {
         Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture_json: Some(graph_fixture_json) }
     }
 }
@@ -781,7 +781,7 @@ struct SpannedToken {
     end: usize,
 }
 
-fn token_class(token: &Token) -> TokenClass {
+async fn token_class(token: &Token) -> TokenClass {
     match token {
         Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::KwWith | Token::KwUnwind | Token::KwCall | Token::KwAs | Token::And | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
@@ -793,14 +793,14 @@ fn token_class(token: &Token) -> TokenClass {
     }
 }
 
-fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end: usize) {
+async fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end: usize) {
     tokens.push(SpannedToken { token, start, end });
 }
 
 /// 🔑️ Uppercases and matches against Jack's clause/logic keyword table; anything else stays a
 /// plain variable/property/kind identifier. Case-insensitive (Cypher heritage — `match`, `Match`,
 /// `MATCH` are all the same token), unlike `dsl_core`'s own grammars which are case-sensitive.
-fn keyword_or_ident(text: String) -> Token {
+async fn keyword_or_ident(text: String) -> Token {
     match text.to_ascii_uppercase().as_str() {
         "MATCH" => Token::KwMatch,
         "WHERE" => Token::KwWhere,
@@ -823,7 +823,7 @@ fn keyword_or_ident(text: String) -> Token {
 /// `var.prop` property-access grammar needs `.` as its own token — splits it back apart here,
 /// checking each piece against the keyword table too (defensive; keywords never legitimately
 /// contain a dot, but this keeps the one keyword-recognition path authoritative).
-fn push_ident_or_keyword_with_dots(text: &str, start: usize, out: &mut Vec<SpannedToken>) {
+async fn push_ident_or_keyword_with_dots(text: &str, start: usize, out: &mut Vec<SpannedToken>) {
     let mut offset = 0usize;
     for (idx, part) in text.split('.').enumerate() {
         if idx > 0 {
@@ -841,7 +841,7 @@ fn push_ident_or_keyword_with_dots(text: &str, start: usize, out: &mut Vec<Spann
 /// 🔬️ Converts one already-lexed `dsl_core` segment (containing no quotes or `!=` — those are
 /// scanned by [`lex_spanned`] itself, ahead of delegating everything else) into Jack's own
 /// richer, grammar-aware token stream.
-fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out: &mut Vec<SpannedToken>) -> Result<(), GraphDslError> {
+async fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out: &mut Vec<SpannedToken>) -> Result<(), GraphDslError> {
     if segment.is_empty() {
         return Ok(());
     }
@@ -919,7 +919,7 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
 /// operator (`dsl_core` has no relational operators at all — it's a structural DSL alphabet, not
 /// an expression language). Both are pre-scanned as their own tokens; every remaining run of
 /// characters is delegated whole to `os_dsl::lex` and converted via [`push_dsl_core_segment`].
-fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
+async fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
     let bytes = input.as_bytes();
     let mut tokens = Vec::new();
     let mut i = 0usize;
@@ -974,12 +974,12 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphD
     Ok(tokens)
 }
 
-fn lex(input: &str) -> Result<Vec<Token>, GraphDslError> {
+async fn lex(input: &str) -> Result<Vec<Token>, GraphDslError> {
     lex_spanned(input, false).map(|spanned| spanned.into_iter().map(|row| row.token).collect())
 }
 
 /// 🎨️ Tokenize jack source for editor highlighting (never fails).
-pub fn tokenize(input: &str) -> Vec<TokenSpan> {
+pub async fn tokenize(input: &str) -> Vec<TokenSpan> {
     lex_spanned(input, true)
         .unwrap_or_default()
         .into_iter()
@@ -1015,7 +1015,7 @@ pub struct Completion {
 const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE", "WITH", "UNWIND", "CALL"];
 const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
 
-fn completion_prefix(source: &str, cursor: usize) -> String {
+async fn completion_prefix(source: &str, cursor: usize) -> String {
     let cursor = cursor.min(source.len());
     let bytes = source.as_bytes();
     let mut start = cursor;
@@ -1030,7 +1030,7 @@ fn completion_prefix(source: &str, cursor: usize) -> String {
     source[start..cursor].to_string()
 }
 
-fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
+async fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
     let mut end = tokens.len();
     for (i, row) in tokens.iter().enumerate() {
         if row.start >= cursor && !matches!(row.token, Token::Eof) {
@@ -1041,7 +1041,7 @@ fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToke
     &tokens[..end]
 }
 
-fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
+async fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     let cursor = cursor.min(source.len());
     let before = &source[..cursor];
     let colon = before.rfind(':')?;
@@ -1062,7 +1062,7 @@ fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     Some(in_bracket)
 }
 
-fn after_dot_property_context(source: &str, cursor: usize) -> bool {
+async fn after_dot_property_context(source: &str, cursor: usize) -> bool {
     let cursor = cursor.min(source.len());
     let before = &source[..cursor];
     let Some(dot) = before.rfind('.') else {
@@ -1071,7 +1071,7 @@ fn after_dot_property_context(source: &str, cursor: usize) -> bool {
     let after = &before[dot + 1..];
     !after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | ':'))
 }
-fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
+async fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
     let mut paren = 0i32;
     let mut bracket = 0i32;
     for row in tokens.iter().rev() {
@@ -1088,7 +1088,7 @@ fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
     None
 }
 
-fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
+async fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
     let mut vars = BTreeSet::new();
     let mut i = 0;
     while i + 2 < tokens.len() {
@@ -1104,7 +1104,7 @@ fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
     vars
 }
 
-fn in_where_clause(tokens: &[SpannedToken]) -> bool {
+async fn in_where_clause(tokens: &[SpannedToken]) -> bool {
     let mut seen_where = false;
     let mut seen_return = false;
     for row in tokens {
@@ -1117,23 +1117,23 @@ fn in_where_clause(tokens: &[SpannedToken]) -> bool {
     seen_where && !seen_return
 }
 
-fn graph_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
     manifest_node_kinds(graph)
 }
 
-fn graph_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
     manifest_edge_kinds(graph)
 }
 
-fn graph_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
     manifest_property_names(graph)
 }
 
-fn graph_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
     manifest_port_kinds(graph)
 }
 
-fn after_at_port_context(source: &str, cursor: usize) -> bool {
+async fn after_at_port_context(source: &str, cursor: usize) -> bool {
     let cursor = cursor.min(source.len());
     let before = &source[..cursor];
     let Some(at) = before.rfind('@') else {
@@ -1143,7 +1143,7 @@ fn after_at_port_context(source: &str, cursor: usize) -> bool {
     !after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | '-' | '>' | '@'))
 }
 
-fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
+async fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
     let prefix_lower = prefix.to_ascii_lowercase();
     let mut out = Vec::new();
     for (label, kind, detail) in candidates {
@@ -1156,7 +1156,7 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
 }
 
 /// 🔎️ Context-aware jack completions for the editor.
-pub fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<Completion> {
+pub async fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<Completion> {
     let cursor = cursor.min(source.len());
     let prefix = completion_prefix(source, cursor);
     let tokens = lex_spanned(source, true).unwrap_or_default();
@@ -1253,7 +1253,7 @@ pub struct SemanticToken {
     pub class: String,
 }
 
-fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
+async fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
     for node in &pattern.nodes {
         out.insert(node.var.clone());
     }
@@ -1265,7 +1265,7 @@ fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
     }
 }
 
-fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
+async fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
     let mut vars = BTreeSet::new();
     for clause in clauses {
         match clause {
@@ -1281,7 +1281,7 @@ fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
     vars
 }
 
-fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
+async fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
     let mut refs = Vec::new();
     for clause in clauses {
         match clause {
@@ -1310,7 +1310,7 @@ fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
     refs
 }
 
-fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
+async fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
     match expr {
         Expr::Eq { var, .. } | Expr::Ne { var, .. } => refs.push((var.clone(), 0, var.len())),
         Expr::And(a, b) | Expr::Or(a, b) => {
@@ -1320,7 +1320,7 @@ fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
     }
 }
 
-fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Vec<Diagnostic> {
+async fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     let node_kinds = graph_node_kinds(graph).into_iter().collect::<BTreeSet<_>>();
     let edge_kinds = graph_edge_kinds(graph).into_iter().collect::<BTreeSet<_>>();
@@ -1369,13 +1369,13 @@ fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Ve
     out
 }
 
-fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
+async fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
     let needle = format!(":{kind}");
     let start = source.find(&needle)?;
     Some((start + 1, start + needle.len()))
 }
 
-fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
+async fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
     let mut from = 0;
     while let Some(rel) = source[from..].find(ident) {
         let start = from + rel;
@@ -1393,7 +1393,7 @@ fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 }
 
 /// 🩺️ Lint jack source with syntax and semantic diagnostics.
-pub fn lint(graph: &dyn QueryableGraph, source: &str) -> Vec<Diagnostic> {
+pub async fn lint(graph: &dyn QueryableGraph, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for span in tokenize(source) {
         if span.class == TokenClass::Error {
@@ -1410,7 +1410,7 @@ pub fn lint(graph: &dyn QueryableGraph, source: &str) -> Vec<Diagnostic> {
     out
 }
 
-fn format_token(tok: &Token) -> String {
+async fn format_token(tok: &Token) -> String {
     match tok {
         Token::KwMatch => "MATCH".into(),
         Token::KwWhere => "WHERE".into(),
@@ -1454,7 +1454,7 @@ fn format_token(tok: &Token) -> String {
 }
 
 /// 🪞️ Format jack source canonically (idempotent).
-pub fn format(source: &str) -> Result<String, GraphDslError> {
+pub async fn format(source: &str) -> Result<String, GraphDslError> {
     let tokens = lex_spanned(source, false)?;
     let mut out = String::new();
     let mut line_open = false;
@@ -1510,7 +1510,7 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
     Ok(out.trim().to_string())
 }
 
-fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> {
+async fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> {
     let cursor = cursor.min(source.len());
     if cursor > source.len() {
         return None;
@@ -1541,7 +1541,7 @@ fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> 
 }
 
 /// 💬️ Hover information at cursor.
-pub fn hover(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Option<Hover> {
+pub async fn hover(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Option<Hover> {
     let (start, end, word) = hover_word_at(source, cursor)?;
     let upper = word.to_ascii_uppercase();
     if CLAUSE_KEYWORDS.iter().any(|kw| *kw == upper) || LOGIC_KEYWORDS.iter().any(|kw| *kw == upper) {
@@ -1563,7 +1563,7 @@ pub fn hover(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Option<
 }
 
 /// 🎨️ Semantic token classes for LSP highlighting.
-pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
+pub async fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
     tokenize(source)
         .into_iter()
         .map(|span| SemanticToken {
@@ -1592,15 +1592,15 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 /// Jack has no AST-to-text printer (`format` re-derives canonical text token-by-token from SOURCE,
 /// not from a `Query`) — `IdiomHooks` itself only needs function pointers, so it's built directly
 /// from the language-service surface Jack already has, no printer required.
-pub fn idiom_hooks() -> dsl_core::IdiomHooks {
+pub async fn idiom_hooks() -> dsl_core::IdiomHooks {
     dsl_core::IdiomHooks { lang: "jack", canonicalize: idiom_canonicalize, classify: idiom_classify, complete: idiom_complete }
 }
 
-fn idiom_canonicalize(text: &str) -> Result<String, dsl_core::TextError> {
+async fn idiom_canonicalize(text: &str) -> Result<String, dsl_core::TextError> {
     format(text).map_err(|e| dsl_core::TextError::new(e.to_string(), dsl_core::TextSpan::at(1, 1)))
 }
 
-fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::TextSpan)> {
+async fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::TextSpan)> {
     tokenize(text)
         .into_iter()
         .map(|span| {
@@ -1618,31 +1618,31 @@ fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::TextSpan)>
         .collect()
 }
 
-fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
+async fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
     // Jack's own `complete` needs a `&dyn QueryableGraph` for schema-aware suggestions (node/edge
     // kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to supply —
     // an empty graph still exercises the syntax-only completions (clause/logic keywords).
     struct EmptyGraph;
     impl QueryableGraph for EmptyGraph {
-        fn manifest(&self) -> Option<&crate::manifest::GraphManifest> {
+        async fn manifest(&self) -> Option<&crate::manifest::GraphManifest> {
             None
         }
-        fn node_ids(&self) -> Vec<String> {
+        async fn node_ids(&self) -> Vec<String> {
             Vec::new()
         }
-        fn node_kind(&self, _id: &str) -> Option<String> {
+        async fn node_kind(&self, _id: &str) -> Option<String> {
             None
         }
-        fn node_name(&self, _id: &str) -> Option<String> {
+        async fn node_name(&self, _id: &str) -> Option<String> {
             None
         }
-        fn node_property(&self, _id: &str, _key: &str) -> Option<PropertyValue> {
+        async fn node_property(&self, _id: &str, _key: &str) -> Option<PropertyValue> {
             None
         }
-        fn edges(&self) -> Vec<QueryableEdge> {
+        async fn edges(&self) -> Vec<QueryableEdge> {
             Vec::new()
         }
-        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+        async fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
             None
         }
     }
@@ -1652,7 +1652,7 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
 /// 📍️ Converts a byte-offset half-open range into `os_dsl::TextSpan`'s 1-based line/column/
 /// length form — Jack's own spans are byte offsets (`TokenSpan`/`SemanticToken`), `dsl_core`'s are
 /// line/column, so this is the one place that needs the source text to translate between them.
-fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl_core::TextSpan {
+async fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl_core::TextSpan {
     let mut line = 1u32;
     let mut column = 1u32;
     for (i, ch) in text.char_indices() {
@@ -1678,15 +1678,15 @@ struct Parser {
 }
 
 impl Parser {
-    fn new(tokens: Vec<Token>) -> Self {
+    async fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, pos: 0 }
     }
 
-    fn peek(&self) -> &Token {
+    async fn peek(&self) -> &Token {
         self.tokens.get(self.pos).unwrap_or(&Token::Eof)
     }
 
-    fn bump(&mut self) -> Token {
+    async fn bump(&mut self) -> Token {
         let t = self.peek().clone();
         if !matches!(t, Token::Eof) {
             self.pos += 1;
@@ -1694,14 +1694,14 @@ impl Parser {
         t
     }
 
-    fn expect_ident(&mut self) -> Result<String, GraphDslError> {
+    async fn expect_ident(&mut self) -> Result<String, GraphDslError> {
         match self.bump() {
             Token::Ident(s) => Ok(s),
             other => Err(GraphDslError::UnexpectedToken { expected: "ident".into(), found: format!("{other:?}") }),
         }
     }
 
-    fn parse_query(&mut self) -> Result<Query, GraphDslError> {
+    async fn parse_query(&mut self) -> Result<Query, GraphDslError> {
         let mut clauses = Vec::new();
         while !matches!(self.peek(), Token::Eof) {
             clauses.push(self.parse_clause()?);
@@ -1709,7 +1709,7 @@ impl Parser {
         Ok(Query { clauses })
     }
 
-    fn parse_clause(&mut self) -> Result<Clause, GraphDslError> {
+    async fn parse_clause(&mut self) -> Result<Clause, GraphDslError> {
         match self.peek() {
             Token::KwMatch => {
                 self.bump();
@@ -1800,7 +1800,7 @@ impl Parser {
     /// this repo's alphabet). `<-` at the front means the edge points INTO `left`; represented by
     /// swapping which parsed node plays "left" so the stored `PatternEdge.right` is always the
     /// forward-direction target, mirroring `dsl_schema`'s own wire `<-` normalization.
-    fn parse_pattern(&mut self) -> Result<Pattern, GraphDslError> {
+    async fn parse_pattern(&mut self) -> Result<Pattern, GraphDslError> {
         self.expect(&Token::LParen)?;
         let left = self.parse_pattern_node()?;
         self.expect(&Token::RParen)?;
@@ -1848,14 +1848,14 @@ impl Parser {
         }
     }
 
-    fn parse_bracketed_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
+    async fn parse_bracketed_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
         self.expect(&Token::LParen)?;
         let node = self.parse_pattern_node()?;
         self.expect(&Token::RParen)?;
         Ok(node)
     }
 
-    fn parse_edge_label(&mut self) -> Result<(Option<String>, Option<String>), GraphDslError> {
+    async fn parse_edge_label(&mut self) -> Result<(Option<String>, Option<String>), GraphDslError> {
         self.expect(&Token::LBracket)?;
         let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
         let edge_kind = if matches!(self.peek(), Token::Colon) {
@@ -1868,7 +1868,7 @@ impl Parser {
         Ok((edge_var, edge_kind))
     }
 
-    fn parse_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
+    async fn parse_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(&Token::Colon)?;
         let kind = self.expect_ident()?;
@@ -1881,7 +1881,7 @@ impl Parser {
         Ok(PatternNode { var, kind, port })
     }
 
-    fn parse_return_item(&mut self) -> Result<ReturnItem, GraphDslError> {
+    async fn parse_return_item(&mut self) -> Result<ReturnItem, GraphDslError> {
         let var = self.expect_ident()?;
         if matches!(self.peek(), Token::Dot) {
             self.bump();
@@ -1892,7 +1892,7 @@ impl Parser {
         }
     }
 
-    fn parse_assignment(&mut self) -> Result<Assignment, GraphDslError> {
+    async fn parse_assignment(&mut self) -> Result<Assignment, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
@@ -1901,11 +1901,11 @@ impl Parser {
         Ok(Assignment { var, prop, value })
     }
 
-    fn parse_expr(&mut self) -> Result<Expr, GraphDslError> {
+    async fn parse_expr(&mut self) -> Result<Expr, GraphDslError> {
         self.parse_or_expr()
     }
 
-    fn parse_or_expr(&mut self) -> Result<Expr, GraphDslError> {
+    async fn parse_or_expr(&mut self) -> Result<Expr, GraphDslError> {
         let mut left = self.parse_and_expr()?;
         while matches!(self.peek(), Token::Or) {
             self.bump();
@@ -1915,7 +1915,7 @@ impl Parser {
         Ok(left)
     }
 
-    fn parse_and_expr(&mut self) -> Result<Expr, GraphDslError> {
+    async fn parse_and_expr(&mut self) -> Result<Expr, GraphDslError> {
         let mut left = self.parse_cmp_expr()?;
         while matches!(self.peek(), Token::And) {
             self.bump();
@@ -1925,7 +1925,7 @@ impl Parser {
         Ok(left)
     }
 
-    fn parse_cmp_expr(&mut self) -> Result<Expr, GraphDslError> {
+    async fn parse_cmp_expr(&mut self) -> Result<Expr, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
@@ -1936,7 +1936,7 @@ impl Parser {
         }
     }
 
-    fn parse_value(&mut self) -> Result<PropertyValue, GraphDslError> {
+    async fn parse_value(&mut self) -> Result<PropertyValue, GraphDslError> {
         match self.bump() {
             Token::Number(n) => Ok(PropertyValue::Number(n)),
             Token::StringLit(s) => Ok(PropertyValue::String(s)),
@@ -1947,7 +1947,7 @@ impl Parser {
         }
     }
 
-    fn expect(&mut self, want: &Token) -> Result<(), GraphDslError> {
+    async fn expect(&mut self, want: &Token) -> Result<(), GraphDslError> {
         if std::mem::discriminant(self.peek()) == std::mem::discriminant(want) {
             self.bump();
             Ok(())
@@ -1958,7 +1958,7 @@ impl Parser {
 }
 
 /// 🔍️ Parse a jack query string.
-pub fn parse(query: &str) -> Result<Query, GraphDslError> {
+pub async fn parse(query: &str) -> Result<Query, GraphDslError> {
     let tokens = lex(query)?;
     Parser::new(tokens).parse_query()
 }
@@ -1973,7 +1973,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a read-only jack query against a queryable graph.
-pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult, GraphDslError> {
+pub async fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult, GraphDslError> {
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
     for clause in &query.clauses {
@@ -1999,16 +1999,16 @@ pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult,
 }
 
 /// ▶️ Parse and execute jack in one step.
-pub fn run_query(graph: &dyn QueryableGraph, source: &str) -> Result<QueryResult, GraphDslError> {
+pub async fn run_query(graph: &dyn QueryableGraph, source: &str) -> Result<QueryResult, GraphDslError> {
     execute(graph, &parse(source)?)
 }
 
 /// ▶️ Execute jack and return JSON result.
-pub fn run_query_json(graph: &dyn QueryableGraph, source: &str) -> Result<String, GraphDslError> {
+pub async fn run_query_json(graph: &dyn QueryableGraph, source: &str) -> Result<String, GraphDslError> {
     Ok(serde_json::to_string(&run_query(graph, source)?)?)
 }
 
-fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
+async fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -2020,7 +2020,7 @@ fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Ve
     Ok(bindings)
 }
 
-fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, GraphDslError> {
+async fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, GraphDslError> {
     let left = pattern.nodes.first().ok_or(GraphDslError::EmptyPattern)?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
@@ -2086,11 +2086,11 @@ fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) 
     Ok(out)
 }
 
-fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
+async fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
     base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
-fn eval_expr(graph: &dyn QueryableGraph, binding: &Binding, expr: &Expr) -> bool {
+async fn eval_expr(graph: &dyn QueryableGraph, binding: &Binding, expr: &Expr) -> bool {
     match expr {
         Expr::Eq { var, prop, value } => binding_value(graph, binding, var, prop) == Some(value.clone()),
         Expr::Ne { var, prop, value } => binding_value(graph, binding, var, prop) != Some(value.clone()),
@@ -2099,23 +2099,23 @@ fn eval_expr(graph: &dyn QueryableGraph, binding: &Binding, expr: &Expr) -> bool
     }
 }
 
-fn binding_value(graph: &dyn QueryableGraph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
+async fn binding_value(graph: &dyn QueryableGraph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
     let node_id = binding.nodes.get(var)?;
     graph.node_property(node_id, prop)
 }
 
-fn binding_has_entity(binding: &Binding, var: &str) -> bool {
+async fn binding_has_entity(binding: &Binding, var: &str) -> bool {
     binding.nodes.contains_key(var) || binding.edges.contains_key(var)
 }
 
-fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
+async fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
     items.iter().any(|item| {
         let ReturnItem::Var(v) = item else { return false };
         bindings.iter().any(|b| binding_has_entity(b, v))
     })
 }
 
-fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
+async fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
     let mut node_ids = BTreeSet::new();
     let mut edge_ids = BTreeSet::new();
     for binding in bindings {
@@ -2133,7 +2133,7 @@ fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeS
     (node_ids, edge_ids)
 }
 
-fn build_return(graph: &dyn QueryableGraph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
+async fn build_return(graph: &dyn QueryableGraph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
         .map(|item| match item {
@@ -2169,13 +2169,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_match_return() {
+    async fn parse_match_return() {
         let q = parse("MATCH (a:computation) RETURN a.name").unwrap();
         assert_eq!(q.clauses.len(), 2);
     }
 
     #[test]
-    fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
+    async fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
         let hooks = idiom_hooks();
         assert_eq!(hooks.lang, "jack");
         let canonical = (hooks.canonicalize)("MATCH   (a:computation)   RETURN   a.name").expect("canonicalize");
@@ -2190,7 +2190,7 @@ mod tests {
     }
 
     #[test]
-    fn run_dag_fixture_query() {
+    async fn run_dag_fixture_query() {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
         // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
@@ -2288,14 +2288,14 @@ mod tests {
     }
 
     #[test]
-    fn parse_match_with_port() {
+    async fn parse_match_with_port() {
         let q = parse("MATCH (a:computation@out) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
         assert_eq!(patterns[0].nodes[0].port.as_deref(), Some("out"));
     }
 
     #[test]
-    fn parse_undirected_edge() {
+    async fn parse_undirected_edge() {
         // 🩹️ unified undirected sigil is `--`, not the old bare `-` (not even lexable in the
         // shared `dsl_core` alphabet, which has no standalone dash token).
         let q = parse("MATCH (a:computation)--(b:slider) RETURN a.name").unwrap();
@@ -2305,7 +2305,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_back_arrow_edge_swaps_left_and_right() {
+    async fn parse_back_arrow_edge_swaps_left_and_right() {
         let q = parse("MATCH (a:computation)<-(b:slider) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
         // `<-` means the edge points INTO the parenthesized-first node — represented by swapping
@@ -2317,7 +2317,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
+    async fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
         let forward = parse("MATCH (a:computation)--[r:wire]->(b:slider) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &forward.clauses[0] else { panic!("expected match") };
         let edge = patterns[0].edge.as_ref().expect("edge");
@@ -2332,7 +2332,7 @@ mod tests {
     }
 
     #[test]
-    fn run_port_filtered_query() {
+    async fn run_port_filtered_query() {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
         // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
@@ -2432,7 +2432,7 @@ mod tests {
     // #region 🔖️Fixtures
     /// 🧵️ Small hand-built graph exercising every `split_endpoint` branch: exact handle match,
     /// mapped/unmapped `@` and `:` splits, and the plain-id fallback.
-    fn split_endpoint_fixture() -> &'static str {
+    async fn split_endpoint_fixture() -> &'static str {
         r#"{
   "manifestId": "flow-dag",
   "nodes": [
@@ -2449,14 +2449,14 @@ mod tests {
 }"#
     }
 
-    fn find_edge<'a>(edges: &'a [QueryableEdge], id: &str) -> &'a QueryableEdge {
+    async fn find_edge<'a>(edges: &'a [QueryableEdge], id: &str) -> &'a QueryableEdge {
         edges.iter().find(|e| e.id == id).unwrap_or_else(|| panic!("missing edge {id}"))
     }
     // #endregion 🔖️Fixtures
 
     // #region 🔖️QueryableGraphTests
     #[test]
-    fn split_endpoint_resolves_exact_handle_and_unmapped_at() {
+    async fn split_endpoint_resolves_exact_handle_and_unmapped_at() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let edges = graph.edges();
         let e1 = find_edge(&edges, "e1");
@@ -2467,7 +2467,7 @@ mod tests {
     }
 
     #[test]
-    fn split_endpoint_resolves_unmapped_colon_and_dot() {
+    async fn split_endpoint_resolves_unmapped_colon_and_dot() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let edges = graph.edges();
         let e2 = find_edge(&edges, "e2");
@@ -2478,7 +2478,7 @@ mod tests {
     }
 
     #[test]
-    fn split_endpoint_resolves_handle_mapped_at_and_colon() {
+    async fn split_endpoint_resolves_handle_mapped_at_and_colon() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let edges = graph.edges();
         let e3 = find_edge(&edges, "e3");
@@ -2489,7 +2489,7 @@ mod tests {
     }
 
     #[test]
-    fn split_endpoint_falls_back_to_plain_id() {
+    async fn split_endpoint_falls_back_to_plain_id() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let edges = graph.edges();
         let e4 = find_edge(&edges, "e4");
@@ -2500,7 +2500,7 @@ mod tests {
     }
 
     #[test]
-    fn board_graph_node_property_id_kind_all_and_missing() {
+    async fn board_graph_node_property_id_kind_all_and_missing() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         assert_eq!(graph.node_property("a", "id"), Some(PropertyValue::String("a".into())));
         assert_eq!(graph.node_property("a", "kind"), Some(PropertyValue::String("computation".into())));
@@ -2512,7 +2512,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_helpers_merge_graph_and_manifest_kinds() {
+    async fn manifest_helpers_merge_graph_and_manifest_kinds() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("flow-dag"));
         let node_kinds = manifest_node_kinds(&graph);
@@ -2529,7 +2529,7 @@ mod tests {
     }
 
     #[test]
-    fn subgraph_fixture_json_filters_to_requested_ids() {
+    async fn subgraph_fixture_json_filters_to_requested_ids() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let node_ids = BTreeSet::from(["a".to_string(), "b".to_string()]);
         let edge_ids = BTreeSet::from(["e1".to_string()]);
@@ -2540,13 +2540,13 @@ mod tests {
     }
 
     #[test]
-    fn from_fixture_json_rejects_invalid_json() {
+    async fn from_fixture_json_rejects_invalid_json() {
         let Err(err) = BoardQueryableGraph::from_fixture_json("not json", None) else { panic!("expected error") };
         assert!(matches!(err, GraphDslError::Json(_)));
     }
 
     #[test]
-    fn from_puzzle3d_fixture_json_converts_objects_array() {
+    async fn from_puzzle3d_fixture_json_converts_objects_array() {
         let fixture = r#"{"objects": [{"id": "o1", "objectKind": "Cube", "name": "Box"}]}"#;
         let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
         assert_eq!(graph.node_kind("o1").as_deref(), Some("Cube"));
@@ -2555,14 +2555,14 @@ mod tests {
     }
 
     #[test]
-    fn from_puzzle3d_fixture_json_passes_through_existing_nodes() {
+    async fn from_puzzle3d_fixture_json_passes_through_existing_nodes() {
         let fixture = r#"{"nodes": [{"id": "n1", "nodeKind": "Widget", "text": "N1"}]}"#;
         let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
         assert_eq!(graph.node_kind("n1").as_deref(), Some("Widget"));
     }
 
     #[test]
-    fn from_puzzle2d_and_puzzle5d_fixture_json_resolve_manifests() {
+    async fn from_puzzle2d_and_puzzle5d_fixture_json_resolve_manifests() {
         let fixture = r#"{"nodes": [], "edges": []}"#;
         let g2 = BoardQueryableGraph::from_puzzle2d_fixture_json(fixture).unwrap();
         assert_eq!(g2.manifest().map(|m| m.id.as_str()), Some("puzzle2d-default"));
@@ -2573,7 +2573,7 @@ mod tests {
 
     // #region 🔖️ErrorTests
     #[test]
-    fn graph_dsl_error_display_messages() {
+    async fn graph_dsl_error_display_messages() {
         assert_eq!(GraphDslError::UnterminatedString.to_string(), "unterminated string literal");
         assert_eq!(GraphDslError::UnexpectedChar('$').to_string(), "unexpected character '$'");
         assert_eq!(GraphDslError::EdgeTargetMissingPort.to_string(), "edge target requires @port");
@@ -2585,7 +2585,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_error_on_unexpected_char() {
+    async fn parse_error_on_unexpected_char() {
         // `{`/`}` are valid tokens in `dsl_core`'s shared alphabet (map/object-literal braces)
         // but aren't part of Jack's own grammar (no map literals) — Jack rejects them itself,
         // hence `UnexpectedChar` rather than a `dsl_core`-surfaced `Lex` error.
@@ -2594,7 +2594,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
+    async fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
         // `?` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
         // valid Jack syntax) — `os_dsl::lex` itself fails, surfaced verbatim as `Lex`.
         let err = parse("MATCH (a:x) ? WHERE").unwrap_err();
@@ -2603,7 +2603,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_error_on_lone_bang_reports_lex_error() {
+    async fn parse_error_on_lone_bang_reports_lex_error() {
         // A stray `!` not followed by `=` isn't a token in Jack's grammar at all (`dsl_core` has
         // no relational operators, and Jack only special-cases `!=`).
         let err = parse("MATCH (a:x) WHERE a.p ! 1").unwrap_err();
@@ -2611,7 +2611,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_error_on_unterminated_string() {
+    async fn parse_error_on_unterminated_string() {
         let err = parse("MATCH (a:x) WHERE a.name = 'oops").unwrap_err();
         assert!(matches!(err, GraphDslError::UnterminatedString));
     }
@@ -2619,7 +2619,7 @@ mod tests {
 
     // #region 🔖️LexerAndLanguageServiceTests
     #[test]
-    fn tokenize_classifies_clause_and_operator_tokens() {
+    async fn tokenize_classifies_clause_and_operator_tokens() {
         let spans = tokenize("MATCH (a:x)--[:wire]->(b:y) WHERE a.p = 1 AND b.q != 'v' RETURN a.p");
         assert!(spans.iter().any(|s| s.class == TokenClass::Keyword));
         assert!(spans.iter().any(|s| s.class == TokenClass::Ident));
@@ -2630,13 +2630,13 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_marks_unterminated_string_as_error_class() {
+    async fn tokenize_marks_unterminated_string_as_error_class() {
         let spans = tokenize("MATCH (a:x) WHERE a.p = 'unterminated");
         assert!(spans.iter().any(|s| s.class == TokenClass::Error));
     }
 
     #[test]
-    fn tokenize_never_panics_on_stray_symbols() {
+    async fn tokenize_never_panics_on_stray_symbols() {
         // 🩹️ `#` is now a legitimate comment starter (unified with the rest of the DSL engine, so
         // it swallows the remainder of the line) — the stray-symbol probes moved off it.
         let spans = tokenize("MATCH (a:x) ~ ^ RETURN a");
@@ -2644,7 +2644,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_treats_hash_as_a_comment_to_end_of_line() {
+    async fn tokenize_treats_hash_as_a_comment_to_end_of_line() {
         let source = "MATCH (a:x) # a trailing comment\nRETURN a";
         let comment_start = source.find('#').unwrap();
         let line_end = source.find('\n').unwrap();
@@ -2654,7 +2654,7 @@ mod tests {
     }
 
     #[test]
-    fn format_query_is_idempotent_and_normalizes_whitespace() {
+    async fn format_query_is_idempotent_and_normalizes_whitespace() {
         let once = format("match(a:x)--[:wire]->(b:y) where a.p=1 and b.q!='v' return a.p,b.q").unwrap();
         assert!(once.contains("MATCH"));
         assert!(once.contains(" AND "));
@@ -2664,13 +2664,13 @@ mod tests {
     }
 
     #[test]
-    fn format_rejects_unterminated_string() {
+    async fn format_rejects_unterminated_string() {
         let err = format("MATCH (a:x) WHERE a.p = 'oops").unwrap_err();
         assert!(matches!(err, GraphDslError::UnterminatedString));
     }
 
     #[test]
-    fn complete_after_colon_suggests_node_then_edge_kinds() {
+    async fn complete_after_colon_suggests_node_then_edge_kinds() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let node_source = "MATCH (a:c";
         let node_completions = complete(&graph, node_source, node_source.len());
@@ -2681,7 +2681,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_after_at_suggests_port_kinds() {
+    async fn complete_after_at_suggests_port_kinds() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "MATCH (a:computation@i";
         let completions = complete(&graph, source, source.len());
@@ -2689,7 +2689,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_after_dot_suggests_property_names() {
+    async fn complete_after_dot_suggests_property_names() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "MATCH (a:computation) RETURN a.sc";
         let completions = complete(&graph, source, source.len());
@@ -2697,7 +2697,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_suggests_bound_variable_when_prefix_does_not_match_logic_keywords() {
+    async fn complete_suggests_bound_variable_when_prefix_does_not_match_logic_keywords() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "MATCH (abc:computation) WHERE ab";
         let completions = complete(&graph, source, source.len());
@@ -2705,7 +2705,7 @@ mod tests {
     }
 
     #[test]
-    fn complete_in_where_clause_suggests_logic_keywords() {
+    async fn complete_in_where_clause_suggests_logic_keywords() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "MATCH (a:computation) WHERE a.score = 1 AN";
         let completions = complete(&graph, source, source.len());
@@ -2713,14 +2713,14 @@ mod tests {
     }
 
     #[test]
-    fn complete_at_start_suggests_clause_keywords() {
+    async fn complete_at_start_suggests_clause_keywords() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let completions = complete(&graph, "MA", 2);
         assert!(completions.iter().any(|c| c.label == "MATCH"));
     }
 
     #[test]
-    fn hover_reports_keyword_and_bound_variable() {
+    async fn hover_reports_keyword_and_bound_variable() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "MATCH (a:computation) WHERE a.score = 1 RETURN a";
         let match_pos = source.find("MATCH").unwrap();
@@ -2732,7 +2732,7 @@ mod tests {
     }
 
     #[test]
-    fn hover_matches_bare_node_kind_edge_kind_and_property_words() {
+    async fn hover_matches_bare_node_kind_edge_kind_and_property_words() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let source = "computation wire score";
         assert!(hover(&graph, source, 3).unwrap().contents.contains("Node kind"));
@@ -2743,41 +2743,41 @@ mod tests {
     }
 
     #[test]
-    fn hover_returns_none_for_whitespace() {
+    async fn hover_returns_none_for_whitespace() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         assert!(hover(&graph, "MATCH (a:x)   RETURN a", 12).is_none());
     }
 
     #[test]
-    fn lint_flags_unknown_node_kind() {
+    async fn lint_flags_unknown_node_kind() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let diags = lint(&graph, "MATCH (a:nonexistentKind) RETURN a");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unknown-node-kind")));
     }
 
     #[test]
-    fn lint_flags_unbound_variable() {
+    async fn lint_flags_unbound_variable() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let diags = lint(&graph, "MATCH (a:computation) RETURN b");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unbound-variable")));
     }
 
     #[test]
-    fn lint_reports_parse_errors() {
+    async fn lint_reports_parse_errors() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let diags = lint(&graph, "MATCH (a:computation");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/parse-error")));
     }
 
     #[test]
-    fn lint_clean_query_has_no_diagnostics() {
+    async fn lint_clean_query_has_no_diagnostics() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let diags = lint(&graph, "MATCH (a:computation) RETURN a.name");
         assert!(diags.is_empty());
     }
 
     #[test]
-    fn semantic_tokens_mirror_tokenize_classes() {
+    async fn semantic_tokens_mirror_tokenize_classes() {
         let tokens = semantic_tokens("MATCH (a:x) RETURN a");
         assert!(tokens.iter().any(|t| t.class == "keyword"));
         assert!(tokens.iter().any(|t| t.class == "ident"));
@@ -2786,7 +2786,7 @@ mod tests {
 
     // #region 🔖️ParserAndExecutorTests
     #[test]
-    fn parse_delete_set_merge_clauses() {
+    async fn parse_delete_set_merge_clauses() {
         let q = parse("MATCH (a:x) DELETE a").unwrap();
         assert!(matches!(q.clauses[1], Clause::Delete(ref vars) if vars == &vec!["a".to_string()]));
         let q = parse("MATCH (a:x) SET a.name = 'v'").unwrap();
@@ -2796,7 +2796,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_where_and_or_precedence() {
+    async fn parse_where_and_or_precedence() {
         let q = parse("MATCH (a:x) WHERE a.p = 1 AND a.q = 2 OR a.r != 3").unwrap();
         let Clause::Where(expr) = &q.clauses[1] else { panic!("expected where") };
         assert!(matches!(expr, Expr::Or(_, _)));
@@ -2807,7 +2807,7 @@ mod tests {
     // parse into the AST (this region) but aren't wired into `execute()` yet, see
     // `GraphDslError::UnsupportedClause`.
     #[test]
-    fn parse_with_clause() {
+    async fn parse_with_clause() {
         let q = parse("MATCH (a:x) WITH a, a.name RETURN a").unwrap();
         let Clause::With(items) = &q.clauses[1] else { panic!("expected with") };
         assert_eq!(items.len(), 2);
@@ -2816,7 +2816,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_unwind_clause() {
+    async fn parse_unwind_clause() {
         let q = parse("MATCH (a:x) UNWIND a.items AS item RETURN item").unwrap();
         let Clause::Unwind(clause) = &q.clauses[1] else { panic!("expected unwind") };
         assert!(matches!(&clause.source, ReturnItem::Property { var, prop } if var == "a" && prop == "items"));
@@ -2824,7 +2824,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_call_clause_with_positional_args() {
+    async fn parse_call_clause_with_positional_args() {
         let q = parse("CALL myProc(1, \"two\", true)").unwrap();
         let Clause::Call(clause) = &q.clauses[0] else { panic!("expected call") };
         assert_eq!(clause.name, "myProc");
@@ -2832,7 +2832,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_rejects_with_unwind_call_pending_wiring() {
+    async fn execute_rejects_with_unwind_call_pending_wiring() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         for query in ["MATCH (a:x) WITH a RETURN a", "MATCH (a:x) UNWIND a.items AS i RETURN i", "CALL proc()"] {
             let err = run_query(&graph, query).unwrap_err();
@@ -2842,7 +2842,7 @@ mod tests {
     // #endregion 🔖️WithUnwindCallTests
 
     #[test]
-    fn lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted() {
+    async fn lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted() {
         let single = parse("MATCH (a:x) WHERE a.name = 'alpha' RETURN a").unwrap();
         let double = parse("MATCH (a:x) WHERE a.name = \"alpha\" RETURN a").unwrap();
         assert_eq!(single, double, "single- and double-quoted string literals must parse identically");
@@ -2852,7 +2852,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_unexpected_token_error_has_expected_and_found() {
+    async fn parse_unexpected_token_error_has_expected_and_found() {
         let err = parse("MATCH a:x)").unwrap_err();
         let GraphDslError::UnexpectedToken { expected, found } = err else { panic!("expected UnexpectedToken") };
         assert_eq!(expected, "LParen");
@@ -2860,14 +2860,14 @@ mod tests {
     }
 
     #[test]
-    fn execute_where_clause_filters_bindings() {
+    async fn execute_where_clause_filters_bindings() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:slider) WHERE a.name = 'B' RETURN a.name").unwrap();
         assert_eq!(result.rows, vec![vec![PropertyValue::String("B".into())]]);
     }
 
     #[test]
-    fn execute_and_or_expressions() {
+    async fn execute_and_or_expressions() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let and_result = run_query(&graph, "MATCH (a:slider) WHERE a.name = 'B' AND a.kind = 'slider' RETURN a.name").unwrap();
         assert_eq!(and_result.rows.len(), 1);
@@ -2876,7 +2876,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_rejects_mutating_clauses() {
+    async fn execute_rejects_mutating_clauses() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         for query in ["CREATE (a:x)", "MATCH (a:x) DELETE a", "MATCH (a:x) SET a.p = 1", "MERGE (a:x)"] {
             let err = run_query(&graph, query).unwrap_err();
@@ -2885,7 +2885,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_undirected_edge_matches_both_directions() {
+    async fn execute_undirected_edge_matches_both_directions() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let forward = run_query(&graph, "MATCH (a:computation)--[:wire]--(b:slider) RETURN a.name, b.name").unwrap();
         let reverse = run_query(&graph, "MATCH (b:slider)--[:wire]--(a:computation) RETURN a.name, b.name").unwrap();
@@ -2894,14 +2894,14 @@ mod tests {
     }
 
     #[test]
-    fn execute_multiple_match_patterns_join_bindings() {
+    async fn execute_multiple_match_patterns_join_bindings() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation), (b:slider) RETURN a.name, b.name").unwrap();
         assert_eq!(result.rows.len(), 2);
     }
 
     #[test]
-    fn execute_returns_graph_kind_when_returning_bound_entities() {
+    async fn execute_returns_graph_kind_when_returning_bound_entities() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation)--[e:wire]--(b:slider) RETURN a, e, b").unwrap();
         assert_eq!(result.kind, QueryResultKind::Graph);
@@ -2909,14 +2909,14 @@ mod tests {
     }
 
     #[test]
-    fn execute_returns_table_kind_for_property_projection() {
+    async fn execute_returns_table_kind_for_property_projection() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
         assert_eq!(result.kind, QueryResultKind::Table);
     }
 
     #[test]
-    fn execute_with_no_return_clause_yields_empty_table() {
+    async fn execute_with_no_return_clause_yields_empty_table() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation)").unwrap();
         assert!(result.columns.is_empty());
@@ -2924,7 +2924,7 @@ mod tests {
     }
 
     #[test]
-    fn run_query_json_serializes_result() {
+    async fn run_query_json_serializes_result() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let json = run_query_json(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
@@ -2932,7 +2932,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_pattern_error_is_reachable_via_pattern_construction() {
+    async fn empty_pattern_error_is_reachable_via_pattern_construction() {
         let pattern = Pattern { nodes: vec![], edge: None };
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
         let err = match_patterns(&graph, std::slice::from_ref(&pattern)).unwrap_err();

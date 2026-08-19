@@ -1,0 +1,604 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio
+
+ ↓ |@semio-tech/framework-renderer-wgpu| 🌎️hub/📦️packages/🟦️typescript/🧪️index.test.ts > boots the real hub and proves directory + presence-per-surface + document-scoped commands + admin kick + restart persistence
+stderr | 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+
+stderr | 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > server/discover with no _meta negotiates the newest supported version and returns capabilities + serverInfo 24ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > server/discover with an explicit supported _meta version negotiates exactly that version 29ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > an unsupported _meta version on server/discover yields -32022 with data.supported 39ms
+stderr | 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > initialize succeeds and negotiates protocolVersion 2025-11-25 34ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > serverInfo.name and declared capabilities match after a real SDK handshake 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls 339ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > resources/list and resources/templates/list return schema-shaped (possibly empty) arrays 5ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > resources/read on an unresolvable URI returns a well-formed MCP error (NullBackend/empty registry today) 4ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > prompts/list is empty (no registrations yet) and prompts/get on an unknown name is a well-formed MCP error 7ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/call on an unregistered tool is a genuine JSON-RPC protocol error, never a resolved isError:true result 2ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > ping succeeds 2ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > a _meta-tagged request is served statelessly with NO initialize, on a completely fresh process with no prior handshake 43ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > an unsupported _meta version on an ordinary method (not just server/discover) yields -32022 with data.supported 27ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts > semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK) > two independent fresh processes each serve a modern request with no shared state (truly stateless) 32ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️hygiene.test.ts > semio-os-mcp — stdio hygiene > every stdout line across a whole mixed-traffic session parses as JSON, even around a malformed line 32ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️hygiene.test.ts > semio-os-mcp — stdio hygiene > malformed input yields a proper JSON-RPC parse error (not a crash) and the process answers the next request 26ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️hygiene.test.ts > semio-os-mcp — stdio hygiene > the malformed-line diagnostic lands on stderr, never on stdout 21ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️hygiene.test.ts > semio-os-mcp — stdio hygiene > the process exits cleanly (code 0) on stdin EOF 24ms
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should calculate correct node dimensions 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should calculate correct node radius 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should match node radius constant 0ms
+ × |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should validate edge endpoint calculation uses correct radius 3ms
+   → expected 100 to be 50 // Object.is equality
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should use proper collision radius in D3 force simulation 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should ensure TableAvatar renders at full node size in diagram 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts > framework renderer wgpu plugin bridge > builds a JS bridge whose manifest() is synchronous JSON, matching ProgramBridge.rs's Reflect::get(handle, "manifest") contract 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts > framework renderer wgpu plugin bridge > forwards createApp/destroyApp by identity 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts > framework renderer wgpu plugin bridge > unwraps handleAction's contextJson third argument down to just its viewState before calling the typed handle — ProgramBridge.rs passes {viewState, actor} JSON, not the bare view state 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts > framework renderer wgpu plugin bridge > bridges render() through JSON round-tripping 0ms
+ × |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️01/PLAYGROUND-WINDOW-MODE-COMPLETENESS-PASS/audit-playground-completeness.test.ts > playground window/mode completeness > every playground mode has footer tools and every window has measures and engagement 3ms
+   → CommandBus is not a constructor
+ ✓ |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL/deep/nested/probe.test.ts > nested probe passes 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > taskManagerColumns > includes every required column id in display order, ending with actions 2ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > taskManagerRowAction > mints an ActionDescriptor addressed at os.task-manager with the actor id in args 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > taskManagerRows > localizes lane/status text and carries every metric field through as a number cell 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > taskManagerRows > emits all three row actions (suspend/resume/cancel), each addressed at this row's actor id 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > produces columnsJson/rowsJson that round-trip through JSON.parse into the shape Table/component.tsx expects 3ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > stays valid JSON with a full row set (multiple lanes/statuses) 2ms
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > renders one row per actor with its id and package visible 3ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > dispatches the right action for the right actor when a row's suspend/resume/cancel button is clicked 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > gives every action button an accessible name naming both the action and the actor (keyboard/screen-reader reachable) 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > suspend really checkpoints + disposes the worker-side instance, through a genuine button click 1ms
+   → document is not defined
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > cancel really disposes and forgets the actor — resume() afterward rejects unknown actor 1ms
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > resume really re-activates a suspended actor, through a genuine button click 0ms
+   → document is not defined
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is disconnected when disabled 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is disconnected when closed 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is connecting while connecting 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is connecting while reconnecting 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is connected when open and idle 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > agentPresenceTone > is working when open and active 0ms
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > renders a status role with an accessible name 2ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the idle label when connected but not active 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the working label with the invocation label interpolated when active 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the disconnected label when disabled 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the connecting label while connecting 0ms
+   → document is not defined
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > parseApprovalSummary > parses a structured JSON summary 2ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > parseApprovalSummary > falls back to plain text when the summary is not JSON 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > parseApprovalSummary > falls back to plain text when the summary is JSON but not the expected shape 0ms
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > renders nothing open when there are no pending approvals 2ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > shows the capability, diff summary, requester and risk for a pending approval 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > falls back to the raw summary text for a plain-text approval 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > dispatches the right decision for the right approval when a decision button is clicked 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > dispatches deny and approve-for-session decisions from their own buttons 0ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > lists every pending approval, each with its own decision buttons 0ms
+   → document is not defined
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > discoverAgentBridgeConfig > returns null when neither env var is set 3ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > discoverAgentBridgeConfig > returns null when only one env var is set 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > discoverAgentBridgeConfig > returns a config when both env vars are set 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridgeUrlWithToken > appends ?token= when the url has no query 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridgeUrlWithToken > appends &token= when the url already has a query 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridgeUrlWithToken > percent-encodes the token 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > has fixture rows in both directions 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Hello encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway ShellState encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway ShellStatePatch encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Instances encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway AppFrames encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway ShellCommandResult encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway ShellCommandResult encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Approval encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Approval encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Ping encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > shell_to_gateway Bye encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell Welcome encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell ShellCommand encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell AppCommand encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell ApprovalRequested encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell ApprovalResolved encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell AgentPresence encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell AgentPresence encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell Pong encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > bridge frame codec (imported, not reimplemented) round-trips through every P1b fixture > gateway_to_shell Bye encodes to the fixture hex and decodes back to the fixture frame 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > applyInboundShellCommand > applies a valid ShellCommand and emits an ok shellCommandResult frame with the bumped revision 1ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > applyInboundShellCommand > rejects a ShellCommand the reducer itself rejects and emits an ok:false frame carrying the error kind 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > applyInboundShellCommand > rejects a malformed payload without throwing, and never invents a command or reduce result 0ms
+ ✓ |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts > buildShellStateFrame > round-trips a ShellState through JSON bytes 0ms
+ × |@semio-tech/framework-renderer-wgpu| 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx > SpacesPage > renders rows from a mocked admin client 4ms
+   → document is not defined
+ × |@semio-tech/framework-renderer-wgpu| 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx > ConnectionsPage > updates live on a pushed connection message 26ms
+   → document is not defined
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 17 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/animate-presentation-deck.spec.ts [ .storybook/animate-presentation-deck.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/animate-presentation-deck.spec.ts:33:1
+     31| }
+     32|
+     33| test("animate three-slide deck: boots with the title slide visible and…
+       | ^
+     34|   await expectAnimateStory(page, "animate--three-slide-deck");
+     35|   await expect(page.locator("body")).toContainText("Semio Storybook");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/cad-renderer.spec.ts [ .storybook/cad-renderer.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/cad-renderer.spec.ts:50:1
+     48| }
+     49|
+     50| test("cad idle: boots with the fresh primitive.box interaction, no com…
+       | ^
+     51|   const { debug } = await expectCadStory(page, "📐️cad--idle");
+     52|   const state = await readCadBoxDebug(debug);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/framework-hosts-no-wasm.spec.ts [ .storybook/framework-hosts-no-wasm.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/framework-hosts-no-wasm.spec.ts:52:1
+     50| // what a real host app would do once the header becomes clickable) bu…
+     51| // interaction that's actually wired end to end today: row click → `se…
+     52| test("TableHost sortable-with-actions: loads with the initial row orde…
+       | ^
+     53|   await expectStoryLoads(page, "🛠️framework🔌️hosts-tablehost--sortab…
+     54|   type Debug = { readonly order: readonly string[]; readonly selectedI…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/framework-hosts-wasm.spec.ts [ .storybook/framework-hosts-wasm.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/framework-hosts-wasm.spec.ts:42:1
+     40|
+     41| //#region NodeGraphHost
+     42| test("NodeGraphHost workflow: boots the real GraphSession WASM engine …
+       | ^
+     43|   await expectHostStory(page, "🛠️framework🔌️hosts-nodegraphhost--wor…
+     44|   await expect(page.locator(".semio-node-graph-host")).toBeVisible();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/os-plugins.spec.ts [ .storybook/os-plugins.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/os-plugins.spec.ts:49:3
+     47|
+     48| for (const target of PLUGIN_BUILD_TARGETS) {
+     49|   test(`framework/os program matrix: ${target.pluginId} reaches a dete…
+       |   ^
+     50|     const pageErrors: Error[] = [];
+     51|     const consoleErrors: string[] = [];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/puzzle-2d.spec.ts [ .storybook/puzzle-2d.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/puzzle-2d.spec.ts:63:1
+     61| }
+     62|
+     63| test("puzzle2d overview select: loads with the initial fixture reflect…
+       | ^
+     64|   const { debug } = await expectBoardStory(page, "puzzle-2d--overview-…
+     65|   const state = await readPuzzle2dDebug(debug);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/puzzle-3d-5d-infinite.spec.ts [ .storybook/puzzle-3d-5d-infinite.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/puzzle-3d-5d-infinite.spec.ts:38:1
+     36|
+     37| //#region puzzle/2d Fixtures
+     38| test("puzzle2d fixtures nakagin: real 180-node/179-edge fixture round-…
+       | ^
+     39|   await expectStoryLoads(page, "🧩️puzzle🩻️2d-fixtures--nakagin-capsu…
+     40|   const debug = JSON.parse(await page.getByTestId("puzzle2d-fixture-de…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/styling.spec.ts [ .storybook/styling.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/styling.spec.ts:38:1
+     36|
+     37| //#region 🔖️Theme
+     38| test("styling/Theme AllThemes: renders every builtin theme's light+dar…
+       | ^
+     39|   await expectStylingStory(page, "🎨️styling-theme--all-themes");
+     40|   await expect(page.getByText("semio", { exact: false }).first()).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/ui-new-stories.spec.ts [ .storybook/ui-new-stories.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/ui-new-stories.spec.ts:78:3
+     76|
+     77| for (const storyId of NEW_UI_STORY_IDS) {
+     78|   test(`ui scope story "${storyId}" mounts with no console/page errors…
+       |   ^
+     79|     await expectStoryMounts(page, storyId);
+     80|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .storybook/ui-uncovered-components-stories.spec.ts [ .storybook/ui-uncovered-components-stories.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/ui-uncovered-components-stories.spec.ts:75:3
+     73|
+     74| for (const storyId of UNCOVERED_UI_STORY_IDS) {
+     75|   test(`ui scope story "${storyId}" mounts with no console/page errors…
+       |   ^
+     76|     await expectStoryMounts(page, storyId);
+     77|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🧪️index.test.ts [ 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🧪️index.test.ts ]
+Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🧪️index.test.ts
+ ❯ 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/ð§ªï¸index.test.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/test-node-edge-alignment.spec.ts [ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/test-node-edge-alignment.spec.ts ]
+Error: Playwright Test did not expect test.describe() to be called here.
+Most common reasons include:
+- You are calling test.describe() in a configuration file.
+- You are calling test.describe() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test.describe() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._describe node_modules/playwright/lib/common/index.js:2304:24
+ ❯ Function.describe node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/test-node-edge-alignment.spec.ts:4:6
+      2| import { test, expect } from "@playwright/test";
+      3|
+      4| test.describe("Kit Diagram Node-Edge Alignment", () => {
+       |      ^
+      5|   test("measure node avatar size vs edge connection points", async ({ …
+      6|     await page.goto("http://localhost:5173");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️11/FIX-ALL-SIX-FAILING-SKETCHPAD-PLAYWRIGHT-TESTS/debug.test.ts [ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️11/FIX-ALL-SIX-FAILING-SKETCHPAD-PLAYWRIGHT-TESTS/debug.test.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️11/FIX-ALL-SIX-FAILING-SKETCHPAD-PLAYWRIGHT-TESTS/debug.test.ts:2:1
+      1| import { test, expect } from "@playwright/test";
+      2| test("debug", async ({ page }) => {
+       | ^
+      3|   await page.goto("/");
+      4|   await page.waitForLoadState("networkidle");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️03/☀️20/FIX-ALGORITHM-STORYBOOK-INFINITE-HANG-ON-LOAD/seed.spec.ts [ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️03/☀️20/FIX-ALGORITHM-STORYBOOK-INFINITE-HANG-ON-LOAD/seed.spec.ts ]
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️03/☀️20/FIX-ALGORITHM-STORYBOOK-INFINITE-HANG-ON-LOAD/seed.spec.ts:3:1
+      1| import { test } from "@playwright/test";
+      2|
+      3| test("seed", async ({ page }) => {
+       | ^
+      4|   await page.goto("http://localhost:6007/iframe.html?id=compose-algori…
+      5|   await page.waitForLoadState("domcontentloaded");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts [ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts ]
+Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+ ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/ð§ªï¸index.test.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️extension.test.ts [ 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️extension.test.ts ]
+Error: Cannot find package 'vscode' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️extension.test.ts
+ ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/ð§ªï¸extension.test.ts:13:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts [ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts ]
+ReferenceError: Element is not defined
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:274:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/37]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 20 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx > SpacesPage > renders rows from a mocked admin client
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/ð§ªï¸admin.test.tsx:77:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx > ConnectionsPage > updates live on a pushed connection message
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/ð§ªï¸admin.test.tsx:100:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts > Kit Diagram Node-Edge Alignment > should validate edge endpoint calculation uses correct radius
+AssertionError: expected 100 to be 50 // Object.is equality
+
+- Expected
++ Received
+
+- 50
++ 100
+
+ ❯ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/node-edge-alignment.test.ts:56:23
+     54|     // For a node at (0, 0) with radius 50, and target at (200, 0)
+     55|     // The endpoint should be at (50, 0) - the right edge of the circle
+     56|     expect(endpointX).toBe(50);
+       |                       ^
+     57|     expect(endpointY).toBe(0);
+     58|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️01/PLAYGROUND-WINDOW-MODE-COMPLETENESS-PASS/audit-playground-completeness.test.ts > playground window/mode completeness > every playground mode has footer tools and every window has measures and engagement
+TypeError: CommandBus is not a constructor
+ ❯ auditAllPlaygrounds .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️01/PLAYGROUND-WINDOW-MODE-COMPLETENESS-PASS/audit-playground-completeness.ts:43:15
+     41| /** @emoji 🔎️ Audits every known playground controller shell. */
+     42| export async function auditAllPlaygrounds(): Promise<string[]> {
+     43|   const bus = new CommandBus();
+       |               ^
+     44|   const notify = () => {};
+     45|   const targets: PlaygroundAuditTarget[] = [];
+ ❯ .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️01/PLAYGROUND-WINDOW-MODE-COMPLETENESS-PASS/audit-playground-completeness.test.ts:6:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > renders nothing open when there are no pending approvals
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:46:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > shows the capability, diff summary, requester and risk for a pending approval
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:51:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > falls back to the raw summary text for a plain-text approval
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:60:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > dispatches the right decision for the right approval when a decision button is clicked
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:66:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > dispatches deny and approve-for-session decisions from their own buttons
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:74:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx > AgentApprovals > lists every pending approval, each with its own decision buttons
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/ð§ªï¸component.test.tsx:83:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > renders a status role with an accessible name
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/ð§ªï¸component.test.tsx:34:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the idle label when connected but not active
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/ð§ªï¸component.test.tsx:39:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the working label with the invocation label interpolated when active
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/ð§ªï¸component.test.tsx:44:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the disconnected label when disabled
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/ð§ªï¸component.test.tsx:49:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx > AgentPresence > shows the connecting label while connecting
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/ð§ªï¸component.test.tsx:54:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > renders one row per actor with its id and package visible
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/ð§ªï¸component.test.tsx:92:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > dispatches the right action for the right actor when a row's suspend/resume/cancel button is clicked
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/ð§ªï¸component.test.tsx:99:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > TaskManagerPanel > gives every action button an accessible name naming both the action and the actor (keyboard/screen-reader reachable)
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/ð§ªï¸component.test.tsx:109:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > suspend really checkpoints + disposes the worker-side instance, through a genuine button click
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/ð§ªï¸component.test.tsx:150:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/37]⎯
+
+ FAIL  |@semio-tech/framework-renderer-wgpu| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > resume really re-activates a suspended actor, through a genuine button click
+ReferenceError: document is not defined
+ ❯ render node_modules/@testing-library/react/dist/pure.js:256:5
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/ð§ªï¸component.test.tsx:177:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/37]⎯
+
+
+ Test Files  23 failed | 6 passed | 1 skipped (30)
+      Tests  20 failed | 75 passed | 1 skipped (96)
+   Start at  15:37:08
+   Duration  7.44s (transform 11.41s, setup 0ms, import 29.77s, tests 864ms, environment 2ms)
+
+EXIT:1

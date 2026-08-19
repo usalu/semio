@@ -4,6 +4,7 @@
 //! payload decodes to: the authority validates it, the optimistic replica applies it, and the
 //! pathmap bodies `db` stores are trees of it. The DSL's own record/field/wire types build on it
 //! and stay product-side.
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 //#region 🔖️Value
 /// @emoji 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).

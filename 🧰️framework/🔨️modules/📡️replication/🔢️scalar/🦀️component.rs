@@ -13,7 +13,7 @@ pub mod scalar {
     // byte-exact vs source), 2 = zigzag-varint delta-ms vs previous tag-1/2 timestamp in stream.
     //
     // 🎯️ Design choice (contract leaves the round-trip heuristic to the implementer): a timestamp
-    // only ever gets tag 1/2 when `format_rfc3339_ms(parse_rfc3339_ms(raw)) == raw` byte-for-byte;
+    // only ever gets tag 1/2 when `format_rfc3339_ms(parse_rfc3339_ms(raw).await).await == raw` byte-for-byte;
     // any input that isn't already exactly `YYYY-MM-DDTHH:MM:SS[.fff]Z` (fraction present iff its
     // ms component is nonzero) safely falls back to tag 0 raw text — correctness never depends on
     // the parser/formatter being calendar-complete, only on the equality check.
@@ -21,26 +21,26 @@ pub mod scalar {
     /// @emoji ⏱️ Writes `raw` using the most compact of the three timestamp tags that reproduces
     /// it byte-exact. Returns `Some(epoch_ms)` iff tag 1/2 was written (thread this back in as
     /// `prev_epoch_ms` on the next call to keep deltas short); `None` iff tag 0 (raw) was written.
-    pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i64>) -> Option<i64> {
-        let Some(epoch_ms) = round_trip_epoch_ms(raw) else {
-            write_raw_timestamp(out, raw);
+    pub async fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i64>) -> Option<i64> {
+        let Some(epoch_ms) = round_trip_epoch_ms(raw).await else {
+            write_raw_timestamp(out, raw).await;
             return None;
         };
         match prev_epoch_ms {
             Some(prev) => {
-                out.write_u8(2);
-                out.write_varint_i64(epoch_ms - prev);
+                out.write_u8(2).await;
+                out.write_varint_i64(epoch_ms - prev).await;
                 Some(epoch_ms)
             }
             None if epoch_ms >= 0 => {
-                out.write_u8(1);
-                out.write_varint_u64(epoch_ms as u64);
+                out.write_u8(1).await;
+                out.write_varint_u64(epoch_ms as u64).await;
                 Some(epoch_ms)
             }
             None => {
                 // Tag 1 stores an unsigned varint; a pre-1970 timestamp with no prior delta base
                 // has no lossless absolute encoding here, so it falls back to raw text.
-                write_raw_timestamp(out, raw);
+                write_raw_timestamp(out, raw).await;
                 None
             }
         }
@@ -48,43 +48,49 @@ pub mod scalar {
 
     /// @emoji ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
     /// the `epoch_ms` to feed back in as `prev_epoch_ms` for the next call.
-    pub fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackError> {
-        let tag = input.read_u8()?;
+    pub async fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackError> {
+        let tag = input.read_u8().await?;
         match tag {
             0 => {
-                let len = input.read_varint_u64()? as usize;
-                let bytes = input.read_bytes(len)?;
-                Ok((utf8(bytes, input.position() as u64)?.to_string(), None))
+                let len = input.read_varint_u64().await? as usize;
+                let bytes = input.read_bytes(len).await?;
+                Ok((utf8(bytes, input.position().await as u64).await?.to_string(), None))
             }
             1 => {
-                let epoch_ms = input.read_varint_u64()? as i64;
-                Ok((format_rfc3339_ms(epoch_ms), Some(epoch_ms)))
+                let epoch_ms = input.read_varint_u64().await? as i64;
+                Ok((format_rfc3339_ms(epoch_ms).await, Some(epoch_ms)))
             }
             2 => {
-                let prev = prev_epoch_ms.ok_or_else(|| malformed("timestamp", input.position() as u64, "tag 2 delta with no previous timestamp in scope"))?;
-                let delta = input.read_varint_i64()?;
-                let epoch_ms = prev.checked_add(delta).ok_or_else(|| malformed("timestamp", input.position() as u64, "epoch_ms overflow"))?;
-                Ok((format_rfc3339_ms(epoch_ms), Some(epoch_ms)))
+                let prev = match prev_epoch_ms {
+                    Some(v) => v,
+                    None => return Err(malformed("timestamp", input.position().await as u64, "tag 2 delta with no previous timestamp in scope").await),
+                };
+                let delta = input.read_varint_i64().await?;
+                let epoch_ms = match prev.checked_add(delta) {
+                    Some(v) => v,
+                    None => return Err(malformed("timestamp", input.position().await as u64, "epoch_ms overflow").await),
+                };
+                Ok((format_rfc3339_ms(epoch_ms).await, Some(epoch_ms)))
             }
-            other => Err(malformed("timestamp tag", input.position() as u64, &format!("unknown timestamp tag {other:#x}"))),
+            other => Err(malformed("timestamp tag", input.position().await as u64, &format!("unknown timestamp tag {other:#x}")).await),
         }
     }
 
-    fn write_raw_timestamp(out: &mut ByteWriter, raw: &str) {
-        out.write_u8(0);
-        out.write_varint_u64(raw.len() as u64);
-        out.write_bytes(raw.as_bytes());
+    async fn write_raw_timestamp(out: &mut ByteWriter, raw: &str) {
+        out.write_u8(0).await;
+        out.write_varint_u64(raw.len() as u64).await;
+        out.write_bytes(raw.as_bytes()).await;
     }
 
-    fn round_trip_epoch_ms(raw: &str) -> Option<i64> {
-        let epoch_ms = parse_rfc3339_ms(raw)?;
-        (format_rfc3339_ms(epoch_ms) == raw).then_some(epoch_ms)
+    async fn round_trip_epoch_ms(raw: &str) -> Option<i64> {
+        let epoch_ms = parse_rfc3339_ms(raw).await?;
+        (format_rfc3339_ms(epoch_ms).await == raw).then_some(epoch_ms)
     }
 
     /// @emoji 📆️ Parses a UTC RFC-3339 timestamp (`Z` or numeric `±HH:MM` offset, optional
-    /// fractional seconds truncated to milliseconds) into milliseconds since the Unix epoch.
+    /// fractional seconds truncated to milliseconds).await into milliseconds since the Unix epoch.
     /// `None` on any deviation from the grammar — callers fall back to raw text, never panic.
-    fn parse_rfc3339_ms(s: &str) -> Option<i64> {
+    async fn parse_rfc3339_ms(s: &str) -> Option<i64> {
         let bytes = s.as_bytes();
         if bytes.len() < 20 {
             return None;
@@ -161,17 +167,17 @@ pub mod scalar {
         if pos != bytes.len() {
             return None;
         }
-        let days = days_from_civil(year, month, day);
+        let days = days_from_civil(year, month, day).await;
         let total_seconds = days * 86_400 + hour * 3_600 + minute * 60 + second - offset_minutes * 60;
         Some(total_seconds * 1_000 + ms)
     }
 
     /// @emoji 📆️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
     /// millisecond component is nonzero. The single source of truth for the tag-1/2 round trip.
-    fn format_rfc3339_ms(epoch_ms: i64) -> String {
+    async fn format_rfc3339_ms(epoch_ms: i64) -> String {
         let days = epoch_ms.div_euclid(86_400_000);
         let rem_ms = epoch_ms.rem_euclid(86_400_000);
-        let (year, month, day) = civil_from_days(days);
+        let (year, month, day) = civil_from_days(days).await;
         let hour = rem_ms / 3_600_000;
         let rem = rem_ms % 3_600_000;
         let minute = rem / 60_000;
@@ -187,7 +193,7 @@ pub mod scalar {
 
     /// @emoji 🌍️ Howard Hinnant's `days_from_civil`: proleptic-Gregorian date to days-since-epoch.
     /// <https://howardhinnant.github.io/date_algorithms.html>
-    fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
+    async fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
         let y = if m <= 2 { y - 1 } else { y };
         let era = if y >= 0 { y } else { y - 399 } / 400;
         let yoe = y - era * 400;
@@ -198,7 +204,7 @@ pub mod scalar {
     }
 
     /// @emoji 🌍️ Inverse of `days_from_civil`.
-    fn civil_from_days(z: i64) -> (i64, i64, i64) {
+    async fn civil_from_days(z: i64) -> (i64, i64, i64) {
         let z = z + 719_468;
         let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
         let doe = z - era * 146_097;
@@ -225,56 +231,56 @@ pub mod scalar {
     // compatible with ids written directly by another layer that chooses to skip interning.
 
     /// @emoji 🪪️ Writes `id` using the most compact of the four id tags that preserves it exactly.
-    pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
+    pub async fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
         if let Some(ordinal) = edit_ordinal_of(id) {
-            out.write_u8(3);
-            out.write_varint_u64(ordinal);
+            out.write_u8(3).await;
+            out.write_varint_u64(ordinal).await;
             return Ok(());
         }
-        if let Some((prefix, uuid_bytes)) = split_prefix_uuid(id) {
-            out.write_u8(2);
-            out.write_varint_u64(intern(prefix) as u64);
-            out.write_bytes(&uuid_bytes);
+        if let Some((prefix, uuid_bytes)) = split_prefix_uuid(id).await {
+            out.write_u8(2).await;
+            out.write_varint_u64(intern(prefix) as u64).await;
+            out.write_bytes(&uuid_bytes).await;
             return Ok(());
         }
-        out.write_u8(1);
-        out.write_varint_u64(intern(id) as u64);
+        out.write_u8(1).await;
+        out.write_varint_u64(intern(id) as u64).await;
         Ok(())
     }
 
     /// @emoji 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
-    pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
-        let tag = input.read_u8()?;
+    pub async fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
+        let tag = input.read_u8().await?;
         match tag {
             0 => {
-                let len = input.read_varint_u64()? as usize;
-                let bytes = input.read_bytes(len)?;
-                Ok(utf8(bytes, input.position() as u64)?.to_string())
+                let len = input.read_varint_u64().await? as usize;
+                let bytes = input.read_bytes(len).await?;
+                Ok(utf8(bytes, input.position().await as u64).await?.to_string())
             }
             1 => {
-                let idx = input.read_varint_u64()? as u32;
+                let idx = input.read_varint_u64().await? as u32;
                 Ok(resolve(idx)?.to_string())
             }
             2 => {
-                let idx = input.read_varint_u64()? as u32;
+                let idx = input.read_varint_u64().await? as u32;
                 let prefix = resolve(idx)?;
-                let uuid_bytes = input.read_bytes(16)?;
+                let uuid_bytes = input.read_bytes(16).await?;
                 let mut array = [0u8; 16];
                 array.copy_from_slice(uuid_bytes);
-                Ok(format!("{prefix}-{}", format_uuid(&array)))
+                Ok(format!("{prefix}-{}", format_uuid(&array).await))
             }
             3 => {
-                let ordinal = input.read_varint_u64()?;
+                let ordinal = input.read_varint_u64().await?;
                 Ok(ordinal_to_id(ordinal)?.to_string())
             }
-            other => Err(malformed("id tag", input.position() as u64, &format!("unknown id tag {other:#x}"))),
+            other => Err(malformed("id tag", input.position().await as u64, &format!("unknown id tag {other:#x}")).await),
         }
     }
 
     /// @emoji 🔪️ Splits `"<prefix>-<uuid>"` into `(prefix, 16 raw uuid bytes)`, requiring the
     /// trailing 36 bytes to be a canonical lowercase-hex-with-dashes UUID and a non-empty prefix
     /// — so the round trip through `format_uuid` reproduces the original text exactly.
-    fn split_prefix_uuid(id: &str) -> Option<(&str, [u8; 16])> {
+    async fn split_prefix_uuid(id: &str) -> Option<(&str, [u8; 16])> {
         let len = id.len();
         if len < 38 {
             return None;
@@ -303,8 +309,8 @@ pub mod scalar {
             let group = uuid_str.get(range)?.as_bytes();
             let mut gi = 0usize;
             while gi + 1 < group.len() + 1 && gi < group.len() {
-                let hi = lower_hex_val(group[gi])?;
-                let lo = lower_hex_val(group[gi + 1])?;
+                let hi = lower_hex_val(group[gi]).await?;
+                let lo = lower_hex_val(group[gi + 1]).await?;
                 out[out_pos] = (hi << 4) | lo;
                 out_pos += 1;
                 gi += 2;
@@ -313,7 +319,7 @@ pub mod scalar {
         Some((prefix, out))
     }
 
-    fn lower_hex_val(b: u8) -> Option<u8> {
+    async fn lower_hex_val(b: u8) -> Option<u8> {
         match b {
             b'0'..=b'9' => Some(b - b'0'),
             b'a'..=b'f' => Some(b - b'a' + 10),
@@ -322,7 +328,7 @@ pub mod scalar {
     }
 
     /// @emoji 🎨️ Formats 16 raw bytes as a canonical lowercase `8-4-4-4-12` UUID string.
-    fn format_uuid(bytes: &[u8; 16]) -> String {
+    async fn format_uuid(bytes: &[u8; 16]) -> String {
         let mut s = String::with_capacity(36);
         for (i, b) in bytes.iter().enumerate() {
             if matches!(i, 4 | 6 | 8 | 10) {
@@ -335,11 +341,14 @@ pub mod scalar {
     //#endregion 🔖️Id
 
     //#region 🔖️Shared
-    fn utf8(bytes: &[u8], offset: u64) -> Result<&str, PackError> {
-        std::str::from_utf8(bytes).map_err(|_| malformed("utf8", offset, "invalid utf-8"))
+    async fn utf8(bytes: &[u8], offset: u64) -> Result<&str, PackError> {
+        match std::str::from_utf8(bytes) {
+            Ok(s) => Ok(s),
+            Err(_) => Err(malformed("utf8", offset, "invalid utf-8").await),
+        }
     }
 
-    fn malformed(what: &'static str, offset: u64, detail: &str) -> PackError {
+    async fn malformed(what: &'static str, offset: u64, detail: &str) -> PackError {
         PackError::Malformed { what, offset, detail: detail.to_string() }
     }
     //#endregion 🔖️Shared

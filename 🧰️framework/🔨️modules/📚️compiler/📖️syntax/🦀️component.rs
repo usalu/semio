@@ -72,7 +72,7 @@ pub enum BinOp {
 }
 
 impl BinOp {
-    fn symbol(self) -> &'static str {
+    async fn symbol(self) -> &'static str {
         match self {
             BinOp::Add => "+",
             BinOp::Sub => "-",
@@ -128,7 +128,7 @@ struct MToken {
     span: TextSpan,
 }
 
-fn line_col_at(text: &str, byte_pos: usize) -> (u32, u32) {
+async fn line_col_at(text: &str, byte_pos: usize) -> (u32, u32) {
     let line = text[..byte_pos].matches('\n').count() as u32 + 1;
     let col = (byte_pos - text[..byte_pos].rfind('\n').map_or(0, |p| p + 1)) as u32 + 1;
     (line, col)
@@ -138,7 +138,7 @@ fn line_col_at(text: &str, byte_pos: usize) -> (u32, u32) {
 /// would otherwise glue into a preceding ident (`x_1` lexing as one `Ident("x_1")`) since
 /// `os_dsl::lex`'s `is_ident_continue` accepts `_` — and delegates every other run of characters
 /// whole to `os_dsl::lex`, exactly like `os_dsl::grammar::lex` does for its own `? |` extras.
-fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
+async fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
     let bytes = text.as_bytes();
     let mut tokens = Vec::new();
     let mut i = 0usize;
@@ -259,11 +259,11 @@ struct Cursor {
 }
 
 impl Cursor {
-    fn peek(&self) -> &MToken {
+    async fn peek(&self) -> &MToken {
         &self.tokens[self.pos]
     }
 
-    fn advance(&mut self) -> MToken {
+    async fn advance(&mut self) -> MToken {
         let token = self.tokens[self.pos].clone();
         if self.pos < self.tokens.len() - 1 {
             self.pos += 1;
@@ -271,7 +271,7 @@ impl Cursor {
         token
     }
 
-    fn expect(&mut self, kind: MKind) -> Result<MToken, TextError> {
+    async fn expect(&mut self, kind: MKind) -> Result<MToken, TextError> {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
@@ -281,7 +281,7 @@ impl Cursor {
 }
 
 /// @emoji 🚪️ Parses one complete math snippet — the crate's main entry point.
-pub fn parse_formula(text: &str) -> Result<MathNode, TextError> {
+pub async fn parse_formula(text: &str) -> Result<MathNode, TextError> {
     let tokens = lex(text)?;
     let mut cursor = Cursor { tokens, pos: 0 };
     let node = parse_relation(&mut cursor)?;
@@ -291,7 +291,7 @@ pub fn parse_formula(text: &str) -> Result<MathNode, TextError> {
     Ok(node)
 }
 
-fn relop(kind: MKind) -> Option<BinOp> {
+async fn relop(kind: MKind) -> Option<BinOp> {
     match kind {
         MKind::Equals => Some(BinOp::Eq),
         MKind::NotEquals => Some(BinOp::Ne),
@@ -304,7 +304,7 @@ fn relop(kind: MKind) -> Option<BinOp> {
     }
 }
 
-fn parse_relation(cursor: &mut Cursor) -> Result<MathNode, TextError> {
+async fn parse_relation(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     let mut node = parse_expr(cursor)?;
     while let Some(op) = relop(cursor.peek().kind) {
         cursor.advance();
@@ -314,7 +314,7 @@ fn parse_relation(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     Ok(node)
 }
 
-fn parse_expr(cursor: &mut Cursor) -> Result<MathNode, TextError> {
+async fn parse_expr(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     let mut node = parse_run(cursor)?;
     loop {
         let op = match cursor.peek().kind {
@@ -329,7 +329,7 @@ fn parse_expr(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     Ok(node)
 }
 
-fn starts_atom(kind: MKind) -> bool {
+async fn starts_atom(kind: MKind) -> bool {
     matches!(kind, MKind::Ident | MKind::Int | MKind::Float | MKind::Text | MKind::Colon | MKind::LBrace | MKind::LParen | MKind::LBracket)
 }
 
@@ -337,7 +337,7 @@ fn starts_atom(kind: MKind) -> bool {
 /// `/` binds tightly to its immediately preceding term (so `a * b / c` prints as `a * (b / c)`,
 /// documented left-to-right behavior — this notation has no `*`-vs-`/` precedence distinction, and
 /// current usage (icons, matrix cells) never chains the two).
-fn parse_run(cursor: &mut Cursor) -> Result<MathNode, TextError> {
+async fn parse_run(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     let first = parse_postfix(cursor)?;
     let mut items = vec![SeqItem { node: first, dot: false }];
     loop {
@@ -367,7 +367,7 @@ fn parse_run(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     }
 }
 
-fn parse_postfix(cursor: &mut Cursor) -> Result<MathNode, TextError> {
+async fn parse_postfix(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     let mut node = parse_atom(cursor)?;
     loop {
         match cursor.peek().kind {
@@ -387,7 +387,7 @@ fn parse_postfix(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     Ok(node)
 }
 
-fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
+async fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
     match cursor.peek().kind {
         MKind::Int | MKind::Float => Ok(MathNode::Number(cursor.advance().text)),
         MKind::Text => {
@@ -436,7 +436,7 @@ fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
 /// follow an `Ident` (see [`parse_atom`]'s `MKind::Ident` arm); a bare, non-ident-preceded `(`/`[`
 /// is a stretchy delimiter group instead. Same resolution `dsl_grammar` uses for `name(args)` vs
 /// `name (group)` — whitespace is trivia, so the token stream alone can't otherwise disambiguate.
-fn parse_call_args(cursor: &mut Cursor) -> Result<Vec<Vec<MathNode>>, TextError> {
+async fn parse_call_args(cursor: &mut Cursor) -> Result<Vec<Vec<MathNode>>, TextError> {
     cursor.expect(MKind::LParen)?;
     let mut rows = vec![parse_row(cursor)?];
     while cursor.peek().kind == MKind::Semicolon {
@@ -447,7 +447,7 @@ fn parse_call_args(cursor: &mut Cursor) -> Result<Vec<Vec<MathNode>>, TextError>
     Ok(rows)
 }
 
-fn parse_row(cursor: &mut Cursor) -> Result<Vec<MathNode>, TextError> {
+async fn parse_row(cursor: &mut Cursor) -> Result<Vec<MathNode>, TextError> {
     if matches!(cursor.peek().kind, MKind::RParen | MKind::Semicolon) {
         return Ok(Vec::new());
     }
@@ -461,7 +461,7 @@ fn parse_row(cursor: &mut Cursor) -> Result<Vec<MathNode>, TextError> {
 //#endregion 🔖️Parser
 
 //#region 🔖️Printer
-fn print_node(node: &MathNode, out: &mut String) {
+async fn print_node(node: &MathNode, out: &mut String) {
     match node {
         MathNode::Number(text) | MathNode::Symbol(text) => out.push_str(text),
         MathNode::Emoji(name) => {
@@ -531,14 +531,14 @@ fn print_node(node: &MathNode, out: &mut String) {
 
 /// @emoji 🖨️ Canonical printer — `parse_formula(print(&parse_formula(x)?)) == parse_formula(x)` is
 /// this crate's round-trip law, checked in `🧪️Tests` over representative formulas.
-pub fn print(node: &MathNode) -> String {
+pub async fn print(node: &MathNode) -> String {
     let mut out = String::new();
     print_node(node, &mut out);
     out
 }
 
 /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
-pub fn canonicalize(text: &str) -> Result<String, TextError> {
+pub async fn canonicalize(text: &str) -> Result<String, TextError> {
     Ok(print(&parse_formula(text)?))
 }
 //#endregion 🔖️Printer
@@ -548,7 +548,7 @@ pub fn canonicalize(text: &str) -> Result<String, TextError> {
 mod tests {
     use super::*;
 
-    fn round_trips(text: &str) -> MathNode {
+    async fn round_trips(text: &str) -> MathNode {
         let parsed = parse_formula(text).unwrap_or_else(|e| panic!("parse of {text:?} failed: {e}"));
         let printed = print(&parsed);
         let reparsed = parse_formula(&printed).unwrap_or_else(|e| panic!("reparse of canonical {printed:?} (from {text:?}) failed: {e}"));
@@ -559,7 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_bare_symbol_and_number() {
+    async fn parses_bare_symbol_and_number() {
         assert_eq!(round_trips("x"), MathNode::Symbol("x".to_string()));
         assert_eq!(round_trips("42"), MathNode::Number("42".to_string()));
         assert_eq!(round_trips("3.14"), MathNode::Number("3.14".to_string()));
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_superscript_and_subscript() {
+    async fn parses_superscript_and_subscript() {
         assert_eq!(round_trips("x^2"), MathNode::Sup(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Number("2".to_string()))));
         assert_eq!(round_trips("x_1"), MathNode::Sub(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Number("1".to_string()))));
         let combined = round_trips("x_i^2");
@@ -579,7 +579,7 @@ mod tests {
     }
 
     #[test]
-    fn subscript_does_not_glue_into_the_preceding_ident() {
+    async fn subscript_does_not_glue_into_the_preceding_ident() {
         // Regression guard for the exact bug this crate's pre-scan lexer exists to avoid:
         // `os_dsl::lex` alone would swallow `_1` into one `Ident("x_1")`.
         let node = parse_formula("x_1").expect("parse");
@@ -587,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_braced_group_exponent() {
+    async fn parses_braced_group_exponent() {
         let node = round_trips("x^{n+1}");
         match node {
             MathNode::Sup(base, exponent) => {
@@ -599,7 +599,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_fraction_and_root_calls() {
+    async fn parses_fraction_and_root_calls() {
         let frac = round_trips("frac(a, b)");
         assert_eq!(frac, MathNode::Call("frac".to_string(), vec![vec![MathNode::Symbol("a".to_string()), MathNode::Symbol("b".to_string())]]));
         let root = round_trips("root(3, x)");
@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_matrix_rows_and_cells() {
+    async fn parses_matrix_rows_and_cells() {
         let mat = round_trips("mat(1, 2; 3, 4)");
         assert_eq!(
             mat,
@@ -624,7 +624,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_cases_with_text_and_relation_cells() {
+    async fn parses_cases_with_text_and_relation_cells() {
         let node = round_trips("cases(x, \"if\" x > 0; 0, \"else\")");
         match node {
             MathNode::Call(name, rows) => {
@@ -647,12 +647,12 @@ mod tests {
     }
 
     #[test]
-    fn parses_emoji_shortcode() {
+    async fn parses_emoji_shortcode() {
         assert_eq!(round_trips(":rocket:"), MathNode::Emoji("rocket".to_string()));
     }
 
     #[test]
-    fn parses_stretchy_parens_and_brackets_distinct_from_calls() {
+    async fn parses_stretchy_parens_and_brackets_distinct_from_calls() {
         let paren = round_trips("(x + y)");
         assert!(matches!(paren, MathNode::Paren('(', _)));
         let bracket = round_trips("[x + y]");
@@ -663,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_relational_and_arrow_operators() {
+    async fn parses_relational_and_arrow_operators() {
         assert_eq!(round_trips("x = y"), MathNode::BinOp(BinOp::Eq, Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Symbol("y".to_string()))));
         assert!(matches!(parse_formula("x != y").expect("parse"), MathNode::BinOp(BinOp::Ne, ..)));
         assert!(matches!(parse_formula("x <= y").expect("parse"), MathNode::BinOp(BinOp::Le, ..)));
@@ -675,13 +675,13 @@ mod tests {
     }
 
     #[test]
-    fn parses_sum_with_limits() {
+    async fn parses_sum_with_limits() {
         let node = round_trips("sum_{i=1}^{n} x_i");
         assert!(matches!(node, MathNode::Sequence(_)), "expected a Sequence joining the sum and x_i, got {node:?}");
     }
 
     #[test]
-    fn distinguishes_explicit_star_from_bare_juxtaposition() {
+    async fn distinguishes_explicit_star_from_bare_juxtaposition() {
         let implicit = parse_formula("2x").expect("parse");
         match implicit {
             MathNode::Sequence(items) => assert!(!items[1].dot, "bare juxtaposition must not set dot"),
@@ -697,7 +697,7 @@ mod tests {
     }
 
     #[test]
-    fn accents_and_stretchy_delimiters_round_trip() {
+    async fn accents_and_stretchy_delimiters_round_trip() {
         round_trips("hat(x)");
         round_trips("bar(x)");
         round_trips("vec(x)");
@@ -710,19 +710,19 @@ mod tests {
     }
 
     #[test]
-    fn bare_bang_is_a_lex_error_not_a_silent_accept() {
+    async fn bare_bang_is_a_lex_error_not_a_silent_accept() {
         let err = parse_formula("x ! y").expect_err("bare `!` must not lex");
         assert!(err.message.contains("!="), "unexpected message: {}", err.message);
     }
 
     #[test]
-    fn unclosed_paren_is_an_error() {
+    async fn unclosed_paren_is_an_error() {
         assert!(parse_formula("(x + y").is_err());
         assert!(parse_formula("frac(a, b").is_err());
     }
 
     #[test]
-    fn trailing_garbage_is_an_error() {
+    async fn trailing_garbage_is_an_error() {
         assert!(parse_formula("x y )").is_err());
     }
 
@@ -732,7 +732,7 @@ mod tests {
     /// matches `os_dsl::lex` tokens directly and has no visibility into this crate's own
     /// pre-scanned `_ ; < > !` extras — a real, documented gap, not a silent approximation).
     #[test]
-    fn math_grammar_parses_under_dsl_grammar() {
+    async fn math_grammar_parses_under_dsl_grammar() {
         let source = include_str!("📖️math.grammar.semio");
         let parsed = crate::os_dsl::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
         assert_eq!(parsed.id, "math");

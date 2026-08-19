@@ -7,7 +7,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{WidgetSignal, WizardState};
 
-fn visible_indices(w: &WizardState) -> Vec<usize> {
+async fn visible_indices(w: &WizardState) -> Vec<usize> {
     if w.filter.is_empty() {
         return (0..w.options.len()).collect();
     }
@@ -20,7 +20,7 @@ fn visible_indices(w: &WizardState) -> Vec<usize> {
         .collect()
 }
 
-pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) async fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let vis = visible_indices(w);
     if vis.is_empty() && !matches!(ev.key, crate::tui::event::Key::Backspace | crate::tui::event::Key::Esc) {
         return None;
@@ -66,7 +66,7 @@ pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub(crate) async fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let bg = theme.surface(Surface::Window);
     let vis = visible_indices(w);
     let breadcrumb = if w.steps.is_empty() {

@@ -18,15 +18,15 @@ pub struct Label(String);
 impl Label {
     /// 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
     /// string literal here is a gate violation (see the Rust twin of `uiDataLabel`'s TS lint).
-    pub fn data(value: impl Into<String>) -> Self {
+    pub async fn data(value: impl Into<String>) -> Self {
         Self(value.into())
     }
 
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 
-    pub fn into_string(self) -> String {
+    pub async fn into_string(self) -> String {
         self.0
     }
 }
@@ -61,13 +61,13 @@ impl LabelText {
         Self(text)
     }
 
-    pub fn as_str(self) -> &'static str {
+    pub async fn as_str(self) -> &'static str {
         self.0
     }
 
     /// 🧵️ Named-placeholder runtime fill, e.g. `labels.selected_count.fill(&[("count", &n.to_string())])`
     /// — substitution, not `format!`, so word order never has to match across locales.
-    pub fn fill(self, args: &[(&str, &str)]) -> Label {
+    pub async fn fill(self, args: &[(&str, &str)]) -> Label {
         let mut out = self.0.to_string();
         for (name, value) in args {
             out = out.replace(&format!("{{{name}}}"), value);
@@ -93,7 +93,7 @@ pub struct LocalizedLabel {
 
 impl LocalizedLabel {
     /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
-    pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
+    pub async fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
         let cells = std::array::from_fn(|ti| {
             let terminology = Terminology::ALL[ti];
             std::array::from_fn(|li| Cow::Owned(resolve(terminology, Locale::ALL[li])))
@@ -102,7 +102,7 @@ impl LocalizedLabel {
     }
 
     /// 📊️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
-    pub fn data(value: impl Into<String>) -> Self {
+    pub async fn data(value: impl Into<String>) -> Self {
         let value = value.into();
         Self::from_fn(|_, _| value.clone())
     }
@@ -111,7 +111,7 @@ impl LocalizedLabel {
     /// per-locale translation) — for the framework's own built-in manifest text (history actions,
     /// panel tabs, …), which has no app-declared terminology axis. The exhaustive match on `Locale`
     /// (no catch-all) means adding a locale breaks every call site here until translated.
-    pub fn native(en: &str, de: &str) -> Self {
+    pub async fn native(en: &str, de: &str) -> Self {
         Self::from_fn(|_terminology, locale| {
             match locale {
                 Locale::En => en,
@@ -121,7 +121,7 @@ impl LocalizedLabel {
         })
     }
 
-    pub fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
+    pub async fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
         &self.cells[terminology.index()][locale.index()]
     }
 }
@@ -149,5 +149,5 @@ impl<'de> Deserialize<'de> for LocalizedLabel {
 /// an exhaustive `match (terminology, locale)` with no catch-all, so a `Locale`/`Terminology` variant
 /// added to the generated axes fails every implementor's build until covered.
 pub trait AppLabels: Sized + 'static {
-    fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
+    async fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
 }

@@ -16,8 +16,8 @@
 //! this driver version, mirroring the same convention `os-semio_hub-storage-neo4j` already used.
 //!
 //! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
-//! `neo4rs` is fully async (`tokio`-native); every `db_storage` sub-trait method here returns a
-//! `db_storage::DbFuture`. This backend used to bridge that onto the family's then-synchronous
+//! `neo4rs` is fully async (`tokio`-native); every `db_storage` sub-trait method here is
+//! a plain `async fn`. This backend used to bridge that onto the family's then-synchronous
 //! trait signatures by owning a dedicated `tokio::runtime::Runtime` and `block_on`-ing every call —
 //! that runtime (and the `block_on` bridge) is GONE: every method body below is the SAME
 //! already-async `neo4rs` code that runtime used to drive, now handed straight back as
@@ -42,7 +42,7 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use crate::db_ids::{check_len, DbError, ArtifactId};
 use crate::db_durability::{DurabilityClass, EpochFence};
-use crate::db_storage::{CatalogStorage, DbFuture, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 
@@ -386,8 +386,7 @@ impl Neo4jStorage {
 
 //#region 🔖️WalStorage
 impl WalStorage for Neo4jStorage {
-    fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let idx = u64_to_i64(index, "wal segment index")?;
             let row = self.fetch_one(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await?;
             // 🎯️ `MERGE` always yields exactly one row; an empty stream here means the driver
@@ -397,11 +396,9 @@ impl WalStorage for Neo4jStorage {
                 return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
             }
             Ok(())
-        })
-    }
+        }
 
-    fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
             let idx = u64_to_i64(index, "wal segment index")?;
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
@@ -419,26 +416,22 @@ impl WalStorage for Neo4jStorage {
             txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(new_len)
-        })
-    }
+        }
 
-    fn sync<'a>(&'a self, _document: &'a ArtifactId, _index: u64, _class: DurabilityClass) -> DbFuture<'a, ()> {
+    async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ See module doc's "Durability" section: every prior `append`/`seal` already committed
         // server-side, so there is nothing left to force for any `DurabilityClass`.
-        Box::pin(async { Ok(()) })
+        { Ok(()) }
     }
 
-    fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let idx = u64_to_i64(index, "wal segment index")?;
             let row = self.fetch_one(query(CYPHER_WAL_SEAL).param("document", document.0.clone()).param("index", idx)).await?;
             row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             Ok(())
-        })
-    }
+        }
 
-    fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
             let idx = u64_to_i64(index, "wal segment index")?;
             let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
@@ -447,31 +440,25 @@ impl WalStorage for Neo4jStorage {
             check_len(current_len, MAX_READ_BYTES, "wal_storage::read current length")?;
             let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
             slice_range(&bytes, range)
-        })
-    }
+        }
 
-    fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let idx = u64_to_i64(index, "wal segment index")?;
             let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
             let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")
-        })
-    }
+        }
 
-    fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let mut stream = self.graph.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
             while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
                 out.push(i64_to_u64(row.get("segIndex").map_err(map_de_error)?, "wal segment index")?);
             }
             Ok(out)
-        })
-    }
+        }
 
-    fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let idx = u64_to_i64(index, "wal segment index")?;
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
             let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
@@ -489,116 +476,92 @@ impl WalStorage for Neo4jStorage {
                 .map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(())
-        })
-    }
+        }
 
-    fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let idx = u64_to_i64(index, "wal segment index")?;
             self.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await
-        })
-    }
+        }
 }
 //#endregion 🔖️WalStorage
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jStorage {
-    fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
             let generation_param = u64_to_i64(generation, "snapshot generation")?;
             self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)).await
-        })
-    }
+        }
 
-    fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let generation_param = u64_to_i64(generation, "snapshot generation")?;
             let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
             let row = row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
             let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "snapshot generation length")?;
             check_len(len, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
             decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        })
-    }
+        }
 
-    fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
-        Box::pin(async move {
+    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let row = self.fetch_one(query(CYPHER_SNAPSHOT_LATEST).param("document", document.0.clone())).await?;
             match row.and_then(|row| row.get::<i64>("maxGeneration").ok()) {
                 Some(max) => Ok(Some(i64_to_u64(max, "snapshot generation")?)),
                 None => Ok(None),
             }
-        })
-    }
+        }
 
-    fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let mut stream = self.graph.execute(query(CYPHER_SNAPSHOT_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
             while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
                 out.push(i64_to_u64(row.get("generation").map_err(map_de_error)?, "snapshot generation")?);
             }
             Ok(out)
-        })
-    }
+        }
 
-    fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let generation_param = u64_to_i64(generation, "snapshot generation")?;
             self.run(query(CYPHER_SNAPSHOT_DELETE).param("document", document.0.clone()).param("generation", generation_param)).await
-        })
-    }
+        }
 }
 //#endregion 🔖️SnapshotStorage
 
 //#region 🔖️PayloadStorage
 impl PayloadStorage for Neo4jStorage {
-    fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
-        Box::pin(async move {
+    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
             let hash = ContentHash(*blake3::hash(bytes).as_bytes());
             self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
             Ok(hash)
-        })
-    }
+        }
 
-    fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
             let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
             let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
             check_len(len, MAX_READ_BYTES, "payload_storage::get")?;
             decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        })
-    }
+        }
 
-    fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
-        Box::pin(async move {
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
             let row = self.fetch_one(query(CYPHER_PAYLOAD_CONTAINS).param("hash", hash.to_string())).await?;
             let count: i64 = row.ok_or_else(|| DbError::Internal("payload_storage::contains returned no row".to_string()))?.get("c").map_err(map_de_error)?;
             Ok(count > 0)
-        })
-    }
+        }
 
-    fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
-        Box::pin(async move { self.run(query(CYPHER_PAYLOAD_DELETE).param("hash", hash.to_string())).await })
-    }
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> { self.run(query(CYPHER_PAYLOAD_DELETE).param("hash", hash.to_string())).await }
 
-    fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
-        Box::pin(async move {
+    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let row = self.fetch_one(query(CYPHER_PAYLOAD_LEN).param("hash", hash.to_string())).await?;
             let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
             i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")
-        })
-    }
+        }
 }
 //#endregion 🔖️PayloadStorage
 
 //#region 🔖️CatalogStorage
 impl CatalogStorage for Neo4jStorage {
-    fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
-        Box::pin(async move {
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let row = self.fetch_one(query(CYPHER_CATALOG_READ)).await?;
             let Some(row) = row else {
                 return Ok(None);
@@ -608,11 +571,9 @@ impl CatalogStorage for Neo4jStorage {
             check_len(len, MAX_READ_BYTES, "catalog_storage::read_root")?;
             let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
             Ok(Some((bytes, EpochFence { epoch })))
-        })
-    }
+        }
 
-    fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
-        Box::pin(async move {
+    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
             check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
             let new_fence = expected.next();
             let row = self
@@ -632,49 +593,40 @@ impl CatalogStorage for Neo4jStorage {
             // against a concurrent writer can only change the reported number, never the CAS outcome.
             let current = self.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
             Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch })
-        })
-    }
+        }
 }
 //#endregion 🔖️CatalogStorage
 
 //#region 🔖️IndexStorage
 impl IndexStorage for Neo4jStorage {
-    fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
             let run_id_param = u64_to_i64(run_id, "index run id")?;
             self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
-        })
-    }
+        }
 
-    fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
-        Box::pin(async move {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let run_id_param = u64_to_i64(run_id, "index run id")?;
             let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
             let row = row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
             let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "index run length")?;
             check_len(len, MAX_READ_BYTES, "index_storage::read_run")?;
             decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        })
-    }
+        }
 
-    fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
-        Box::pin(async move {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let mut stream = self.graph.execute(query(CYPHER_INDEX_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
             let mut out = Vec::new();
             while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
                 out.push(i64_to_u64(row.get("runId").map_err(map_de_error)?, "index run id")?);
             }
             Ok(out)
-        })
-    }
+        }
 
-    fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let run_id_param = u64_to_i64(run_id, "index run id")?;
             self.run(query(CYPHER_INDEX_DELETE).param("document", document.0.clone()).param("runId", run_id_param)).await
-        })
-    }
+        }
 }
 //#endregion 🔖️IndexStorage
 
@@ -696,8 +648,7 @@ impl Neo4jStorage {
 }
 
 impl LeaseStorage for Neo4jStorage {
-    fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
-        Box::pin(async move {
+    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
             let existing = self.lease_row(&mut txn, resource).await?;
             let fence = decide_acquire_fence(resource, existing, holder, now_ms)?;
@@ -707,11 +658,9 @@ impl LeaseStorage for Neo4jStorage {
                 .map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(fence)
-        })
-    }
+        }
 
-    fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
             let existing = self.lease_row(&mut txn, resource).await?;
             validate_renew(resource, existing, holder, fence, now_ms)?;
@@ -721,22 +670,18 @@ impl LeaseStorage for Neo4jStorage {
                 .map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(())
-        })
-    }
+        }
 
-    fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
-        Box::pin(async move {
+    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
             let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
             let existing = self.lease_row(&mut txn, resource).await?;
             validate_release(resource, existing, holder, fence)?;
             txn.run(query(CYPHER_LEASE_DELETE).param("resource", resource)).await.map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(())
-        })
-    }
+        }
 
-    fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
-        Box::pin(async move {
+    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             let row = self.fetch_one(query(CYPHER_LEASE_READ).param("resource", resource)).await?;
             let Some(row) = row else {
                 return Ok(None);
@@ -748,45 +693,20 @@ impl LeaseStorage for Neo4jStorage {
             }
             let holder: String = row.get("holder").map_err(map_de_error)?;
             Ok(Some(LeaseInfo { resource: resource.to_string(), holder, fence: EpochFence { epoch }, expires_at_ms }))
-        })
-    }
+        }
 }
 //#endregion 🔖️LeaseStorage
 
-//#region 🔖️DbStorage
-impl DbStorage for Neo4jStorage {
-    fn wal(&self) -> &dyn WalStorage {
-        self
-    }
-
-    fn snapshot(&self) -> &dyn SnapshotStorage {
-        self
-    }
-
-    fn payload(&self) -> &dyn PayloadStorage {
-        self
-    }
-
-    fn catalog(&self) -> &dyn CatalogStorage {
-        self
-    }
-
-    fn index(&self) -> &dyn IndexStorage {
-        self
-    }
-
-    fn lease(&self) -> &dyn LeaseStorage {
-        self
-    }
-
-    fn capabilities(&self) -> StorageCapabilities {
-        // 🎯️ See module doc's "Durability" section: every write already committed server-side by
-        // the time it returns, so this backend can honestly claim it satisfies the strongest
-        // single-node durability class without a separate `sync` step.
+//#region 🔖️DbBackend
+impl Neo4jStorage {
+    /// @emoji 🎚️ What this backend actually supports. See module doc's "Durability" section: every
+    /// write is already committed server-side by the time it returns, so this backend can
+    /// honestly claim the strongest single-node durability class without a separate `sync` step.
+    pub async fn capabilities(&self) -> StorageCapabilities {
         StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
     }
 }
-//#endregion 🔖️DbStorage
+//#endregion 🔖️DbBackend
 
 //#region 🧪️Tests
 #[cfg(test)]

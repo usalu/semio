@@ -50,19 +50,19 @@ pub struct CheckpointPack {
 impl CheckpointPack {
     /// 🪪️ `(id, app_id)` pairs restored — `⚛️reactor::restore_now` reseeds `OPEN_INSTANCES` from
     /// this so a later `checkpoint_now` round-trips correctly.
-    pub fn instances(&self) -> Vec<(u32, String)> {
+    pub async fn instances(&self) -> Vec<(u32, String)> {
         self.instances.iter().map(|instance| (instance.id, instance.app_id.clone())).collect()
     }
 
-    pub fn timers(&self) -> &[u64] {
+    pub async fn timers(&self) -> &[u64] {
         &self.timers
     }
 
-    pub fn pending_requests(&self) -> &[u64] {
+    pub async fn pending_requests(&self) -> &[u64] {
         &self.pending_requests
     }
 
-    pub fn task_restarts(&self) -> &[TaskRestart] {
+    pub async fn task_restarts(&self) -> &[TaskRestart] {
         &self.task_restarts
     }
 }
@@ -71,7 +71,7 @@ impl CheckpointPack {
 /// is `store::encode_document_pack_bytes(files.pack, files.spr)` — the SAME wire codec
 /// `AppCommand::LoadDocument`/`ReadDocument` already use for a whole document as one binary blob;
 /// `files.ops` (a derived text mirror, never authoritative) is not carried.
-pub fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
+pub async fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
         let files = plugin_runtime::plugin_document_pack(*id).unwrap_or_default();
@@ -85,7 +85,7 @@ pub fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requ
 /// 📸️ Restores every instance recorded in `state`, re-creating each and reloading its document
 /// pack — `⚛️reactor::poll`'s caller is responsible for re-arming `timers`/treating
 /// `pending_requests` as stale (design-abi.md §4).
-pub fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
+pub async fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
     let pack: CheckpointPack = serde_json::from_slice(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     for instance in &pack.instances {
         let new_id = plugin_runtime::plugin_create_app(&instance.app_id)?;
@@ -103,7 +103,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn checkpoint_of_no_instances_round_trips_through_json() {
+    async fn checkpoint_of_no_instances_round_trips_through_json() {
         let bytes = checkpoint(&[], vec![1, 2], vec![7], Vec::new()).expect("an empty instance list must still encode");
         let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
         assert!(pack.instances.is_empty());
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
+    async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
         let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
         let bytes = checkpoint(&[], Vec::new(), Vec::new(), restarts.clone()).expect("must encode");
         let pack = restore(&bytes).expect("must decode back");
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
+    async fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
         // 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
         // missing the field entirely) must not fail to restore just because this wave added a
         // field to the envelope (greenfield repo, no migration script, but a checkpoint taken

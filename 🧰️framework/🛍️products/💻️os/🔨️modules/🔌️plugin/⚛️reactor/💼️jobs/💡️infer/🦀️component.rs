@@ -22,7 +22,7 @@ use super::{run_two_phase, JobCtx};
 use std::future::Future;
 use std::pin::Pin;
 
-pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+pub(super) async fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
@@ -40,7 +40,7 @@ pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) 
 /// `(artifact_kind, inference_schema)` identity as the first slice's progress bytes — a REAL
 /// decode (not a placeholder), since a malformed request should fail on slice 1, before ever
 /// touching the inference-service registry on slice 2.
-fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let request: crate::app::WireArtifactInferenceRequest = serde_json::from_slice(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
     serde_json::to_vec(&(request.artifact_kind, request.inference_schema)).map_err(|error| super::fault("job.infer.decode", error.to_string()))
 }
@@ -63,11 +63,11 @@ mod tests {
         policy_version: 1,
     };
 
-    fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
+    async fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
         Ok(ArtifactInferenceExecution { canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
     }
 
-    fn request_bytes() -> Vec<u8> {
+    async fn request_bytes() -> Vec<u8> {
         let request = WireArtifactInferenceRequest {
             wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: TEST_METADATA.owner.into(),
@@ -98,7 +98,7 @@ mod tests {
     /// through two real `step_job` slices to `Done`, proving `job_infer` really reaches
     /// `crate::app::wire_artifact_infer` and not just `job.unknown-kind`.
     #[test]
-    fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
+    async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         start_job(200, JOB_KIND_INFER, &request_bytes());
 
@@ -133,7 +133,7 @@ mod tests {
     /// mission's checkpoint/restore round-trip requirement, exercised against the real dispatch, not
     /// a synthetic counter.
     #[test]
-    fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
+    async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         let input = request_bytes();
 
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
+    async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(203, JOB_KIND_INFER, b"not json");
         match step_job(203, JobBudget::default()) {
             JobStep::Failed(bytes) => {

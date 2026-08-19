@@ -66,13 +66,13 @@ impl From<Dialect> for ArtifactDialect {
 impl ArtifactDialect {
     /// 🧵️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. The one format that
     /// crosses every boundary in the system — the only dialect-coordinate codec in the repo.
-    pub fn to_coordinate(&self) -> String {
+    pub async fn to_coordinate(&self) -> String {
         format!("{}@{}/{}", self.artifact_kind, self.standard, self.subset)
     }
 
     /// 🧵️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
     /// `/` separates standard from subset.
-    pub fn parse_coordinate(s: &str) -> Result<Self, String> {
+    pub async fn parse_coordinate(s: &str) -> Result<Self, String> {
         let (kind, rest) = s.split_once('@').ok_or_else(|| format!("dialect coordinate {s:?} missing '@'"))?;
         let (standard, subset) = rest.rsplit_once('/').ok_or_else(|| format!("dialect coordinate {s:?} missing '/'"))?;
         if kind.is_empty() || standard.is_empty() || subset.is_empty() {
@@ -93,7 +93,7 @@ pub struct ArtifactKindId(String);
 impl ArtifactKindId {
     /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
     /// rule broke.
-    pub fn parse(s: &str) -> Result<Self, String> {
+    pub async fn parse(s: &str) -> Result<Self, String> {
         if !is_canonical_artifact_kind(s) {
             return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
         }
@@ -101,17 +101,17 @@ impl ArtifactKindId {
     }
 
     /// 🔍️ Borrowed access to the full `s.<plugin>.<artifact>` string.
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 
     /// 🔌️ Second segment — the owning plugin slug.
-    pub fn plugin(&self) -> &str {
+    pub async fn plugin(&self) -> &str {
         self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
 
     /// 🗿️ Third segment — the artifact slug within the plugin.
-    pub fn artifact(&self) -> &str {
+    pub async fn artifact(&self) -> &str {
         self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
 }
@@ -123,7 +123,7 @@ impl std::fmt::Display for ArtifactKindId {
 }
 
 /// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse`.
-pub fn is_canonical_artifact_kind(kind: &str) -> bool {
+pub async fn is_canonical_artifact_kind(kind: &str) -> bool {
     let mut segments = kind.split('.');
     let Some(first) = segments.next() else { return false };
     if first != "s" {
@@ -139,7 +139,7 @@ pub fn is_canonical_artifact_kind(kind: &str) -> bool {
 
 /// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
 /// hyphen, no doubled hyphen.
-fn is_kebab_segment(segment: &str) -> bool {
+async fn is_kebab_segment(segment: &str) -> bool {
     if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
         return false;
     }
@@ -157,12 +157,12 @@ pub struct ArtifactRef {
 
 impl ArtifactRef {
     /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
-    pub fn to_uri(&self) -> String {
+    pub async fn to_uri(&self) -> String {
         format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
     }
 
     /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.
-    pub fn parse_uri(s: &str) -> Result<Self, String> {
+    pub async fn parse_uri(s: &str) -> Result<Self, String> {
         let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
         if artifact_id.is_empty() {
             return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
@@ -210,7 +210,7 @@ pub enum Confidence {
 
 impl Confidence {
     /// 📏️ Ordered strength: High > Medium > Low > None.
-    pub fn rank(self) -> u8 {
+    pub async fn rank(self) -> u8 {
         match self {
             Self::None => 0,
             Self::Low => 1,
@@ -236,7 +236,7 @@ pub enum IoFidelity {
 
 impl IoFidelity {
     /// 📏️ Ordered strength: Exact > Canonical > Semantic > Lossy — mirrors `IoFidelityClass::rank`.
-    pub fn rank(self) -> u8 {
+    pub async fn rank(self) -> u8 {
         match self {
             Self::Exact => 3,
             Self::Canonical => 2,
@@ -267,7 +267,7 @@ pub struct IoOutcome<T> {
 
 impl<T> IoOutcome<T> {
     /// 🌱️ Wraps a bare value with no diagnostics — the common case for a clean hop.
-    pub fn clean(value: T) -> Self {
+    pub async fn clean(value: T) -> Self {
         Self { value, diagnostics: Vec::new() }
     }
 }

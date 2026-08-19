@@ -41,11 +41,11 @@ enum LeafContext {
 /// `text::FontAtlas` so taffy can ask fontdue for wrap-aware text metrics without ui_wgpu's flex
 /// module depending on fontdue directly.
 pub(crate) trait TextMeasure {
-    fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32);
+    async fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32);
 }
 
 impl TextMeasure for FontAtlas {
-    fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32) {
+    async fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32) {
         match max_width {
             Some(width) if width > 0.0 => self.measure_text_wrapped(text, width, DEFAULT_TEXT_SIZE_PX),
             _ => self.measure_text(text, DEFAULT_TEXT_SIZE_PX),
@@ -53,7 +53,7 @@ impl TextMeasure for FontAtlas {
     }
 }
 
-fn quantize_width(width: Option<f32>) -> Option<u32> {
+async fn quantize_width(width: Option<f32>) -> Option<u32> {
     width.map(|w| w.round().max(0.0) as u32)
 }
 
@@ -64,7 +64,7 @@ fn quantize_width(width: Option<f32>) -> Option<u32> {
 /// theme-dependent; every other variant is a content leaf (auto-sized, measured via `LeafContext`
 /// where applicable). `flex_grow` is layered on top by the caller for children of a `Stack`/`Field`,
 /// not set here, since it depends on the *parent's* kind.
-fn style_for(node: &UiNode) -> Style {
+async fn style_for(node: &UiNode) -> Style {
     match node {
         UiNode::Stack(stack) => {
             let vertical = stack.direction != "horizontal";
@@ -91,7 +91,7 @@ fn style_for(node: &UiNode) -> Style {
 
 /// 🎚️ Applies `theme`-resolved gap/padding onto a freshly built `Stack` style (kept separate from
 /// `style_for` so the latter stays theme-independent and trivially testable).
-fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::UiStackNode, theme: &Theme) {
+async fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::UiStackNode, theme: &Theme) {
     let gap = gap_for_token(theme, stack.gap.as_deref());
     let padding = padding_for_token(theme, stack.padding.as_deref());
     style.gap = Size { width: length(gap), height: length(gap) };
@@ -104,7 +104,7 @@ fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::Ui
 /// taffy container, combined with `style_with_grow` granting its sole child `flex_grow: 1.0`, resolves
 /// that child to the identical rect taffy-side (default `align_items: Stretch` already matches the
 /// full `bounds.w`, since `Field`'s container has no left/right padding).
-fn apply_field_metrics(style: &mut Style, theme: &Theme) {
+async fn apply_field_metrics(style: &mut Style, theme: &Theme) {
     let label_h = theme.font_size_small;
     let gap = gap_for_token(theme, Some("standard"));
     style.padding.top = length(label_h + gap);
@@ -122,12 +122,12 @@ const SECTION_HEADER_HEIGHT: f32 = 24.0;
 /// header offset as top padding and `theme.gap_standard` as the inter-row gap reproduces that
 /// positioning without granting `flex_grow` — `style_with_grow`'s `flex_grow_child` gate deliberately
 /// stays `Stack`/`Field`-only.
-fn apply_section_metrics(style: &mut Style, theme: &Theme) {
+async fn apply_section_metrics(style: &mut Style, theme: &Theme) {
     style.padding.top = length(SECTION_HEADER_HEIGHT);
     style.gap = Size { width: length(0.0_f32), height: length(theme.gap_standard) };
 }
 
-fn leaf_context(node: &UiNode) -> LeafContext {
+async fn leaf_context(node: &UiNode) -> LeafContext {
     match node {
         UiNode::Text(text) => LeafContext::Text(text.value.clone().into_string()),
         _ => LeafContext::None,
@@ -154,7 +154,7 @@ impl Default for LayoutEngine {
 }
 
 impl LayoutEngine {
-    pub(crate) fn new() -> Self {
+    pub(crate) async fn new() -> Self {
         Self::default()
     }
 
@@ -162,7 +162,7 @@ impl LayoutEngine {
     /// tree carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY` (checking the root alone suffices — `mark_dirty`
     /// always bubbles `SUBTREE_DIRTY` to the root, so an all-clean tree is a single flag read, no
     /// walk). Returns whether a layout pass actually ran.
-    pub(crate) fn compute(&mut self, tree: &mut UiTree, root: NodeId, atlas: &mut FontAtlas, theme: &Theme, available_width: f32, available_height: f32) -> bool {
+    pub(crate) async fn compute(&mut self, tree: &mut UiTree, root: NodeId, atlas: &mut FontAtlas, theme: &Theme, available_width: f32, available_height: f32) -> bool {
         let Some(root_node) = tree.node(root) else { return false };
         let needs_layout = root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) || root_node.flags.contains(NodeFlags::SUBTREE_DIRTY);
         if !needs_layout {
@@ -197,7 +197,7 @@ impl LayoutEngine {
 
     /// 🧹️ Drops taffy-side nodes whose retained counterpart no longer exists (removed by
     /// `reconcile`), so the mapping doesn't grow unbounded across the tree's lifetime.
-    fn prune_removed(&mut self, tree: &UiTree) {
+    async fn prune_removed(&mut self, tree: &UiTree) {
         let stale: Vec<NodeId> = self.nodes.by_ui.keys().copied().filter(|id| !tree.contains(*id)).collect();
         for id in stale {
             if let Some(taffy_id) = self.nodes.by_ui.remove(&id) {
@@ -212,7 +212,7 @@ impl LayoutEngine {
     /// recomputation for genuinely unchanged subtrees). `flex_grow_child` is true when `id`'s parent
     /// is a `Stack` or `Field` — the two kinds whose child(ren) should grow to fill leftover space
     /// (a `Section`'s children deliberately don't; see `apply_section_metrics`).
-    fn sync(&mut self, tree: &UiTree, theme: &Theme, id: NodeId, flex_grow_child: bool) -> taffy::NodeId {
+    async fn sync(&mut self, tree: &UiTree, theme: &Theme, id: NodeId, flex_grow_child: bool) -> taffy::NodeId {
         let node = tree.node(id).expect("sync called with a live NodeId");
         let grows_children = matches!(node.spec.0, UiNode::Stack(_) | UiNode::Field(_));
         let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT);
@@ -240,7 +240,7 @@ impl LayoutEngine {
         taffy_id
     }
 
-    fn style_with_grow(&self, node: &UiNode, theme: &Theme, flex_grow_child: bool) -> Style {
+    async fn style_with_grow(&self, node: &UiNode, theme: &Theme, flex_grow_child: bool) -> Style {
         let mut style = style_for(node);
         match node {
             UiNode::Stack(stack) => apply_stack_metrics(&mut style, stack, theme),
@@ -258,7 +258,7 @@ impl LayoutEngine {
     /// same space taffy itself uses — see `tree::LayoutBucket`'s doc comment) and clears
     /// `DIRTY_LAYOUT`. Text nodes also get their `cached_text_measure` refreshed at the node's final
     /// resolved width, so a following unchanged-constraint measurement is a cache hit.
-    fn write_back(&mut self, tree: &mut UiTree, atlas: &mut FontAtlas, id: NodeId) {
+    async fn write_back(&mut self, tree: &mut UiTree, atlas: &mut FontAtlas, id: NodeId) {
         if let Some(&taffy_id) = self.nodes.by_ui.get(&id) {
             if let Ok(layout) = self.taffy.layout(taffy_id) {
                 let (x, y, width, height) = (layout.location.x, layout.location.y, layout.size.width, layout.size.height);
@@ -301,16 +301,16 @@ mod tests {
     use super::*;
     use crate::wgpu::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 
-    fn text(value: &str) -> UiNode {
+    async fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
+    async fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode { direction: direction.into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
     }
 
     #[test]
-    fn vertical_stack_lays_children_top_to_bottom_with_correct_y_offsets() {
+    async fn vertical_stack_lays_children_top_to_bottom_with_correct_y_offsets() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("vertical", vec![text("hello"), text("a longer line of text")]));
         let root = tree.root.unwrap();
@@ -330,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn horizontal_stack_distributes_equal_leftover_width_across_children() {
+    async fn horizontal_stack_distributes_equal_leftover_width_across_children() {
         let mut tree = UiTree::new();
         let children = vec![
             UiNode::Separator(crate::wgpu::component::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None }),
@@ -353,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn recomputing_with_nothing_dirty_is_a_no_operation() {
+    async fn recomputing_with_nothing_dirty_is_a_no_operation() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("vertical", vec![text("hello")]));
         let root = tree.root.unwrap();
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn text_measurement_is_cached_per_unchanged_width() {
+    async fn text_measurement_is_cached_per_unchanged_width() {
         let mut atlas = FontAtlas::builtin();
         let first = atlas.measure("hello world", Some(120.0));
         let second = atlas.measure("hello world", Some(120.0));
@@ -391,7 +391,7 @@ mod tests {
 
     //#region 🔖️FieldSectionGrowSemantics
     #[test]
-    fn field_child_grows_to_fill_the_label_adjusted_remainder() {
+    async fn field_child_grows_to_fill_the_label_adjusted_remainder() {
         let mut tree = UiTree::new();
         let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default(), menu: None });
         tree.apply_tree(&field);
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
+    async fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
         let mut tree = UiTree::new();
         let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")], menu: None });
         tree.apply_tree(&section);

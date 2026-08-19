@@ -1,0 +1,10 @@
+local traits known: 241 | files: 19
+{
+  "converted": 1773,
+  "const": 3,
+  "extern": 6,
+  "external_trait": 52,
+  "main": 1,
+  "already": 47,
+  "tagged_exempt": 0
+}

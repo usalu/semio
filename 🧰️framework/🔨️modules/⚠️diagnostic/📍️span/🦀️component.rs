@@ -1,4 +1,5 @@
 //! 📍 Source spans for DSL diagnostics and tokens.
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 use serde::{Deserialize, Serialize};
 

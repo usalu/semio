@@ -39,21 +39,21 @@ pub enum PropertyValue {
 }
 
 impl PropertyValue {
-    pub fn as_str(&self) -> Option<&str> {
+    pub async fn as_str(&self) -> Option<&str> {
         match self {
             Self::String(s) => Some(s.as_str()),
             _ => None,
         }
     }
 
-    pub fn as_f64(&self) -> Option<f64> {
+    pub async fn as_f64(&self) -> Option<f64> {
         match self {
             Self::Number(n) => Some(*n),
             _ => None,
         }
     }
 
-    pub fn as_object(&self) -> Option<&std::collections::BTreeMap<String, PropertyValue>> {
+    pub async fn as_object(&self) -> Option<&std::collections::BTreeMap<String, PropertyValue>> {
         match self {
             Self::Object(m) => Some(m),
             _ => None,
@@ -71,7 +71,7 @@ impl PropertyValue {
 // directly through `DslValue` (mirroring the engine's own `serde_json::Value` bridge) is both
 // correct and the natural fit for an untyped recursive value type, and it needs no attributes on
 // the Array/Object variants: recursion is carried by `DslValue` itself, not by field-level nesting.
-fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
+async fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
     match value {
         PropertyValue::Null => dsl_core::DslValue::Null,
         PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
@@ -82,7 +82,7 @@ fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
     }
 }
 
-fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
+async fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
     match value {
         dsl_core::DslValue::Null => PropertyValue::Null,
         dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
@@ -94,15 +94,15 @@ fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
 }
 
 impl dsl_core::DslField for PropertyValue {
-    fn shape() -> dsl_core::Shape {
+    async fn shape() -> dsl_core::Shape {
         dsl_core::Shape::Value
     }
 
-    fn to_value(&self) -> dsl_core::FieldValue {
+    async fn to_value(&self) -> dsl_core::FieldValue {
         dsl_core::FieldValue::Value(property_value_to_dsl_value(self))
     }
 
-    fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
         match value {
             dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
             other => Err(format!("expected Value, found {other:?}")),
@@ -119,7 +119,7 @@ pub enum PropertyKind {
     Derived,
 }
 
-fn deserialize_value_type<'de, D>(deserializer: D) -> Result<ValueType, D::Error>
+async fn deserialize_value_type<'de, D>(deserializer: D) -> Result<ValueType, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -127,14 +127,14 @@ where
     parse_value_type_value(&raw).map_err(serde::de::Error::custom)
 }
 
-fn serialize_value_type<S>(value: &ValueType, serializer: S) -> Result<S::Ok, S::Error>
+async fn serialize_value_type<S>(value: &ValueType, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     value.serialize(serializer)
 }
 
-fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
+async fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
     if let Ok(vt) = serde_json::from_value::<ValueType>(raw.clone()) {
         return Ok(vt);
     }
@@ -225,7 +225,7 @@ pub struct KindDef {
 }
 
 impl KindDef {
-    pub fn display_name(&self) -> &str {
+    pub async fn display_name(&self) -> &str {
         if self.name.is_empty() {
             &self.id
         } else {
@@ -271,31 +271,31 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    pub fn node_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn node_kind(&self, id: &str) -> Option<&KindDef> {
         self.node_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn edge_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn edge_kind(&self, id: &str) -> Option<&KindDef> {
         self.edge_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn port_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn port_kind(&self, id: &str) -> Option<&KindDef> {
         self.port_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn wire_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn wire_kind(&self, id: &str) -> Option<&KindDef> {
         self.wire_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn layer_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn layer_kind(&self, id: &str) -> Option<&KindDef> {
         self.layer_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn language_kind(&self, id: &str) -> Option<&KindDef> {
+    pub async fn language_kind(&self, id: &str) -> Option<&KindDef> {
         self.language_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn to_trinity_manifest(&self) -> TrinityManifest {
+    pub async fn to_trinity_manifest(&self) -> TrinityManifest {
         TrinityManifest {
             node_kinds: self.node_kinds.iter().map(|k| TrinityNodeKindDef { name: k.id.clone(), properties: k.properties.clone(), port_kinds: k.ports.clone() }).collect(),
             edge_kinds: self.edge_kinds.iter().map(|k| TrinityEdgeKindDef { name: k.id.clone(), properties: k.properties.clone() }).collect(),
@@ -357,20 +357,20 @@ pub struct TrinityPortKindDef {
 }
 
 impl TrinityManifest {
-    pub fn node_kind(&self, name: &str) -> Option<&TrinityNodeKindDef> {
+    pub async fn node_kind(&self, name: &str) -> Option<&TrinityNodeKindDef> {
         self.node_kinds.iter().find(|k| k.name == name)
     }
 
-    pub fn edge_kind(&self, name: &str) -> Option<&TrinityEdgeKindDef> {
+    pub async fn edge_kind(&self, name: &str) -> Option<&TrinityEdgeKindDef> {
         self.edge_kinds.iter().find(|k| k.name == name)
     }
 
-    pub fn port_kind(&self, name: &str) -> Option<&TrinityPortKindDef> {
+    pub async fn port_kind(&self, name: &str) -> Option<&TrinityPortKindDef> {
         self.port_kinds.iter().find(|k| k.name == name)
     }
 
     /// 📜️ Nakagin capsule tower compile-time manifest.
-    pub fn nakagin_default() -> Self {
+    pub async fn nakagin_default() -> Self {
         nakagin::nakagin_manifest().to_trinity_manifest()
     }
 }
@@ -386,7 +386,7 @@ pub struct ManifestValidationError {
 }
 
 impl ManifestValidationError {
-    fn new(path: impl Into<String>, message: impl Into<String>) -> Self {
+    async fn new(path: impl Into<String>, message: impl Into<String>) -> Self {
         Self { path: path.into(), message: message.into() }
     }
 }
@@ -398,11 +398,11 @@ pub struct ManifestValidator<'a> {
 }
 
 impl<'a> ManifestValidator<'a> {
-    pub fn new(manifest: &'a Manifest) -> Self {
+    pub async fn new(manifest: &'a Manifest) -> Self {
         Self { manifest }
     }
 
-    pub fn validate_node_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_node_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.node_kind(kind).is_some() {
             Ok(())
         } else {
@@ -410,7 +410,7 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_edge_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_edge_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.edge_kind(kind).is_some() {
             Ok(())
         } else {
@@ -418,7 +418,7 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_port_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_port_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.port_kind(kind).is_some() {
             Ok(())
         } else {
@@ -426,7 +426,7 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_wire_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_wire_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.wire_kind(kind).is_some() {
             Ok(())
         } else {
@@ -434,7 +434,7 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_layer_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_layer_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.layer_kind(kind).is_some() {
             Ok(())
         } else {
@@ -442,7 +442,7 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_language_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+    pub async fn validate_language_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
         if self.manifest.language_kind(kind).is_some() {
             Ok(())
         } else {
@@ -450,21 +450,21 @@ impl<'a> ManifestValidator<'a> {
         }
     }
 
-    pub fn validate_node_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
+    pub async fn validate_node_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
         let Some(def) = self.manifest.node_kind(kind) else {
             return self.validate_node_kind(kind);
         };
         self.validate_property_bag(&format!("nodes/{kind}/properties"), &def.properties, properties)
     }
 
-    pub fn validate_edge_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
+    pub async fn validate_edge_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
         let Some(def) = self.manifest.edge_kind(kind) else {
             return self.validate_edge_kind(kind);
         };
         self.validate_property_bag(&format!("edges/{kind}/properties"), &def.properties, properties)
     }
 
-    fn validate_property_bag(&self, path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), ManifestValidationError> {
+    async fn validate_property_bag(&self, path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), ManifestValidationError> {
         for def in defs {
             if def.kind == PropertyKind::Derived {
                 continue;
@@ -484,7 +484,7 @@ impl<'a> ManifestValidator<'a> {
         Ok(())
     }
 
-    pub fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
+    pub async fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
         for node in nodes {
             self.validate_node_kind(node.kind)?;
             self.validate_node_properties(node.kind, node.properties)?;
@@ -505,7 +505,7 @@ impl<'a> ManifestValidator<'a> {
     }
 }
 
-fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> bool {
+async fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> bool {
     if matches!(expected, ValueType::Any) {
         return true;
     }
@@ -518,7 +518,7 @@ fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> b
     }
 }
 
-fn property_value_to_neural(value: &PropertyValue) -> Value {
+async fn property_value_to_neural(value: &PropertyValue) -> Value {
     match value {
         PropertyValue::Null => Value::null(),
         PropertyValue::Bool(b) => Value::Atom(neural_engine::Atom::Boolean(*b)),
@@ -558,7 +558,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn nakagin_manifest_loads() {
+    async fn nakagin_manifest_loads() {
         let m = nakagin::nakagin_manifest();
         assert_eq!(m.id, "nakagin");
         assert!(m.node_kind("Piece").is_some());
@@ -566,20 +566,20 @@ mod tests {
     }
 
     #[test]
-    fn validator_rejects_unknown_node_kind() {
+    async fn validator_rejects_unknown_node_kind() {
         let m = nakagin::nakagin_manifest();
         let v = ManifestValidator::new(&m);
         assert!(v.validate_node_kind("NoSuchNode").is_err());
     }
 
     #[test]
-    fn manifest_by_id_resolves() {
+    async fn manifest_by_id_resolves() {
         let m = manifest_by_id("nakagin").expect("nakagin");
         assert!(m.node_kind("Balcony").is_some());
     }
 
     #[test]
-    fn property_value_dsl_field_round_trips_nested_array_and_object() {
+    async fn property_value_dsl_field_round_trips_nested_array_and_object() {
         // 🌳️ Nested case: an Object containing an Array containing an Object — proves the
         // `dsl_core::DslField` bridge (via `dsl_core::DslValue`) recurses correctly at every depth, not just
         // for a flat value.

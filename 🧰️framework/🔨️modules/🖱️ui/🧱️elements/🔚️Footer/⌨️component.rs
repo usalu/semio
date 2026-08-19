@@ -8,7 +8,7 @@ use crate::tui::geometry::{Pos, Rect};
 use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 
-pub(crate) fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Base);
     let (hairline, content) = rect.split_top(1);
     buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(Role::BorderNormal), bg);

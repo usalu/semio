@@ -17,3 +17,6 @@ path = "📦️glue.rs"
 [dependencies]
 serde = { workspace = true }
 gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -1,0 +1,43 @@
+=== self-driving mode (expected PASS, no hang) ===
+[wasmpollster] mode=self-driving: pollster::block_on(SelfDrivingCountdown{remaining:5})
+[wasmpollster] RESULT = 42
+[wasmpollster] PASS: block_on completed under wasm32-wasip2 for a self-driving future
+exit=0
+
+=== never-wakes mode (expected CRASH/hang, external 5s timeout) ===
+process returned after 0.01s, exit=134
+--- stdout ---
+[wasmpollster] mode=never-wakes: pollster::block_on(NeverWakes) -- expect this line is the LAST output, process must be killed by an external timeout
+
+--- stderr ---
+
+thread 'main' (1) panicked at /rustc/c4af71034e89a431eeee91125a31ad001379faac/library/std/src/sys/sync/condvar/no_threads.rs:23:9:
+condvar wait not supported
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Error: failed to run main module `/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-brepprobe/wasm32-wasip2/release/wasmpollster.wasm`
+
+Caused by:
+    0: failed to invoke `run` function
+    1: error while executing at wasm backtrace:
+    0:   0x6886 - wasmpollster-40505a0d8e6f6e63.wasm!abort
+    1:   0x3938 - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::sys::pal::wasi::abort_internal
+    2:   0x2895 - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::process::abort
+    3:   0x2e04 - wasmpollster-40505a0d8e6f6e63.wasm!__rustc[feecb8598a58626c]::__rust_abort
+    4:   0x1497 - wasmpollster-40505a0d8e6f6e63.wasm!__rustc[feecb8598a58626c]::__rust_start_panic
+    5:   0x2c81 - wasmpollster-40505a0d8e6f6e63.wasm!__rustc[feecb8598a58626c]::rust_panic
+    6:   0x222e - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::panicking::panic_with_hook
+    7:   0x1e1c - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::panicking::panic_handler::{closure#0}
+    8:   0x1daf - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::sys::backtrace::__rust_end_short_backtrace::<std[be0b48a5cd1d3967]::panicking::panic_handler::{closure#0}, !>
+    9:   0x2ee7 - wasmpollster-40505a0d8e6f6e63.wasm!__rustc[feecb8598a58626c]::rust_begin_unwind
+   10:   0xb678 - wasmpollster-40505a0d8e6f6e63.wasm!core[7b00b25753185ab2]::panicking::panic_fmt
+   11:   0x303c - wasmpollster-40505a0d8e6f6e63.wasm!<std[be0b48a5cd1d3967]::sys::sync::condvar::no_threads::Condvar>::wait
+   12:   0x134e - wasmpollster-40505a0d8e6f6e63.wasm!<pollster[7e15fa87a0eccfc1]::Signal>::wait
+   13:   0x119a - wasmpollster-40505a0d8e6f6e63.wasm!wasmpollster[194badd160aedd98]::main
+   14:    0xe3e - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+   15:    0xe51 - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::rt::lang_start::<()>::{closure#0}
+   16:   0x357c - wasmpollster-40505a0d8e6f6e63.wasm!std[be0b48a5cd1d3967]::rt::lang_start_internal
+   17:   0x125b - wasmpollster-40505a0d8e6f6e63.wasm!__main_void
+   18:    0xe26 - wasmpollster-40505a0d8e6f6e63.wasm!_start
+    2: wasm trap: wasm `unreachable` instruction executed
+
+

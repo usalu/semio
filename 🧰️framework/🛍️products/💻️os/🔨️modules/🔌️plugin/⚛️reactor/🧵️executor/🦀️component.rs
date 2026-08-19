@@ -31,13 +31,13 @@ pub struct LocalExecutor {
 }
 
 impl LocalExecutor {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// 🌱️ Spawns a task and schedules it ready for the next `run_until_idle` — used both for a
     /// fresh `Emit::tasks` follow-up and for the top-level `app-command` dispatch future.
-    pub fn spawn(&self, future: impl Future<Output = ()> + 'static) -> TaskId {
+    pub async fn spawn(&self, future: impl Future<Output = ()> + 'static) -> TaskId {
         let mut inner = self.inner.borrow_mut();
         let id = if let Some(id) = inner.free.pop() {
             inner.slots[id] = Some(Box::pin(future));
@@ -55,7 +55,7 @@ impl LocalExecutor {
     /// embed its OWN id (post-completion bookkeeping keyed by `TaskId` — `⚛️reactor::spawn_task`'s
     /// `TASK_RECORDS`/`TASK_KEYS` cleanup) without a capture-after-construct `Cell` dance. `spawn`
     /// above stays as the simpler entry point for callers that never need their own id.
-    pub fn spawn_with_id(&self, make_future: impl FnOnce(TaskId) -> Pin<Box<dyn Future<Output = ()>>>) -> TaskId {
+    pub async fn spawn_with_id(&self, make_future: impl FnOnce(TaskId) -> Pin<Box<dyn Future<Output = ()>>>) -> TaskId {
         let id = {
             let mut inner = self.inner.borrow_mut();
             if let Some(id) = inner.free.pop() {
@@ -79,7 +79,7 @@ impl LocalExecutor {
     /// Used for key-dedupe (spawning onto a live `(instance, key)` cancels the stale task first)
     /// and `Event::InstanceClose` (every task that instance owns). Idempotent: cancelling an
     /// already-finished or unknown id is a no-op.
-    pub fn cancel(&self, id: TaskId) {
+    pub async fn cancel(&self, id: TaskId) {
         let mut inner = self.inner.borrow_mut();
         let index = id as usize;
         if index < inner.slots.len() {
@@ -92,7 +92,7 @@ impl LocalExecutor {
     }
 
     /// 🔔️ Re-queues `id`. Idempotent within one turn (never double-queues an already-ready task).
-    pub fn wake(&self, id: TaskId) {
+    pub async fn wake(&self, id: TaskId) {
         let mut inner = self.inner.borrow_mut();
         let id = id as usize;
         if id < inner.slots.len() && inner.slots[id].is_some() && !inner.ready.contains(&id) {
@@ -105,14 +105,14 @@ impl LocalExecutor {
     /// re-waking itself forever inside one turn — `reactor::poll` treats hitting the cap as
     /// `turn-status::more-work`, not `idle`). Returns whether any task is still alive (ready or
     /// parked) when it returns.
-    pub fn run_until_idle(&self, max_iterations: u32) -> bool {
+    pub async fn run_until_idle(&self, max_iterations: u32) -> bool {
         for _ in 0..max_iterations {
             let Some(id) = self.inner.borrow_mut().ready.pop_front() else {
                 break;
             };
             let future = self.inner.borrow_mut().slots[id].take();
             let Some(mut future) = future else { continue };
-            let waker = self.waker_for(id as TaskId);
+            let waker = self.waker_for(id as TaskId).await;
             let mut cx = Context::from_waker(&waker);
             match future.as_mut().poll(&mut cx) {
                 Poll::Ready(()) => {
@@ -125,18 +125,18 @@ impl LocalExecutor {
                 }
             }
         }
-        self.has_pending()
+        self.has_pending().await
     }
 
-    pub fn has_ready(&self) -> bool {
+    pub async fn has_ready(&self) -> bool {
         !self.inner.borrow().ready.is_empty()
     }
 
-    pub fn has_pending(&self) -> bool {
+    pub async fn has_pending(&self) -> bool {
         self.inner.borrow().slots.iter().any(Option::is_some)
     }
 
-    fn waker_for(&self, id: TaskId) -> Waker {
+    async fn waker_for(&self, id: TaskId) -> Waker {
         let data = Rc::new(WakerData { inner: self.inner.clone(), id: id as usize });
         unsafe { Waker::from_raw(raw_waker(data)) }
     }
@@ -147,12 +147,15 @@ struct WakerData {
     id: usize,
 }
 
+// 🚫️async: E4 fn-pointer slot — RawWakerVTable::new requires bare `unsafe fn(*const ()) -> T`
+// pointers; core::task calls these through a raw vtable and can never `.await` them.
 fn raw_waker(data: Rc<WakerData>) -> RawWaker {
     RawWaker::new(Rc::into_raw(data) as *const (), &VTABLE)
 }
 
 static VTABLE: RawWakerVTable = RawWakerVTable::new(waker_clone, waker_wake, waker_wake_by_ref, waker_drop);
 
+// 🚫️async: E4 fn-pointer slot
 unsafe fn waker_clone(ptr: *const ()) -> RawWaker {
     let data = unsafe { Rc::from_raw(ptr as *const WakerData) };
     let cloned = data.clone();
@@ -160,6 +163,7 @@ unsafe fn waker_clone(ptr: *const ()) -> RawWaker {
     raw_waker(cloned)
 }
 
+// 🚫️async: E4 fn-pointer slot
 unsafe fn waker_wake(ptr: *const ()) {
     let data = unsafe { Rc::from_raw(ptr as *const WakerData) };
     let mut inner = data.inner.borrow_mut();
@@ -168,6 +172,7 @@ unsafe fn waker_wake(ptr: *const ()) {
     }
 }
 
+// 🚫️async: E4 fn-pointer slot
 unsafe fn waker_wake_by_ref(ptr: *const ()) {
     let data = unsafe { &*(ptr as *const WakerData) };
     let mut inner = data.inner.borrow_mut();
@@ -176,6 +181,7 @@ unsafe fn waker_wake_by_ref(ptr: *const ()) {
     }
 }
 
+// 🚫️async: E4 fn-pointer slot
 unsafe fn waker_drop(ptr: *const ()) {
     drop(unsafe { Rc::from_raw(ptr as *const WakerData) });
 }
@@ -204,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn spawn_runs_a_ready_task_to_completion() {
+    async fn spawn_runs_a_ready_task_to_completion() {
         let executor = LocalExecutor::new();
         let ran = Rc::new(Cell::new(false));
         let ran_inner = ran.clone();
@@ -217,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn a_self_waking_task_is_polled_again_within_the_same_pass() {
+    async fn a_self_waking_task_is_polled_again_within_the_same_pass() {
         let executor = LocalExecutor::new();
         executor.spawn(YieldOnce { yielded: false });
         let pending = executor.run_until_idle(8);
@@ -225,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn a_task_that_never_wakes_stays_pending_until_woken() {
+    async fn a_task_that_never_wakes_stays_pending_until_woken() {
         let executor = LocalExecutor::new();
         let waker_cell: Rc<RefCell<Option<Waker>>> = Rc::new(RefCell::new(None));
         let waker_cell_inner = waker_cell.clone();
@@ -258,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_before_the_first_run_until_idle_drops_the_future_without_ever_polling_it() {
+    async fn cancel_before_the_first_run_until_idle_drops_the_future_without_ever_polling_it() {
         struct DropFlag(Rc<Cell<bool>>);
         impl Drop for DropFlag {
             fn drop(&mut self) {
@@ -282,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
+    async fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
         let executor = LocalExecutor::new();
         let waker_cell: Rc<RefCell<Option<Waker>>> = Rc::new(RefCell::new(None));
         let waker_cell_inner = waker_cell.clone();
@@ -307,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn spawn_with_id_hands_the_reserved_id_to_the_future_builder_before_it_ever_runs() {
+    async fn spawn_with_id_hands_the_reserved_id_to_the_future_builder_before_it_ever_runs() {
         let executor = LocalExecutor::new();
         let seen_id: Rc<Cell<Option<TaskId>>> = Rc::new(Cell::new(None));
         let seen_id_inner = seen_id.clone();
@@ -322,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn cancel_is_idempotent_for_an_unknown_or_already_finished_id() {
+    async fn cancel_is_idempotent_for_an_unknown_or_already_finished_id() {
         let executor = LocalExecutor::new();
         executor.cancel(999); // never spawned
         let id = executor.spawn(async move {});

@@ -19,18 +19,18 @@ pub struct Coo {
 }
 
 impl Coo {
-    pub fn new(n: usize) -> Self {
+    pub async fn new(n: usize) -> Self {
         Self { n, rows: Vec::new(), cols: Vec::new(), vals: Vec::new() }
     }
 
-    pub fn add(&mut self, row: usize, col: usize, value: f64) {
+    pub async fn add(&mut self, row: usize, col: usize, value: f64) {
         self.rows.push(row as u32);
         self.cols.push(col as u32);
         self.vals.push(value);
     }
 
     /// 🧩️ Scatters a small dense element block (e.g. from `Element::stiffness_global`) at global indices.
-    pub fn add_block(&mut self, indices: &[usize], block: &MatD) {
+    pub async fn add_block(&mut self, indices: &[usize], block: &MatD) {
         for (local_row, &global_row) in indices.iter().enumerate() {
             for (local_col, &global_col) in indices.iter().enumerate() {
                 let value = block.get(local_row, local_col);
@@ -41,7 +41,7 @@ impl Coo {
         }
     }
 
-    fn merge_sorted(mut entries: Vec<(u32, f64)>) -> Vec<(u32, f64)> {
+    async fn merge_sorted(mut entries: Vec<(u32, f64)>) -> Vec<(u32, f64)> {
         entries.sort_by_key(|&(k, _)| k);
         let mut merged: Vec<(u32, f64)> = Vec::with_capacity(entries.len());
         for (k, v) in entries {
@@ -57,7 +57,7 @@ impl Coo {
     }
 
     /// 🧮️ General CSR (both triangles present or not, caller's choice) — used for SpMV.
-    pub fn to_csr(&self) -> Csr {
+    pub async fn to_csr(&self) -> Csr {
         let n = self.n;
         let mut by_row: Vec<Vec<(u32, f64)>> = vec![Vec::new(); n];
         for i in 0..self.rows.len() {
@@ -80,7 +80,7 @@ impl Coo {
     /// 🔺️ Keeps only entries where `col >= row` (upper triangle), grouped by the SMALLER index `j`
     /// so that storage-column `j` directly holds `A[j][c]` for every `c >= j` (via symmetry
     /// `A[j][c] = A[c][j]`) — the layout the left-looking LDLT column loop needs without a scan.
-    pub fn to_csc_sym_upper(&self) -> CscSym {
+    pub async fn to_csc_sym_upper(&self) -> CscSym {
         let n = self.n;
         let mut by_col: Vec<Vec<(u32, f64)>> = vec![Vec::new(); n];
         for i in 0..self.rows.len() {
@@ -105,7 +105,7 @@ impl Coo {
     }
 
     /// 🪞️ Dense form for testing/cross-validation against `MatD::lu_solve`.
-    pub fn to_dense(&self) -> MatD {
+    pub async fn to_dense(&self) -> MatD {
         let mut m = MatD::zeros(self.n, self.n);
         for i in 0..self.rows.len() {
             m.add_at(self.rows[i] as usize, self.cols[i] as usize, self.vals[i]);
@@ -125,7 +125,7 @@ pub struct Csr {
 }
 
 impl Csr {
-    pub fn mul_vec(&self, x: &VecD) -> VecD {
+    pub async fn mul_vec(&self, x: &VecD) -> VecD {
         let mut out = VecD::zeros(self.n);
         for row in 0..self.n {
             let start = self.indptr[row] as usize;
@@ -139,7 +139,7 @@ impl Csr {
         out
     }
 
-    pub fn diag(&self) -> VecD {
+    pub async fn diag(&self) -> VecD {
         let mut out = VecD::zeros(self.n);
         for row in 0..self.n {
             let start = self.indptr[row] as usize;
@@ -167,7 +167,7 @@ pub struct CscSym {
 
 impl CscSym {
     /// 🔍️ Reads `(row, col)` — storage-column is the smaller index, stored-row the larger.
-    pub fn get(&self, row: usize, col: usize) -> f64 {
+    pub async fn get(&self, row: usize, col: usize) -> f64 {
         let (lo, hi) = if row <= col { (row, col) } else { (col, row) };
         let start = self.colptr[lo] as usize;
         let end = self.colptr[lo + 1] as usize;
@@ -180,7 +180,7 @@ impl CscSym {
     }
 
     /// 🪟️ Mirrors into a full general CSR (for SpMV/PCG/residual use).
-    pub fn to_csr_full(&self) -> Csr {
+    pub async fn to_csr_full(&self) -> Csr {
         let mut coo = Coo::new(self.n);
         for col in 0..self.n {
             let start = self.colptr[col] as usize;
@@ -222,7 +222,7 @@ pub struct LdltFactor {
 /// list of contributing earlier columns) subtracts `L[j][k] * L[i][k] * D[k]` at every row `i`
 /// where `L[i][k] != 0` — this is where fill-in appears. Symbolic and numeric phases are combined
 /// in one pass, per Davis's "Direct Methods for Sparse Linear Systems".
-pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
+pub async fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
     let n = a.n;
     let mut l_cols: Vec<BTreeMap<u32, f64>> = vec![BTreeMap::new(); n];
     let mut d = vec![0.0; n];
@@ -271,7 +271,7 @@ pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
 impl LdltFactor {
     /// 🧭️ Forward (`Ly=b`) → diagonal (`z=y/D`) → backward (`Lᵀx=z`) substitution, column-oriented
     /// so no separate row-major structure of `L` is needed.
-    pub fn solve(&self, b: &VecD) -> VecD {
+    pub async fn solve(&self, b: &VecD) -> VecD {
         let n = self.n;
         let mut y = b.0.clone();
         for j in 0..n {
@@ -296,7 +296,7 @@ impl LdltFactor {
         VecD::from_vec(y)
     }
 
-    pub fn solve_many(&self, b: &MatD) -> MatD {
+    pub async fn solve_many(&self, b: &MatD) -> MatD {
         let mut out = MatD::zeros(b.rows, b.cols);
         for col in 0..b.cols {
             let rhs = VecD::from_vec((0..b.rows).map(|row| b.get(row, col)).collect());
@@ -309,7 +309,7 @@ impl LdltFactor {
     }
 
     /// 🔢️ Count of `D[j] < 0` — a Sturm-sequence inertia count, used later for eigenvalue-count checks.
-    pub fn negative_pivot_count(&self) -> usize {
+    pub async fn negative_pivot_count(&self) -> usize {
         self.d.iter().filter(|&&value| value < 0.0).count()
     }
 }
@@ -326,7 +326,7 @@ pub struct PcgStats {
 
 /// ➰️ Jacobi-preconditioned conjugate gradient — mutates `x0` in place, converges when
 /// `‖r‖ / ‖b‖ < tol_rel` or `max_iter` is reached.
-pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> PcgStats {
+pub async fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> PcgStats {
     let n = a.n;
     let diag = a.diag();
     let precondition = |r: &VecD| -> VecD {
@@ -381,7 +381,7 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
 /// 🎯️ Cyclic Jacobi eigenvalue algorithm for a small dense symmetric matrix — returns eigenvalues
 /// (ascending) and the matching eigenvectors as columns of the returned `MatD`. Used internally to
 /// solve the small (`p×p`, `p ≤ ~40`) projected eigenproblem inside `subspace_iteration`.
-fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
+async fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
     let n = a.rows;
     let mut m = a.clone();
     let mut v = MatD::identity(n);
@@ -456,7 +456,7 @@ fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
     (vals, vecs)
 }
 
-fn frobenius_norm(m: &MatD) -> f64 {
+async fn frobenius_norm(m: &MatD) -> f64 {
     let mut sum = 0.0;
     for row in 0..m.rows {
         for col in 0..m.cols {
@@ -467,7 +467,7 @@ fn frobenius_norm(m: &MatD) -> f64 {
 }
 
 /// 🪜️ Lower-triangular Cholesky `A = L Lᵀ` of a small dense SPD matrix (Cholesky-Banachiewicz).
-fn cholesky_lower(a: &MatD) -> MatD {
+async fn cholesky_lower(a: &MatD) -> MatD {
     let n = a.rows;
     let mut l = MatD::zeros(n, n);
     for i in 0..n {
@@ -487,7 +487,7 @@ fn cholesky_lower(a: &MatD) -> MatD {
 }
 
 /// 🔁️ Inverse of a lower-triangular matrix via forward substitution, one identity column at a time.
-fn invert_lower_triangular(l: &MatD) -> MatD {
+async fn invert_lower_triangular(l: &MatD) -> MatD {
     let n = l.rows;
     let mut inv = MatD::zeros(n, n);
     for col in 0..n {
@@ -506,7 +506,7 @@ fn invert_lower_triangular(l: &MatD) -> MatD {
     inv
 }
 
-fn symmetrize(a: &MatD) -> MatD {
+async fn symmetrize(a: &MatD) -> MatD {
     let n = a.rows;
     let mut out = MatD::zeros(n, n);
     for i in 0..n {
@@ -525,17 +525,17 @@ pub struct EigenPairs {
     pub vectors: Vec<VecD>,
 }
 
-fn mat_col(m: &MatD, col: usize) -> VecD {
+async fn mat_col(m: &MatD, col: usize) -> VecD {
     VecD::from_vec((0..m.rows).map(|row| m.get(row, col)).collect())
 }
 
-fn set_col(m: &mut MatD, col: usize, v: &VecD) {
+async fn set_col(m: &mut MatD, col: usize, v: &VecD) {
     for row in 0..m.rows {
         m.set(row, col, v.get(row));
     }
 }
 
-fn apply_b(b: &Csr, m: &MatD) -> MatD {
+async fn apply_b(b: &Csr, m: &MatD) -> MatD {
     let mut out = MatD::zeros(m.rows, m.cols);
     for col in 0..m.cols {
         let bv = b.mul_vec(&mat_col(m, col));
@@ -551,7 +551,7 @@ fn apply_b(b: &Csr, m: &MatD) -> MatD {
 /// raw `K` operator is never needed — only its factorization), solve the small dense generalized
 /// eigenproblem via a Cholesky-of-`B_proj` transform to a standard eigenproblem, rotate the subspace
 /// by the recovered eigenvectors, and repeat until the lowest `p` eigenvalues stop changing.
-pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, max_iter: usize) -> EigenPairs {
+pub async fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, max_iter: usize) -> EigenPairs {
     let m = (p + 8).max(2 * p).min(n).max(1);
     let mut x = MatD::zeros(n, m);
     for j in 0..m {
@@ -621,7 +621,7 @@ pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, ma
 // #endregion 🔖️SubspaceIteration
 
 // #region 🔖️Rcm
-fn bfs_distances(start: usize, adjacency: &[Vec<usize>]) -> Vec<i64> {
+async fn bfs_distances(start: usize, adjacency: &[Vec<usize>]) -> Vec<i64> {
     let n = adjacency.len();
     let mut dist = vec![-1i64; n];
     dist[start] = 0;
@@ -638,13 +638,13 @@ fn bfs_distances(start: usize, adjacency: &[Vec<usize>]) -> Vec<i64> {
     dist
 }
 
-fn farthest_node(start: usize, adjacency: &[Vec<usize>]) -> usize {
+async fn farthest_node(start: usize, adjacency: &[Vec<usize>]) -> usize {
     let dist = bfs_distances(start, adjacency);
     (0..adjacency.len()).filter(|&i| dist[i] >= 0).max_by_key(|&i| dist[i]).unwrap_or(start)
 }
 
 /// 🧭️ George-Liu pseudo-peripheral heuristic: BFS to the farthest node, repeat twice more.
-fn pseudo_peripheral(start: usize, adjacency: &[Vec<usize>]) -> usize {
+async fn pseudo_peripheral(start: usize, adjacency: &[Vec<usize>]) -> usize {
     let a = farthest_node(start, adjacency);
     let b = farthest_node(a, adjacency);
     farthest_node(b, adjacency)
@@ -655,7 +655,7 @@ fn pseudo_peripheral(start: usize, adjacency: &[Vec<usize>]) -> usize {
 /// Disconnected graphs are processed one component at a time, in order of first unvisited node;
 /// each component is seeded from its pseudo-peripheral node, BFS'd with each level's nodes emitted
 /// sorted by ascending degree, and the whole resulting order is reversed at the end.
-pub fn rcm_order(adjacency: &[Vec<usize>]) -> Vec<usize> {
+pub async fn rcm_order(adjacency: &[Vec<usize>]) -> Vec<usize> {
     let n = adjacency.len();
     let mut visited = vec![false; n];
     let mut order: Vec<usize> = Vec::with_capacity(n);
@@ -692,7 +692,7 @@ pub fn rcm_order(adjacency: &[Vec<usize>]) -> Vec<usize> {
 mod tests {
     use super::*;
 
-    fn graph_laplacian_plus_identity(n: usize, edges: &[(usize, usize)]) -> Coo {
+    async fn graph_laplacian_plus_identity(n: usize, edges: &[(usize, usize)]) -> Coo {
         let mut degree = vec![0usize; n];
         for &(u, v) in edges {
             degree[u] += 1;
@@ -710,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    fn ldlt_matches_dense_lu_on_random_spd() {
+    async fn ldlt_matches_dense_lu_on_random_spd() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
         let coo = graph_laplacian_plus_identity(n, &edges);
@@ -727,7 +727,7 @@ mod tests {
     }
 
     #[test]
-    fn ldlt_matches_dense_lu_on_1d_laplacian() {
+    async fn ldlt_matches_dense_lu_on_1d_laplacian() {
         let n = 20;
         let mut coo = Coo::new(n);
         for i in 0..n {
@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn ldlt_solve_many_matches_solve_per_column() {
+    async fn ldlt_solve_many_matches_solve_per_column() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
         let coo = graph_laplacian_plus_identity(n, &edges);
@@ -771,7 +771,7 @@ mod tests {
     }
 
     #[test]
-    fn ldlt_reports_zero_pivot_on_singular_matrix() {
+    async fn ldlt_reports_zero_pivot_on_singular_matrix() {
         let n = 5;
         let edges = [(0, 1), (1, 2), (2, 3)];
         let mut degree = vec![0usize; n];
@@ -794,7 +794,7 @@ mod tests {
     }
 
     #[test]
-    fn pcg_matches_ldlt_and_dense_lu() {
+    async fn pcg_matches_ldlt_and_dense_lu() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
         let coo = graph_laplacian_plus_identity(n, &edges);
@@ -812,7 +812,7 @@ mod tests {
     }
 
     #[test]
-    fn rcm_reduces_bandwidth_on_scattered_path_graph() {
+    async fn rcm_reduces_bandwidth_on_scattered_path_graph() {
         let shuffle = [9usize, 0, 8, 1, 7, 2, 6, 3, 5, 4];
         let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); 10];
         let mut edges = Vec::new();
@@ -834,7 +834,7 @@ mod tests {
     }
 
     #[test]
-    fn dense_symmetric_eigen_jacobi_matches_known_eigenvalues() {
+    async fn dense_symmetric_eigen_jacobi_matches_known_eigenvalues() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 3.0);
         a.set(1, 1, 1.0);
@@ -846,7 +846,7 @@ mod tests {
     }
 
     #[test]
-    fn subspace_iteration_matches_diagonal_analytic_case() {
+    async fn subspace_iteration_matches_diagonal_analytic_case() {
         let n = 10;
         let mut k_coo = Coo::new(n);
         let mut b_coo = Coo::new(n);
@@ -864,7 +864,7 @@ mod tests {
     }
 
     #[test]
-    fn subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case() {
+    async fn subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case() {
         let n = 7;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 0), (0, 3)];
         let k_coo = graph_laplacian_plus_identity(n, &edges);
@@ -888,7 +888,7 @@ mod tests {
     /// orderings resolve to the same stored upper-triangle slot) and returns `0.0` for an absent entry;
     /// `to_csr_full` mirrors the SAME matrix into a full (both triangles materialized) `Csr`.
     #[test]
-    fn csc_sym_get_and_to_csr_full_match_dense() {
+    async fn csc_sym_get_and_to_csr_full_match_dense() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 4.0);
         coo.add(1, 1, 5.0);
@@ -919,7 +919,7 @@ mod tests {
     /// 🔢️ `negative_pivot_count` counts `D[j] < 0` — a diagonal (already-factored-trivially) indefinite
     /// matrix with one negative entry must report exactly one negative pivot.
     #[test]
-    fn negative_pivot_count_counts_negative_diagonal_entries() {
+    async fn negative_pivot_count_counts_negative_diagonal_entries() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 1.0);
         coo.add(1, 1, -2.0);
@@ -931,7 +931,7 @@ mod tests {
     /// ⏱️ `pcg` returns immediately (zero iterations, `converged: true`) when the initial guess `x0`
     /// already satisfies the residual tolerance.
     #[test]
-    fn pcg_converges_immediately_when_initial_guess_is_already_exact() {
+    async fn pcg_converges_immediately_when_initial_guess_is_already_exact() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 2.0);
         coo.add(1, 1, 3.0);
@@ -946,7 +946,7 @@ mod tests {
 
     /// ⏱️ `pcg` with `max_iter: 0` never enters its iteration loop and reports `converged: false`.
     #[test]
-    fn pcg_reports_not_converged_when_max_iter_is_zero() {
+    async fn pcg_reports_not_converged_when_max_iter_is_zero() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 2.0);
         coo.add(1, 1, 3.0);
@@ -963,7 +963,7 @@ mod tests {
     /// very first step, hitting the early `break` guard against dividing by zero — reported as
     /// `converged: false` after exactly 1 iteration.
     #[test]
-    fn pcg_breaks_on_zero_curvature_direction() {
+    async fn pcg_breaks_on_zero_curvature_direction() {
         let coo = Coo::new(3); // no entries added: A is the zero operator
         let csr = coo.to_csr();
         let b = VecD::from_vec(vec![1.0, 1.0, 1.0]);
@@ -977,7 +977,7 @@ mod tests {
     /// of looping — the degenerate size `subspace_iteration`'s own `.max(1)` guard against normally
     /// avoids, but the helper itself must still handle directly.
     #[test]
-    fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
+    async fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
         let a = MatD::zeros(0, 0);
         let (vals, vecs) = dense_symmetric_eigen_jacobi(&a);
         assert!(vals.is_empty());

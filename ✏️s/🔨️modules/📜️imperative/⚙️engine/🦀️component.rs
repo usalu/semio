@@ -28,14 +28,14 @@ pub struct Path {
 }
 
 impl Path {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 }
 
 
 impl protocol::Identified<String> for Step {
-    fn id(&self) -> &String {
+    async fn id(&self) -> &String {
         &self.id
     }
 }
@@ -45,11 +45,11 @@ impl protocol::Identified<String> for Step {
 /// `diff_patch` instead); `diff_patch` reports `None` when `params` is unchanged, matching this same
 /// full-replace semantics as `vcs::Patchable`'s impl above.
 impl protocol::Patchable<Dictionary> for Step {
-    fn apply_patch(&mut self, patch: &Dictionary) {
+    async fn apply_patch(&mut self, patch: &Dictionary) {
         self.params = patch.clone();
     }
 
-    fn diff_patch(&self, other: &Self) -> Option<Dictionary> {
+    async fn diff_patch(&self, other: &Self) -> Option<Dictionary> {
         if self.params == other.params {
             None
         } else {
@@ -89,19 +89,19 @@ pub struct Executor<'a> {
 }
 
 impl<'a> Executor<'a> {
-    pub fn new(registry: &'a Registry) -> Self {
+    pub async fn new(registry: &'a Registry) -> Self {
         Self { registry }
     }
 
     /// Runs steps strictly in list order; merges each output into scope; halts on first error.
-    pub fn run(&self, path: &Path, seed: &Dictionary) -> RunResult {
+    pub async fn run(&self, path: &Path, seed: &Dictionary) -> RunResult {
         let mut scope = seed.clone();
         let mut effects = Vec::new();
         self.run_steps(&path.steps, &mut scope, &mut effects, 0);
         RunResult { scope, effects }
     }
 
-    fn run_steps(&self, steps: &[Step], scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) {
+    async fn run_steps(&self, steps: &[Step], scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) {
         if depth > MAX_NESTING_DEPTH {
             effects.push(EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some(format!("nesting depth exceeded {MAX_NESTING_DEPTH}")) });
             return;
@@ -115,7 +115,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn run_step(&self, step: &Step, scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) -> Option<bool> {
+    async fn run_step(&self, step: &Step, scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) -> Option<bool> {
         match step.kind.as_str() {
             "control.if" => {
                 let key = read_string_param(&step.params, "key").unwrap_or_default();
@@ -176,19 +176,19 @@ impl<'a> Executor<'a> {
 
 /// 🔑️ Shared with `crate::compiler` — both the executor and the text emitter read `key`/`count` params
 /// the same way, so this stays `pub(crate)` rather than duplicated.
-pub(crate) fn read_string_param(params: &Dictionary, key: &str) -> Option<String> {
+pub(crate) async fn read_string_param(params: &Dictionary, key: &str) -> Option<String> {
     params.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string)
 }
 
-pub(crate) fn read_number_param(params: &Dictionary, key: &str) -> Option<f64> {
+pub(crate) async fn read_number_param(params: &Dictionary, key: &str) -> Option<f64> {
     params.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64())
 }
 
-fn read_scope_bool(scope: &Dictionary, key: &str) -> bool {
+async fn read_scope_bool(scope: &Dictionary, key: &str) -> bool {
     scope.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
 }
 
-fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionary {
+async fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionary {
     let mut merged = scope.clone();
     for key in output.keys() {
         if key == SCHEMA_KEY {
@@ -218,12 +218,12 @@ mod tests {
     use super::*;
     use neural_engine::Atom;
 
-    fn test_registry() -> Registry {
+    async fn test_registry() -> Registry {
         crate::registry::imperative_module_registry()
     }
 
     #[test]
-    fn executor_runs_steps_in_order() {
+    async fn executor_runs_steps_in_order() {
         let registry = test_registry();
         let executor = Executor::new(&registry);
         let path = Path {
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn executor_runs_control_if_then_branch() {
+    async fn executor_runs_control_if_then_branch() {
         let registry = test_registry();
         let executor = Executor::new(&registry);
         let mut bodies = BTreeMap::new();
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn executor_runs_control_repeat() {
+    async fn executor_runs_control_repeat() {
         let registry = test_registry();
         let executor = Executor::new(&registry);
         let mut bodies = BTreeMap::new();

@@ -29,11 +29,11 @@ pub enum Lane {
 }
 
 impl Lane {
-    fn to_byte(self) -> u8 {
+    async fn to_byte(self) -> u8 {
         self as u8
     }
 
-    fn from_byte(byte: u8) -> Option<Self> {
+    async fn from_byte(byte: u8) -> Option<Self> {
         match byte {
             0 => Some(Lane::Command),
             1 => Some(Lane::Preview),
@@ -116,208 +116,229 @@ pub enum ServerFrame {
 // module-level docstring. `crate::wire::🔖️WireCodec` supplies the primitives; this region adds
 // the option/vec combinators the frame shapes need plus the tag-dispatch match arms.
 
-fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::ProtocolError {
+async fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::ProtocolError {
     crate::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
 }
 
 //#region 🔖️Combinators
-fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
-    crate::write_bool(out, value.is_some());
+async fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
+    crate::write_bool(out, value.is_some()).await;
     if let Some(s) = value {
-        crate::write_str(out, s);
+        crate::write_str(out, s).await;
     }
 }
 
-fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos)? {
-        Ok(Some(crate::read_str(bytes, pos)?))
+async fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::ProtocolError> {
+    if crate::read_bool(bytes, pos).await? {
+        Ok(Some(crate::read_str(bytes, pos).await?))
     } else {
         Ok(None)
     }
 }
 
-fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
-    crate::write_bool(out, value.is_some());
+async fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
+    crate::write_bool(out, value.is_some()).await;
     if let Some(b) = value {
-        crate::write_bytes(out, b);
+        crate::write_bytes(out, b).await;
     }
 }
 
-fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos)? {
-        Ok(Some(crate::read_bytes(bytes, pos)?))
+async fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::ProtocolError> {
+    if crate::read_bool(bytes, pos).await? {
+        Ok(Some(crate::read_bytes(bytes, pos).await?))
     } else {
         Ok(None)
     }
 }
 
-fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<crate::causal::FrontierSummary>) {
-    crate::write_bool(out, value.is_some());
+async fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<crate::causal::FrontierSummary>) {
+    crate::write_bool(out, value.is_some()).await;
     if let Some(f) = value {
-        crate::causal::encode_frontier(f, out);
+        crate::causal::encode_frontier(f, out).await;
     }
 }
 
-fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::causal::FrontierSummary>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos)? {
-        Ok(Some(crate::causal::decode_frontier(bytes, pos)?))
+async fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::causal::FrontierSummary>, crate::ProtocolError> {
+    if crate::read_bool(bytes, pos).await? {
+        Ok(Some(crate::causal::decode_frontier(bytes, pos).await?))
     } else {
         Ok(None)
     }
 }
 
-fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::wire::write_varint_u64(out, values.len() as u64);
+async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
+    crate::wire::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        crate::write_bytes(out, value);
+        crate::write_bytes(out, value).await;
     }
 }
 
-fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| crate::read_bytes(bytes, pos)).collect()
+async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(crate::read_bytes(bytes, pos).await?);
+    }
+    Ok(out)
 }
 
-fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::causal::MutationEnvelope]) {
-    crate::wire::write_varint_u64(out, values.len() as u64);
+async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::causal::MutationEnvelope]) {
+    crate::wire::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        crate::causal::encode_envelope(value, out);
+        crate::causal::encode_envelope(value, out).await;
     }
 }
 
-fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::causal::MutationEnvelope>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| crate::causal::decode_envelope(bytes, pos)).collect()
+async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::causal::MutationEnvelope>, crate::ProtocolError> {
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(crate::causal::decode_envelope(bytes, pos).await?);
+    }
+    Ok(out)
 }
 //#endregion 🔖️Combinators
 
 //#region 🔖️NestedEnums
-fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
+async fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
     match bootstrap {
         Bootstrap::None => out.push(0),
         Bootstrap::Snapshot { pack_hash, inline } => {
             out.push(1);
-            crate::write_hash32(out, pack_hash);
-            write_opt_bytes(out, inline);
+            crate::write_hash32(out, pack_hash).await;
+            write_opt_bytes(out, inline).await;
         }
         Bootstrap::Tail => out.push(2),
     }
 }
 
-fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, crate::ProtocolError> {
-    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire bootstrap tag", *pos as u64, "truncated"))?;
+async fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, crate::ProtocolError> {
+    let tag = match bytes.get(*pos) {
+        Some(b) => *b,
+        None => return Err(malformed("wire bootstrap tag", *pos as u64, "truncated").await),
+    };
     *pos += 1;
     match tag {
         0 => Ok(Bootstrap::None),
         1 => {
-            let pack_hash = crate::read_hash32(bytes, pos)?;
-            let inline = read_opt_bytes(bytes, pos)?;
+            let pack_hash = crate::read_hash32(bytes, pos).await?;
+            let inline = read_opt_bytes(bytes, pos).await?;
             Ok(Bootstrap::Snapshot { pack_hash, inline })
         }
         2 => Ok(Bootstrap::Tail),
-        other => Err(malformed("wire bootstrap tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+        other => Err(malformed("wire bootstrap tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
 
-fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
+async fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
     match outcome {
         ApplyOutcome::Accepted => out.push(0),
         ApplyOutcome::Transformed { envelope } => {
             out.push(1);
-            crate::causal::encode_envelope(envelope, out);
+            crate::causal::encode_envelope(envelope, out).await;
         }
         ApplyOutcome::Rejected { reason, messages } => {
             out.push(2);
-            crate::write_str(out, reason);
-            crate::write_bytes(out, messages);
+            crate::write_str(out, reason).await;
+            crate::write_bytes(out, messages).await;
         }
     }
 }
 
-fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, crate::ProtocolError> {
-    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire apply-outcome tag", *pos as u64, "truncated"))?;
+async fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, crate::ProtocolError> {
+    let tag = match bytes.get(*pos) {
+        Some(b) => *b,
+        None => return Err(malformed("wire apply-outcome tag", *pos as u64, "truncated").await),
+    };
     *pos += 1;
     match tag {
         0 => Ok(ApplyOutcome::Accepted),
-        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::causal::decode_envelope(bytes, pos)?) }),
-        2 => Ok(ApplyOutcome::Rejected { reason: crate::read_str(bytes, pos)?, messages: crate::read_bytes(bytes, pos)? }),
-        other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::causal::decode_envelope(bytes, pos).await?) }),
+        2 => Ok(ApplyOutcome::Rejected { reason: crate::read_str(bytes, pos).await?, messages: crate::read_bytes(bytes, pos).await? }),
+        other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
 
-fn encode_ack_stage(stage: &AckStage, out: &mut Vec<u8>) {
+async fn encode_ack_stage(stage: &AckStage, out: &mut Vec<u8>) {
     match stage {
         AckStage::Received => out.push(0),
         AckStage::Persisted => out.push(1),
         AckStage::Applied { outcome } => {
             out.push(2);
-            encode_apply_outcome(outcome, out);
+            encode_apply_outcome(outcome, out).await;
         }
     }
 }
 
-fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, crate::ProtocolError> {
-    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire ack-stage tag", *pos as u64, "truncated"))?;
+async fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, crate::ProtocolError> {
+    let tag = match bytes.get(*pos) {
+        Some(b) => *b,
+        None => return Err(malformed("wire ack-stage tag", *pos as u64, "truncated").await),
+    };
     *pos += 1;
     match tag {
         0 => Ok(AckStage::Received),
         1 => Ok(AckStage::Persisted),
-        2 => Ok(AckStage::Applied { outcome: Box::new(decode_apply_outcome(bytes, pos)?) }),
-        other => Err(malformed("wire ack-stage tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+        2 => Ok(AckStage::Applied { outcome: Box::new(decode_apply_outcome(bytes, pos).await?) }),
+        other => Err(malformed("wire ack-stage tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
 
-fn write_vec_ack_stage(out: &mut Vec<u8>, values: &[AckStage]) {
-    crate::wire::write_varint_u64(out, values.len() as u64);
+async fn write_vec_ack_stage(out: &mut Vec<u8>, values: &[AckStage]) {
+    crate::wire::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        encode_ack_stage(value, out);
+        encode_ack_stage(value, out).await;
     }
 }
 
-fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| decode_ack_stage(bytes, pos)).collect()
+async fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, crate::ProtocolError> {
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(decode_ack_stage(bytes, pos).await?);
+    }
+    Ok(out)
 }
 //#endregion 🔖️NestedEnums
 
 /// @emoji 📤️ Encodes one `ClientFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
-pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
+pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
-    out.push(lane.to_byte());
+    out.push(lane.to_byte().await);
     match frame {
         ClientFrame::Hello { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } => {
             out.push(0);
-            crate::wire::write_varint_u64(&mut out, *wire_version as u64);
-            crate::wire::write_varint_u64(&mut out, *protocol_version as u64);
-            crate::write_str(&mut out, schema);
-            crate::write_hash32(&mut out, pack_schema_hash);
-            crate::write_str(&mut out, &actor.0);
-            write_opt_str(&mut out, token);
-            write_opt_str(&mut out, resume_token);
-            write_opt_frontier(&mut out, frontier);
+            crate::wire::write_varint_u64(&mut out, *wire_version as u64).await;
+            crate::wire::write_varint_u64(&mut out, *protocol_version as u64).await;
+            crate::write_str(&mut out, schema).await;
+            crate::write_hash32(&mut out, pack_schema_hash).await;
+            crate::write_str(&mut out, &actor.0).await;
+            write_opt_str(&mut out, token).await;
+            write_opt_str(&mut out, resume_token).await;
+            write_opt_frontier(&mut out, frontier).await;
         }
         ClientFrame::Commands { batch_id, envelopes } => {
             out.push(1);
-            crate::wire::write_varint_u64(&mut out, *batch_id);
-            write_vec_envelope(&mut out, envelopes);
+            crate::wire::write_varint_u64(&mut out, *batch_id).await;
+            write_vec_envelope(&mut out, envelopes).await;
         }
         ClientFrame::FrontierAdvertise { frontier } => {
             out.push(2);
-            crate::causal::encode_frontier(frontier, &mut out);
+            crate::causal::encode_frontier(frontier, &mut out).await;
         }
         ClientFrame::PreviewPublish { key, seq, payload } => {
             out.push(3);
-            crate::write_str(&mut out, key);
-            crate::wire::write_varint_u64(&mut out, *seq);
-            crate::write_bytes(&mut out, payload);
+            crate::write_str(&mut out, key).await;
+            crate::wire::write_varint_u64(&mut out, *seq).await;
+            crate::write_bytes(&mut out, payload).await;
         }
         ClientFrame::Presence { peer } => {
             out.push(4);
-            crate::write_bytes(&mut out, peer);
+            crate::write_bytes(&mut out, peer).await;
         }
         ClientFrame::CreditGrant { n } => {
             out.push(5);
-            crate::wire::write_varint_u64(&mut out, *n as u64);
+            crate::wire::write_varint_u64(&mut out, *n as u64).await;
         }
         ClientFrame::Bye => out.push(6),
     }
@@ -325,90 +346,99 @@ pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
 }
 
 /// @emoji 📥️ Decodes one `ClientFrame`, returning the `Lane` it was tagged with.
-pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::ProtocolError> {
-    let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
-    let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
+pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), crate::ProtocolError> {
+    let lane_byte = match bytes.first() {
+        Some(b) => *b,
+        None => return Err(malformed("wire frame", 0, "empty frame").await),
+    };
+    let lane = match Lane::from_byte(lane_byte).await {
+        Some(l) => l,
+        None => return Err(malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")).await),
+    };
     let mut pos = 1usize;
-    let tag = *bytes.get(pos).ok_or_else(|| malformed("wire client-frame tag", pos as u64, "truncated"))?;
+    let tag = match bytes.get(pos) {
+        Some(b) => *b,
+        None => return Err(malformed("wire client-frame tag", pos as u64, "truncated").await),
+    };
     pos += 1;
     let frame = match tag {
         0 => ClientFrame::Hello {
-            wire_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
-            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
-            schema: crate::read_str(bytes, &mut pos)?,
-            pack_schema_hash: crate::read_hash32(bytes, &mut pos)?,
-            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?),
-            token: read_opt_str(bytes, &mut pos)?,
-            resume_token: read_opt_str(bytes, &mut pos)?,
-            frontier: read_opt_frontier(bytes, &mut pos)?,
+            wire_version: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32,
+            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32,
+            schema: crate::read_str(bytes, &mut pos).await?,
+            pack_schema_hash: crate::read_hash32(bytes, &mut pos).await?,
+            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?),
+            token: read_opt_str(bytes, &mut pos).await?,
+            resume_token: read_opt_str(bytes, &mut pos).await?,
+            frontier: read_opt_frontier(bytes, &mut pos).await?,
         },
-        1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
-        2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
-        3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
-        4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos)? },
-        5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
+        1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos).await?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
+        2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
+        3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos).await?, seq: crate::wire::read_varint_u64(bytes, &mut pos).await?, payload: crate::read_bytes(bytes, &mut pos).await? },
+        4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos).await? },
+        5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
         6 => ClientFrame::Bye,
-        other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
+        other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
     };
     Ok((lane, frame))
 }
 
 /// @emoji 📤️ Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
-pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
+pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
-    out.push(lane.to_byte());
+    out.push(lane.to_byte().await);
     match frame {
         ServerFrame::Welcome { session_id, resume_token, server_frontier, bootstrap } => {
             out.push(0);
-            crate::write_str(&mut out, session_id);
-            crate::write_str(&mut out, resume_token);
-            crate::causal::encode_frontier(server_frontier, &mut out);
-            encode_bootstrap(bootstrap, &mut out);
+            crate::write_str(&mut out, session_id).await;
+            crate::write_str(&mut out, resume_token).await;
+            crate::causal::encode_frontier(server_frontier, &mut out).await;
+            encode_bootstrap(bootstrap, &mut out).await;
         }
         ServerFrame::SnapshotChunk { seq, bytes } => {
             out.push(1);
-            crate::wire::write_varint_u64(&mut out, *seq as u64);
-            crate::write_bytes(&mut out, bytes);
+            crate::wire::write_varint_u64(&mut out, *seq as u64).await;
+            crate::write_bytes(&mut out, bytes).await;
         }
         ServerFrame::SnapshotDone { seq_count } => {
             out.push(2);
-            crate::wire::write_varint_u64(&mut out, *seq_count as u64);
+            crate::wire::write_varint_u64(&mut out, *seq_count as u64).await;
         }
         ServerFrame::Commands { envelopes, origin, frontier } => {
             out.push(3);
-            write_vec_envelope(&mut out, envelopes);
-            crate::write_str(&mut out, &origin.0);
-            crate::causal::encode_frontier(frontier, &mut out);
+            write_vec_envelope(&mut out, envelopes).await;
+            crate::write_str(&mut out, &origin.0).await;
+            crate::causal::encode_frontier(frontier, &mut out).await;
         }
         ServerFrame::Ack { batch_id, stages, frontier } => {
             out.push(4);
-            crate::wire::write_varint_u64(&mut out, *batch_id);
-            write_vec_ack_stage(&mut out, stages);
-            crate::causal::encode_frontier(frontier, &mut out);
+            crate::wire::write_varint_u64(&mut out, *batch_id).await;
+            write_vec_ack_stage(&mut out, stages).await;
+            crate::causal::encode_frontier(frontier, &mut out).await;
         }
         ServerFrame::Preview { actor, key, seq, payload } => {
             out.push(5);
-            crate::write_str(&mut out, &actor.0);
-            crate::write_str(&mut out, key);
-            crate::wire::write_varint_u64(&mut out, *seq);
-            crate::write_bytes(&mut out, payload);
+            crate::write_str(&mut out, &actor.0).await;
+            crate::write_str(&mut out, key).await;
+            crate::wire::write_varint_u64(&mut out, *seq).await;
+            crate::write_bytes(&mut out, payload).await;
         }
         ServerFrame::Presence { peers } => {
             out.push(6);
-            write_vec_bytes(&mut out, peers);
+            write_vec_bytes(&mut out, peers).await;
         }
         ServerFrame::CreditGrant { n } => {
             out.push(7);
-            crate::wire::write_varint_u64(&mut out, *n as u64);
+            crate::wire::write_varint_u64(&mut out, *n as u64).await;
         }
         ServerFrame::Error { code, message } => {
             out.push(8);
-            crate::write_str(&mut out, code);
-            crate::write_str(&mut out, message);
+            crate::write_str(&mut out, code).await;
+            crate::write_str(&mut out, message).await;
         }
         ServerFrame::Session { actor, color } => {
             out.push(9);
-            crate::write_str(&mut out, actor);
+            crate::write_str(&mut out, actor).await;
             out.push(*color);
         }
     }
@@ -416,38 +446,47 @@ pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
 }
 
 /// @emoji 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
-pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::ProtocolError> {
-    let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
-    let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
+pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::ProtocolError> {
+    let lane_byte = match bytes.first() {
+        Some(b) => *b,
+        None => return Err(malformed("wire frame", 0, "empty frame").await),
+    };
+    let lane = match Lane::from_byte(lane_byte).await {
+        Some(l) => l,
+        None => return Err(malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")).await),
+    };
     let mut pos = 1usize;
-    let tag = *bytes.get(pos).ok_or_else(|| malformed("wire server-frame tag", pos as u64, "truncated"))?;
+    let tag = match bytes.get(pos) {
+        Some(b) => *b,
+        None => return Err(malformed("wire server-frame tag", pos as u64, "truncated").await),
+    };
     pos += 1;
     let frame = match tag {
         0 => ServerFrame::Welcome {
-            session_id: crate::read_str(bytes, &mut pos)?,
-            resume_token: crate::read_str(bytes, &mut pos)?,
-            server_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
-            bootstrap: decode_bootstrap(bytes, &mut pos)?,
+            session_id: crate::read_str(bytes, &mut pos).await?,
+            resume_token: crate::read_str(bytes, &mut pos).await?,
+            server_frontier: crate::causal::decode_frontier(bytes, &mut pos).await?,
+            bootstrap: decode_bootstrap(bytes, &mut pos).await?,
         },
-        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: crate::read_bytes(bytes, &mut pos)? },
-        2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
-        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
-        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32, bytes: crate::read_bytes(bytes, &mut pos).await? },
+        2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?), frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
+        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos).await?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
         5 => ServerFrame::Preview {
-            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?),
-            key: crate::read_str(bytes, &mut pos)?,
-            seq: crate::wire::read_varint_u64(bytes, &mut pos)?,
-            payload: crate::read_bytes(bytes, &mut pos)?,
+            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?),
+            key: crate::read_str(bytes, &mut pos).await?,
+            seq: crate::wire::read_varint_u64(bytes, &mut pos).await?,
+            payload: crate::read_bytes(bytes, &mut pos).await?,
         },
-        6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos)? },
-        7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
-        8 => ServerFrame::Error { code: crate::read_str(bytes, &mut pos)?, message: crate::read_str(bytes, &mut pos)? },
+        6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos).await? },
+        7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
+        8 => ServerFrame::Error { code: crate::read_str(bytes, &mut pos).await?, message: crate::read_str(bytes, &mut pos).await? },
         9 => {
-            let actor = crate::read_str(bytes, &mut pos)?;
-            let color = crate::read_u8(bytes, &mut pos)?;
+            let actor = crate::read_str(bytes, &mut pos).await?;
+            let color = crate::read_u8(bytes, &mut pos).await?;
             ServerFrame::Session { actor, color }
         }
-        other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
+        other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
     };
     Ok((lane, frame))
 }
@@ -459,7 +498,7 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
+    async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
         crate::causal::MutationEnvelope {
             mutation_id: crate::ids::MutationId(id.to_string()),
             document_id: crate::ids::ArtifactId("document-1".to_string()),
@@ -467,34 +506,34 @@ mod tests {
             dependencies: Vec::new(),
             diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
             inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
+            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0).await,
         }
     }
 
-    fn sample_frontier() -> crate::causal::FrontierSummary {
+    async fn sample_frontier() -> crate::causal::FrontierSummary {
         crate::causal::FrontierSummary { document_id: crate::ids::ArtifactId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Lane
-    #[test]
-    fn lane_byte_round_trips() {
-        assert_eq!(Lane::from_byte(Lane::Command.to_byte()), Some(Lane::Command));
-        assert_eq!(Lane::from_byte(Lane::Preview.to_byte()), Some(Lane::Preview));
-        assert_eq!(Lane::from_byte(2), None);
+    #[semio_framework_async_macros::async_test]
+    async fn lane_byte_round_trips() {
+        assert_eq!(Lane::from_byte(Lane::Command.to_byte().await).await, Some(Lane::Command));
+        assert_eq!(Lane::from_byte(Lane::Preview.to_byte().await).await, Some(Lane::Preview));
+        assert_eq!(Lane::from_byte(2).await, None);
     }
     //#endregion 🔖️Lane
 
     //#region 🔖️ClientFrame
-    fn assert_client_round_trips(frame: &ClientFrame, lane: Lane) {
-        let bytes = encode_client_frame(frame, lane);
-        let (decoded_lane, decoded_frame) = decode_client_frame(&bytes).expect("decode must succeed");
+    async fn assert_client_round_trips(frame: &ClientFrame, lane: Lane) {
+        let bytes = encode_client_frame(frame, lane).await;
+        let (decoded_lane, decoded_frame) = decode_client_frame(&bytes).await.expect("decode must succeed");
         assert_eq!(decoded_lane, lane);
         assert_eq!(&decoded_frame, frame);
     }
 
-    #[test]
-    fn client_frame_hello_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_hello_round_trips() {
         assert_client_round_trips(
             &ClientFrame::Hello {
                 wire_version: 1,
@@ -504,165 +543,165 @@ mod tests {
                 actor: crate::ids::ActorId("actor-1".to_string()),
                 token: Some("token".to_string()),
                 resume_token: None,
-                frontier: Some(sample_frontier()),
+                frontier: Some(sample_frontier().await),
             },
             Lane::Command,
-        );
+        ).await;
     }
 
-    #[test]
-    fn client_frame_hello_with_no_optionals_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_hello_with_no_optionals_round_trips() {
         assert_client_round_trips(
             &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::ids::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
             Lane::Command,
-        );
+        ).await;
     }
 
-    #[test]
-    fn client_frame_commands_round_trips() {
-        assert_client_round_trips(&ClientFrame::Commands { batch_id: 42, envelopes: vec![sample_envelope("op-1"), sample_envelope("op-2")] }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_commands_round_trips() {
+        assert_client_round_trips(&ClientFrame::Commands { batch_id: 42, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] }, Lane::Command).await;
     }
 
-    #[test]
-    fn client_frame_frontier_advertise_round_trips() {
-        assert_client_round_trips(&ClientFrame::FrontierAdvertise { frontier: sample_frontier() }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_frontier_advertise_round_trips() {
+        assert_client_round_trips(&ClientFrame::FrontierAdvertise { frontier: sample_frontier().await }, Lane::Command).await;
     }
 
-    #[test]
-    fn client_frame_preview_publish_round_trips() {
-        assert_client_round_trips(&ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_preview_publish_round_trips() {
+        assert_client_round_trips(&ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
     }
 
-    #[test]
-    fn client_frame_presence_round_trips() {
-        assert_client_round_trips(&ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_presence_round_trips() {
+        assert_client_round_trips(&ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview).await;
     }
 
-    #[test]
-    fn client_frame_credit_grant_round_trips() {
-        assert_client_round_trips(&ClientFrame::CreditGrant { n: 16 }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_credit_grant_round_trips() {
+        assert_client_round_trips(&ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
     }
 
-    #[test]
-    fn client_frame_bye_round_trips() {
-        assert_client_round_trips(&ClientFrame::Bye, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn client_frame_bye_round_trips() {
+        assert_client_round_trips(&ClientFrame::Bye, Lane::Command).await;
     }
     //#endregion 🔖️ClientFrame
 
     //#region 🔖️ServerFrame
-    fn assert_server_round_trips(frame: &ServerFrame, lane: Lane) {
-        let bytes = encode_server_frame(frame, lane);
-        let (decoded_lane, decoded_frame) = decode_server_frame(&bytes).expect("decode must succeed");
+    async fn assert_server_round_trips(frame: &ServerFrame, lane: Lane) {
+        let bytes = encode_server_frame(frame, lane).await;
+        let (decoded_lane, decoded_frame) = decode_server_frame(&bytes).await.expect("decode must succeed");
         assert_eq!(decoded_lane, lane);
         assert_eq!(&decoded_frame, frame);
     }
 
-    #[test]
-    fn server_frame_welcome_round_trips_for_every_bootstrap_variant() {
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_welcome_round_trips_for_every_bootstrap_variant() {
         for bootstrap in [Bootstrap::None, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9]) }, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: None }, Bootstrap::Tail] {
-            assert_server_round_trips(&ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: sample_frontier(), bootstrap }, Lane::Command);
+            assert_server_round_trips(&ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: sample_frontier().await, bootstrap }, Lane::Command).await;
         }
     }
 
-    #[test]
-    fn server_frame_snapshot_chunk_round_trips() {
-        assert_server_round_trips(&ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_snapshot_chunk_round_trips() {
+        assert_server_round_trips(&ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command).await;
     }
 
-    #[test]
-    fn server_frame_snapshot_done_round_trips() {
-        assert_server_round_trips(&ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_snapshot_done_round_trips() {
+        assert_server_round_trips(&ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
     }
 
-    #[test]
-    fn server_frame_commands_round_trips() {
-        assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1")], origin: crate::ids::ActorId("actor-1".to_string()), frontier: sample_frontier() }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_commands_round_trips() {
+        assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1").await], origin: crate::ids::ActorId("actor-1".to_string()), frontier: sample_frontier().await }, Lane::Command).await;
     }
 
-    #[test]
-    fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant() {
-        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1")) }, ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2] }] {
-            assert_server_round_trips(&ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier() }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant() {
+        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1").await) }, ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2] }] {
+            assert_server_round_trips(&ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier().await }, Lane::Command).await;
         }
     }
 
-    #[test]
-    fn server_frame_preview_round_trips() {
-        assert_server_round_trips(&ServerFrame::Preview { actor: crate::ids::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_preview_round_trips() {
+        assert_server_round_trips(&ServerFrame::Preview { actor: crate::ids::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
     }
 
-    #[test]
-    fn server_frame_presence_round_trips() {
-        assert_server_round_trips(&ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_presence_round_trips() {
+        assert_server_round_trips(&ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview).await;
     }
 
-    #[test]
-    fn server_frame_credit_grant_round_trips() {
-        assert_server_round_trips(&ServerFrame::CreditGrant { n: 32 }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_credit_grant_round_trips() {
+        assert_server_round_trips(&ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
     }
 
-    #[test]
-    fn server_frame_error_round_trips() {
-        assert_server_round_trips(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_error_round_trips() {
+        assert_server_round_trips(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
     }
 
-    #[test]
-    fn server_frame_session_round_trips() {
-        assert_server_round_trips(&ServerFrame::Session { actor: "actor-1".to_string(), color: 7 }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn server_frame_session_round_trips() {
+        assert_server_round_trips(&ServerFrame::Session { actor: "actor-1".to_string(), color: 7 }, Lane::Command).await;
     }
     //#endregion 🔖️ServerFrame
 
     //#region 🔖️Codec
-    #[test]
-    fn decode_client_frame_rejects_empty_bytes() {
-        let err = decode_client_frame(&[]).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_client_frame_rejects_empty_bytes() {
+        let err = decode_client_frame(&[]).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire frame", .. }));
     }
 
-    #[test]
-    fn decode_client_frame_rejects_unknown_lane_byte() {
-        let err = decode_client_frame(&[2u8, 0]).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_client_frame_rejects_unknown_lane_byte() {
+        let err = decode_client_frame(&[2u8, 0]).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire frame lane byte", .. }));
     }
 
-    #[test]
-    fn decode_client_frame_rejects_unknown_tag() {
-        let bytes = vec![Lane::Command.to_byte(), 0xFF];
-        let err = decode_client_frame(&bytes).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_client_frame_rejects_unknown_tag() {
+        let bytes = vec![Lane::Command.to_byte().await, 0xFF];
+        let err = decode_client_frame(&bytes).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
-    #[test]
-    fn decode_server_frame_rejects_unknown_tag() {
-        let bytes = vec![Lane::Command.to_byte(), 0xFF];
-        let err = decode_server_frame(&bytes).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_server_frame_rejects_unknown_tag() {
+        let bytes = vec![Lane::Command.to_byte().await, 0xFF];
+        let err = decode_server_frame(&bytes).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
     }
 
-    #[test]
-    fn decode_client_frame_rejects_truncated_field() {
-        let bytes = encode_client_frame(&ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn decode_client_frame_rejects_truncated_field() {
+        let bytes = encode_client_frame(&ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
         let truncated = &bytes[..bytes.len() - 2];
-        assert!(decode_client_frame(truncated).is_err());
+        assert!(decode_client_frame(truncated).await.is_err());
     }
 
-    #[test]
-    fn decode_server_frame_rejects_truncated_field() {
-        let bytes = encode_server_frame(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn decode_server_frame_rejects_truncated_field() {
+        let bytes = encode_server_frame(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
         let truncated = &bytes[..bytes.len() - 3];
-        assert!(decode_server_frame(truncated).is_err());
+        assert!(decode_server_frame(truncated).await.is_err());
     }
 
-    #[test]
-    fn decode_client_frame_rejects_empty_body_after_lane() {
-        let err = decode_client_frame(&[Lane::Command.to_byte()]).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_client_frame_rejects_empty_body_after_lane() {
+        let err = decode_client_frame(&[Lane::Command.to_byte().await]).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
-    #[test]
-    fn different_lanes_produce_different_leading_bytes_but_same_body() {
-        let command_bytes = encode_client_frame(&ClientFrame::Bye, Lane::Command);
-        let preview_bytes = encode_client_frame(&ClientFrame::Bye, Lane::Preview);
+    #[semio_framework_async_macros::async_test]
+    async fn different_lanes_produce_different_leading_bytes_but_same_body() {
+        let command_bytes = encode_client_frame(&ClientFrame::Bye, Lane::Command).await;
+        let preview_bytes = encode_client_frame(&ClientFrame::Bye, Lane::Preview).await;
         assert_eq!(command_bytes[0], 0);
         assert_eq!(preview_bytes[0], 1);
         assert_eq!(command_bytes[1..], preview_bytes[1..]);
@@ -727,93 +766,102 @@ pub struct PresenceUi {
 }
 
 //#region 🔖️PresenceViewCodec
-fn encode_presence_view_kind(kind: &PresenceViewKind, out: &mut Vec<u8>) {
+async fn encode_presence_view_kind(kind: &PresenceViewKind, out: &mut Vec<u8>) {
     match kind {
         PresenceViewKind::Canvas { x, y, zoom } => {
             out.push(0);
-            crate::write_f64(out, *x);
-            crate::write_f64(out, *y);
-            crate::write_f64(out, *zoom);
+            crate::write_f64(out, *x).await;
+            crate::write_f64(out, *y).await;
+            crate::write_f64(out, *zoom).await;
         }
         PresenceViewKind::Orbit { position, target, up, fov } => {
             out.push(1);
             for value in position.iter().chain(target.iter()).chain(up.iter()) {
-                crate::write_f64(out, *value);
+                crate::write_f64(out, *value).await;
             }
-            crate::write_f64(out, *fov);
+            crate::write_f64(out, *fov).await;
         }
         PresenceViewKind::Geo { lng, lat, zoom, bearing, pitch } => {
             out.push(2);
-            crate::write_f64(out, *lng);
-            crate::write_f64(out, *lat);
-            crate::write_f64(out, *zoom);
-            crate::write_f64(out, *bearing);
-            crate::write_f64(out, *pitch);
+            crate::write_f64(out, *lng).await;
+            crate::write_f64(out, *lat).await;
+            crate::write_f64(out, *zoom).await;
+            crate::write_f64(out, *bearing).await;
+            crate::write_f64(out, *pitch).await;
         }
     }
 }
 
-fn decode_presence_view_kind(bytes: &[u8], pos: &mut usize) -> Result<PresenceViewKind, crate::ProtocolError> {
-    let tag = *bytes.get(*pos).ok_or_else(|| malformed("presence view kind tag", *pos as u64, "truncated"))?;
+async fn decode_presence_view_kind(bytes: &[u8], pos: &mut usize) -> Result<PresenceViewKind, crate::ProtocolError> {
+    let tag = match bytes.get(*pos) {
+        Some(b) => *b,
+        None => return Err(malformed("presence view kind tag", *pos as u64, "truncated").await),
+    };
     *pos += 1;
     match tag {
-        0 => Ok(PresenceViewKind::Canvas { x: crate::read_f64(bytes, pos)?, y: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)? }),
+        0 => Ok(PresenceViewKind::Canvas { x: crate::read_f64(bytes, pos).await?, y: crate::read_f64(bytes, pos).await?, zoom: crate::read_f64(bytes, pos).await? }),
         1 => {
-            let read3 = |bytes: &[u8], pos: &mut usize| -> Result<[f64; 3], crate::ProtocolError> { Ok([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?]) };
-            let position = read3(bytes, pos)?;
-            let target = read3(bytes, pos)?;
-            let up = read3(bytes, pos)?;
-            let fov = crate::read_f64(bytes, pos)?;
+            async fn read3(bytes: &[u8], pos: &mut usize) -> Result<[f64; 3], crate::ProtocolError> {
+                Ok([crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?])
+            }
+            let position = read3(bytes, pos).await?;
+            let target = read3(bytes, pos).await?;
+            let up = read3(bytes, pos).await?;
+            let fov = crate::read_f64(bytes, pos).await?;
             Ok(PresenceViewKind::Orbit { position, target, up, fov })
         }
-        2 => Ok(PresenceViewKind::Geo { lng: crate::read_f64(bytes, pos)?, lat: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)?, bearing: crate::read_f64(bytes, pos)?, pitch: crate::read_f64(bytes, pos)? }),
-        other => Err(malformed("presence view kind tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+        2 => Ok(PresenceViewKind::Geo { lng: crate::read_f64(bytes, pos).await?, lat: crate::read_f64(bytes, pos).await?, zoom: crate::read_f64(bytes, pos).await?, bearing: crate::read_f64(bytes, pos).await?, pitch: crate::read_f64(bytes, pos).await? }),
+        other => Err(malformed("presence view kind tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
 
-fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8>) {
-    crate::write_str(out, &view.window_id);
-    crate::write_str(out, &view.space);
-    encode_presence_view_kind(&view.kind, out);
-    crate::write_f64(out, view.size[0]);
-    crate::write_f64(out, view.size[1]);
-    crate::write_bool(out, view.pointer.is_some());
+async fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8>) {
+    crate::write_str(out, &view.window_id).await;
+    crate::write_str(out, &view.space).await;
+    encode_presence_view_kind(&view.kind, out).await;
+    crate::write_f64(out, view.size[0]).await;
+    crate::write_f64(out, view.size[1]).await;
+    crate::write_bool(out, view.pointer.is_some()).await;
     if let Some(pointer) = view.pointer {
         for value in pointer {
-            crate::write_f64(out, value);
+            crate::write_f64(out, value).await;
         }
     }
 }
 
-fn decode_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<PresenceWindowView, crate::ProtocolError> {
-    let window_id = crate::read_str(bytes, pos)?;
-    let space = crate::read_str(bytes, pos)?;
-    let kind = decode_presence_view_kind(bytes, pos)?;
-    let size = [crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?];
-    let pointer = if crate::read_bool(bytes, pos)? { Some([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?]) } else { None };
+async fn decode_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<PresenceWindowView, crate::ProtocolError> {
+    let window_id = crate::read_str(bytes, pos).await?;
+    let space = crate::read_str(bytes, pos).await?;
+    let kind = decode_presence_view_kind(bytes, pos).await?;
+    let size = [crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?];
+    let pointer = if crate::read_bool(bytes, pos).await? { Some([crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?]) } else { None };
     Ok(PresenceWindowView { window_id, space, kind, size, pointer })
 }
 
-fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
-    crate::wire::write_varint_u64(out, values.len() as u64);
+async fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
+    crate::wire::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        encode_presence_window_view(value, out);
+        encode_presence_window_view(value, out).await;
     }
 }
 
-fn read_vec_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<Vec<PresenceWindowView>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| decode_presence_window_view(bytes, pos)).collect()
+async fn read_vec_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<Vec<PresenceWindowView>, crate::ProtocolError> {
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(decode_presence_window_view(bytes, pos).await?);
+    }
+    Ok(out)
 }
 
-fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
-    write_opt_str(out, &ui.hovered_path);
-    write_opt_str(out, &ui.focused_path);
-    write_opt_str(out, &ui.pressed_path);
+async fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
+    write_opt_str(out, &ui.hovered_path).await;
+    write_opt_str(out, &ui.focused_path).await;
+    write_opt_str(out, &ui.pressed_path).await;
 }
 
-fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi, crate::ProtocolError> {
-    Ok(PresenceUi { hovered_path: read_opt_str(bytes, pos)?, focused_path: read_opt_str(bytes, pos)?, pressed_path: read_opt_str(bytes, pos)? })
+async fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi, crate::ProtocolError> {
+    Ok(PresenceUi { hovered_path: read_opt_str(bytes, pos).await?, focused_path: read_opt_str(bytes, pos).await?, pressed_path: read_opt_str(bytes, pos).await? })
 }
 //#endregion 🔖️PresenceViewCodec
 //#endregion 🔖️PresenceView
@@ -824,6 +872,8 @@ fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi, crate
 mod presence_pack_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+    // 🚫️async: E1 impl of externally-declared serde contract — `#[serde(with = "...")]` calls
+    // these synchronously from derive-generated code; the signature is fixed by serde, not this repo.
     pub fn serialize<S: Serializer>(value: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error> {
         match value {
             None => serializer.serialize_none(),
@@ -834,6 +884,7 @@ mod presence_pack_serde {
         }
     }
 
+    // 🚫️async: E1 impl of externally-declared serde contract — see `serialize` above.
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error> {
         let encoded: Option<String> = Option::deserialize(deserializer)?;
         match encoded {
@@ -903,9 +954,9 @@ pub struct PresencePeer {
 /// (`views`) is set iff non-empty; bit 9 (`ui`) carries three `opt_str` fields unconditionally once
 /// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range.
-pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
+pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::write_str(&mut out, &peer.actor);
+    crate::write_str(&mut out, &peer.actor).await;
     let mut flags = 0u64;
     if peer.label.is_some() {
         flags |= 1 << 0;
@@ -937,57 +988,57 @@ pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.ui.is_some() {
         flags |= 1 << 9;
     }
-    crate::wire::write_varint_u64(&mut out, flags);
-    crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
+    crate::wire::write_varint_u64(&mut out, flags).await;
+    crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64).await;
     if let Some(label) = &peer.label {
-        crate::write_str(&mut out, label);
+        crate::write_str(&mut out, label).await;
     }
     if let Some(presence_pack) = &peer.presence_pack {
-        crate::write_bytes(&mut out, presence_pack);
+        crate::write_bytes(&mut out, presence_pack).await;
     }
     if let Some(user_id) = &peer.user_id {
-        crate::write_str(&mut out, user_id);
+        crate::write_str(&mut out, user_id).await;
     }
     if let Some(role) = &peer.role {
-        crate::write_str(&mut out, role);
+        crate::write_str(&mut out, role).await;
     }
     if let Some(drag_ghost_json) = &peer.drag_ghost_json {
-        crate::write_str(&mut out, drag_ghost_json);
+        crate::write_str(&mut out, drag_ghost_json).await;
     }
     if let Some(interaction) = &peer.interaction {
-        encode_presence_interaction(interaction, &mut out);
+        encode_presence_interaction(interaction, &mut out).await;
     }
     if let Some(color) = peer.color {
         out.push(color);
     }
     if let Some(surface) = &peer.surface {
-        crate::write_str(&mut out, surface);
+        crate::write_str(&mut out, surface).await;
     }
     if !peer.views.is_empty() {
-        write_vec_presence_window_view(&mut out, &peer.views);
+        write_vec_presence_window_view(&mut out, &peer.views).await;
     }
     if let Some(ui) = &peer.ui {
-        encode_presence_ui(ui, &mut out);
+        encode_presence_ui(ui, &mut out).await;
     }
     out
 }
 
 /// @emoji 🎯️ Inverse of [`encode_presence_peer`]. Any flag bit ≥ 10 set is a drift guard failure
 /// (`ProtocolError::Malformed { what: "presence peer flags", .. }`) — no silent forward compatibility.
-pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
+pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
     let mut pos = 0usize;
-    let actor = crate::read_str(bytes, &mut pos)?;
-    let flags = crate::wire::read_varint_u64(bytes, &mut pos)?;
+    let actor = crate::read_str(bytes, &mut pos).await?;
+    let flags = crate::wire::read_varint_u64(bytes, &mut pos).await?;
     if flags >> 10 != 0 {
         return Err(crate::ProtocolError::Malformed { what: "presence peer flags", offset: pos as u64, detail: format!("unknown flag bits set: {flags:#x}") });
     }
-    let connected_at_ms = crate::wire::read_varint_u64(bytes, &mut pos)? as i64;
-    let label = if flags & (1 << 0) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::read_bytes(bytes, &mut pos)?) } else { None };
-    let user_id = if flags & (1 << 2) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let role = if flags & (1 << 3) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let interaction = if flags & (1 << 5) != 0 { Some(decode_presence_interaction(bytes, &mut pos)?) } else { None };
+    let connected_at_ms = crate::wire::read_varint_u64(bytes, &mut pos).await? as i64;
+    let label = if flags & (1 << 0) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::read_bytes(bytes, &mut pos).await?) } else { None };
+    let user_id = if flags & (1 << 2) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let role = if flags & (1 << 3) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let interaction = if flags & (1 << 5) != 0 { Some(decode_presence_interaction(bytes, &mut pos).await?) } else { None };
     let color = if flags & (1 << 6) != 0 {
         let byte = *bytes.get(pos).ok_or(crate::ProtocolError::Malformed { what: "presence peer color", offset: pos as u64, detail: "truncated".to_string() })?;
         pos += 1;
@@ -995,9 +1046,9 @@ pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::Protoco
     } else {
         None
     };
-    let surface = if flags & (1 << 7) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let views = if flags & (1 << 8) != 0 { read_vec_presence_window_view(bytes, &mut pos)? } else { Vec::new() };
-    let ui = if flags & (1 << 9) != 0 { Some(decode_presence_ui(bytes, &mut pos)?) } else { None };
+    let surface = if flags & (1 << 7) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let views = if flags & (1 << 8) != 0 { read_vec_presence_window_view(bytes, &mut pos).await? } else { Vec::new() };
+    let ui = if flags & (1 << 9) != 0 { Some(decode_presence_ui(bytes, &mut pos).await?) } else { None };
     Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui })
 }
 
@@ -1005,15 +1056,15 @@ pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::Protoco
 mod presence_codec_tests {
     use super::{decode_presence_peer, encode_presence_peer, PresenceDomain, PresenceInteraction, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
 
-    #[test]
-    fn presence_peer_binary_round_trips_with_every_field_absent() {
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_binary_round_trips_with_every_field_absent() {
         let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None };
-        let bytes = encode_presence_peer(&peer);
-        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+        let bytes = encode_presence_peer(&peer).await;
+        assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
     }
 
-    #[test]
-    fn presence_peer_binary_round_trips_with_every_field_present() {
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_binary_round_trips_with_every_field_present() {
         let peer = PresencePeer {
             actor: "peer-2".into(),
             connected_at_ms: 1_700_000_000_000,
@@ -1034,12 +1085,12 @@ mod presence_codec_tests {
             ],
             ui: Some(PresenceUi { hovered_path: Some("row[0]#a".into()), focused_path: None, pressed_path: Some("btn[1]#save".into()) }),
         };
-        let bytes = encode_presence_peer(&peer);
-        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+        let bytes = encode_presence_peer(&peer).await;
+        assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
     }
 
-    #[test]
-    fn presence_peer_round_trips_views_ui_color_surface() {
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_round_trips_views_ui_color_surface() {
         let peer = PresencePeer {
             actor: "peer-4".into(),
             connected_at_ms: 5000,
@@ -1054,56 +1105,56 @@ mod presence_codec_tests {
             views: vec![PresenceWindowView { window_id: "w1".into(), space: "geo".into(), kind: PresenceViewKind::Geo { lng: 8.5, lat: 47.4, zoom: 12.0, bearing: 0.0, pitch: 0.0 }, size: [500.0, 400.0], pointer: Some([8.5, 47.4, 0.0]) }],
             ui: Some(PresenceUi { hovered_path: None, focused_path: Some("panel[0]#tools".into()), pressed_path: None }),
         };
-        let bytes = encode_presence_peer(&peer);
-        let decoded = decode_presence_peer(&bytes).unwrap();
+        let bytes = encode_presence_peer(&peer).await;
+        let decoded = decode_presence_peer(&bytes).await.unwrap();
         assert_eq!(decoded, peer);
         assert_eq!(decoded.color, Some(11));
         assert_eq!(decoded.views.len(), 1);
         assert!(decoded.ui.is_some());
     }
 
-    #[test]
-    fn presence_peer_rejects_unknown_flag_bits() {
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_rejects_unknown_flag_bits() {
         // 🔎️ Hand-built rather than mutating an `encode_presence_peer` output: flags is a
         // varint_u64, so flipping a bit in the encoded byte stream doesn't map 1:1 onto a logical
         // flag bit. Bit 10 is one past the frozen 0..=9 range — no field on this struct sets it.
         let mut bytes = Vec::new();
-        crate::write_str(&mut bytes, "peer-5");
-        crate::wire::write_varint_u64(&mut bytes, 1 << 10);
-        crate::wire::write_varint_u64(&mut bytes, 1000);
-        let err = decode_presence_peer(&bytes).unwrap_err();
+        crate::write_str(&mut bytes, "peer-5").await;
+        crate::wire::write_varint_u64(&mut bytes, 1 << 10).await;
+        crate::wire::write_varint_u64(&mut bytes, 1000).await;
+        let err = decode_presence_peer(&bytes).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "presence peer flags", .. }));
     }
 
     //#region 🔖️InteractionBit
-    fn peer_with_interaction(interaction: Option<PresenceInteraction>) -> PresencePeer {
+    async fn peer_with_interaction(interaction: Option<PresenceInteraction>) -> PresencePeer {
         PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None }
     }
 
     /// 🔎️ Presence byte index: `actor str`'s own varint-length prefix (1 byte for `peer_with_interaction`'s
     /// short actor id) plus the actor bytes themselves.
-    fn presence_flag_byte(peer: &PresencePeer, bytes: &[u8]) -> u8 {
+    async fn presence_flag_byte(peer: &PresencePeer, bytes: &[u8]) -> u8 {
         bytes[1 + peer.actor.len()]
     }
 
-    #[test]
-    fn presence_peer_bit_5_round_trips_with_interaction_present() {
-        let peer = peer_with_interaction(Some(PresenceInteraction { app_id: "draw".into(), domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into(), "n2".into()], hovered: vec![] }] }));
-        let bytes = encode_presence_peer(&peer);
-        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 5), 1 << 5, "bit 5 set when interaction present");
-        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_bit_5_round_trips_with_interaction_present() {
+        let peer = peer_with_interaction(Some(PresenceInteraction { app_id: "draw".into(), domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into(), "n2".into()], hovered: vec![] }] })).await;
+        let bytes = encode_presence_peer(&peer).await;
+        assert_eq!(presence_flag_byte(&peer, &bytes).await & (1 << 5), 1 << 5, "bit 5 set when interaction present");
+        assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
     }
 
-    #[test]
-    fn presence_peer_bit_5_round_trips_with_interaction_absent() {
-        let peer = peer_with_interaction(None);
-        let bytes = encode_presence_peer(&peer);
-        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 5), 0, "bit 5 clear when interaction absent");
-        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_bit_5_round_trips_with_interaction_absent() {
+        let peer = peer_with_interaction(None).await;
+        let bytes = encode_presence_peer(&peer).await;
+        assert_eq!(presence_flag_byte(&peer, &bytes).await & (1 << 5), 0, "bit 5 clear when interaction absent");
+        assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
     }
 
-    #[test]
-    fn presence_peer_interaction_round_trips_with_multiple_domains() {
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_interaction_round_trips_with_multiple_domains() {
         let peer = peer_with_interaction(Some(PresenceInteraction {
             app_id: "space".into(),
             domains: vec![
@@ -1111,9 +1162,9 @@ mod presence_codec_tests {
                 PresenceDomain { domain: "board".into(), granularity: "card".into(), selected: vec![], hovered: vec!["c1".into(), "c2".into(), "c3".into()] },
                 PresenceDomain { domain: "canvas".into(), granularity: "node".into(), selected: vec!["n9".into()], hovered: vec![] },
             ],
-        }));
-        let bytes = encode_presence_peer(&peer);
-        let decoded = decode_presence_peer(&bytes).unwrap();
+        })).await;
+        let bytes = encode_presence_peer(&peer).await;
+        let decoded = decode_presence_peer(&bytes).await.unwrap();
         assert_eq!(decoded, peer);
         assert_eq!(decoded.interaction.unwrap().domains.len(), 3);
     }
@@ -1153,6 +1204,7 @@ pub struct HoverSpec {
 }
 
 impl Default for HoverSpec {
+    // 🚫️async: E1 impl of externally-declared `Default` trait
     fn default() -> Self {
         Self { enabled: true, transitive: false, channels: default_pointer_channels(), broadcast: true }
     }
@@ -1223,17 +1275,19 @@ pub enum MergeMode {
     Range,
 }
 
+// 🚫️async: E1 — called by name from `#[serde(default = "...")]`, whose generated call site is sync.
 fn default_true() -> bool {
     true
 }
 
+// 🚫️async: E1 — called by name from `#[serde(default = "...")]`, whose generated call site is sync.
 fn default_pointer_channels() -> Vec<String> {
     vec!["pointer".to_string()]
 }
 
 //#region 🔖️Runtime
 /// 🎯️ One addressed target: a granularity id plus the target's own id (u32 domain ids are stringified
-/// at the app boundary before reaching this module).
+/// at the app boundary before reaching this module).await.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1265,7 +1319,7 @@ pub struct DomainHover {
     pub ids: Vec<String>,
 }
 
-/// 🗺️ Own persisted-local selection (`Interaction` history lane) + ephemeral-local hover, keyed by
+/// 🗺️ Own persisted-local selection (`Interaction` history lane).await + ephemeral-local hover, keyed by
 /// domain id — the framework-owned counterpart to what every per-app config used to hand-roll.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -1279,7 +1333,7 @@ pub struct InteractionState {
 //#endregion 🔖️Runtime
 
 //#region 🔖️Topology
-/// 🌳️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).
+/// 🌳️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).await.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1302,16 +1356,16 @@ pub struct DomainTopology {
 
 impl DomainTopology {
     /// 🔎️ The pre-order index of `id`, or `None` when absent.
-    pub fn index_of(&self, id: &str) -> Option<usize> {
+    pub async fn index_of(&self, id: &str) -> Option<usize> {
         self.ordered.iter().position(|node| node.id == id)
     }
 
     /// ✅️ Whether `id` is a known node in this topology.
-    pub fn contains(&self, id: &str) -> bool {
-        self.index_of(id).is_some()
+    pub async fn contains(&self, id: &str) -> bool {
+        self.index_of(id).await.is_some()
     }
 
-    fn children_by_parent(&self) -> BTreeMap<String, Vec<String>> {
+    async fn children_by_parent(&self) -> BTreeMap<String, Vec<String>> {
         let mut children: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for node in &self.ordered {
             if let Some(parent) = &node.parent {
@@ -1322,18 +1376,18 @@ impl DomainTopology {
     }
 
     /// 🌳️ `root_id` plus every descendant, pre-order (root first) — empty when `root_id` is absent.
-    pub fn descendant_closure(&self, root_id: &str) -> Vec<String> {
-        if !self.contains(root_id) {
+    pub async fn descendant_closure(&self, root_id: &str) -> Vec<String> {
+        if !self.contains(root_id).await {
             return Vec::new();
         }
-        let children = self.children_by_parent();
+        let children = self.children_by_parent().await;
         let mut out = Vec::new();
-        visit_descendants(root_id, &children, &mut out);
+        visit_descendants(root_id, &children, &mut out).await;
         out
     }
 
     /// 🪜️ `id`'s ancestor chain, nearest parent first, root last.
-    pub fn ancestors(&self, id: &str) -> Vec<String> {
+    pub async fn ancestors(&self, id: &str) -> Vec<String> {
         let mut out = Vec::new();
         let mut current = self.ordered.iter().find(|node| node.id == id).and_then(|node| node.parent.clone());
         while let Some(parent_id) = current {
@@ -1344,11 +1398,11 @@ impl DomainTopology {
     }
 }
 
-fn visit_descendants(id: &str, children: &BTreeMap<String, Vec<String>>, out: &mut Vec<String>) {
+async fn visit_descendants(id: &str, children: &BTreeMap<String, Vec<String>>, out: &mut Vec<String>) {
     out.push(id.to_string());
     if let Some(kids) = children.get(id) {
         for kid in kids {
-            visit_descendants(kid, children, out);
+            Box::pin(visit_descendants(kid, children, out)).await;
         }
     }
 }
@@ -1381,7 +1435,7 @@ pub struct SelectionInput {
 /// distinct merges, and transitive descendant-closure expansion.
 ///
 /// - `Single` mode ignores `merge` entirely and clamps to the batch's last target (mirrors Tree
-///   returning `{selectedIds:[targetId]}` unconditionally in single mode).
+///   returning `{selectedIds:[targetId]}` unconditionally in single mode).await.
 /// - `Range` replaces the selection with the topology-order slice between the anchor (falling back to
 ///   `current.anchor_id`, then `current.ids.last()`, then the target itself — mirrors Tree's
 ///   `fallbackAnchorId`) and the batch's last target, ascending index order; the anchor does not move.
@@ -1390,7 +1444,7 @@ pub struct SelectionInput {
 ///   the batch's last target.
 ///
 /// Empty `input.targets` is a no-op (returns `current` unchanged).
-pub fn next_selection(spec: &SelectionSpec, current: &DomainSelection, topo: &DomainTopology, input: &SelectionInput) -> DomainSelection {
+pub async fn next_selection(spec: &SelectionSpec, current: &DomainSelection, topo: &DomainTopology, input: &SelectionInput) -> DomainSelection {
     let Some(last_target) = input.targets.last() else {
         return current.clone();
     };
@@ -1404,7 +1458,7 @@ pub fn next_selection(spec: &SelectionSpec, current: &DomainSelection, topo: &Do
 
     if input.merge == MergeMode::Range {
         let fallback_anchor = current.anchor_id.clone().or_else(|| current.ids.last().cloned()).unwrap_or_else(|| last_target_id.clone());
-        if let (Some(anchor_index), Some(target_index)) = (topo.index_of(&fallback_anchor), topo.index_of(&last_target_id)) {
+        if let (Some(anchor_index), Some(target_index)) = (topo.index_of(&fallback_anchor).await, topo.index_of(&last_target_id).await) {
             let (start, end) = if anchor_index <= target_index { (anchor_index, target_index) } else { (target_index, anchor_index) };
             let ids = topo.ordered[start..=end].iter().map(|node| node.id.clone()).collect();
             return DomainSelection { granularity, ids, anchor_id: Some(fallback_anchor) };
@@ -1412,24 +1466,22 @@ pub fn next_selection(spec: &SelectionSpec, current: &DomainSelection, topo: &Do
         return DomainSelection { granularity, ids: vec![last_target_id.clone()], anchor_id: Some(last_target_id) };
     }
 
-    let expanded: Vec<String> = target_ids
-        .iter()
-        .flat_map(|id| {
-            if spec.transitive {
-                let closure = topo.descendant_closure(id);
-                if closure.is_empty() {
-                    vec![id.clone()]
-                } else {
-                    closure
-                }
+    let mut expanded: Vec<String> = Vec::new();
+    for id in &target_ids {
+        if spec.transitive {
+            let closure = topo.descendant_closure(id).await;
+            if closure.is_empty() {
+                expanded.push(id.clone());
             } else {
-                vec![id.clone()]
+                expanded.extend(closure);
             }
-        })
-        .collect();
+        } else {
+            expanded.push(id.clone());
+        }
+    }
 
     let mut ids = match input.merge {
-        MergeMode::Replace => dedup_preserving_order(expanded),
+        MergeMode::Replace => dedup_preserving_order(expanded).await,
         MergeMode::Additive => {
             let mut ids = current.ids.clone();
             for id in expanded {
@@ -1454,11 +1506,11 @@ pub fn next_selection(spec: &SelectionSpec, current: &DomainSelection, topo: &Do
         }
         MergeMode::Range => unreachable!("Range handled above"),
     };
-    ids = dedup_preserving_order(ids);
+    ids = dedup_preserving_order(ids).await;
     DomainSelection { granularity, ids, anchor_id: Some(last_target_id) }
 }
 
-fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
+async fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
     let mut out: Vec<String> = Vec::with_capacity(ids.len());
     for id in ids {
         if !out.contains(&id) {
@@ -1483,14 +1535,14 @@ pub struct HoverInput {
 /// has no merge algebra). When `spec.transitive`, each target expands to its descendant closure with
 /// the hovered root first; multiple targets concatenate in input order, deduplicated. Disabled specs
 /// and empty target batches both clear the channel.
-pub fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverInput) -> DomainHover {
+pub async fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverInput) -> DomainHover {
     if !spec.enabled || input.targets.is_empty() {
         return DomainHover { channel: input.channel.clone(), ids: Vec::new() };
     }
     let mut ids: Vec<String> = Vec::new();
     for target in &input.targets {
         let expanded = if spec.transitive {
-            let closure = topo.descendant_closure(&target.id);
+            let closure = topo.descendant_closure(&target.id).await;
             if closure.is_empty() {
                 vec![target.id.clone()]
             } else {
@@ -1529,8 +1581,8 @@ pub struct InteractionOutline {
 /// dispatch), resets `active_granularity`/`active_mode` to a declared value (falling back to the
 /// domain's default, its first declared entry) when the stored one is no longer declared, and clamps
 /// `Single`-mode selections down to their first id (mirrors `normalizeTreeSelectedIds`'s external-update
-/// normalization, not `next_selection`'s recency-preferring clamp).
-pub fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopology, state: &InteractionState) -> InteractionState {
+/// normalization, not `next_selection`'s recency-preferring clamp).await.
+pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopology, state: &InteractionState) -> InteractionState {
     let mut result = InteractionState::default();
 
     for def in defs {
@@ -1547,7 +1599,16 @@ pub fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopology, s
 
         if let Some(selection) = state.selection.get(&def.id) {
             let selection_granularity = if declared_granularities.contains(&selection.granularity.as_str()) { selection.granularity.clone() } else { default_granularity.clone() };
-            let mut ids: Vec<String> = selection.ids.iter().filter(|id| domain_topo.is_none_or(|topo| topo.contains(id))).cloned().collect();
+            let mut ids: Vec<String> = Vec::new();
+            for id in &selection.ids {
+                let keep = match domain_topo {
+                    Some(topo) => topo.contains(id).await,
+                    None => true,
+                };
+                if keep {
+                    ids.push(id.clone());
+                }
+            }
             if mode == SelectionMode::Single && ids.len() > 1 {
                 ids.truncate(1);
             }
@@ -1556,7 +1617,16 @@ pub fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopology, s
         }
 
         if let Some(hover) = state.hover.get(&def.id) {
-            let ids: Vec<String> = hover.ids.iter().filter(|id| domain_topo.is_none_or(|topo| topo.contains(id))).cloned().collect();
+            let mut ids: Vec<String> = Vec::new();
+            for id in &hover.ids {
+                let keep = match domain_topo {
+                    Some(topo) => topo.contains(id).await,
+                    None => true,
+                };
+                if keep {
+                    ids.push(id.clone());
+                }
+            }
             result.hover.insert(def.id.clone(), DomainHover { channel: hover.channel.clone(), ids });
         }
     }
@@ -1595,45 +1665,52 @@ pub struct PresenceDomain {
 // (in the `🔖️Presence` region) call for bit 5. Self-delimiting throughout (varint counts, exactly
 // `write_vec_bytes`/`write_vec_envelope`'s own convention in `🔖️Combinators` up top), so no outer
 // length prefix is needed around the whole payload.
-fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
-    crate::wire::write_varint_u64(out, values.len() as u64);
+async fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
+    crate::wire::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        crate::write_str(out, value);
+        crate::write_str(out, value).await;
     }
 }
 
-fn read_vec_str(bytes: &[u8], pos: &mut usize) -> Result<Vec<String>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| crate::read_str(bytes, pos)).collect()
+async fn read_vec_str(bytes: &[u8], pos: &mut usize) -> Result<Vec<String>, crate::ProtocolError> {
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(crate::read_str(bytes, pos).await?);
+    }
+    Ok(out)
 }
 
-fn encode_presence_domain(domain: &PresenceDomain, out: &mut Vec<u8>) {
-    crate::write_str(out, &domain.domain);
-    crate::write_str(out, &domain.granularity);
-    write_vec_str(out, &domain.selected);
-    write_vec_str(out, &domain.hovered);
+async fn encode_presence_domain(domain: &PresenceDomain, out: &mut Vec<u8>) {
+    crate::write_str(out, &domain.domain).await;
+    crate::write_str(out, &domain.granularity).await;
+    write_vec_str(out, &domain.selected).await;
+    write_vec_str(out, &domain.hovered).await;
 }
 
-fn decode_presence_domain(bytes: &[u8], pos: &mut usize) -> Result<PresenceDomain, crate::ProtocolError> {
-    Ok(PresenceDomain { domain: crate::read_str(bytes, pos)?, granularity: crate::read_str(bytes, pos)?, selected: read_vec_str(bytes, pos)?, hovered: read_vec_str(bytes, pos)? })
+async fn decode_presence_domain(bytes: &[u8], pos: &mut usize) -> Result<PresenceDomain, crate::ProtocolError> {
+    Ok(PresenceDomain { domain: crate::read_str(bytes, pos).await?, granularity: crate::read_str(bytes, pos).await?, selected: read_vec_str(bytes, pos).await?, hovered: read_vec_str(bytes, pos).await? })
 }
 
 /// @emoji 🎯️ Encodes one `PresenceInteraction` — `pub` (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4): guests never enable the kernel's `sync` feature, and
 /// `VcsArtifactApp` (the plugin ABI's presence adoption path) must be able to call this directly.
-pub fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
-    crate::write_str(out, &interaction.app_id);
-    crate::wire::write_varint_u64(out, interaction.domains.len() as u64);
+pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
+    crate::write_str(out, &interaction.app_id).await;
+    crate::wire::write_varint_u64(out, interaction.domains.len() as u64).await;
     for domain in &interaction.domains {
-        encode_presence_domain(domain, out);
+        encode_presence_domain(domain, out).await;
     }
 }
 
 /// @emoji 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
-pub fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::ProtocolError> {
-    let app_id = crate::read_str(bytes, pos)?;
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    let domains = (0..count).map(|_| decode_presence_domain(bytes, pos)).collect::<Result<Vec<_>, _>>()?;
+pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::ProtocolError> {
+    let app_id = crate::read_str(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let mut domains = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        domains.push(decode_presence_domain(bytes, pos).await?);
+    }
     Ok(PresenceInteraction { app_id, domains })
 }
 //#endregion 🔖️PresenceInteractionCodec
@@ -1655,7 +1732,7 @@ pub fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<Pres
 /// C7.4) from `store_sync` — guests never enable the kernel's `sync` feature, and `VcsArtifactApp`
 /// (the plugin ABI's presence-adoption path, §C7.6) must be able to call this pure fn without pulling
 /// in the whole actor layer.
-pub fn assemble_presence_interaction(app_id: &str, state: &InteractionState, hover_specs: &BTreeMap<String, HoverSpec>, selection_specs: &BTreeMap<String, SelectionSpec>) -> PresenceInteraction {
+pub async fn assemble_presence_interaction(app_id: &str, state: &InteractionState, hover_specs: &BTreeMap<String, HoverSpec>, selection_specs: &BTreeMap<String, SelectionSpec>) -> PresenceInteraction {
     let mut domain_ids: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();
     domain_ids.extend(state.selection.keys());
     domain_ids.extend(state.hover.keys());
@@ -1682,33 +1759,33 @@ pub fn assemble_presence_interaction(app_id: &str, state: &InteractionState, hov
 mod assemble_presence_interaction_tests {
     use super::*;
 
-    fn selection(ids: &[&str]) -> DomainSelection {
+    async fn selection(ids: &[&str]) -> DomainSelection {
         DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: None }
     }
 
-    fn hover(channel: &str, ids: &[&str]) -> DomainHover {
+    async fn hover(channel: &str, ids: &[&str]) -> DomainHover {
         DomainHover { channel: channel.into(), ids: ids.iter().map(|id| id.to_string()).collect() }
     }
 
-    fn broadcasting_hover_spec() -> HoverSpec {
+    async fn broadcasting_hover_spec() -> HoverSpec {
         HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true }
     }
 
-    fn broadcasting_selection_spec() -> SelectionSpec {
+    async fn broadcasting_selection_spec() -> SelectionSpec {
         SelectionSpec { modes: vec![SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true }
     }
 
-    #[test]
-    fn assemble_presence_interaction_includes_broadcasting_domains() {
+    #[semio_framework_async_macros::async_test]
+    async fn assemble_presence_interaction_includes_broadcasting_domains() {
         let mut state = InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["n1", "n2"]));
-        state.hover.insert("graph".into(), hover("pointer", &["n3"]));
+        state.selection.insert("graph".into(), selection(&["n1", "n2"]).await);
+        state.hover.insert("graph".into(), hover("pointer", &["n3"]).await);
         state.active_granularity.insert("graph".into(), "node".into());
 
-        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
-        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec().await)]);
+        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec().await)]);
 
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs).await;
         assert_eq!(interaction.app_id, "draw");
         assert_eq!(interaction.domains.len(), 1);
         let domain = &interaction.domains[0];
@@ -1718,41 +1795,41 @@ mod assemble_presence_interaction_tests {
         assert_eq!(domain.hovered, vec!["n3".to_string()]);
     }
 
-    #[test]
-    fn assemble_presence_interaction_omits_domains_with_broadcast_disabled() {
+    #[semio_framework_async_macros::async_test]
+    async fn assemble_presence_interaction_omits_domains_with_broadcast_disabled() {
         let mut state = InteractionState::default();
-        state.selection.insert("private".into(), selection(&["secret"]));
-        state.hover.insert("private".into(), hover("pointer", &["secret"]));
+        state.selection.insert("private".into(), selection(&["secret"]).await);
+        state.hover.insert("private".into(), hover("pointer", &["secret"]).await);
 
-        let hover_specs = BTreeMap::from([("private".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
-        let selection_specs = BTreeMap::from([("private".to_string(), SelectionSpec { broadcast: false, ..broadcasting_selection_spec() })]);
+        let hover_specs = BTreeMap::from([("private".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec().await })]);
+        let selection_specs = BTreeMap::from([("private".to_string(), SelectionSpec { broadcast: false, ..broadcasting_selection_spec().await })]);
 
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs).await;
         assert!(interaction.domains.is_empty(), "broadcast:false on both halves drops the domain entirely");
     }
 
-    #[test]
-    fn assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel() {
+    #[semio_framework_async_macros::async_test]
+    async fn assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel() {
         let mut state = InteractionState::default();
-        state.hover.insert("graph".into(), hover("drag-preview", &["n1"]));
+        state.hover.insert("graph".into(), hover("drag-preview", &["n1"]).await);
 
-        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
+        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec().await)]);
         let selection_specs = BTreeMap::new();
 
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs).await;
         assert!(interaction.domains.is_empty(), "a non-pointer hover channel never broadcasts");
     }
 
-    #[test]
-    fn assemble_presence_interaction_respects_each_half_independently() {
+    #[semio_framework_async_macros::async_test]
+    async fn assemble_presence_interaction_respects_each_half_independently() {
         let mut state = InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["n1"]));
-        state.hover.insert("graph".into(), hover("pointer", &["n2"]));
+        state.selection.insert("graph".into(), selection(&["n1"]).await);
+        state.hover.insert("graph".into(), hover("pointer", &["n2"]).await);
 
-        let hover_specs = BTreeMap::from([("graph".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
-        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+        let hover_specs = BTreeMap::from([("graph".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec().await })]);
+        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec().await)]);
 
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs).await;
         assert_eq!(interaction.domains.len(), 1);
         assert_eq!(interaction.domains[0].selected, vec!["n1".to_string()], "selection still broadcasts");
         assert!(interaction.domains[0].hovered.is_empty(), "hover suppressed by its own broadcast:false");
@@ -1770,186 +1847,190 @@ mod interaction_tests {
 
     //#region 🔖️Fixtures
     /// 🌲️ root → {a → {a1, a2}, b → {b1}}, pre-order: root, a, a1, a2, b, b1.
-    fn sample_topology() -> DomainTopology {
+    async fn sample_topology() -> DomainTopology {
         let node = |id: &str, parent: Option<&str>| TopologyNode { id: id.into(), granularity: "node".into(), parent: parent.map(Into::into) };
         DomainTopology { ordered: vec![node("root", None), node("a", Some("root")), node("a1", Some("a")), node("a2", Some("a")), node("b", Some("root")), node("b1", Some("b"))] }
     }
 
-    fn target(id: &str) -> InteractionTarget {
+    async fn target(id: &str) -> InteractionTarget {
         InteractionTarget { granularity: "node".into(), id: id.into() }
     }
 
-    fn selection(ids: &[&str], anchor: Option<&str>) -> DomainSelection {
+    async fn selection(ids: &[&str], anchor: Option<&str>) -> DomainSelection {
         DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: anchor.map(Into::into) }
     }
 
-    fn spec(transitive: bool, merges: &[MergeMode]) -> SelectionSpec {
+    async fn spec(transitive: bool, merges: &[MergeMode]) -> SelectionSpec {
         SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: merges.to_vec(), transitive, broadcast: true }
     }
 
-    fn multiple_input(ids: &[&str], merge: MergeMode) -> SelectionInput {
-        SelectionInput { targets: ids.iter().map(|id| target(id)).collect(), merge, mode: SelectionMode::Multiple }
+    async fn multiple_input(ids: &[&str], merge: MergeMode) -> SelectionInput {
+        let mut targets = Vec::with_capacity(ids.len());
+        for id in ids {
+            targets.push(target(id).await);
+        }
+        SelectionInput { targets, merge, mode: SelectionMode::Multiple }
     }
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MergeModes
-    #[test]
-    fn replace_sets_selection_to_batch_targets() {
-        let current = selection(&["a1"], Some("a1"));
-        let next = next_selection(&spec(false, &[MergeMode::Replace]), &current, &sample_topology(), &multiple_input(&["b", "b1"], MergeMode::Replace));
+    #[semio_framework_async_macros::async_test]
+    async fn replace_sets_selection_to_batch_targets() {
+        let current = selection(&["a1"], Some("a1")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Replace]).await, &current, &sample_topology().await, &multiple_input(&["b", "b1"], MergeMode::Replace).await).await;
         assert_eq!(next.ids, vec!["b".to_string(), "b1".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("b1"));
     }
 
-    #[test]
-    fn additive_unions_batch_into_current_selection() {
-        let current = selection(&["a1"], Some("a1"));
-        let next = next_selection(&spec(false, &[MergeMode::Additive]), &current, &sample_topology(), &multiple_input(&["a2"], MergeMode::Additive));
+    #[semio_framework_async_macros::async_test]
+    async fn additive_unions_batch_into_current_selection() {
+        let current = selection(&["a1"], Some("a1")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Additive]).await, &current, &sample_topology().await, &multiple_input(&["a2"], MergeMode::Additive).await).await;
         assert_eq!(next.ids, vec!["a1".to_string(), "a2".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("a2"));
     }
 
-    #[test]
-    fn subtractive_removes_batch_from_current_selection() {
-        let current = selection(&["a1", "a2", "b1"], Some("b1"));
-        let next = next_selection(&spec(false, &[MergeMode::Subtractive]), &current, &sample_topology(), &multiple_input(&["a2"], MergeMode::Subtractive));
+    #[semio_framework_async_macros::async_test]
+    async fn subtractive_removes_batch_from_current_selection() {
+        let current = selection(&["a1", "a2", "b1"], Some("b1")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Subtractive]).await, &current, &sample_topology().await, &multiple_input(&["a2"], MergeMode::Subtractive).await).await;
         assert_eq!(next.ids, vec!["a1".to_string(), "b1".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("a2"), "anchor tracks the last acted-on target, even on removal");
     }
 
-    #[test]
-    fn invertive_toggles_each_batch_target_independently() {
-        let current = selection(&["a1", "a2"], Some("a2"));
-        let next = next_selection(&spec(false, &[MergeMode::Invertive]), &current, &sample_topology(), &multiple_input(&["a2", "b1"], MergeMode::Invertive));
+    #[semio_framework_async_macros::async_test]
+    async fn invertive_toggles_each_batch_target_independently() {
+        let current = selection(&["a1", "a2"], Some("a2")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Invertive]).await, &current, &sample_topology().await, &multiple_input(&["a2", "b1"], MergeMode::Invertive).await).await;
         assert_eq!(next.ids, vec!["a1".to_string(), "b1".to_string()], "a2 was present so it toggles off, b1 was absent so it toggles on");
     }
     //#endregion 🔖️MergeModes
 
     //#region 🔖️Range
-    #[test]
-    fn range_slices_topology_order_between_anchor_and_target() {
-        let current = selection(&["a"], Some("a"));
-        let next = next_selection(&spec(false, &[MergeMode::Range]), &current, &sample_topology(), &multiple_input(&["b1"], MergeMode::Range));
+    #[semio_framework_async_macros::async_test]
+    async fn range_slices_topology_order_between_anchor_and_target() {
+        let current = selection(&["a"], Some("a")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Range]).await, &current, &sample_topology().await, &multiple_input(&["b1"], MergeMode::Range).await).await;
         assert_eq!(next.ids, vec!["a".to_string(), "a1".to_string(), "a2".to_string(), "b".to_string(), "b1".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("a"), "range never moves the anchor");
     }
 
-    #[test]
-    fn range_falls_back_to_last_selected_id_when_no_anchor_recorded() {
-        let current = selection(&["a1", "a2"], None);
-        let next = next_selection(&spec(false, &[MergeMode::Range]), &current, &sample_topology(), &multiple_input(&["b"], MergeMode::Range));
+    #[semio_framework_async_macros::async_test]
+    async fn range_falls_back_to_last_selected_id_when_no_anchor_recorded() {
+        let current = selection(&["a1", "a2"], None).await;
+        let next = next_selection(&spec(false, &[MergeMode::Range]).await, &current, &sample_topology().await, &multiple_input(&["b"], MergeMode::Range).await).await;
         assert_eq!(next.ids, vec!["a2".to_string(), "b".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("a2"));
     }
 
-    #[test]
-    fn range_handles_target_before_anchor_in_topology_order() {
-        let current = selection(&["b"], Some("b"));
-        let next = next_selection(&spec(false, &[MergeMode::Range]), &current, &sample_topology(), &multiple_input(&["a1"], MergeMode::Range));
+    #[semio_framework_async_macros::async_test]
+    async fn range_handles_target_before_anchor_in_topology_order() {
+        let current = selection(&["b"], Some("b")).await;
+        let next = next_selection(&spec(false, &[MergeMode::Range]).await, &current, &sample_topology().await, &multiple_input(&["a1"], MergeMode::Range).await).await;
         assert_eq!(next.ids, vec!["a1".to_string(), "a2".to_string(), "b".to_string()]);
     }
     //#endregion 🔖️Range
 
     //#region 🔖️SingleClamp
-    #[test]
-    fn single_mode_clamps_to_last_target_regardless_of_merge() {
-        let current = selection(&["a1", "a2"], Some("a1"));
-        let input = SelectionInput { targets: vec![target("b"), target("b1")], merge: MergeMode::Additive, mode: SelectionMode::Single };
-        let next = next_selection(&spec(false, &[MergeMode::Additive]), &current, &sample_topology(), &input);
+    #[semio_framework_async_macros::async_test]
+    async fn single_mode_clamps_to_last_target_regardless_of_merge() {
+        let current = selection(&["a1", "a2"], Some("a1")).await;
+        let input = SelectionInput { targets: vec![target("b").await, target("b1").await], merge: MergeMode::Additive, mode: SelectionMode::Single };
+        let next = next_selection(&spec(false, &[MergeMode::Additive]).await, &current, &sample_topology().await, &input).await;
         assert_eq!(next.ids, vec!["b1".to_string()]);
         assert_eq!(next.anchor_id.as_deref(), Some("b1"));
     }
     //#endregion 🔖️SingleClamp
 
     //#region 🔖️Transitive
-    #[test]
-    fn transitive_select_expands_target_to_descendant_closure() {
+    #[semio_framework_async_macros::async_test]
+    async fn transitive_select_expands_target_to_descendant_closure() {
         let current = DomainSelection::default();
-        let next = next_selection(&spec(true, &[MergeMode::Replace]), &current, &sample_topology(), &multiple_input(&["a"], MergeMode::Replace));
+        let next = next_selection(&spec(true, &[MergeMode::Replace]).await, &current, &sample_topology().await, &multiple_input(&["a"], MergeMode::Replace).await).await;
         assert_eq!(next.ids, vec!["a".to_string(), "a1".to_string(), "a2".to_string()]);
     }
 
-    #[test]
-    fn transitive_hover_expands_with_root_first() {
+    #[semio_framework_async_macros::async_test]
+    async fn transitive_hover_expands_with_root_first() {
         let hover_spec = HoverSpec { enabled: true, transitive: true, channels: default_pointer_channels(), broadcast: true };
-        let input = HoverInput { channel: "pointer".into(), targets: vec![target("a")] };
-        let hover = next_hover(&hover_spec, &sample_topology(), &input);
+        let input = HoverInput { channel: "pointer".into(), targets: vec![target("a").await] };
+        let hover = next_hover(&hover_spec, &sample_topology().await, &input).await;
         assert_eq!(hover.ids, vec!["a".to_string(), "a1".to_string(), "a2".to_string()]);
         assert_eq!(hover.ids.first().map(String::as_str), Some("a"), "hovered root sorts first");
     }
 
-    #[test]
-    fn non_transitive_hover_replaces_with_raw_targets_only() {
+    #[semio_framework_async_macros::async_test]
+    async fn non_transitive_hover_replaces_with_raw_targets_only() {
         let hover_spec = HoverSpec { enabled: true, transitive: false, channels: default_pointer_channels(), broadcast: true };
-        let input = HoverInput { channel: "pointer".into(), targets: vec![target("a")] };
-        let hover = next_hover(&hover_spec, &sample_topology(), &input);
+        let input = HoverInput { channel: "pointer".into(), targets: vec![target("a").await] };
+        let hover = next_hover(&hover_spec, &sample_topology().await, &input).await;
         assert_eq!(hover.ids, vec!["a".to_string()]);
     }
 
-    #[test]
-    fn empty_hover_targets_clears_the_channel() {
+    #[semio_framework_async_macros::async_test]
+    async fn empty_hover_targets_clears_the_channel() {
         let hover_spec = HoverSpec::default();
-        let hover = next_hover(&hover_spec, &sample_topology(), &HoverInput { channel: "pointer".into(), targets: Vec::new() });
+        let hover = next_hover(&hover_spec, &sample_topology().await, &HoverInput { channel: "pointer".into(), targets: Vec::new() }).await;
         assert!(hover.ids.is_empty());
     }
     //#endregion 🔖️Transitive
 
     //#region 🔖️ValidateState
-    fn sample_outline() -> InteractionOutline {
-        InteractionOutline { id: "graph".into(), granularity_ids: vec!["node".into(), "edge".into()], selection: spec(false, &[MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range]) }
+    async fn sample_outline() -> InteractionOutline {
+        InteractionOutline { id: "graph".into(), granularity_ids: vec!["node".into(), "edge".into()], selection: spec(false, &[MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range]).await }
     }
 
-    #[test]
-    fn validate_state_prunes_ids_absent_from_topology() {
-        let def = sample_outline();
+    #[semio_framework_async_macros::async_test]
+    async fn validate_state_prunes_ids_absent_from_topology() {
+        let def = sample_outline().await;
         let mut topo = InteractionTopology::default();
-        topo.domains.insert("graph".into(), sample_topology());
+        topo.domains.insert("graph".into(), sample_topology().await);
 
         let mut state = InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["a1", "deleted-node", "b1"], Some("deleted-node")));
+        state.selection.insert("graph".into(), selection(&["a1", "deleted-node", "b1"], Some("deleted-node")).await);
         state.hover.insert("graph".into(), DomainHover { channel: "pointer".into(), ids: vec!["a1".into(), "gone".into()] });
         state.active_mode.insert("graph".into(), SelectionMode::Multiple);
         state.active_granularity.insert("graph".into(), "node".into());
 
-        let validated = validate_state(&[def], &topo, &state);
+        let validated = validate_state(&[def], &topo, &state).await;
         let graph_selection = validated.selection.get("graph").expect("graph domain kept");
         assert_eq!(graph_selection.ids, vec!["a1".to_string(), "b1".to_string()], "deleted-node pruned");
         assert_eq!(graph_selection.anchor_id, None, "stale anchor pruned along with its id");
         assert_eq!(validated.hover.get("graph").unwrap().ids, vec!["a1".to_string()], "gone pruned");
     }
 
-    #[test]
-    fn validate_state_drops_undeclared_domains_and_granularities() {
-        let def = sample_outline();
+    #[semio_framework_async_macros::async_test]
+    async fn validate_state_drops_undeclared_domains_and_granularities() {
+        let def = sample_outline().await;
         let topo = InteractionTopology::default();
 
         let mut state = InteractionState::default();
-        state.selection.insert("mesh".into(), selection(&["x"], None));
+        state.selection.insert("mesh".into(), selection(&["x"], None).await);
         state.active_granularity.insert("graph".into(), "face".into());
 
-        let validated = validate_state(&[def], &topo, &state);
+        let validated = validate_state(&[def], &topo, &state).await;
         assert!(validated.selection.get("mesh").is_none(), "undeclared domain dropped");
         assert_eq!(validated.active_granularity.get("graph").map(String::as_str), Some("node"), "undeclared granularity resets to the default");
     }
 
-    #[test]
-    fn validate_state_clamps_single_mode_selection_to_first_id() {
-        let def = sample_outline();
+    #[semio_framework_async_macros::async_test]
+    async fn validate_state_clamps_single_mode_selection_to_first_id() {
+        let def = sample_outline().await;
         let mut topo = InteractionTopology::default();
-        topo.domains.insert("graph".into(), sample_topology());
+        topo.domains.insert("graph".into(), sample_topology().await);
 
         let mut state = InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["a1", "a2", "b1"], None));
+        state.selection.insert("graph".into(), selection(&["a1", "a2", "b1"], None).await);
         state.active_mode.insert("graph".into(), SelectionMode::Single);
 
-        let validated = validate_state(&[def], &topo, &state);
+        let validated = validate_state(&[def], &topo, &state).await;
         assert_eq!(validated.selection.get("graph").unwrap().ids, vec!["a1".to_string()]);
     }
     //#endregion 🔖️ValidateState
 
     //#region 🔖️Serde
-    #[test]
-    fn hierarchy_provider_serializes_internally_tagged_variants() {
+    #[semio_framework_async_macros::async_test]
+    async fn hierarchy_provider_serializes_internally_tagged_variants() {
         let path_delimited = HierarchyProvider::PathDelimited { delimiter: "/".into() };
         let json = serde_json::to_string(&path_delimited).unwrap();
         assert_eq!(json, "{\"kind\":\"pathDelimited\",\"delimiter\":\"/\"}");

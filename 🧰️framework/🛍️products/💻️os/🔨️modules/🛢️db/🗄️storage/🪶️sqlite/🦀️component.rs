@@ -19,7 +19,7 @@
 //!
 //! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
 //! `rusqlite` is a genuinely BLOCKING C client (unlike `sqlx`/`neo4rs`) — every `db_storage`
-//! sub-trait method here returns a `db_storage::DbFuture` whose body dispatches through
+//! sub-trait method here is a plain `async fn` whose body dispatches through
 //! `semio_framework_async::HostAsyncRuntime::run_blocking` (via `db_storage`'s own
 //! `run_blocking_op` bridge) rather than ever running the SQLite call on the calling async task's
 //! own thread. This crate names no `tokio`/executor of its own — mirrors `db_storage::FsStorage`'s
@@ -47,7 +47,7 @@
 mod sqlite_storage {
     use crate::db_ids::{check_len, DbError, ArtifactId};
     use crate::db_durability::{DurabilityClass, EpochFence};
-    use crate::db_storage::{run_blocking_op, CatalogStorage, DbFuture, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+    use crate::db_storage::{run_blocking_op, CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
     use semio_framework_async::{HostAsyncRuntime, ScopeHandle};
@@ -136,9 +136,9 @@ CREATE TABLE IF NOT EXISTS lease (
     /// — `rusqlite` is synchronous, and every method here is a short, bounded query/transaction,
     /// so holding the mutex for a call's duration never becomes a real bottleneck at this crate's
     /// scope.
-    pub struct SqliteStorage {
+    pub struct SqliteStorage<R: HostAsyncRuntime> {
         conn: Arc<Mutex<Connection>>,
-        runtime: Arc<dyn HostAsyncRuntime>,
+        runtime: Arc<R>,
         scope: ScopeHandle,
     }
 
@@ -149,14 +149,14 @@ CREATE TABLE IF NOT EXISTS lease (
         conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    impl SqliteStorage {
+    impl<R: HostAsyncRuntime> SqliteStorage<R> {
         /// @emoji 🚀️ Opens (creating the file and its parent directories if absent) a
         /// `SqliteStorage` at `path` and bootstraps the schema. Safe to call repeatedly against
         /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched). Dispatches every
         /// subsequent trait call's blocking body through `runtime`'s `run_blocking`, scoped to
         /// `scope` — this constructor itself stays synchronous (a one-time, small open+DDL, not
         /// part of any `DbStorage` trait method's hot path), mirroring `FsStorage::open`.
-        pub fn open(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, path: &std::path::Path) -> Result<Self, DbError> {
+        pub async fn open(runtime: Arc<R>, scope: ScopeHandle, path: &std::path::Path) -> Result<Self, DbError> {
             if let Some(parent) = path.parent() {
                 if !parent.as_os_str().is_empty() {
                     std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
@@ -169,12 +169,12 @@ CREATE TABLE IF NOT EXISTS lease (
         /// @emoji 🧪️ Opens a private, in-memory `SqliteStorage` — never durable across process
         /// exit; exists for fast unit tests that don't care about on-disk persistence (the
         /// crash/reopen laws are exercised against a real file in `//#region 🧪️Tests` instead).
-        pub fn open_in_memory(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle) -> Result<Self, DbError> {
+        pub async fn open_in_memory(runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
             let conn = Connection::open_in_memory().map_err(sqlite_err)?;
             Self::init(conn, runtime, scope)
         }
 
-        fn init(conn: Connection, runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle) -> Result<Self, DbError> {
+        fn init(conn: Connection, runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
             // 🎯️ `journal_mode = WAL` is a no-op (silently stays `memory`) on an in-memory
             // connection — SQLite doesn't error on the pragma either way, so `open_in_memory`
             // shares this path.
@@ -188,13 +188,13 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️Connection
 
     //#region 🔖️WalStorage
-    impl WalStorage for SqliteStorage {
-        fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> WalStorage for SqliteStorage<R> {
+        async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let index = to_sql_i64(index, "wal_storage::create_segment index")?;
                     let conn = lock(&conn);
@@ -206,19 +206,19 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
+        async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::append index")?;
                     let conn = lock(&conn);
@@ -240,21 +240,21 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(new_len as u64)
                 })
                 .await
-            })
+            }
         }
 
-        fn sync<'a>(&'a self, _document: &'a ArtifactId, _index: u64, _class: DurabilityClass) -> DbFuture<'a, ()> {
+        async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
             // 🎯️ See module doc's "Durability choice": `synchronous = FULL` already fsyncs every
             // commit, so every class this crate could be asked to sync to is already satisfied.
-            Box::pin(async { Ok(()) })
+            { Ok(()) }
         }
 
-        fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
                     let conn = lock(&conn);
@@ -269,18 +269,18 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
+        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             if let Err(err) = check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::read index")?;
                     let conn = lock(&conn);
@@ -297,15 +297,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(bytes[start..end].to_vec())
                 })
                 .await
-            })
+            }
         }
 
-        fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
+        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
                     let conn = lock(&conn);
@@ -317,15 +317,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(len as u64)
                 })
                 .await
-            })
+            }
         }
 
-        fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
@@ -337,15 +337,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(out)
                 })
                 .await
-            })
+            }
         }
 
-        fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
+        async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
                     let conn = lock(&conn);
@@ -365,15 +365,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
                     let conn = lock(&conn);
@@ -381,23 +381,23 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️WalStorage
 
     //#region 🔖️SnapshotStorage
-    impl SnapshotStorage for SqliteStorage {
-        fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> SnapshotStorage for SqliteStorage<R> {
+        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
                     let conn = lock(&conn);
@@ -410,15 +410,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
+        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
                     let conn = lock(&conn);
@@ -428,30 +428,30 @@ CREATE TABLE IF NOT EXISTS lease (
                         .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
                 })
                 .await
-            })
+            }
         }
 
-        fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
+        async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok(max.map(|value| value as u64))
                 })
                 .await
-            })
+            }
         }
 
-        fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
@@ -463,15 +463,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(out)
                 })
                 .await
-            })
+            }
         }
 
-        fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
+        async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
                     let conn = lock(&conn);
@@ -479,22 +479,22 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️SnapshotStorage
 
     //#region 🔖️PayloadStorage
-    impl PayloadStorage for SqliteStorage {
-        fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
+    impl<R: HostAsyncRuntime> PayloadStorage for SqliteStorage<R> {
+        async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
                     let conn = lock(&conn);
@@ -502,94 +502,94 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(hash)
                 })
                 .await
-            })
+            }
         }
 
-        fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
+        async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
                 })
                 .await
-            })
+            }
         }
 
-        fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
+        async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
                 })
                 .await
-            })
+            }
         }
 
-        fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
+        async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
+        async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
                     Ok(len as u64)
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️PayloadStorage
 
     //#region 🔖️CatalogStorage
-    impl CatalogStorage for SqliteStorage {
-        fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
+    impl<R: HostAsyncRuntime> CatalogStorage for SqliteStorage<R> {
+        async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let conn = self.conn.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
                 })
                 .await
-            })
+            }
         }
 
-        fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
+        async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
             if let Err(err) = check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let new_bytes = new_bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let mut conn = lock(&conn);
                     // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
@@ -611,23 +611,23 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(new_fence)
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️CatalogStorage
 
     //#region 🔖️IndexStorage
-    impl IndexStorage for SqliteStorage {
-        fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+    impl<R: HostAsyncRuntime> IndexStorage for SqliteStorage<R> {
+        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run") {
-                return Box::pin(async move { Err(err) });
+                return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
                     let conn = lock(&conn);
@@ -640,15 +640,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
+        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
                     let conn = lock(&conn);
@@ -658,15 +658,15 @@ CREATE TABLE IF NOT EXISTS lease (
                         .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
                 })
                 .await
-            })
+            }
         }
 
-        fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
@@ -678,15 +678,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(out)
                 })
                 .await
-            })
+            }
         }
 
-        fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
+        async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
                     let conn = lock(&conn);
@@ -694,20 +694,20 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️IndexStorage
 
     //#region 🔖️LeaseStorage
-    impl LeaseStorage for SqliteStorage {
-        fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
+    impl<R: HostAsyncRuntime> LeaseStorage for SqliteStorage<R> {
+        async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
@@ -734,16 +734,16 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(fence)
                 })
                 .await
-            })
+            }
         }
 
-        fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
+        async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
@@ -765,16 +765,16 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
+        async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
@@ -792,15 +792,15 @@ CREATE TABLE IF NOT EXISTS lease (
                     Ok(())
                 })
                 .await
-            })
+            }
         }
 
-        fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
+        async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
-            Box::pin(async move {
+            {
                 run_blocking_op(&*runtime, &scope, move || {
                     let conn = lock(&conn);
                     let existing: Option<(String, i64, i64)> = conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
@@ -815,42 +815,19 @@ CREATE TABLE IF NOT EXISTS lease (
                     ))
                 })
                 .await
-            })
+            }
         }
     }
     //#endregion 🔖️LeaseStorage
 
-    //#region 🔖️DbStorage
-    impl DbStorage for SqliteStorage {
-        fn wal(&self) -> &dyn WalStorage {
-            self
-        }
-
-        fn snapshot(&self) -> &dyn SnapshotStorage {
-            self
-        }
-
-        fn payload(&self) -> &dyn PayloadStorage {
-            self
-        }
-
-        fn catalog(&self) -> &dyn CatalogStorage {
-            self
-        }
-
-        fn index(&self) -> &dyn IndexStorage {
-            self
-        }
-
-        fn lease(&self) -> &dyn LeaseStorage {
-            self
-        }
-
-        fn capabilities(&self) -> StorageCapabilities {
+    //#region 🔖️DbBackend
+    impl<R: HostAsyncRuntime> SqliteStorage<R> {
+        /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — `synchronous = FULL` mode.
+        pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
         }
     }
-    //#endregion 🔖️DbStorage
+    //#endregion 🔖️DbBackend
 
     //#region 🧪️Tests
     #[cfg(test)]
@@ -858,11 +835,12 @@ CREATE TABLE IF NOT EXISTS lease (
         use super::*;
         use std::future::Future;
 
-        /// @emoji ✅️ Test-only: mirrors `db_storage`'s own `block_on_ready` — every `DbFuture` a
-        /// `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands back
-        /// resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously), so
-        /// this drives one to completion without needing a real executor.
-        fn block_on_ready<'a, T>(mut fut: DbFuture<'a, T>) -> Result<T, DbError> {
+        /// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every
+        /// future a `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands
+        /// back resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously),
+        /// so this drives one to completion without needing a real executor.
+        fn poll_once<T>(fut: impl Future<Output = T>) -> T {
+            let mut fut = std::pin::pin!(fut);
             let waker = std::task::Waker::noop();
             let mut cx = std::task::Context::from_waker(&waker);
             match fut.as_mut().poll(&mut cx) {
@@ -871,9 +849,13 @@ CREATE TABLE IF NOT EXISTS lease (
             }
         }
 
-        fn test_runtime_and_scope() -> (Arc<dyn HostAsyncRuntime>, ScopeHandle) {
-            let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_sqlite_test"), None);
+        fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
+            poll_once(fut)
+        }
+
+        fn test_runtime_and_scope() -> (Arc<semio_framework_async::testkit::ManualRuntime>, ScopeHandle) {
+            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
+            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_sqlite_test"), None));
             (runtime, scope)
         }
 
@@ -889,9 +871,9 @@ CREATE TABLE IF NOT EXISTS lease (
             std::env::temp_dir().join(format!("db_storage_sqlite_test_{name}_{pid}_{counter}.sqlite3"))
         }
 
-        fn sqlite_scratch(name: &str) -> SqliteStorage {
+        fn sqlite_scratch(name: &str) -> SqliteStorage<semio_framework_async::testkit::ManualRuntime> {
             let (runtime, scope) = test_runtime_and_scope();
-            SqliteStorage::open(runtime, scope, &sqlite_scratch_path(name)).unwrap()
+            poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path(name))).unwrap()
         }
 
         //#region 🔖️WalStorage
@@ -1054,24 +1036,25 @@ CREATE TABLE IF NOT EXISTS lease (
         }
         //#endregion 🔖️LeaseStorage
 
-        //#region 🔖️DbStorage
+        //#region 🔖️DbBackend
         #[test]
-        fn db_storage_accessors_and_capabilities() {
+        fn db_backend_accessors_and_capabilities() {
             let (runtime, scope) = test_runtime_and_scope();
-            let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(SqliteStorage::open(runtime, scope, &sqlite_scratch_path("umbrella")).unwrap());
+            let storage: crate::db_storage::DbBackend<semio_framework_async::testkit::ManualRuntime> =
+                crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path("umbrella"))).unwrap());
             let document: ArtifactId = "doc-umbrella".into();
-            block_on_ready(storage.wal().create_segment(&document, 0)).unwrap();
-            block_on_ready(storage.catalog().cas_root(EpochFence::INITIAL, b"root")).unwrap();
-            block_on_ready(storage.index().write_run(&document, 0, b"run")).unwrap();
-            assert_eq!(block_on_ready(storage.index().read_run(&document, 0)).unwrap(), b"run");
+            block_on_ready(poll_once(storage.wal()).create_segment(&document, 0)).unwrap();
+            block_on_ready(poll_once(storage.catalog()).cas_root(EpochFence::INITIAL, b"root")).unwrap();
+            block_on_ready(poll_once(storage.index()).write_run(&document, 0, b"run")).unwrap();
+            assert_eq!(block_on_ready(poll_once(storage.index()).read_run(&document, 0)).unwrap(), b"run");
 
-            let capabilities = storage.capabilities();
+            let capabilities = poll_once(storage.capabilities());
             assert!(capabilities.durable);
             assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
             assert!(capabilities.supports_fsync);
             assert!(capabilities.supports_cas);
         }
-        //#endregion 🔖️DbStorage
+        //#endregion 🔖️DbBackend
 
         //#region 🔖️Connection
         #[test]
@@ -1079,25 +1062,25 @@ CREATE TABLE IF NOT EXISTS lease (
             let path = sqlite_scratch_path("reopen");
             {
                 let (runtime, scope) = test_runtime_and_scope();
-                let storage = SqliteStorage::open(runtime, scope, &path).unwrap();
+                let storage = poll_once(SqliteStorage::open(runtime, scope, &path)).unwrap();
                 let document: ArtifactId = "doc-reopen".into();
                 block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).unwrap();
-                block_on_ready(storage.payload().put(b"payload persisted across reopen")).unwrap();
+                block_on_ready(storage.put(b"payload persisted across reopen")).unwrap();
             }
             {
                 let (runtime, scope) = test_runtime_and_scope();
-                let storage = SqliteStorage::open(runtime, scope, &path).unwrap();
+                let storage = poll_once(SqliteStorage::open(runtime, scope, &path)).unwrap();
                 let document: ArtifactId = "doc-reopen".into();
                 assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"persisted across reopen");
                 let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
-                assert_eq!(block_on_ready(storage.payload().get(&hash)).unwrap(), b"payload persisted across reopen");
+                assert_eq!(block_on_ready(storage.get(&hash)).unwrap(), b"payload persisted across reopen");
             }
         }
 
         #[test]
         fn in_memory_storage_works_without_a_file() {
             let (runtime, scope) = test_runtime_and_scope();
-            let storage = SqliteStorage::open_in_memory(runtime, scope).unwrap();
+            let storage = poll_once(SqliteStorage::open_in_memory(runtime, scope)).unwrap();
             let document: ArtifactId = "doc-mem".into();
             block_on_ready(storage.create_segment(&document, 0)).unwrap();
             assert_eq!(block_on_ready(storage.append(&document, 0, b"in memory")).unwrap(), 9);

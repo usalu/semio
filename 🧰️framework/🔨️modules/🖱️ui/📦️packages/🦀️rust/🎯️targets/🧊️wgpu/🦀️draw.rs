@@ -59,7 +59,7 @@ pub struct SceneColorTarget {
 }
 
 impl SceneColorTarget {
-    pub fn ensure(device: &wgpu::Device, target: &mut Option<Self>, width: u32, height: u32, format: wgpu::TextureFormat) {
+    pub async fn ensure(device: &wgpu::Device, target: &mut Option<Self>, width: u32, height: u32, format: wgpu::TextureFormat) {
         let width = width.max(1);
         let height = height.max(1);
         if let Some(existing) = target {
@@ -124,27 +124,27 @@ impl SceneColorTarget {
         *target = Some(Self { texture, blur_scratch, blur_scratch_mip_views, sample_view, mip_views, sampler, width, height });
     }
 
-    pub fn mip_view(&self, level: u32) -> &wgpu::TextureView {
+    pub async fn mip_view(&self, level: u32) -> &wgpu::TextureView {
         &self.mip_views[level as usize]
     }
 
-    pub fn sample_view(&self) -> &wgpu::TextureView {
+    pub async fn sample_view(&self) -> &wgpu::TextureView {
         &self.sample_view
     }
 
-    pub fn sampler(&self) -> &wgpu::Sampler {
+    pub async fn sampler(&self) -> &wgpu::Sampler {
         &self.sampler
     }
 
-    pub fn blur_scratch_mip_view(&self, level: u32) -> &wgpu::TextureView {
+    pub async fn blur_scratch_mip_view(&self, level: u32) -> &wgpu::TextureView {
         &self.blur_scratch_mip_views[level as usize]
     }
 
-    fn mip_extent(&self, level: u32) -> wgpu::Extent3d {
+    async fn mip_extent(&self, level: u32) -> wgpu::Extent3d {
         wgpu::Extent3d { width: (self.width >> level).max(1), height: (self.height >> level).max(1), depth_or_array_layers: 1 }
     }
 
-    pub fn copy_mip_to_blur_scratch(&self, encoder: &mut wgpu::CommandEncoder, src_mip: u32) {
+    pub async fn copy_mip_to_blur_scratch(&self, encoder: &mut wgpu::CommandEncoder, src_mip: u32) {
         let extent = self.mip_extent(src_mip);
         encoder.copy_texture_to_texture(
             wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: src_mip, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
@@ -171,43 +171,43 @@ pub struct UiInstance {
 }
 
 impl UiInstance {
-    pub fn solid(rect: [f32; 4], color: Rgba) -> Self {
+    pub async fn solid(rect: [f32; 4], color: Rgba) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_SOLID, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    pub fn rounded(rect: [f32; 4], color: Rgba, radius: f32, border: f32, border_color: Rgba) -> Self {
+    pub async fn rounded(rect: [f32; 4], color: Rgba, radius: f32, border: f32, border_color: Rgba) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_ROUNDED, border_color.a], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
-    pub fn loading_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+    pub async fn loading_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
-    pub fn waiting_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+    pub async fn waiting_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// ✅️ Solid, static at-bounds ring for `UiStatus::Finished` in `color` — no animation.
-    pub fn finished_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+    pub async fn finished_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_FINISHED_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 💫️ Raised-cosine breathing pulse ring for `UiState::Introducing` in `color`; phase comes from `globals._pad.x` in `UI_SHADER`.
-    pub fn introducing_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+    pub async fn introducing_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_INTRODUCING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    pub fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
+    pub async fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_GLYPH, 0.0], uv_rect }
     }
 
-    pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) -> Self {
+    pub async fn textured(rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [0.0, 0.0, KIND_TEXTURED, 0.0], uv_rect }
     }
 
-    pub fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
+    pub async fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
         Self { rect, color: [1.0, 1.0, 1.0, alpha], params: [0.0, 0.0, KIND_RASTER, 0.0], uv_rect }
     }
 }
@@ -230,7 +230,7 @@ pub struct ScissorRect {
 }
 
 impl ScissorRect {
-    pub fn from_rect(rect: crate::wgpu::geometry::Rect, _screen_h: f32) -> Self {
+    pub async fn from_rect(rect: crate::wgpu::geometry::Rect, _screen_h: f32) -> Self {
         let x = rect.x.max(0.0).floor() as u32;
         let y = rect.y.max(0.0).floor() as u32;
         let x2 = (rect.x + rect.w.max(0.0)).max(0.0).ceil() as u32;
@@ -238,7 +238,7 @@ impl ScissorRect {
         Self { x, y, w: x2.saturating_sub(x), h: y2.saturating_sub(y) }
     }
 
-    pub fn intersect(&self, other: &Self) -> Self {
+    pub async fn intersect(&self, other: &Self) -> Self {
         let x0 = self.x.max(other.x);
         let y0 = self.y.max(other.y);
         let x1 = (self.x + self.w).min(other.x + other.w);
@@ -254,7 +254,7 @@ pub struct ClipRegion {
 
 impl ClipRegion {
     /// 🪟️ Builds a bounded orthogonal clip union; callers provide non-overlapping pieces.
-    pub fn from_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
+    pub async fn from_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
         let scissors = rects
             .iter()
             .map(|rect| ScissorRect::from_rect(*rect, screen_h))
@@ -263,7 +263,7 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    fn intersect(&self, other: &Self) -> Self {
+    async fn intersect(&self, other: &Self) -> Self {
         let scissors = self
             .scissors
             .iter()
@@ -273,7 +273,7 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
+    async fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
         let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
         self.scissors
             .iter()
@@ -317,22 +317,22 @@ impl Default for DrawList {
 }
 
 impl DrawList {
-    pub fn set_screen_height(&mut self, height: f32) {
+    pub async fn set_screen_height(&mut self, height: f32) {
         self.screen_h = height;
     }
 
-    fn active_foreground_of(&self) -> Option<usize> {
+    async fn active_foreground_of(&self) -> Option<usize> {
         self.glass_content_stack.last().copied()
     }
 
-    fn active_layer(&mut self) -> &mut DrawLayer {
+    async fn active_layer(&mut self) -> &mut DrawLayer {
         if self.layers.is_empty() {
             self.layers.push(DrawLayer::default());
         }
         self.layers.last_mut().expect("layer")
     }
 
-    pub fn clear(&mut self) {
+    pub async fn clear(&mut self) {
         self.scene_passes.clear();
         self.layers.clear();
         self.layers.push(DrawLayer::default());
@@ -342,7 +342,7 @@ impl DrawList {
         self.glass_content_stack.clear();
     }
 
-    pub fn push_scissor(&mut self, rect: crate::wgpu::geometry::Rect) {
+    pub async fn push_scissor(&mut self, rect: crate::wgpu::geometry::Rect) {
         let mut scissor = ScissorRect::from_rect(rect, self.screen_h);
         if let Some(parent) = self.scissor_stack.last() {
             scissor = parent.intersect(&scissor);
@@ -351,14 +351,14 @@ impl DrawList {
         self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
-    pub fn pop_scissor(&mut self) {
+    pub async fn pop_scissor(&mut self) {
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
         self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
     /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
-    pub fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
+    pub async fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
         let mut clip = ClipRegion::from_rects(rects, self.screen_h);
         if let Some(parent) = self.clip_stack.last() {
             clip = parent.intersect(&clip);
@@ -367,12 +367,12 @@ impl DrawList {
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
-    pub fn end_silhouette_clip(&mut self) {
+    pub async fn end_silhouette_clip(&mut self) {
         self.clip_stack.pop();
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
-    pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
+    pub async fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
         if self.layers.is_empty() {
             self.layers.push(DrawLayer::default());
         }
@@ -384,31 +384,31 @@ impl DrawList {
         self.scene_passes.push(pass);
     }
 
-    pub fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
+    pub async fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
         self.active_layer().ui_instances.push(UiInstance::solid(rect, color));
     }
 
-    pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
+    pub async fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
         self.active_layer().ui_instances.push(UiInstance::rounded(rect, color, radius, 0.0, color));
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
-    pub fn push_loading_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+    pub async fn push_loading_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
         self.active_layer().ui_instances.push(UiInstance::loading_border(rect, color, radius, stroke));
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
-    pub fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+    pub async fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
         self.active_layer().ui_instances.push(UiInstance::waiting_border(rect, color, radius, stroke));
     }
 
     /// ✅️ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
-    pub fn push_finished_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+    pub async fn push_finished_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
         self.active_layer().ui_instances.push(UiInstance::finished_border(rect, color, radius, stroke));
     }
 
     /// 💫️ Raised-cosine breathing pulse ring around `rect`, in `color` — `UiState::Introducing`.
-    pub fn push_introducing_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+    pub async fn push_introducing_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
         self.active_layer().ui_instances.push(UiInstance::introducing_border(rect, color, radius, stroke));
     }
 
@@ -416,43 +416,43 @@ impl DrawList {
     /// from `Theme::glass(level)` themselves (see
     /// `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
-    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
+    pub async fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
         let index = self.glass_regions.len();
         self.glass_regions.push(GlassRegion { rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
     }
 
-    pub fn begin_glass_content(&mut self, region: usize) {
+    pub async fn begin_glass_content(&mut self, region: usize) {
         self.glass_content_stack.push(region);
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), ..DrawLayer::default() });
     }
 
-    pub fn end_glass_content(&mut self) {
+    pub async fn end_glass_content(&mut self) {
         self.glass_content_stack.pop();
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
-    pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
+    pub async fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
         self.active_layer().ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
-    pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
+    pub async fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
         self.active_layer().overlay_ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
-    pub fn push_solid_overlay(&mut self, rect: [f32; 4], color: Rgba) {
+    pub async fn push_solid_overlay(&mut self, rect: [f32; 4], color: Rgba) {
         self.active_layer().overlay_ui_instances.push(UiInstance::solid(rect, color));
     }
 
-    pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
+    pub async fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
         self.active_layer().ui_instances.push(UiInstance::textured(rect, uv_rect, color));
     }
 
-    pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+    pub async fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
         self.active_layer().raster_instances.push((key.to_string(), UiInstance::raster(rect, uv_rect, alpha)));
     }
 
-    pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+    pub async fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
         let dx = x1 - x0;
         let dy = y1 - y0;
         let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -470,7 +470,7 @@ impl DrawList {
         ]);
     }
 
-    pub fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+    pub async fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
         let dx = x1 - x0;
         let dy = y1 - y0;
         let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -488,7 +488,7 @@ impl DrawList {
         ]);
     }
 
-    pub fn push_triangle_fan(&mut self, points: &[[f32; 2]], color: Rgba) {
+    pub async fn push_triangle_fan(&mut self, points: &[[f32; 2]], color: Rgba) {
         if points.len() < 3 {
             return;
         }
@@ -501,7 +501,7 @@ impl DrawList {
         }
     }
 
-    pub fn push_triangle_fan_overlay(&mut self, points: &[[f32; 2]], color: Rgba) {
+    pub async fn push_triangle_fan_overlay(&mut self, points: &[[f32; 2]], color: Rgba) {
         if points.len() < 3 {
             return;
         }
@@ -515,14 +515,14 @@ impl DrawList {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn push_dashed_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32, dash: f32, gap: f32) {
+    pub async fn push_dashed_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32, dash: f32, gap: f32) {
         for (sx0, sy0, sx1, sy1) in dashed_line_segments(x0, y0, x1, y1, dash, gap) {
             self.push_line(sx0, sy0, sx1, sy1, color, width);
         }
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn push_dashed_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32, dash: f32, gap: f32) {
+    pub async fn push_dashed_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32, dash: f32, gap: f32) {
         for (sx0, sy0, sx1, sy1) in dashed_line_segments(x0, y0, x1, y1, dash, gap) {
             self.push_line_overlay(sx0, sy0, sx1, sy1, color, width);
         }
@@ -534,15 +534,15 @@ pub const SELECTION_MARQUEE_FILL_ALPHA: f32 = 0.12;
 pub const SELECTION_MARQUEE_DASH_LEN: f32 = 5.0;
 pub const SELECTION_MARQUEE_DASH_GAP: f32 = 4.0;
 
-pub fn selection_marquee_stroke(theme: &Theme) -> Rgba {
+pub async fn selection_marquee_stroke(theme: &Theme) -> Rgba {
     theme.selected
 }
 
-pub fn selection_marquee_fill(theme: &Theme) -> Rgba {
+pub async fn selection_marquee_fill(theme: &Theme) -> Rgba {
     theme.selected.with_alpha(SELECTION_MARQUEE_FILL_ALPHA)
 }
 
-fn dashed_line_segments(x0: f32, y0: f32, x1: f32, y1: f32, dash: f32, gap: f32) -> Vec<(f32, f32, f32, f32)> {
+async fn dashed_line_segments(x0: f32, y0: f32, x1: f32, y1: f32, dash: f32, gap: f32) -> Vec<(f32, f32, f32, f32)> {
     let dx = x1 - x0;
     let dy = y1 - y0;
     let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -569,7 +569,7 @@ mod selection_marquee_tests {
     use crate::wgpu::theme::Theme;
 
     #[test]
-    fn dashed_line_segments_emit_dashes_along_segment() {
+    async fn dashed_line_segments_emit_dashes_along_segment() {
         let segments = dashed_line_segments(0.0, 0.0, 20.0, 0.0, 5.0, 4.0);
         assert!(!segments.is_empty());
         let span: f32 = segments.iter().map(|(x0, _, x1, _)| x1 - x0).sum();
@@ -577,7 +577,7 @@ mod selection_marquee_tests {
     }
 
     #[test]
-    fn selection_marquee_colors_use_active_token_only() {
+    async fn selection_marquee_colors_use_active_token_only() {
         let theme = Theme::default();
         assert_eq!(selection_marquee_stroke(&theme), theme.selected);
         assert_eq!(selection_marquee_fill(&theme).a, SELECTION_MARQUEE_FILL_ALPHA);
@@ -585,7 +585,7 @@ mod selection_marquee_tests {
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
-fn push_marquee_segment(draw: &mut DrawList, overlay: bool, x0: f32, y0: f32, x1: f32, y1: f32, stroke: Rgba, dashed: bool) {
+async fn push_marquee_segment(draw: &mut DrawList, overlay: bool, x0: f32, y0: f32, x1: f32, y1: f32, stroke: Rgba, dashed: bool) {
     if dashed {
         if overlay {
             draw.push_dashed_line_overlay(x0, y0, x1, y1, stroke, SELECTION_MARQUEE_STROKE_WIDTH, SELECTION_MARQUEE_DASH_LEN, SELECTION_MARQUEE_DASH_GAP);
@@ -599,7 +599,7 @@ fn push_marquee_segment(draw: &mut DrawList, overlay: bool, x0: f32, y0: f32, x1
     }
 }
 
-pub fn paint_selection_marquee(draw: &mut DrawList, theme: &Theme, crossing: bool, lasso: bool, points: &[[f32; 2]], overlay: bool) {
+pub async fn paint_selection_marquee(draw: &mut DrawList, theme: &Theme, crossing: bool, lasso: bool, points: &[[f32; 2]], overlay: bool) {
     if points.len() < 2 {
         return;
     }
@@ -639,7 +639,7 @@ pub fn paint_selection_marquee(draw: &mut DrawList, theme: &Theme, crossing: boo
     push_marquee_segment(draw, overlay, start[0], end[1], start[0], start[1], stroke, dashed);
 }
 
-pub fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
+pub async fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
     if points.len() < 3 {
         return Vec::new();
     }
@@ -693,7 +693,7 @@ pub fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
     triangles
 }
 
-fn point_in_triangle(p: [f32; 2], a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> bool {
+async fn point_in_triangle(p: [f32; 2], a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> bool {
     let d1 = sign(p, a, b);
     let d2 = sign(p, b, c);
     let d3 = sign(p, c, a);
@@ -728,7 +728,7 @@ pub struct World3dGpuInstance {
 }
 
 impl World3dGpuInstance {
-    pub fn from_instance(model: [f32; 16], color: [f32; 4], selected: bool, hovered: bool) -> Self {
+    pub async fn from_instance(model: [f32; 16], color: [f32; 4], selected: bool, hovered: bool) -> Self {
         Self {
             model0: [model[0], model[1], model[2], model[3]],
             model1: [model[4], model[5], model[6], model[7]],
@@ -751,7 +751,7 @@ pub struct MeshGpuTable {
     meshes: std::collections::HashMap<String, GpuMeshBuffers>,
 }
 
-pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32]) -> u64 {
+pub async fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32]) -> u64 {
     let mut hash = 0xcbf29ce484222325u64;
     for value in positions.iter().chain(normals.iter()) {
         hash ^= value.to_bits() as u64;
@@ -765,19 +765,19 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 }
 
 impl MeshGpuTable {
-    pub fn get(&self, key: &str) -> Option<&GpuMeshBuffers> {
+    pub async fn get(&self, key: &str) -> Option<&GpuMeshBuffers> {
         self.meshes.get(key)
     }
 
-    pub fn lookup_key(mesh_key: &str, version: u64) -> String {
+    pub async fn lookup_key(mesh_key: &str, version: u64) -> String {
         format!("{mesh_key}:{version}")
     }
 
-    pub fn get_versioned(&self, mesh_key: &str, version: u64) -> Option<&GpuMeshBuffers> {
+    pub async fn get_versioned(&self, mesh_key: &str, version: u64) -> Option<&GpuMeshBuffers> {
         self.get(&Self::lookup_key(mesh_key, version))
     }
 
-    pub fn ensure_mesh(&mut self, device: &wgpu::Device, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
+    pub async fn ensure_mesh(&mut self, device: &wgpu::Device, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
         let store_key = format!("{key}:{version}");
         if self.meshes.contains_key(&store_key) {
             return;
@@ -796,7 +796,7 @@ impl MeshGpuTable {
         self.meshes.insert(store_key, GpuMeshBuffers { vertex_buffer, index_buffer, index_count: indices.len() as u32 });
     }
 
-    pub fn evict_mesh(&mut self, key: &str) {
+    pub async fn evict_mesh(&mut self, key: &str) {
         let prefix = format!("{key}:");
         self.meshes.retain(|existing, _| !existing.starts_with(&prefix));
     }
@@ -811,11 +811,11 @@ pub struct GrowBuffer {
 }
 
 impl GrowBuffer {
-    pub fn slice(&self) -> Option<wgpu::BufferSlice<'_>> {
+    pub async fn slice(&self) -> Option<wgpu::BufferSlice<'_>> {
         self.buffer.as_ref().map(|buffer| buffer.slice(..))
     }
 
-    pub fn upload<T: Pod>(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, data: &[T], usage: wgpu::BufferUsages, label: &str) -> Option<wgpu::BufferSlice<'_>> {
+    pub async fn upload<T: Pod>(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, data: &[T], usage: wgpu::BufferUsages, label: &str) -> Option<wgpu::BufferSlice<'_>> {
         if data.is_empty() {
             return None;
         }
@@ -872,7 +872,7 @@ struct WorldGlobalsRing {
 }
 
 impl WorldGlobalsRing {
-    fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, initial_slots: u32) -> Self {
+    async fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, initial_slots: u32) -> Self {
         let slot_stride = WORLD_GLOBALS_SLOT_SIZE as u32;
         let capacity_slots = initial_slots.max(1);
         let buffer =
@@ -885,7 +885,7 @@ impl WorldGlobalsRing {
         Self { buffer, bind_group, slot_stride, capacity_slots }
     }
 
-    fn ensure_slots(&mut self, device: &wgpu::Device, layout: &wgpu::BindGroupLayout, slots: u32) {
+    async fn ensure_slots(&mut self, device: &wgpu::Device, layout: &wgpu::BindGroupLayout, slots: u32) {
         if slots <= self.capacity_slots {
             return;
         }
@@ -903,19 +903,19 @@ impl WorldGlobalsRing {
         });
     }
 
-    fn write_passes(&self, queue: &wgpu::Queue, passes: &[World3dGlobals]) {
+    async fn write_passes(&self, queue: &wgpu::Queue, passes: &[World3dGlobals]) {
         for (index, globals) in passes.iter().enumerate() {
             let offset = (index as u64) * self.slot_stride as u64;
             queue.write_buffer(&self.buffer, offset, bytemuck::bytes_of(globals));
         }
     }
 
-    fn offset_for_slot(&self, slot: u32) -> u32 {
+    async fn offset_for_slot(&self, slot: u32) -> u32 {
         slot * self.slot_stride
     }
 }
 
-fn sign(p1: [f32; 2], p2: [f32; 2], p3: [f32; 2]) -> f32 {
+async fn sign(p1: [f32; 2], p2: [f32; 2], p3: [f32; 2]) -> f32 {
     (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 }
 
@@ -935,11 +935,11 @@ impl Default for IconAtlas {
 }
 
 impl IconAtlas {
-    pub fn from_packed(width: u32, height: u32, pixels: Vec<u8>, entries: Vec<(String, [f32; 4])>) -> Self {
+    pub async fn from_packed(width: u32, height: u32, pixels: Vec<u8>, entries: Vec<(String, [f32; 4])>) -> Self {
         Self { width, height, pixels, entries: entries.into_iter().collect() }
     }
 
-    pub fn icon_uv(&self, icon_id: &str) -> Option<[f32; 4]> {
+    pub async fn icon_uv(&self, icon_id: &str) -> Option<[f32; 4]> {
         self.entries.get(icon_id).copied()
     }
 }
@@ -958,13 +958,13 @@ pub struct RasterTextureTable {
 }
 
 impl RasterTextureTable {
-    pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
+    pub async fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("raster_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
         Self { textures: std::collections::HashMap::new(), layout: layout.clone(), sampler }
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn ensure_raster(
+    pub async fn ensure_raster(
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -1018,12 +1018,12 @@ impl RasterTextureTable {
         self.textures.insert(key.to_string(), RasterTexture { texture, bind_group, width, height });
     }
 
-    pub fn get(&self, key: &str) -> Option<&RasterTexture> {
+    pub async fn get(&self, key: &str) -> Option<&RasterTexture> {
         self.textures.get(key)
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn replace_gpu_bind_group(
+    pub async fn replace_gpu_bind_group(
         &mut self,
         device: &wgpu::Device,
         globals_buffer: &wgpu::Buffer,
@@ -1098,14 +1098,14 @@ impl Clone for LayerBatchFilter {
     }
 }
 
-fn layer_matches_filter(layer: &DrawLayer, filter: LayerBatchFilter) -> bool {
+async fn layer_matches_filter(layer: &DrawLayer, filter: LayerBatchFilter) -> bool {
     match filter {
         LayerBatchFilter::Backdrop => layer.foreground_of.is_none(),
         LayerBatchFilter::Foreground => layer.foreground_of.is_some(),
     }
 }
 
-fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
+async fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
     let mut batches = Vec::new();
@@ -1126,7 +1126,7 @@ fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInst
     (all_ui, all_vec, batches)
 }
 
-fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
+async fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
     let mut batches = Vec::new();
@@ -1146,7 +1146,7 @@ fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Ve
     (all_ui, all_vec, batches)
 }
 
-fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, width: f32, height: f32) {
+async fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, width: f32, height: f32) {
     if let Some(scissor) = scissor {
         pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
     } else {
@@ -1154,7 +1154,7 @@ fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect
     }
 }
 
-fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
+async fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
     if let Some(clip) = clip {
         return clip.effective_scissors(scissor, width, height).into_iter().map(Some).collect();
     }
@@ -1166,17 +1166,17 @@ fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width
     }
 }
 
-fn content_stencil_state() -> wgpu::StencilState {
+async fn content_stencil_state() -> wgpu::StencilState {
     let face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Equal, fail_op: wgpu::StencilOperation::Keep, depth_fail_op: wgpu::StencilOperation::Keep, pass_op: wgpu::StencilOperation::Keep };
     wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0x00 }
 }
 
-fn mask_stencil_state() -> wgpu::StencilState {
+async fn mask_stencil_state() -> wgpu::StencilState {
     let face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Always, fail_op: wgpu::StencilOperation::Replace, depth_fail_op: wgpu::StencilOperation::Replace, pass_op: wgpu::StencilOperation::Replace };
     wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0xff }
 }
 
-fn stencil_attachment<'a>(view: &'a wgpu::TextureView, depth_load: wgpu::LoadOp<f32>, stencil_load: wgpu::LoadOp<u32>) -> wgpu::RenderPassDepthStencilAttachment<'a> {
+async fn stencil_attachment<'a>(view: &'a wgpu::TextureView, depth_load: wgpu::LoadOp<f32>, stencil_load: wgpu::LoadOp<u32>) -> wgpu::RenderPassDepthStencilAttachment<'a> {
     wgpu::RenderPassDepthStencilAttachment {
         view,
         depth_ops: Some(wgpu::Operations { load: depth_load, store: wgpu::StoreOp::Store }),
@@ -1184,7 +1184,7 @@ fn stencil_attachment<'a>(view: &'a wgpu::TextureView, depth_load: wgpu::LoadOp<
     }
 }
 
-fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
+async fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
     let first = *scissors.first()?;
     let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x + first.w, first.y + first.h);
     for scissor in &scissors[1..] {
@@ -1196,7 +1196,7 @@ fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
     Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
 }
 
-fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
+async fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
     match (a, b) {
         (Some(a), Some(b)) => union_scissors(&[a, b]),
         (Some(value), None) | (None, Some(value)) => Some(value),
@@ -1204,7 +1204,7 @@ fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Optio
     }
 }
 
-fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<UiInstance>, Option<ScissorRect>) {
+async fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<UiInstance>, Option<ScissorRect>) {
     let white = Rgba::new(1.0, 1.0, 1.0, 1.0);
     let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
     let pieces: Vec<ScissorRect> = layer_scissors(scissor, clip, width, height).into_iter().map(|piece| piece.unwrap_or(viewport)).collect();
@@ -1217,7 +1217,7 @@ fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previ
     (instances, current_bounds)
 }
 
-fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<UiInstance>, Vec<(u32, u32)>) {
+async fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<UiInstance>, Vec<(u32, u32)>) {
     let mut instances = Vec::new();
     let mut ranges = Vec::with_capacity(batches.len());
     let mut previous_bounds = None;
@@ -1233,7 +1233,7 @@ fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<Ui
 }
 
 impl UiPipelines {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
+    pub async fn new(device: &wgpu::Device, queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
         let globals_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("ui_globals_layout"),
             entries: &[
@@ -1698,35 +1698,35 @@ impl UiPipelines {
         }
     }
 
-    pub fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+    pub async fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
         &self.bind_group_layout
     }
 
-    pub fn globals_buffer(&self) -> &wgpu::Buffer {
+    pub async fn globals_buffer(&self) -> &wgpu::Buffer {
         &self.globals_buffer
     }
 
-    pub fn glyph_view(&self) -> wgpu::TextureView {
+    pub async fn glyph_view(&self) -> wgpu::TextureView {
         self.glyph_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 
-    pub fn glyph_sampler(&self) -> &wgpu::Sampler {
+    pub async fn glyph_sampler(&self) -> &wgpu::Sampler {
         &self.glyph_sampler
     }
 
-    pub fn icon_view(&self) -> wgpu::TextureView {
+    pub async fn icon_view(&self) -> wgpu::TextureView {
         self.icon_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 
-    pub fn icon_sampler(&self) -> &wgpu::Sampler {
+    pub async fn icon_sampler(&self) -> &wgpu::Sampler {
         &self.icon_sampler
     }
 
-    pub fn depth_format(&self) -> wgpu::TextureFormat {
+    pub async fn depth_format(&self) -> wgpu::TextureFormat {
         wgpu::TextureFormat::Depth24PlusStencil8
     }
 
-    fn prepare_world_passes(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<Option<usize>>) {
+    async fn prepare_world_passes(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<Option<usize>>) {
         let mut prepared = Vec::new();
         let mut all_instances = Vec::new();
         let mut all_lines = Vec::new();
@@ -1779,7 +1779,7 @@ impl UiPipelines {
         (prepared, all_instances, all_lines, pass_index_map)
     }
 
-    fn upload_world_passes(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, draw: &DrawList, frame_buffers: &mut FrameBuffers, filter: LayerBatchFilter) -> Option<(Vec<PreparedWorldPass>, Vec<Option<usize>>)> {
+    async fn upload_world_passes(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, draw: &DrawList, frame_buffers: &mut FrameBuffers, filter: LayerBatchFilter) -> Option<(Vec<PreparedWorldPass>, Vec<Option<usize>>)> {
         if draw.scene_passes.is_empty() {
             return None;
         }
@@ -1803,7 +1803,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn draw_world_pass_at<'a>(
+    async fn draw_world_pass_at<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
         mesh_store: &MeshGpuTable,
@@ -1856,7 +1856,7 @@ impl UiPipelines {
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
 
-    fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuTable, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
+    async fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuTable, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
         let store_key = MeshGpuTable::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
         let Some(mesh) = mesh_store.get(&store_key) else {
             return;
@@ -1868,7 +1868,7 @@ impl UiPipelines {
         pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
     }
 
-    fn draw_ui_instances<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, instance_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
+    async fn draw_ui_instances<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, instance_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
         if count == 0 {
             return;
         }
@@ -1879,7 +1879,7 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
-    fn draw_silhouette_mask<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, mask_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32, width: f32, height: f32) {
+    async fn draw_silhouette_mask<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, mask_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32, width: f32, height: f32) {
         if count == 0 {
             pass.set_stencil_reference(1);
             return;
@@ -1899,7 +1899,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn draw_raster_layers<'a>(
+    async fn draw_raster_layers<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
         raster_store: &RasterTextureTable,
@@ -1964,7 +1964,7 @@ impl UiPipelines {
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
 
-    fn draw_vector_vertices<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, vector_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
+    async fn draw_vector_vertices<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, vector_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
         if count == 0 {
             return;
         }
@@ -1975,7 +1975,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn render_interleaved_layers<'a>(
+    async fn render_interleaved_layers<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
         draw: &DrawList,
@@ -2053,11 +2053,11 @@ impl UiPipelines {
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
 
-    pub fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32, time_seconds: f32) {
+    pub async fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32, time_seconds: f32) {
         queue.write_buffer(&self.globals_buffer, 0, bytemuck::bytes_of(&UiGlobals { screen_size: [width, height], _pad: [time_seconds, 0.0] }));
     }
 
-    pub fn upload_glyph_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
+    pub async fn upload_glyph_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
         queue.write_texture(
             wgpu::TexelCopyTextureInfo { texture: &self.glyph_texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
             pixels,
@@ -2066,7 +2066,7 @@ impl UiPipelines {
         );
     }
 
-    pub fn upload_icon_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
+    pub async fn upload_icon_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
         queue.write_texture(
             wgpu::TexelCopyTextureInfo { texture: &self.icon_texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
             pixels,
@@ -2076,7 +2076,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn render_scene_content<'a>(
+    pub async fn render_scene_content<'a>(
         &'a mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -2147,14 +2147,14 @@ impl UiPipelines {
         }
     }
 
-    fn has_glass_foreground(draw: &DrawList) -> bool {
+    async fn has_glass_foreground(draw: &DrawList) -> bool {
         let layer_content = draw.layers.iter().any(|layer| layer.foreground_of.is_some() && (!layer.ui_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.raster_instances.is_empty()));
         let scene_content = draw.scene_passes.iter().any(|pass| layer_matches_filter(&draw.layers[pass.layer_index], LayerBatchFilter::Foreground));
         layer_content || scene_content
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn render_glass_foreground<'a>(
+    async fn render_glass_foreground<'a>(
         &'a mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -2225,7 +2225,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn composite_to_swapchain<'a>(
+    pub async fn composite_to_swapchain<'a>(
         &'a mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -2264,7 +2264,7 @@ impl UiPipelines {
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     #[allow(dead_code, reason = "top-level UiPipelines render entrypoint; not yet called internally, likely wired externally by framework/renderer/wgpu")]
-    pub fn render<'a>(
+    pub async fn render<'a>(
         &'a mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -2285,7 +2285,7 @@ impl UiPipelines {
         self.composite_to_swapchain(device, queue, encoder, view, scene, depth_view, draw, overlay, mesh_store, raster_store, frame_buffers, width, height);
     }
 
-    fn run_blur_chain(&self, device: &wgpu::Device, queue: &wgpu::Queue, scene: &SceneColorTarget) {
+    async fn run_blur_chain(&self, device: &wgpu::Device, queue: &wgpu::Queue, scene: &SceneColorTarget) {
         for mip in 1..SCENE_MIP_LEVELS {
             let src_mip = mip - 1;
             queue.write_buffer(&self.blur_globals_buffer, 0, bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }));
@@ -2322,7 +2322,7 @@ impl UiPipelines {
         }
     }
 
-    fn blit_scene_to_swapchain(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView, scene: &SceneColorTarget) {
+    async fn blit_scene_to_swapchain(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView, scene: &SceneColorTarget) {
         let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("scene_blit_bind_group"),
             layout: &self.scene_bind_group_layout,
@@ -2346,7 +2346,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn composite_glass_regions(
+    async fn composite_glass_regions(
         &self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -2392,7 +2392,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn render_overlay<'a>(&'a self, device: &wgpu::Device, queue: &wgpu::Queue, pass: &mut wgpu::RenderPass<'a>, overlay: &DrawList, frame_buffers: &'a mut FrameBuffers, width: f32, height: f32) {
+    pub async fn render_overlay<'a>(&'a self, device: &wgpu::Device, queue: &wgpu::Queue, pass: &mut wgpu::RenderPass<'a>, overlay: &DrawList, frame_buffers: &'a mut FrameBuffers, width: f32, height: f32) {
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
 
@@ -2438,7 +2438,7 @@ mod tests {
     use crate::wgpu::kernel_3d_scene::ScenePass3d;
 
     #[test]
-    fn scissor_intersects_child() {
+    async fn scissor_intersects_child() {
         let a = ScissorRect { x: 0, y: 0, w: 100, h: 100 };
         let b = ScissorRect { x: 50, y: 50, w: 100, h: 100 };
         let c = a.intersect(&b);
@@ -2447,21 +2447,21 @@ mod tests {
     }
 
     #[test]
-    fn scissor_covers_fractional_rect_edges_without_pixel_seams() {
+    async fn scissor_covers_fractional_rect_edges_without_pixel_seams() {
         assert_eq!(ScissorRect::from_rect(Rect::new(10.25, 20.75, 30.5, 40.5), 100.0), ScissorRect { x: 10, y: 20, w: 31, h: 42 });
     }
 
     //#region SilhouetteClipTests
 
     #[test]
-    fn clip_region_preserves_disjoint_cutouts_and_intersects_scissor() {
+    async fn clip_region_preserves_disjoint_cutouts_and_intersects_scissor() {
         let clip = ClipRegion::from_rects(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(80.0, 0.0, 20.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)], 100.0);
         let scissors = clip.effective_scissors(Some(ScissorRect { x: 10, y: 0, w: 80, h: 100 }), 100.0, 100.0);
         assert_eq!(scissors, vec![ScissorRect { x: 10, y: 0, w: 30, h: 20 }, ScissorRect { x: 80, y: 0, w: 10, h: 20 }, ScissorRect { x: 10, y: 20, w: 80, h: 80 }]);
     }
 
     #[test]
-    fn draw_list_nests_and_restores_clip_regions() {
+    async fn draw_list_nests_and_restores_clip_regions() {
         let mut draw = DrawList::default();
         draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 100.0, 100.0)]);
         draw.begin_silhouette_clip(&[Rect::new(25.0, 25.0, 100.0, 100.0)]);
@@ -2473,7 +2473,7 @@ mod tests {
     }
 
     #[test]
-    fn glass_foreground_inherits_active_silhouette_clip() {
+    async fn glass_foreground_inherits_active_silhouette_clip() {
         let mut draw = DrawList::default();
         draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)]);
         let glass = draw.push_glass([0.0, 0.0, 40.0, 20.0], 0.0, crate::wgpu::theme::Theme::default().glass(crate::wgpu::theme::Level::Window));
@@ -2482,7 +2482,7 @@ mod tests {
     }
 
     #[test]
-    fn silhouette_stencil_states_write_masks_then_require_equality() {
+    async fn silhouette_stencil_states_write_masks_then_require_equality() {
         let mask = mask_stencil_state();
         assert_eq!(mask.front.compare, wgpu::CompareFunction::Always);
         assert_eq!(mask.front.pass_op, wgpu::StencilOperation::Replace);
@@ -2494,7 +2494,7 @@ mod tests {
     }
 
     #[test]
-    fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
+    async fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
         let previous = Some(ScissorRect { x: 10, y: 10, w: 30, h: 20 });
         let clip = ClipRegion { scissors: vec![ScissorRect { x: 80, y: 15, w: 20, h: 25 }] };
         let (instances, current) = mask_instances(None, Some(&clip), previous, 500.0, 400.0);
@@ -2504,7 +2504,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_silhouette_clip_writes_no_visible_stencil_region() {
+    async fn empty_silhouette_clip_writes_no_visible_stencil_region() {
         let empty = ClipRegion { scissors: Vec::new() };
         let (instances, current) = mask_instances(None, Some(&empty), None, 500.0, 400.0);
         assert!(instances.is_empty(), "a cleared pass needs neither a reset nor a reference-one mask draw");
@@ -2514,7 +2514,7 @@ mod tests {
     //#endregion SilhouetteClipTests
 
     #[test]
-    fn scissor_from_rect_uses_top_left_origin() {
+    async fn scissor_from_rect_uses_top_left_origin() {
         let scissor = ScissorRect::from_rect(Rect::new(10.0, 20.0, 80.0, 60.0), 720.0);
         assert_eq!(scissor.x, 10);
         assert_eq!(scissor.y, 20);
@@ -2523,7 +2523,7 @@ mod tests {
     }
 
     #[test]
-    fn draw_list_push_scissor_splits_layers() {
+    async fn draw_list_push_scissor_splits_layers() {
         let mut draw = DrawList::default();
         draw.set_screen_height(200.0);
         draw.push_solid([0.0, 0.0, 200.0, 200.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
@@ -2534,20 +2534,20 @@ mod tests {
     }
 
     #[test]
-    fn ear_clip_produces_triangles() {
+    async fn ear_clip_produces_triangles() {
         let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
         let tris = ear_clip_polygon(&square);
         assert!(tris.len() >= 3);
     }
 
     #[test]
-    fn world_globals_slot_size_is_aligned() {
+    async fn world_globals_slot_size_is_aligned() {
         const { assert!(WORLD_GLOBALS_SLOT_SIZE >= 80) };
         assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
     }
 
     #[test]
-    fn scene_pass_records_layer_watermarks() {
+    async fn scene_pass_records_layer_watermarks() {
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 10.0, 10.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
         draw.push_solid([1.0, 1.0, 8.0, 8.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
@@ -2562,7 +2562,7 @@ mod tests {
     }
 
     #[test]
-    fn mesh_instances_without_lines_are_valid_world_pass() {
+    async fn mesh_instances_without_lines_are_valid_world_pass() {
         use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
 
         let pass = ScenePass3d {
@@ -2581,14 +2581,14 @@ mod tests {
     }
 
     #[test]
-    fn mesh_content_version_changes_with_indices() {
+    async fn mesh_content_version_changes_with_indices() {
         let v0 = mesh_content_version(&[0.0, 0.0, 0.0], &[0.0, 1.0, 0.0], &[0, 1, 2]);
         let v1 = mesh_content_version(&[0.0, 0.0, 0.0], &[0.0, 1.0, 0.0], &[0, 2, 1]);
         assert_ne!(v0, v1);
     }
 
     #[test]
-    fn overlay_layers_collected_separately_from_backdrop_ui() {
+    async fn overlay_layers_collected_separately_from_backdrop_ui() {
         use super::{build_layer_batches, build_overlay_layer_batches, LayerBatchFilter};
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
@@ -2604,7 +2604,7 @@ mod tests {
     }
 
     #[test]
-    fn glass_content_layers_tagged_with_foreground_of() {
+    async fn glass_content_layers_tagged_with_foreground_of() {
         use super::{Level, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
@@ -2622,7 +2622,7 @@ mod tests {
     }
 
     #[test]
-    fn glass_foreground_layers_excluded_from_backdrop_batches() {
+    async fn glass_foreground_layers_excluded_from_backdrop_batches() {
         use super::{build_layer_batches, LayerBatchFilter, Level, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
@@ -2642,7 +2642,7 @@ mod tests {
     }
 
     #[test]
-    fn glass_scissor_inherits_foreground_tag() {
+    async fn glass_scissor_inherits_foreground_tag() {
         use super::{Level, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
@@ -2661,7 +2661,7 @@ mod tests {
     /// "chrome" variant — a level's attached chrome (title caps, ribbons, tab bars, rails) always
     /// renders the exact same `glass(level)` as its body, so one level never shows two appearances.
     #[test]
-    fn glass_alpha_and_blur_are_formula_derived_per_level() {
+    async fn glass_alpha_and_blur_are_formula_derived_per_level() {
         use super::{Level, Theme};
         let theme = Theme::default();
         let ordered = [Level::Base, Level::Window, Level::Pane, Level::Panel, Level::Dialog, Level::Menu];

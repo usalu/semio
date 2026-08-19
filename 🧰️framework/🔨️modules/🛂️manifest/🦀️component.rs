@@ -55,11 +55,11 @@ pub struct PlatformKeybinding {
 }
 
 impl PlatformKeybinding {
-    pub fn new(chord: impl Into<String>) -> Self {
+    pub async fn new(chord: impl Into<String>) -> Self {
         Self { chord: chord.into(), platform: None }
     }
 
-    pub fn for_platform(chord: impl Into<String>, platform: Platform) -> Self {
+    pub async fn for_platform(chord: impl Into<String>, platform: Platform) -> Self {
         Self { chord: chord.into(), platform: Some(platform) }
     }
 }
@@ -209,7 +209,7 @@ pub struct ActionArgOption {
 }
 
 impl ActionArgOption {
-    pub fn new(value: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn new(value: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self { value: value.into(), label: label.into() }
     }
 }
@@ -300,70 +300,70 @@ pub struct ActionArgDef {
 }
 
 impl ActionArgDef {
-    fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
+    async fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
         Self { id: id.into(), label: label.into(), schema, presentation: None, required: false, default: None, description: None }
     }
 
-    fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
+    async fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
         ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format }
     }
 
     /// @emoji 🔤️ A free-text argument.
-    pub fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, Self::plain_string(None))
     }
 
     /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
-    pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
     }
 
     /// @emoji 🎚️ A bounded slider argument.
-    pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
+    pub async fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
         let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
         def.presentation = Some(ArgPresentation::Slider);
         def
     }
 
     /// @emoji 🔘️ A boolean toggle argument.
-    pub fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Boolean)
     }
 
     /// @emoji 🔽️ A single-choice select argument.
-    pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+    pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
         Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
     }
 
     /// @emoji 🧭️ A three-component vector argument.
-    pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
     }
 
     /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
-    pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
+    pub async fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
     }
 
     /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
-    pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
+    pub async fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
-    pub fn required(mut self) -> Self {
+    pub async fn required(mut self) -> Self {
         self.required = true;
         self
     }
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
-    pub fn default_value(mut self, value: impl Serialize) -> Self {
+    pub async fn default_value(mut self, value: impl Serialize) -> Self {
         self.default = dsl::to_dsl_value(&value).ok();
         self
     }
 
     /// @emoji 💬️ Attaches a description shown alongside the field.
-    pub fn describe(mut self, description: impl Into<String>) -> Self {
+    pub async fn describe(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
@@ -373,7 +373,7 @@ impl ActionArgDef {
     /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
     /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select over
     /// any format; a `Slider` presentation or a fully-bounded `Number` wins Slider over plain Number.
-    pub fn control(&self) -> ActionArgControl {
+    pub async fn control(&self) -> ActionArgControl {
         match &self.schema {
             ArgSchema::String { options, format, .. } => {
                 if !options.is_empty() {
@@ -402,7 +402,7 @@ impl ActionArgDef {
     /// @emoji 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
     /// `description`/`default`.
-    pub fn json_schema(&self) -> serde_json::Value {
+    pub async fn json_schema(&self) -> serde_json::Value {
         let mut schema = arg_schema_json_schema(&self.schema);
         if let Some(map) = schema.as_object_mut() {
             if let Some(description) = &self.description {
@@ -420,7 +420,7 @@ impl ActionArgDef {
 /// (the vendor extension every format carries) plus, for the two host-resolved refinements, the
 /// `roles`/`dialect_arg` a host needs to resolve them (`x-semio-roles`/`x-semio-dialect-arg`) — and
 /// the standard `format: "uri"` keyword where JSON Schema already defines one.
-fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
+async fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
     let tag = match format {
         ArgFormat::ArtifactRef => "artifactRef",
         ArgFormat::WindowId => "windowId",
@@ -453,7 +453,7 @@ fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format
 /// @emoji 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
 /// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
 /// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
-fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
+async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
     match schema {
         ArgSchema::String { options, min_len, max_len, pattern, format } => {
             let mut value = serde_json::json!({ "type": "string" });
@@ -532,7 +532,7 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
 //#endregion 🔖️ActionArgs
 
 /// @emoji 🎛️ Canonical catalog icon for a declared app mode id.
-pub fn catalog_mode_icon_id(id: &str) -> IconName {
+pub async fn catalog_mode_icon_id(id: &str) -> IconName {
     match id {
         "edit" | "main" => "pencil".into(),
         "paint" => "paintbrush".into(),
@@ -552,7 +552,7 @@ pub fn catalog_mode_icon_id(id: &str) -> IconName {
 }
 
 /// @emoji 🧪️ Canonical catalog icon for a playground example id (content-specific ids override at declaration).
-pub fn catalog_example_icon_id(id: &str) -> IconName {
+pub async fn catalog_example_icon_id(id: &str) -> IconName {
     match id {
         "empty" | "default" => "file".into(),
         "demo" => "cylinder".into(),
@@ -565,7 +565,7 @@ pub fn catalog_example_icon_id(id: &str) -> IconName {
 }
 
 /// @emoji 🎯️ Canonical catalog icon for a declared action id (view/shell/operation/history/clipboard).
-pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
+pub async fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
     match id {
         "undo" => "undo-2".into(),
         "redo" => "redo-2".into(),
@@ -637,7 +637,7 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
 }
 
 /// @emoji 🎛️ Canonical catalog icon for a footer command id.
-pub fn catalog_command_icon_id(id: &str) -> IconName {
+pub async fn catalog_command_icon_id(id: &str) -> IconName {
     match id {
         id if id.starts_with("os.set") => "settings".into(),
         "os.resetDock" => "panel-left".into(),
@@ -665,7 +665,7 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
 pub struct ResourceSelector(pub String);
 
 impl ResourceSelector {
-    pub fn new(selector: impl Into<String>) -> Self {
+    pub async fn new(selector: impl Into<String>) -> Self {
         Self(selector.into())
     }
 }
@@ -812,7 +812,7 @@ impl ActionSemantics {
     /// needs `documents.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
     /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
     /// `shell.clipboard`; `Shell` is not reversible and needs `shell.navigate`.
-    pub fn for_kind(kind: ActionKind) -> Self {
+    pub async fn for_kind(kind: ActionKind) -> Self {
         match kind {
             ActionKind::Mutation => Self {
                 effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
@@ -873,7 +873,7 @@ pub struct ActionDefinition {
 }
 
 impl ActionDefinition {
-    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -888,25 +888,25 @@ impl ActionDefinition {
     }
 
     /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
-    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
+    pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         let id = id.into();
         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this action.
-    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+    pub async fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
     /// @emoji 🎨️ Sets palette visibility for this action.
-    pub fn with_in_palette(mut self, in_palette: bool) -> Self {
+    pub async fn with_in_palette(mut self, in_palette: bool) -> Self {
         self.in_palette = in_palette;
         self
     }
 
     /// @emoji 🎨️ Sets palette visibility for this action.
-    pub fn in_palette(self, in_palette: bool) -> Self {
+    pub async fn in_palette(self, in_palette: bool) -> Self {
         self.with_in_palette(in_palette)
     }
 
@@ -914,25 +914,25 @@ impl ActionDefinition {
     /// id) — read back by `AppActionRegistry::category_of` and fed into `organize_context_menu`'s
     /// `category_of` lookup at the context-menu funnel, so an overflowing flat menu buckets this
     /// action's row into `menu.group.<category>` instead of `menu.group.actions`.
-    pub fn with_category(mut self, category: impl Into<String>) -> Self {
+    pub async fn with_category(mut self, category: impl Into<String>) -> Self {
         self.category = Some(category.into());
         self
     }
 
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
-    pub fn category(self, category: impl Into<String>) -> Self {
+    pub async fn category(self, category: impl Into<String>) -> Self {
         self.with_category(category)
     }
 
     /// @emoji 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
-    pub fn semantics(mut self, semantics: ActionSemantics) -> Self {
+    pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
     }
 
     /// @emoji ⚠️ Marks this action destructive: sets `effects.destructive` and raises `policy.approval`
     /// to `WhenDestructive` (a no-op if it was already `Always`).
-    pub fn destructive(mut self) -> Self {
+    pub async fn destructive(mut self) -> Self {
         self.semantics.effects.destructive = true;
         if self.semantics.policy.approval == ApprovalMode::Never {
             self.semantics.policy.approval = ApprovalMode::WhenDestructive;
@@ -942,13 +942,13 @@ impl ActionDefinition {
 
     /// @emoji 🗣️ Sets the natural-language phrases a capability search should match this action
     /// against (`ActionSemantics.use_when`).
-    pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
     }
 
     /// @emoji 📖️ Appends one natural-language usage example (`ActionSemantics.examples`).
-    pub fn example(mut self, example: impl Into<String>) -> Self {
+    pub async fn example(mut self, example: impl Into<String>) -> Self {
         self.semantics.examples.push(example.into());
         self
     }
@@ -960,7 +960,7 @@ impl ActionDefinition {
 pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
-pub fn history_action_definitions() -> Vec<ActionDefinition> {
+pub async fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
             keys: Some("mod+z".into()),
@@ -995,7 +995,7 @@ pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter"
 /// operation — `ActionKind::View`. Arg id is `"value"` (not `"filter"`) — a top-level `UiNode::Select`
 /// always dispatches its picked option merged into `args` under the `"value"` key (both renderers'
 /// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
-pub fn set_history_command_filter_action_definition() -> ActionDefinition {
+pub async fn set_history_command_filter_action_definition() -> ActionDefinition {
     let options = vec![
         ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")),
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
@@ -1021,7 +1021,7 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// shell-kind effect that already happened into the session command log, for effects dispatched
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
-pub fn note_shell_command_action_definition() -> ActionDefinition {
+pub async fn note_shell_command_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
         ..ActionDefinition::new_catalog(
@@ -1041,7 +1041,7 @@ pub fn note_shell_command_action_definition() -> ActionDefinition {
 /// 🕹️ The three framework-owned Clipboard actions, auto-injected into every `AppDefinition` —
 /// mirrors `history_action_definitions`. `paste` carries a staged `anchoring` choice (defaulting to
 /// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
-pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
+pub async fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     let anchoring_options = vec![
         ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")),
         ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")),
@@ -1103,7 +1103,7 @@ pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranulari
 /// `interactionHover` are the raw dispatch verbs renderers translate clicks/marquee/hover into
 /// (never in the palette); `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity`
 /// are user-facing and drive the per-domain Select controls.
-pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
+pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
     if app.interactions.is_empty() {
         return Vec::new();
     }
@@ -1180,7 +1180,7 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// @emoji 🧰️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
-pub fn set_active_utility_action_definition() -> ActionDefinition {
+pub async fn set_active_utility_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
         ..ActionDefinition::new_catalog(
@@ -1202,7 +1202,7 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// @emoji 🛠️ The framework-injected `setActiveTool` View action (never in the palette): switches the
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
-pub fn set_active_tool_action_definition() -> ActionDefinition {
+pub async fn set_active_tool_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
         ..ActionDefinition::new_catalog(
@@ -1223,7 +1223,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// forwarded to the program), it resets playback to the first step of `AppDefinition.introduction`.
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
-pub fn start_introduction_action_definition() -> ActionDefinition {
+pub async fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
         ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View)
@@ -1238,11 +1238,11 @@ pub fn start_introduction_action_definition() -> ActionDefinition {
 pub struct ActionRef(String);
 
 impl ActionRef {
-    pub fn new(id: impl Into<String>) -> Self {
+    pub async fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1318,7 +1318,7 @@ pub struct UtilityDefinition {
 
 impl UtilityDefinition {
     /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
-    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -1340,11 +1340,11 @@ impl UtilityDefinition {
 pub struct UtilityRef(String);
 
 impl UtilityRef {
-    pub fn new(id: impl Into<String>) -> Self {
+    pub async fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1391,7 +1391,7 @@ pub struct CommandDefinition {
 }
 
 impl CommandDefinition {
-    pub fn new(
+    pub async fn new(
         id: impl Into<String>,
         label: impl Into<LocalizedLabel>,
         category: impl Into<String>,
@@ -1412,31 +1412,31 @@ impl CommandDefinition {
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
-    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+    pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         let id = id.into();
         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
-    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+    pub async fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
     /// @emoji ⌨️ Attaches one platform-aware command keybinding.
-    pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
+    pub async fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
         self.keybindings.push(keybinding);
         self
     }
 
     /// @emoji 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
-    pub fn semantics(mut self, semantics: ActionSemantics) -> Self {
+    pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
     }
 
     /// @emoji ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
-    pub fn destructive(mut self) -> Self {
+    pub async fn destructive(mut self) -> Self {
         self.semantics.effects.destructive = true;
         if self.semantics.policy.approval == ApprovalMode::Never {
             self.semantics.policy.approval = ApprovalMode::WhenDestructive;
@@ -1445,13 +1445,13 @@ impl CommandDefinition {
     }
 
     /// @emoji 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
-    pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
     }
 
     /// @emoji 📖️ Appends one `ActionSemantics.examples` entry — see `ActionDefinition::example`.
-    pub fn example(mut self, example: impl Into<String>) -> Self {
+    pub async fn example(mut self, example: impl Into<String>) -> Self {
         self.semantics.examples.push(example.into());
         self
     }
@@ -1520,7 +1520,7 @@ pub struct ToolDefinition {
 
 impl ToolDefinition {
     /// @emoji 🛠️ A tool with sensible defaults (no keybinding).
-    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None }
     }
 }
@@ -1533,11 +1533,11 @@ impl ToolDefinition {
 pub struct ToolRef(String);
 
 impl ToolRef {
-    pub fn new(id: impl Into<String>) -> Self {
+    pub async fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub fn as_str(&self) -> &str {
+    pub async fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1562,7 +1562,7 @@ impl From<String> for ToolRef {
 /// integration key across i18n, tooltips, hotkeys, command origin tracking, tutorials, E2E selectors,
 /// and introduction anchors; each renderer maps it onto its own element (React → DOM `id` attribute,
 /// wgpu → hit-target `control_id`), so no renderer-specific shape leaks into the grammar itself.
-pub fn is_element_id(id: &str) -> bool {
+pub async fn is_element_id(id: &str) -> bool {
     if id.is_empty() {
         return false;
     }
@@ -1581,7 +1581,7 @@ pub fn is_element_id(id: &str) -> bool {
 /// non-alphanumeric character. Idempotent on input that is already a valid segment. Used as the last
 /// resort by `child_element_id` when a child id is derived from something not already grammar-safe (e.g.
 /// a runtime label) — prefer a real semantic key first, then this, then a numeric index.
-pub fn element_id_segment(raw: &str) -> String {
+pub async fn element_id_segment(raw: &str) -> String {
     let mut segment = String::new();
     let mut capitalize_next = false;
     for ch in raw.chars() {
@@ -1607,7 +1607,7 @@ pub fn element_id_segment(raw: &str) -> String {
 /// @emoji 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
 /// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
 /// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
-pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
+pub async fn child_element_id(parent: &str, segments: &[&str]) -> String {
     let mut id = parent.to_string();
     for segment in segments {
         id.push('.');
@@ -1622,21 +1622,21 @@ pub const UI_NAVBAR_ELEMENT_ID: &str = "ui.navbar";
 pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
 
 /// @emoji 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
-pub fn window_element_id(kind_id: &str) -> String {
+pub async fn window_element_id(kind_id: &str) -> String {
     child_element_id("framework.window", &[kind_id])
 }
 
 /// @emoji 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
 /// `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended verbatim rather than through
 /// `child_element_id`, which would collapse its dots into camelCase.
-pub fn panel_tab_element_id(tab_id: &str) -> String {
+pub async fn panel_tab_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}")
 }
 
 /// @emoji 🆔️ Alias id of the first draggable tree row inside a panel tab (document order within that
 /// uncollapsed panel) — stamped via `data-element-alias` since no single tree row has a stable semantic
 /// id at authoring time. Used to teach catalogue drag-and-drop without hardcoding a kind id.
-pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
+pub async fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}.firstDraggable")
 }
 //#endregion 🆔️ElementId
@@ -1697,7 +1697,7 @@ pub struct IntroductionStepDefinition {
 }
 
 impl IntroductionStepDefinition {
-    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
+    pub async fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
@@ -1713,45 +1713,45 @@ impl IntroductionStepDefinition {
     }
 
     /// @emoji 🎯️ Sets the single element id raised above the glass and anchoring the info box.
-    pub fn introduce(mut self, element_id: impl Into<String>) -> Self {
+    pub async fn introduce(mut self, element_id: impl Into<String>) -> Self {
         self.introduce = Some(element_id.into());
         self
     }
 
     /// @emoji 🕳️ Additional element ids raised above the glass alongside `introduce` (no pulse).
-    pub fn show(mut self, element_ids: Vec<String>) -> Self {
+    pub async fn show(mut self, element_ids: Vec<String>) -> Self {
         self.show = element_ids;
         self
     }
 
     /// @emoji 📍️ Overrides where the info box is placed relative to `introduce`.
-    pub fn placement(mut self, placement: IntroductionPlacement) -> Self {
+    pub async fn placement(mut self, placement: IntroductionPlacement) -> Self {
         self.placement = placement;
         self
     }
 
     /// @emoji ✅️ Makes the step complete when the user performs all `interactions` (any order) instead of
     /// pressing Next.
-    pub fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+    pub async fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self
     }
 
     /// @emoji 🔢️ Like `interact`, but `interactions` must complete in declaration order.
-    pub fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+    pub async fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self.ordered = true;
         self
     }
 
     /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
-    pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
+    pub async fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
         self.logos = logos;
         self
     }
 
     /// @emoji 🎬️ Attaches ghost-cursor demonstrations played in order, then looping back to the first.
-    pub fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
+    pub async fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
         self.demonstrations = demonstrations;
         self
     }
@@ -1828,52 +1828,52 @@ pub struct IntroductionInteraction {
 }
 
 impl IntroductionInteraction {
-    fn new(on: IntroductionInteractionKind, label: impl Into<String>) -> Self {
+    async fn new(on: IntroductionInteractionKind, label: impl Into<String>) -> Self {
         Self { on, label: label.into(), celebrate: None }
     }
 
     /// @emoji 📇️ An interaction completing when the user activates action `id`.
-    pub fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label)
     }
 
     /// @emoji 🧰️ An interaction completing when the user activates utility `id`.
-    pub fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label)
     }
 
     /// @emoji 🛠️ An interaction completing when the user activates tool `id`.
-    pub fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into())), label)
     }
 
     /// @emoji 📑️ An interaction completing when panel tab `id` opens.
-    pub fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Panel(id.into()), label)
     }
 
     /// @emoji 🌲️ An interaction completing when tree section/item `id` expands.
-    pub fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Expand(id.into()), label)
     }
 
     /// @emoji 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
-    pub fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label)
     }
 
     /// @emoji 🔍️ An interaction completing when the user zooms 3D window `window_kind_id`.
-    pub fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label)
     }
 
     /// @emoji 🌐️ An interaction completing when the user orbits 3D window `window_kind_id`.
-    pub fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label)
     }
 
     /// @emoji 🎉️ Overrides which element id is stamped `data-celebrated` on completion.
-    pub fn celebrate(mut self, element_id: impl Into<String>) -> Self {
+    pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
         self.celebrate = Some(element_id.into());
         self
     }
@@ -1934,27 +1934,27 @@ pub enum IntroductionPoint {
 
 impl IntroductionPoint {
     /// @emoji 🗺️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
-    pub fn canvas(window_id: impl Into<String>, x: f64, y: f64) -> Self {
+    pub async fn canvas(window_id: impl Into<String>, x: f64, y: f64) -> Self {
         Self::Canvas { id: window_id.into(), x, y }
     }
 
     /// @emoji 🏷️ A specific entity by domain + id, centered (no `offset`).
-    pub fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
+    pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
         Self::Entity { id: window_id.into(), domain: domain.into(), entity: entity.into(), offset: None }
     }
 
     /// @emoji 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
-    pub fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+    pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
         Self::entity(window_id, domain, "*")
     }
 
     /// @emoji 🪡️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
-    pub fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
+    pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
         Self::Curve { id: window_id.into(), domain: domain.into(), entity: entity.into(), t }
     }
 
     /// @emoji 🎚️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
-    pub fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> Self {
+    pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> Self {
         Self::Domain { id: window_id.into(), domain: domain.into(), entity: entity.into(), value }
     }
 }
@@ -1981,15 +1981,15 @@ pub enum IntroductionKeyModifier {
     Meta,
 }
 
-fn introduction_pointer_button_left() -> IntroductionPointerButton {
+async fn introduction_pointer_button_left() -> IntroductionPointerButton {
     IntroductionPointerButton::Left
 }
 
-fn introduction_pointer_button_right() -> IntroductionPointerButton {
+async fn introduction_pointer_button_right() -> IntroductionPointerButton {
     IntroductionPointerButton::Right
 }
 
-fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
+async fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
     vec![IntroductionKeyModifier::Alt]
 }
 
@@ -2056,17 +2056,17 @@ pub struct IntroductionDemonstration {
 
 impl IntroductionDemonstration {
     /// @emoji 👆️ A left-click demonstration at `at`.
-    pub fn left_click(at: IntroductionPoint) -> Self {
+    pub async fn left_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::LeftClick { at }, cursor: None }
     }
 
     /// @emoji 👆️ A right-click demonstration at `at`.
-    pub fn right_click(at: IntroductionPoint) -> Self {
+    pub async fn right_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::RightClick { at }, cursor: None }
     }
 
     /// @emoji ✋️ A click-and-drag demonstration from `from` to `to`.
-    pub fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
+    pub async fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self {
             gesture: IntroductionGesture::Drag { from, to, button: IntroductionPointerButton::Left, modifiers: vec![] },
             cursor: None,
@@ -2074,12 +2074,12 @@ impl IntroductionDemonstration {
     }
 
     /// @emoji 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
-    pub fn scroll(at: IntroductionPoint, delta_y: f64) -> Self {
+    pub async fn scroll(at: IntroductionPoint, delta_y: f64) -> Self {
         Self { gesture: IntroductionGesture::Scroll { at, delta_y }, cursor: None }
     }
 
     /// @emoji 🌐️ A camera-orbit demonstration curving from `from` to `to`.
-    pub fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
+    pub async fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self {
             gesture: IntroductionGesture::Orbit {
                 from,
@@ -2130,7 +2130,7 @@ pub struct TutorialDefinition {
 impl TutorialDefinition {
     /// @emoji 📂️ Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
     /// to load a hand-authored or recorded tutorial (e.g. via `include_str!`) into `.tutorial(...)`.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+    pub async fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
 }
@@ -2213,11 +2213,11 @@ pub enum TutorialAssetSrc {
     DataUrl { data: String },
 }
 
-fn tutorial_narration_default_rate() -> f64 {
+async fn tutorial_narration_default_rate() -> f64 {
     1.0
 }
 
-fn tutorial_rate_is_default(rate: &f64) -> bool {
+async fn tutorial_rate_is_default(rate: &f64) -> bool {
     (*rate - 1.0).abs() < f64::EPSILON
 }
 
@@ -2513,7 +2513,7 @@ pub enum TutorialArtifactEventKind {
     }
 }
 
-fn tutorial_camera_up_z() -> [f64; 3] {
+async fn tutorial_camera_up_z() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
@@ -2587,7 +2587,7 @@ pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 
 /// @emoji 🎬️ The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
 /// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
-pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
+pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
     let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
     ActionDefinition {
         in_palette: false,
@@ -2602,7 +2602,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
-pub fn record_tutorial_action_definition() -> ActionDefinition {
+pub async fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
         ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View)
@@ -2618,8 +2618,8 @@ pub const TUTORIAL_CONVERGE_MS: u64 = 600;
 /// track sorted ascending by `at`, every entry within `[0, durationMs]`, chapter/narration-cue ids
 /// unique, `base.cameras` all at `at == 0`. Does NOT check that referenced action/command/element ids
 /// exist — the plugin builder's validation (which has the full `AppDefinition` in scope) does that.
-pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
-    fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
+pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
+    async fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
         let mut last: Option<u64> = None;
         for item in items {
             let at = at(item);
@@ -2665,7 +2665,7 @@ pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
     Ok(())
 }
 
-fn tutorial_ease_in_out(t: f64) -> f64 {
+async fn tutorial_ease_in_out(t: f64) -> f64 {
     if t < 0.5 {
         2.0 * t * t
     } else {
@@ -2673,7 +2673,7 @@ fn tutorial_ease_in_out(t: f64) -> f64 {
     }
 }
 
-fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
+async fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
     [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 }
 
@@ -2682,7 +2682,7 @@ fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
 /// space so zooming reads as constant visual speed. `next.easing` governs the curve; `Hold` snaps to
 /// `prev` until `next.at`, then jumps. Mismatched camera kinds between the two keyframes (`Orbit` vs
 /// `Canvas` on the same window) never interpolate — the result snaps to whichever side `t` is closer to.
-pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &TutorialCameraKeyframe, at_ms: f64) -> TutorialCameraState {
+pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &TutorialCameraKeyframe, at_ms: f64) -> TutorialCameraState {
     let span = (next.at as f64 - prev.at as f64).max(1.0);
     let raw = ((at_ms - prev.at as f64) / span).clamp(0.0, 1.0);
     let t = match next.easing {
@@ -2727,7 +2727,7 @@ pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &Tutoria
 /// @emoji 🎥️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
 /// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
 /// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
-pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
+pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
     let keyframes: Vec<&TutorialCameraKeyframe> =
         def.base.cameras.iter().chain(def.tracks.camera.iter()).filter(|k| k.window_id == window_id).collect();
     let first = keyframes.first()?;
@@ -2745,7 +2745,7 @@ pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64)
 
 /// @emoji 🩹️ Applies one `TutorialUiChange` onto a `TutorialUiSnapshot` in place — the pure core both
 /// `compose_tutorial_ui` and each shell's live director share.
-pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
+pub async fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
     match change {
         TutorialUiChange::ActiveMode { id } => state.active_mode_id = Some(id.clone()),
         TutorialUiChange::FocusedWindow { id } => state.focused_window_id = id.clone(),
@@ -2789,7 +2789,7 @@ pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &Tutoria
 /// latest `Snapshot` sample with `at <= at_ms` (if any, replacing the base), then replays every `Delta`
 /// sample after that snapshot up to and including `at_ms`, in order. This is the one place seeking (and
 /// the deviation-then-play converge step) source their target UI state.
-pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSnapshot {
+pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSnapshot {
     let mut state = def.base.ui.clone();
     let mut deltas: Vec<&TutorialUiChange> = Vec::new();
     for keyframe in &def.tracks.ui {
@@ -2835,7 +2835,7 @@ pub struct TutorialSlice {
 /// in practice (ticks run far more often than the multi-second snapshot cadence); any caller that jumps
 /// across a snapshot boundary (a seek/scrub) should call `compose_tutorial_ui` wholesale instead of
 /// accumulating through this slice.
-pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> TutorialSlice {
+pub async fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> TutorialSlice {
     let forward = to_ms >= from_ms;
     let (lo, hi) = if forward { (from_ms, to_ms) } else { (to_ms, from_ms) };
     let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
@@ -2891,7 +2891,7 @@ pub struct DialogDefinition {
 }
 
 impl DialogDefinition {
-    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, submit_action: ActionRef) -> Self {
+    pub async fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, submit_action: ActionRef) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
@@ -2906,31 +2906,31 @@ impl DialogDefinition {
     }
 
     /// @emoji 📝️ Attaches explanatory body text shown below the title.
-    pub fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
+    pub async fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
         self.body = Some(body.into());
         self
     }
 
     /// @emoji 🧾️ Attaches the staged-form field declarations.
-    pub fn args(mut self, args: Vec<ActionArgDef>) -> Self {
+    pub async fn args(mut self, args: Vec<ActionArgDef>) -> Self {
         self.args = args;
         self
     }
 
     /// @emoji ✅️ Overrides the submit button label (default "OK").
-    pub fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.submit_label = label.into();
         self
     }
 
     /// @emoji ❌️ Overrides the cancel button label (default "Cancel", applied by the renderer).
-    pub fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
+    pub async fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.cancel_label = Some(label.into());
         self
     }
 
     /// @emoji 🚪️ Declares an action dispatched on any dismissal (Escape, veil click, Cancel button).
-    pub fn on_cancel(mut self, action: ActionRef) -> Self {
+    pub async fn on_cancel(mut self, action: ActionRef) -> Self {
         self.cancel_action = Some(action);
         self
     }
@@ -2968,35 +2968,35 @@ pub struct NonEmptyVec<T> {
 }
 
 impl<T> NonEmptyVec<T> {
-    pub fn one(first: T) -> Self {
+    pub async fn one(first: T) -> Self {
         Self { first, rest: Vec::new() }
     }
 
-    pub fn new(first: T, rest: Vec<T>) -> Self {
+    pub async fn new(first: T, rest: Vec<T>) -> Self {
         Self { first, rest }
     }
 
-    pub fn first(&self) -> &T {
+    pub async fn first(&self) -> &T {
         &self.first
     }
 
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         1 + self.rest.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         false
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub async fn iter(&self) -> impl Iterator<Item = &T> {
         std::iter::once(&self.first).chain(self.rest.iter())
     }
 
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+    pub async fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         std::iter::once(&mut self.first).chain(self.rest.iter_mut())
     }
 
-    pub fn first_mut(&mut self) -> &mut T {
+    pub async fn first_mut(&mut self) -> &mut T {
         &mut self.first
     }
 }
@@ -3022,7 +3022,7 @@ impl<'a, T> IntoIterator for &'a NonEmptyVec<T> {
 
 impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
     type Error = String;
-    fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
+    async fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
         if values.is_empty() {
             return Err("expected a non-empty list, got zero entries".to_string());
         }
@@ -3032,7 +3032,7 @@ impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
 }
 
 impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
-    fn from(value: NonEmptyVec<T>) -> Self {
+    async fn from(value: NonEmptyVec<T>) -> Self {
         std::iter::once(value.first).chain(value.rest).collect()
     }
 }
@@ -3101,7 +3101,7 @@ impl PanelGroup {
     /// 🧭️ The dock anchor this group defaults to. Groups only ever map to the four corner anchors —
     /// the four edge-middle anchors (`top-middle`/`right-middle`/`bottom-middle`/`left-middle`) start
     /// empty and are user-populated via drag-and-drop or a dock skeleton override, never via a `PanelGroup`.
-    pub fn anchor(&self) -> &'static str {
+    pub async fn anchor(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "top-left",
             PanelGroup::Details => "top-right",
@@ -3110,7 +3110,7 @@ impl PanelGroup {
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
+    pub async fn as_str(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "workbench",
             PanelGroup::Details => "details",
@@ -3146,7 +3146,7 @@ pub enum PanelTabKind {
 
 impl PanelTabKind {
     /// 🔤️ Flat string key for code that needs one, e.g. React `key=` props.
-    pub fn id_str(&self) -> &str {
+    pub async fn id_str(&self) -> &str {
         match self {
             PanelTabKind::WorkbenchCategory => "framework.category.workbench",
             PanelTabKind::DisplayCategory => "framework.category.display",
@@ -3180,7 +3180,7 @@ pub struct PanelTabDefinition {
 }
 
 impl PanelTabDefinition {
-    pub fn id(&self) -> &str {
+    pub async fn id(&self) -> &str {
         self.kind.id_str()
     }
 }
@@ -3198,7 +3198,7 @@ pub enum AppRole {
 impl AppRole {
     /// 🔤️ Wire spelling — exactly `"viewer"`/`"editor"`, shared by serde, TS, JSON schema and the
     /// `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values.
-    pub fn as_str(&self) -> &'static str {
+    pub async fn as_str(&self) -> &'static str {
         match self {
             AppRole::Viewer => "viewer",
             AppRole::Editor => "editor",
@@ -3227,12 +3227,12 @@ pub struct AppRef {
 }
 
 /// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
-pub fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
+pub async fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
     format!("{}#{}", dialect.to_coordinate(), role.as_str())
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
-pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
+pub async fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
     let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
     let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
@@ -3333,7 +3333,7 @@ pub struct AppDefinition {
 }
 
 /// 🧭️ Resolves the dock layout a mode should present.
-pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
+pub async fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
     let mode = app.modes.iter().find(|mode| mode.id == mode_id)?;
     if let Some(layout_id) = &mode.layout_id {
         if let Some(named) = app.named_layouts.iter().find(|entry| entry.id == *layout_id) {
@@ -3355,7 +3355,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧮️action-argument-resolution/🟦️component.ts`).
-pub fn effective_action_args(
+pub async fn effective_action_args(
     defs: &[ActionArgDef],
     staged: &DslValue,
     seed: Option<&DslValue>,
@@ -3395,7 +3395,7 @@ pub fn effective_action_args(
 /// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
 /// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
 /// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
-pub fn missing_required_args(
+pub async fn missing_required_args(
     defs: &[ActionArgDef],
     effective: &DslValue,
 ) -> Vec<String> {
@@ -3413,7 +3413,7 @@ pub fn missing_required_args(
 /// @emoji 🚦️ Whether an action is eligible to appear in a window's Actions panel — excludes the six
 /// framework History actions (rendered by the History rail) and the injected `setActiveUtility`/
 /// `setActiveTool` (internal View actions wired to the utility bar/tool panel, never the panel).
-fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
+async fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History
         && action.id != SET_ACTIVE_UTILITY_ACTION_ID
         && action.id != SET_ACTIVE_TOOL_ACTION_ID
@@ -3421,7 +3421,7 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
 
 /// @emoji 📇️ Resolves the actions a window kind presents in its panel from its authoritative
 /// owned definitions, preserving declaration order and excluding framework-only rail actions.
-pub fn resolve_window_actions<'a>(
+pub async fn resolve_window_actions<'a>(
     _app: &'a AppDefinition,
     window_kind: &'a WindowKindDefinition,
 ) -> Vec<&'a ActionDefinition> {
@@ -3432,7 +3432,7 @@ pub fn resolve_window_actions<'a>(
 /// `AppDefinition.tools` via `ModeDefinition.tools`. Unlike `resolve_window_actions`, unresolvable or
 /// unreferenced tools have no orphan fallback: tools are opt-in per mode, not automatically shown
 /// everywhere. Unresolvable refs are skipped (the builder validates them at construction time).
-pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
     let Some(mode) = app.modes.iter().find(|mode| mode.id == mode_id) else {
         return Vec::new();
     };
@@ -3450,18 +3450,18 @@ pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a 
 //#endregion 🔖️action-args
 
 /// 🪜️ Formats a canonical app breadcrumb for chrome.
-pub fn app_breadcrumb(breadcrumb: &[String]) -> String {
+pub async fn app_breadcrumb(breadcrumb: &[String]) -> String {
     breadcrumb.join(" · ")
 }
 
 /// 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to the canonical breadcrumb.
-pub fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
+pub async fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
     app.terminology_breadcrumbs.get(terminology).map(Vec::as_slice).unwrap_or(&app.breadcrumb)
 }
 
 /// 🗂️ Formats a window tab within its canonical app breadcrumb, resolved under the active terminology
 /// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
-pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
+pub async fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
     let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
@@ -3498,7 +3498,7 @@ pub struct ProgramContributionEntry {
 }
 
 /// 📕️ Parses host-pushed `contributionsJson` into typed entries.
-pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
+pub async fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
@@ -3519,12 +3519,12 @@ pub struct TopicContribution {
 }
 
 impl TopicContribution {
-    pub fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
+    pub async fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
         Self { topic: topic.into(), payload }
     }
 
     /// 📕️ Decodes `payload` into a caller-chosen typed shape.
-    pub fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+    pub async fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_value(self.payload.clone())
     }
 }
@@ -3552,12 +3552,12 @@ pub enum VersionParseError {
 }
 
 impl Version {
-    pub fn new(major: u64, minor: u64, patch: u64) -> Self {
+    pub async fn new(major: u64, minor: u64, patch: u64) -> Self {
         Self { major, minor, patch }
     }
 
     /// 🔢️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
-    pub fn parse(input: &str) -> Result<Self, VersionParseError> {
+    pub async fn parse(input: &str) -> Result<Self, VersionParseError> {
         let mut segments = input.split('.');
         let (Some(major), Some(minor), Some(patch), None) = (segments.next(), segments.next(), segments.next(), segments.next()) else {
             return Err(VersionParseError::Malformed(input.to_string()));
@@ -3608,7 +3608,7 @@ pub enum VersionReq {
 
 impl VersionReq {
     /// 🔢️ Parses one of the five frozen grammar forms.
-    pub fn parse(input: &str) -> Result<Self, VersionReqParseError> {
+    pub async fn parse(input: &str) -> Result<Self, VersionReqParseError> {
         let trimmed = input.trim();
         if trimmed == "*" {
             return Ok(VersionReq::Any);
@@ -3629,7 +3629,7 @@ impl VersionReq {
     }
 
     /// ✅️ Whether `version` satisfies this requirement.
-    pub fn matches(&self, version: &Version) -> bool {
+    pub async fn matches(&self, version: &Version) -> bool {
         match self {
             VersionReq::Any => true,
             VersionReq::Exact(required) => version == required,
@@ -3649,7 +3649,7 @@ impl VersionReq {
 
     /// ✅️ Convenience for the dependency graph: parses `raw` and matches, treating an unparsable
     /// target version as non-matching (except `*`, which never needs to parse its target).
-    pub fn matches_raw(&self, raw: &str) -> bool {
+    pub async fn matches_raw(&self, raw: &str) -> bool {
         match self {
             VersionReq::Any => true,
             _ => Version::parse(raw).map(|version| self.matches(&version)).unwrap_or(false),
@@ -3703,7 +3703,7 @@ pub struct PluginDependency {
 }
 
 impl PluginDependency {
-    pub fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
+    pub async fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
         Self { plugin_id: plugin_id.into(), version }
     }
 }
@@ -3837,7 +3837,7 @@ pub struct SurfaceAppChoice {
 /// re-resolves display strings client-side under the active terminology from `kind_id`/`schema`
 /// alone if it ever needs to, but the frozen shape itself is native-only, matching `IconSelect`'s own
 /// `classifier_kind`-not-label precedent for host-resolved controls).
-pub fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
+pub async fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
     serde_json::json!({
         "kindId": choice.kind_id,
         "schema": choice.schema,
@@ -3851,7 +3851,7 @@ pub fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
 }
 
 /// 🧵️ Inverse of `encode_artifact_kind_choice`.
-pub fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
+pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
     let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
     let kind_id = json.get("kindId").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
     let schema = json.get("schema").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
@@ -3862,7 +3862,7 @@ pub fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, St
 }
 
 /// 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
-pub fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
+pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
     serde_json::json!({
         "pluginId": choice.app.plugin_id,
         "appId": choice.app.app_id,
@@ -3872,7 +3872,7 @@ pub fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
 }
 
 /// 🧵️ Inverse of `encode_surface_app_choice`.
-pub fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
+pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
     let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
     let plugin_id = json.get("pluginId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
     let app_id = json.get("appId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
@@ -3886,7 +3886,7 @@ pub fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String
 /// coordinate. Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests
 /// first so the owner's label wins over a later contributor's), sorted by coordinate for determinism
 /// — the pure resolver behind `ActionArgControl::ArtifactKind`.
-pub fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRole]) -> Vec<ArtifactKindChoice> {
+pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRole]) -> Vec<ArtifactKindChoice> {
     let mut by_coordinate: BTreeMap<String, ArtifactKindChoice> = BTreeMap::new();
     for manifest in manifests {
         for app in &manifest.apps {
@@ -3916,7 +3916,7 @@ pub enum DependencyGraphError {
 /// ✅️ Checks every declared dependency resolves to a loaded plugin at a satisfying version —
 /// deterministic: manifests are checked in input order, each manifest's dependencies in declaration
 /// order, so the first violation found is always the same for the same input.
-fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
+async fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), DependencyGraphError> {
     let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
     for manifest in manifests {
         for dependency in &manifest.dependencies {
@@ -3941,7 +3941,7 @@ fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), Depende
 /// picked next, so the returned order is a pure, deterministic function of the input set. Runs
 /// `validate_dependency_graph` first, so a missing dependency or version mismatch is reported
 /// before any cycle would be detected.
-pub fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
     validate_dependency_graph(manifests)?;
 
     let mut in_degree: BTreeMap<&str, usize> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), 0)).collect();
@@ -3987,7 +3987,7 @@ pub fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, D
 /// 🔁️ Walks the leftover (never-ready) subgraph depth-first from its lexicographically smallest
 /// node, following each plugin's first declared dependency that is also leftover, until a node
 /// repeats — the repeated slice of the walked path is the named cycle.
-fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections::BTreeSet<String>) -> Vec<String> {
+async fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections::BTreeSet<String>) -> Vec<String> {
     let by_id: BTreeMap<&str, &PluginManifest> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), manifest)).collect();
     let mut visited: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for start in leftover {
@@ -4023,7 +4023,7 @@ fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collections:
 /// 🔎️ Every plugin (direct dependents only, not transitive) that declares `plugin_id` as a
 /// dependency, sorted for determinism — used to refuse unload/hot-reload while dependents are
 /// loaded (contract freeze §4).
-pub fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
     let mut result: Vec<String> = manifests
         .iter()
         .filter(|manifest| manifest.dependencies.iter().any(|dependency| dependency.plugin_id == plugin_id))
@@ -4041,7 +4041,7 @@ mod plugin_dependency_tests {
     //! validation, and manifest serde round-trips (absent-field defaults included).
     use super::*;
 
-    fn manifest(plugin_id: &str, version: &str, dependencies: Vec<PluginDependency>) -> PluginManifest {
+    async fn manifest(plugin_id: &str, version: &str, dependencies: Vec<PluginDependency>) -> PluginManifest {
         PluginManifest {
             plugin_id: plugin_id.into(),
             label: plugin_id.into(),
@@ -4059,7 +4059,7 @@ mod plugin_dependency_tests {
 
     //#region 🔖️VersionAndVersionReq
     #[test]
-    fn version_parses_valid_triples_and_rejects_malformed_input() {
+    async fn version_parses_valid_triples_and_rejects_malformed_input() {
         assert_eq!(Version::parse("1.2.3").unwrap(), Version::new(1, 2, 3));
         assert_eq!(Version::parse("0.0.0").unwrap(), Version::new(0, 0, 0));
         assert!(matches!(Version::parse("1.2").unwrap_err(), VersionParseError::Malformed(_)));
@@ -4069,7 +4069,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_ord_matches_semver_precedence() {
+    async fn version_ord_matches_semver_precedence() {
         assert!(Version::new(1, 0, 0) < Version::new(1, 0, 1));
         assert!(Version::new(1, 0, 0) < Version::new(1, 1, 0));
         assert!(Version::new(1, 0, 0) < Version::new(2, 0, 0));
@@ -4077,7 +4077,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_req_parses_all_five_grammar_forms_and_rejects_unknown_operators() {
+    async fn version_req_parses_all_five_grammar_forms_and_rejects_unknown_operators() {
         assert_eq!(VersionReq::parse("*").unwrap(), VersionReq::Any);
         assert_eq!(VersionReq::parse("=1.2.3").unwrap(), VersionReq::Exact(Version::new(1, 2, 3)));
         assert_eq!(VersionReq::parse("^1.2.3").unwrap(), VersionReq::Caret(Version::new(1, 2, 3)));
@@ -4088,7 +4088,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_req_display_round_trips_through_parse() {
+    async fn version_req_display_round_trips_through_parse() {
         for raw in ["*", "=1.2.3", "^1.2.3", "~1.2.3", ">=1.2.3"] {
             let parsed = VersionReq::parse(raw).unwrap();
             assert_eq!(parsed.to_string(), raw);
@@ -4097,7 +4097,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_req_matches_exact_and_at_least() {
+    async fn version_req_matches_exact_and_at_least() {
         let exact = VersionReq::parse("=1.2.3").unwrap();
         assert!(exact.matches(&Version::new(1, 2, 3)));
         assert!(!exact.matches(&Version::new(1, 2, 4)));
@@ -4111,7 +4111,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_req_matches_caret_semantics_across_leading_zero_tiers() {
+    async fn version_req_matches_caret_semantics_across_leading_zero_tiers() {
         let caret_major = VersionReq::parse("^1.2.3").unwrap();
         assert!(caret_major.matches(&Version::new(1, 2, 3)));
         assert!(caret_major.matches(&Version::new(1, 9, 0)), "caret allows minor/patch bumps under the same major");
@@ -4129,7 +4129,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn version_req_matches_tilde_semantics() {
+    async fn version_req_matches_tilde_semantics() {
         let tilde = VersionReq::parse("~1.2.3").unwrap();
         assert!(tilde.matches(&Version::new(1, 2, 3)));
         assert!(tilde.matches(&Version::new(1, 2, 9)), "tilde allows patch bumps");
@@ -4138,7 +4138,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn plugin_dependency_serde_round_trips_as_a_plain_string() {
+    async fn plugin_dependency_serde_round_trips_as_a_plain_string() {
         let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap());
         let json = serde_json::to_value(&dependency).unwrap();
         assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
@@ -4149,7 +4149,7 @@ mod plugin_dependency_tests {
 
     //#region 🔖️DependencyGraphTests
     #[test]
-    fn resolve_load_order_toposorts_a_diamond() {
+    async fn resolve_load_order_toposorts_a_diamond() {
         // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
         // deterministically pick `left` before `right`.
         let manifests = vec![
@@ -4163,7 +4163,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn resolve_load_order_is_deterministic_regardless_of_input_order() {
+    async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
         let forward = vec![
             manifest("a", "1.0.0", vec![]),
             manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
@@ -4176,14 +4176,14 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn resolve_load_order_reports_missing_dependency() {
+    async fn resolve_load_order_reports_missing_dependency() {
         let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)])];
         let error = resolve_load_order(&manifests).unwrap_err();
         assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
     }
 
     #[test]
-    fn resolve_load_order_reports_version_mismatch() {
+    async fn resolve_load_order_reports_version_mismatch() {
         let manifests = vec![
             manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]),
             manifest("b", "1.0.0", vec![]),
@@ -4196,7 +4196,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn resolve_load_order_names_every_member_of_a_cycle() {
+    async fn resolve_load_order_names_every_member_of_a_cycle() {
         let manifests = vec![
             manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]),
             manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]),
@@ -4215,12 +4215,12 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
+    async fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
         assert_eq!(resolve_load_order(&[]).unwrap(), Vec::<String>::new());
     }
 
     #[test]
-    fn dependents_returns_direct_dependents_sorted() {
+    async fn dependents_returns_direct_dependents_sorted() {
         let manifests = vec![
             manifest("a", "1.0.0", vec![]),
             manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
@@ -4235,7 +4235,7 @@ mod plugin_dependency_tests {
 
     //#region 🔖️ManifestSerdeTests
     #[test]
-    fn plugin_manifest_dependencies_and_contributions_default_absent_on_the_wire() {
+    async fn plugin_manifest_dependencies_and_contributions_default_absent_on_the_wire() {
         let bare = serde_json::json!({
             "pluginId": "flow",
             "label": "Flow",
@@ -4253,7 +4253,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn artifact_contribution_descriptor_round_trips() {
+    async fn artifact_contribution_descriptor_round_trips() {
         let descriptor = ArtifactContributionDescriptor {
             artifact_kind: "s.cad.building".into(),
             mutations: vec![ContributedMutationMetadata {
@@ -4283,7 +4283,7 @@ mod plugin_dependency_tests {
     }
 
     #[test]
-    fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
+    async fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
         let manifest = PluginManifest {
             dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap())],
             contributions: vec![ArtifactContributionDescriptor { artifact_kind: "s.cad.building".into(), mutations: Vec::new(), inferences: Vec::new() }],
@@ -4639,7 +4639,7 @@ impl AgentContributions {
     /// (`describe_plugin()`/`describe_extension()`) and consumer (`📇️registry:check`) must hold.
     /// Pure and dependency-free so both the Rust builder side and the registry's own TypeScript
     /// check (which has no way to call back into this crate) can each verify it independently.
-    pub fn promoted_is_subset_of_capabilities(&self) -> bool {
+    pub async fn promoted_is_subset_of_capabilities(&self) -> bool {
         self.promoted.iter().all(|id| self.capabilities.contains(id))
     }
 }
@@ -4649,7 +4649,7 @@ mod agent_contributions_tests {
     use super::*;
 
     #[test]
-    fn default_is_empty_and_promoted_subset_holds_trivially() {
+    async fn default_is_empty_and_promoted_subset_holds_trivially() {
         let contributions = AgentContributions::default();
         assert!(contributions.capabilities.is_empty());
         assert!(contributions.promoted.is_empty());
@@ -4657,7 +4657,7 @@ mod agent_contributions_tests {
     }
 
     #[test]
-    fn promoted_subset_of_capabilities_holds_and_is_violated_correctly() {
+    async fn promoted_subset_of_capabilities_holds_and_is_violated_correctly() {
         let ok = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.deleteSelection".into()] };
         assert!(ok.promoted_is_subset_of_capabilities());
         let bad = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.addBlock".into()] };
@@ -4665,7 +4665,7 @@ mod agent_contributions_tests {
     }
 
     #[test]
-    fn serde_round_trip_uses_camel_case_and_skips_empty_promoted() {
+    async fn serde_round_trip_uses_camel_case_and_skips_empty_promoted() {
         let contributions = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
         let json = serde_json::to_value(&contributions).unwrap();
         assert_eq!(json, serde_json::json!({ "capabilities": ["note.editor.deleteSelection"] }));
@@ -4674,7 +4674,7 @@ mod agent_contributions_tests {
     }
 
     #[test]
-    fn never_conflated_with_capability_requests() {
+    async fn never_conflated_with_capability_requests() {
         // 🚨️ `AgentContributions.capabilities` (what this package OFFERS) and
         // `PackageDescriptor.capability_requests: Vec<kernel::CapabilityRequest>` (what this
         // package NEEDS) are different types with different shapes — this test exists only to
@@ -4850,7 +4850,7 @@ const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[
 ];
 
 /// ⚖️ The single source of truth for wire compatibility: classes must match exactly, `MediaForm::Any` on the accepting side takes anything within the class, equal forms are always direct, and everything else falls through to the explicit `MEDIA_FORM_CONVERSIONS` table.
-pub fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> MediaCompat {
+pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> MediaCompat {
     if produced.class != accepted.class {
         return MediaCompat::Reject;
     }
@@ -4901,7 +4901,7 @@ pub struct AppIo {
 
 impl AppIo {
     /// 🔌️ The implicit `"document:in"` port every app accepts, keyed by `self.document_media_type`.
-    pub fn document_in_port(&self) -> MediaPortSpec {
+    pub async fn document_in_port(&self) -> MediaPortSpec {
         MediaPortSpec {
             id: "document:in".into(),
             label: "Document".into(),
@@ -4914,7 +4914,7 @@ impl AppIo {
     }
 
     /// 🔌️ The implicit `"document:out"` port every app produces — see `document_in_port`.
-    pub fn document_out_port(&self) -> MediaPortSpec {
+    pub async fn document_out_port(&self) -> MediaPortSpec {
         MediaPortSpec {
             id: "document:out".into(),
             label: "Document".into(),
@@ -4927,14 +4927,14 @@ impl AppIo {
     }
 
     /// 🔌️ The full port list, in stable order: the implicit document ports first, followed by every app-specific port declared in `self.ports`.
-    pub fn all_ports(&self) -> Vec<MediaPortSpec> {
+    pub async fn all_ports(&self) -> Vec<MediaPortSpec> {
         let mut ports = vec![self.document_in_port(), self.document_out_port()];
         ports.extend(self.ports.clone());
         ports
     }
 
     /// 🏗️ Builds an `AppIo` from just its implicit document surface, with no extra ports/formats declared yet — chain `.with_ports(...)` to add app-specific ports.
-    pub fn from_document(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
+    pub async fn from_document(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
         Self {
             document_schema: schema.into(),
             document_media_type: media_type,
@@ -4946,7 +4946,7 @@ impl AppIo {
     }
 
     /// 🔌️ Attaches app-specific ports (beyond the implicit document ports) to this `AppIo`.
-    pub fn with_ports(mut self, ports: Vec<MediaPortSpec>) -> Self {
+    pub async fn with_ports(mut self, ports: Vec<MediaPortSpec>) -> Self {
         self.ports = ports;
         self
     }
@@ -5023,7 +5023,7 @@ pub struct ConfigSpec {
 }
 
 impl ConfigSpec {
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self::default()
     }
 }
@@ -5064,7 +5064,7 @@ pub struct CommandGrammar {
 }
 
 impl CommandGrammar {
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self::default()
     }
 }
@@ -5096,7 +5096,7 @@ pub struct MediaFingerprint(pub String);
 
 impl MediaFingerprint {
     /// 🔑️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
-    pub fn of(media: &Media) -> Self {
+    pub async fn of(media: &Media) -> Self {
         match &media.payload {
             MediaPayload::Structured { schema, json } => {
                 MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]))
@@ -5121,9 +5121,9 @@ pub enum MediaError {
 
 /// 🔀️ A registered one-way conversion the workflow may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
 pub trait MediaConverter: Send + Sync {
-    fn from_form(&self) -> MediaForm;
-    fn to_form(&self) -> MediaForm;
-    fn convert(&self, media: &Media) -> Result<Media, MediaError>;
+    async fn from_form(&self) -> MediaForm;
+    async fn to_form(&self) -> MediaForm;
+    async fn convert(&self, media: &Media) -> Result<Media, MediaError>;
 }
 //#endregion Media
 //#endregion 🔖️MediaVocabulary
@@ -5137,7 +5137,7 @@ mod media_vocabulary_tests {
     use super::*;
 
     #[test]
-    fn media_types_compatible_covers_direct_any_convert_and_reject() {
+    async fn media_types_compatible_covers_direct_any_convert_and_reject() {
         let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
         let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaForm::Any };
@@ -5154,7 +5154,7 @@ mod media_vocabulary_tests {
     }
 
     #[test]
-    fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
+    async fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
         let structured = Media {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
@@ -5176,7 +5176,7 @@ mod media_vocabulary_tests {
     }
 
     #[test]
-    fn media_error_messages_are_human_readable() {
+    async fn media_error_messages_are_human_readable() {
         assert_eq!(MediaError::UnknownPort("in".into()).to_string(), "unknown media port `in`");
         let incompatible = MediaError::Incompatible {
             port: "out".into(),
@@ -5199,7 +5199,7 @@ mod app_label_tests {
     /// silently serialize as snake_case (`window_bodies`) while the TS `UiDirtyScope` type expects
     /// camelCase (`windowBodies`), desyncing the wire contract without any compile-time signal.
     #[test]
-    fn ui_dirty_scope_partial_serializes_fields_as_camel_case() {
+    async fn ui_dirty_scope_partial_serializes_fields_as_camel_case() {
         use crate::kernel::UiDirtyScope;
         let scope = UiDirtyScope::Partial {
             window_bodies: vec!["a".into()],
@@ -5218,7 +5218,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn ui_dirty_scope_defaults_to_full() {
+    async fn ui_dirty_scope_defaults_to_full() {
         use crate::kernel::UiDirtyScope;
         assert_eq!(UiDirtyScope::default(), UiDirtyScope::Full);
         assert_eq!(serde_json::to_string(&UiDirtyScope::Full).unwrap(), "{\"kind\":\"full\"}");
@@ -5234,7 +5234,7 @@ mod app_label_tests {
     //#endregion UiDirtyScopeTests
 
     #[test]
-    fn formats_app_label_for_chrome() {
+    async fn formats_app_label_for_chrome() {
         assert_eq!(
             app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]),
             "semio · puzzle · 3d"
@@ -5273,7 +5273,7 @@ mod app_label_tests {
     use serde_json::json;
 
     #[test]
-    fn action_arg_def_builder_chain() {
+    async fn action_arg_def_builder_chain() {
         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
             .required()
             .default_value(1.0)
@@ -5290,7 +5290,7 @@ mod app_label_tests {
     /// the `ActionArgControl` it used to construct directly, now that `control` is a stored→derived
     /// field — this is the whole refactor's regression guard for the ~236 call sites across 33 plugins.
     #[test]
-    fn six_arg_builder_helpers_derive_the_pre_d6_control() {
+    async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
         assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).control(), ActionArgControl::Text { placeholder: None });
         assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None });
         assert_eq!(
@@ -5307,7 +5307,7 @@ mod app_label_tests {
     /// audit) still derive their pre-D6 controls too — `ArgFormat::ArtifactKind`/`SurfaceApp` exist
     /// solely so these keep working under the new stored/derived split.
     #[test]
-    fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
+    async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
         let roles = vec![AppRole::Viewer];
         assert_eq!(
             ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).control(),
@@ -5321,7 +5321,7 @@ mod app_label_tests {
 
     /// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
     #[test]
-    fn action_semantics_for_kind_matches_the_defaults_table() {
+    async fn action_semantics_for_kind_matches_the_defaults_table() {
         let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
         assert!(mutation.effects.reversible);
         assert_eq!(mutation.execution.preview, PreviewMode::Diff);
@@ -5346,7 +5346,7 @@ mod app_label_tests {
     /// @emoji 🧪️ `ActionDefinition::new`/`new_catalog` populate `semantics` from `kind` automatically,
     /// and `.destructive()`/`.use_when()`/`.example()` compose on top of it.
     #[test]
-    fn action_definition_semantics_default_from_kind_and_builders_compose() {
+    async fn action_definition_semantics_default_from_kind_and_builders_compose() {
         let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
         assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation));
 
@@ -5363,7 +5363,7 @@ mod app_label_tests {
     /// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
     /// leaves for the shapes P3-manifest-schema actually introduces.
     #[test]
-    fn action_arg_def_json_schema_covers_the_core_shapes() {
+    async fn action_arg_def_json_schema_covers_the_core_shapes() {
         let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe("a name").json_schema();
         assert_eq!(text["type"], serde_json::json!("string"));
         assert_eq!(text["description"], serde_json::json!("a name"));
@@ -5388,7 +5388,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn effective_args_prefer_staged_then_default() {
+    async fn effective_args_prefer_staged_then_default() {
         let defs = vec![
             ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"),
             ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"),
@@ -5405,7 +5405,7 @@ mod app_label_tests {
     /// bug that dropped a dialog's seeded, non-form context arg (e.g. `shareSpace`'s `spaceId`) before
     /// it ever reached the dispatched descriptor, causing the hub to authorize against an empty id.
     #[test]
-    fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
+    async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
         let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "email": "user2@semio.dev" })).unwrap();
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1" })).unwrap();
@@ -5418,7 +5418,7 @@ mod app_label_tests {
     /// 🌱️ A seed value for a DECLARED field pre-fills it (e.g. `renameSpace` seeding the current name
     /// into its own editable `name` field) until the form stages its own edit, which then wins.
     #[test]
-    fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
+    async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
         let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "name": "Old Name" })).unwrap();
         let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
@@ -5432,7 +5432,7 @@ mod app_label_tests {
     /// 🗑️ A zero-declared-field confirm dialog (`deleteSpace`'s confirm/cancel shape) must pass its
     /// entire seeded context through wholesale — there is no form field to carry it otherwise.
     #[test]
-    fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
+    async fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "confirmed": true })).unwrap();
         let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
@@ -5440,7 +5440,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn missing_required_args_treats_unset_select_as_missing() {
+    async fn missing_required_args_treats_unset_select_as_missing() {
         let defs = vec![
             ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(),
             ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required(),
@@ -5458,7 +5458,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn utility_definition_and_utility_ref_construction() {
+    async fn utility_definition_and_utility_ref_construction() {
         let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush");
         assert_eq!(utility.id, "brush");
         assert!(!utility.allows_actions_while_active, "default gates actions while active");
@@ -5466,7 +5466,7 @@ mod app_label_tests {
         assert_eq!(UtilityRef::from("brush").as_str(), "brush");
     }
 
-    fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
+    async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
         let owned_actions = if window_actions.is_empty() {
             actions
         } else {
@@ -5531,7 +5531,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_window_actions_explicit_scoping() {
+    async fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
             vec![
                 ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
@@ -5545,7 +5545,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
+    async fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
                 ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
@@ -5563,7 +5563,7 @@ mod app_label_tests {
     //#region 🔖️InteractionTests
     /// 🕹️ Minimal one-domain, one-granularity `InteractionDefinition` fixture — mirrors the wave-0
     /// `sample_definition()` fixture in `🕹️interaction/🦀️component.rs`'s own tests.
-    fn sample_interaction_definition(id: &str) -> InteractionDefinition {
+    async fn sample_interaction_definition(id: &str) -> InteractionDefinition {
         InteractionDefinition {
             id: id.into(),
             label: LocalizedLabel::data(id),
@@ -5581,14 +5581,14 @@ mod app_label_tests {
     }
 
     #[test]
-    fn interaction_action_definitions_empty_when_app_has_no_interactions() {
+    async fn interaction_action_definitions_empty_when_app_has_no_interactions() {
         let app = app_with(vec![], vec![]);
         assert!(app.interactions.is_empty());
         assert!(interaction_action_definitions(&app).is_empty());
     }
 
     #[test]
-    fn interaction_action_definitions_full_set_when_app_has_interactions() {
+    async fn interaction_action_definitions_full_set_when_app_has_interactions() {
         let mut app = app_with(vec![], vec![]);
         app.interactions = vec![sample_interaction_definition("graph")];
         let defs = interaction_action_definitions(&app);
@@ -5617,7 +5617,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_window_actions_includes_injected_interaction_actions() {
+    async fn resolve_window_actions_includes_injected_interaction_actions() {
         let mut app = app_with(vec![], vec![]);
         app.interactions = vec![sample_interaction_definition("graph")];
         let actions = interaction_action_definitions(&app);
@@ -5637,14 +5637,14 @@ mod app_label_tests {
     }
 
     #[test]
-    fn action_kind_interaction_round_trips_through_json() {
+    async fn action_kind_interaction_round_trips_through_json() {
         let json = serde_json::to_string(&ActionKind::Interaction).unwrap();
         assert_eq!(json, "\"interaction\"");
         assert_eq!(serde_json::from_str::<ActionKind>(&json).unwrap(), ActionKind::Interaction);
     }
 
     #[test]
-    fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
+    async fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
         let mut app = app_with(
             vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View)],
             vec![ActionRef::new("noop")],
@@ -5671,7 +5671,7 @@ mod app_label_tests {
     /// Deserialization stays tolerant (`#[serde(default)]`), so an absent key still parses; it is only
     /// the *emitted* form that is now total.
     #[test]
-    fn empty_collections_serialize_as_arrays_rather_than_vanishing_from_the_manifest() {
+    async fn empty_collections_serialize_as_arrays_rather_than_vanishing_from_the_manifest() {
         let app = app_with(vec![], vec![]);
         assert!(app.commands.is_empty(), "this law is about the EMPTY case");
         let json = serde_json::to_string(&app).unwrap();
@@ -5685,7 +5685,7 @@ mod app_label_tests {
     }
     //#endregion 🔖️InteractionTests
 
-    fn app_with_modes_and_tools(mut modes: Vec<crate::ui::ModeDefinition>, tools: Vec<crate::ui::ToolDefinition>) -> AppDefinition {
+    async fn app_with_modes_and_tools(mut modes: Vec<crate::ui::ModeDefinition>, tools: Vec<crate::ui::ToolDefinition>) -> AppDefinition {
         let mut app = app_with(vec![], vec![]);
         let first = modes.remove(0);
         app.modes = Modes::new(first, modes);
@@ -5694,7 +5694,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_mode_tools_declared_order() {
+    async fn resolve_mode_tools_declared_order() {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
@@ -5714,7 +5714,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_mode_tools_isolates_other_modes() {
+    async fn resolve_mode_tools_isolates_other_modes() {
         let app = app_with_modes_and_tools(
             vec![
                 crate::ui::ModeDefinition {
@@ -5742,7 +5742,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_mode_tools_skips_unresolvable_refs() {
+    async fn resolve_mode_tools_skips_unresolvable_refs() {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
@@ -5759,8 +5759,8 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
-        fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
+    async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
+        async fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
             ui_wgpu::wgpu::WindowLayout {
                 root: ui_wgpu::wgpu::WindowLayoutRoot::Stack(ui_wgpu::wgpu::WindowLayoutStackNode {
                     kind: "stack".into(),
@@ -5797,7 +5797,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
+    async fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
         let mut app = app_with(vec![], vec![]);
         app.terminology_breadcrumbs.insert("de".into(), vec!["semio".into(), "a-de".into()]);
         assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
@@ -5806,7 +5806,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
+    async fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
         let mut app = app_with(vec![], vec![]);
         app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
         assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
@@ -5824,7 +5824,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn non_empty_vec_index_iter_first_mut_and_try_from() {
+    async fn non_empty_vec_index_iter_first_mut_and_try_from() {
         let mut list = NonEmptyVec::new(1i32, vec![2, 3]);
         assert_eq!(list.len(), 3);
         assert_eq!(list[0], 1);
@@ -5843,7 +5843,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn panel_group_anchor_and_as_str_cover_all_variants() {
+    async fn panel_group_anchor_and_as_str_cover_all_variants() {
         assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
         assert_eq!(PanelGroup::Details.anchor(), "top-right");
         assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
@@ -5853,7 +5853,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn panel_tab_kind_id_str_covers_framework_and_app_variants() {
+    async fn panel_tab_kind_id_str_covers_framework_and_app_variants() {
         assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
         assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
         assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
@@ -5868,7 +5868,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn action_definition_requires_and_serializes_args_field() {
+    async fn action_definition_requires_and_serializes_args_field() {
         let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation);
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
@@ -5882,7 +5882,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn window_kind_deserializes_without_utilities_field() {
+    async fn window_kind_deserializes_without_utilities_field() {
         let window: WindowKindDefinition = serde_json::from_str(
             r#"{"id":"main","label":{"native":{"en":"Main","de":"Main"},"reuse":{"en":"Main","de":"Main"}},"bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
         )
@@ -5892,7 +5892,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn action_arg_control_serializes_tagged() {
+    async fn action_arg_control_serializes_tagged() {
         let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X"))] };
         let json = serde_json::to_string(&control).unwrap();
         assert!(json.contains("\"kind\":\"select\""), "tagged with kind: {json}");
@@ -5901,7 +5901,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
+    async fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
         assert!(is_element_id("framework.navbar"));
         assert!(is_element_id("ui.window.main.action.addLayer"));
         assert!(is_element_id("brush"));
@@ -5913,7 +5913,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn element_id_segment_normalizes_and_is_idempotent() {
+    async fn element_id_segment_normalizes_and_is_idempotent() {
         assert_eq!(element_id_segment("world-orbit-projection"), "worldOrbitProjection");
         assert_eq!(element_id_segment("Some Name"), "someName");
         assert_eq!(element_id_segment("myUtilityId"), "myUtilityId");
@@ -5921,14 +5921,14 @@ mod app_label_tests {
     }
 
     #[test]
-    fn child_element_id_suffixes_and_normalizes_segments() {
+    async fn child_element_id_suffixes_and_normalizes_segments() {
         assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
         assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
         assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
     }
 
     #[test]
-    fn introduction_step_serde_defaults() {
+    async fn introduction_step_serde_defaults() {
         let step: IntroductionStepDefinition = serde_json::from_str(
             r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
         )
@@ -5949,7 +5949,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn element_id_authoring_helpers() {
+    async fn element_id_authoring_helpers() {
         assert_eq!(window_element_id("puzzle3d-main"), "framework.window.puzzle3dMain");
         assert_eq!(panel_tab_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
         assert_eq!(
@@ -5964,7 +5964,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_interaction_kind_round_trips_tagged() {
+    async fn introduction_interaction_kind_round_trips_tagged() {
         for (kind, tag) in [
             (IntroductionInteractionKind::Action(ActionRef::new("add")), "action"),
             (IntroductionInteractionKind::Utility(UtilityRef::new("brush")), "utility"),
@@ -5983,7 +5983,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_interaction_round_trips_and_defaults() {
+    async fn introduction_interaction_round_trips_and_defaults() {
         let interaction = IntroductionInteraction::zoom("puzzle3d-main", "Zoom in");
         assert_eq!(interaction.celebrate, None);
         let json = serde_json::to_string(&interaction).unwrap();
@@ -6017,7 +6017,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_point_round_trips_tagged_camel_case() {
+    async fn introduction_point_round_trips_tagged_camel_case() {
         for (point, tag) in [
             (IntroductionPoint::Element { id: "transform".into(), offset: None }, "element"),
             (IntroductionPoint::Element { id: "transform".into(), offset: Some([0.25, 0.75]) }, "element"),
@@ -6045,7 +6045,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_gesture_round_trips_tagged_camel_case() {
+    async fn introduction_gesture_round_trips_tagged_camel_case() {
         let at = IntroductionPoint::Element { id: "tool.fill".into(), offset: None };
         for (gesture, tag) in [
             (IntroductionGesture::LeftClick { at: at.clone() }, "leftClick"),
@@ -6081,7 +6081,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
+    async fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
         let at = IntroductionPoint::Element { id: "puzzle3d-main".into(), offset: None };
         let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
         assert_eq!(
@@ -6124,7 +6124,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn introduction_demonstration_round_trips_and_defaults() {
+    async fn introduction_demonstration_round_trips_and_defaults() {
         let at = IntroductionPoint::Element { id: "transform".into(), offset: None };
         let demo = IntroductionDemonstration::left_click(at.clone());
         assert_eq!(demo.cursor, None);
@@ -6163,7 +6163,7 @@ mod app_label_tests {
     }
 
     //#region 🔖️TutorialTests
-    fn minimal_tutorial() -> TutorialDefinition {
+    async fn minimal_tutorial() -> TutorialDefinition {
         TutorialDefinition {
             id: "welcome-tour".into(),
             title: LocalizedLabel::data("Welcome Tour"),
@@ -6177,7 +6177,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_definition_serde_defaults() {
+    async fn tutorial_definition_serde_defaults() {
         let json = r#"{"id":"t","title":{"native":{"en":"T","de":"T"},"reuse":{"en":"T","de":"T"}},"durationMs":1000,"base":{"ui":{}},"tracks":{}}"#;
         let def: TutorialDefinition = serde_json::from_str(json).unwrap();
         assert!(def.description.is_none());
@@ -6191,7 +6191,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_asset_src_round_trips_tagged_camel_case() {
+    async fn tutorial_asset_src_round_trips_tagged_camel_case() {
         for asset in [
             TutorialAssetSrc::Url { url: "https://example.test/clip.webm".into() },
             TutorialAssetSrc::Blob { hash: "abc123".into(), size: 42, media_type: "video/webm".into() },
@@ -6207,7 +6207,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_event_kind_round_trips_tagged_camel_case() {
+    async fn tutorial_event_kind_round_trips_tagged_camel_case() {
         let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::to_dsl_value(&serde_json::json!({"kindId": "beam"})).expect("tutorial action args")) };
         let json = serde_json::to_string(&action).unwrap();
         assert!(json.contains("\"kind\":\"action\""), "{json}");
@@ -6221,7 +6221,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_ui_change_round_trips_tagged_camel_case() {
+    async fn tutorial_ui_change_round_trips_tagged_camel_case() {
         let change = TutorialUiChange::ActiveUtility { window_id: "puzzle3d-main".into(), utility_id: Some("transform".into()) };
         let json = serde_json::to_string(&change).unwrap();
         assert!(json.contains("\"windowId\":\"puzzle3d-main\""), "field must be camelCase: {json}");
@@ -6243,7 +6243,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
+    async fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
         let edit = TutorialArtifactEventKind::Edit {
             forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate"})).expect("tutorial forward operation")],
             backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate", "inverse": true})).expect("tutorial backward operation")],
@@ -6262,7 +6262,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_camera_state_round_trips_tagged_camel_case() {
+    async fn tutorial_camera_state_round_trips_tagged_camel_case() {
         let orbit = TutorialCameraState::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(50.0) };
         let json = serde_json::to_string(&orbit).unwrap();
         assert!(json.contains("\"kind\":\"orbit\""), "{json}");
@@ -6277,7 +6277,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
+    async fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
         let mut def = minimal_tutorial();
         def.tracks.narration = vec![
             TutorialNarrationCue {
@@ -6333,7 +6333,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_camera_interpolation_lerps_position_and_target() {
+    async fn tutorial_camera_interpolation_lerps_position_and_target() {
         let prev = TutorialCameraKeyframe {
             at: 0,
             window_id: "w".into(),
@@ -6361,7 +6361,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_camera_interpolation_zooms_in_log_space() {
+    async fn tutorial_camera_interpolation_zooms_in_log_space() {
         let prev =
             TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
         let next =
@@ -6374,7 +6374,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_camera_interpolation_hold_snaps_at_keyframe() {
+    async fn tutorial_camera_interpolation_hold_snaps_at_keyframe() {
         let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Hold };
         let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Hold };
         assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
@@ -6382,7 +6382,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_camera_at_holds_first_pose_before_first_keyframe_and_last_pose_after() {
+    async fn tutorial_camera_at_holds_first_pose_before_first_keyframe_and_last_pose_after() {
         let mut def = minimal_tutorial();
         def.tracks.camera = vec![
             TutorialCameraKeyframe { at: 100, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear },
@@ -6394,7 +6394,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn compose_tutorial_ui_applies_snapshot_then_deltas() {
+    async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
         let mut def = minimal_tutorial();
         def.base.ui.active_tool_id = Some("fill".into());
         def.tracks.ui = vec![
@@ -6435,7 +6435,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
+    async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
         let mut def = minimal_tutorial();
         def.tracks.document = vec![
             TutorialArtifactEvent {
@@ -6474,7 +6474,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
+    async fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
         let mut def = minimal_tutorial();
         def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
         def.tracks.ui =
@@ -6486,7 +6486,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn start_tutorial_action_definition_offers_declared_tutorials_as_select_options() {
+    async fn start_tutorial_action_definition_offers_declared_tutorials_as_select_options() {
         let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial()));
         assert_eq!(action.id, START_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
@@ -6502,7 +6502,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn record_tutorial_action_definition_is_shell_intercepted_and_out_of_palette() {
+    async fn record_tutorial_action_definition_is_shell_intercepted_and_out_of_palette() {
         let action = record_tutorial_action_definition();
         assert_eq!(action.id, RECORD_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette);
@@ -6511,7 +6511,7 @@ mod app_label_tests {
     //#endregion 🔖️TutorialTests
 
     #[test]
-    fn dialog_definition_round_trips_camel_case_with_defaults() {
+    async fn dialog_definition_round_trips_camel_case_with_defaults() {
         let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection"));
         let json = serde_json::to_string(&dialog).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
@@ -6523,7 +6523,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn dialog_definition_builder_chain() {
+    async fn dialog_definition_builder_chain() {
         let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind"))
             .body(LocalizedLabel::data("Choose a kind"))
             .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind"))])
@@ -6538,7 +6538,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn command_definition_round_trips_camel_case_with_defaults() {
+    async fn command_definition_round_trips_camel_case_with_defaults() {
         let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell)
             .with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs));
         let json = serde_json::to_string(&command).unwrap();
@@ -6554,7 +6554,7 @@ mod app_label_tests {
 
 
     #[test]
-    fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
+    async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
         let command = CommandInvocation {
             address: CommandAddress {
                 owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() },
@@ -6586,7 +6586,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn open_dialog_effect_round_trips_camel_case() {
+    async fn open_dialog_effect_round_trips_camel_case() {
         let effect = Effect::OpenDialog { req: RequestId(1), dialog_id: "addObject".into(), args: None };
         let json = serde_json::to_string(&effect).unwrap();
         assert_eq!(json, r#"{"openDialog":{"req":1,"dialogId":"addObject"}}"#);
@@ -6595,7 +6595,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn dispatch_action_effect_round_trips_camel_case() {
+    async fn dispatch_action_effect_round_trips_camel_case() {
         let effect = Effect::DispatchAction {
             req: RequestId(2),
             action: "advanceReconstruction".into(),
@@ -6614,7 +6614,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn request_file_open_effect_round_trips_multiple() {
+    async fn request_file_open_effect_round_trips_multiple() {
         let effect = Effect::RequestFileOpen {
             req: RequestId(4),
             accept: ".png,.jpg".into(),
@@ -6645,7 +6645,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn request_media_frames_effect_round_trips_camel_case() {
+    async fn request_media_frames_effect_round_trips_camel_case() {
         let effect = Effect::RequestMediaFrames {
             req: RequestId(6),
             accept: "video/mp4,video/quicktime".into(),
@@ -6713,7 +6713,7 @@ mod app_label_tests {
     /// every dialect in a fixture set covering subset `*`, a dotted standard, and a hyphenated
     /// artifact kind.
     #[test]
-    fn surface_app_id_round_trips_through_parse_surface_app_id() {
+    async fn surface_app_id_round_trips_through_parse_surface_app_id() {
         let fixtures = [
             (ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor),
             (ArtifactDialect { artifact_kind: "s.stdio.png".into(), standard: "1.7".into(), subset: "a".into() }, AppRole::Viewer),
@@ -6728,13 +6728,13 @@ mod app_label_tests {
     }
 
     #[test]
-    fn parse_surface_app_id_rejects_missing_hash_and_unknown_role() {
+    async fn parse_surface_app_id_rejects_missing_hash_and_unknown_role() {
         assert!(parse_surface_app_id("s.cad.cad@1/*").is_err(), "missing '#role' suffix");
         assert!(parse_surface_app_id("s.cad.cad@1/*#owner").is_err(), "role outside viewer/editor");
     }
 
     #[test]
-    fn app_role_serde_wire_strings_are_exactly_viewer_and_editor() {
+    async fn app_role_serde_wire_strings_are_exactly_viewer_and_editor() {
         assert_eq!(serde_json::to_string(&AppRole::Viewer).unwrap(), "\"viewer\"");
         assert_eq!(serde_json::to_string(&AppRole::Editor).unwrap(), "\"editor\"");
         assert_eq!(serde_json::from_str::<AppRole>("\"viewer\"").unwrap(), AppRole::Viewer);
@@ -6743,7 +6743,7 @@ mod app_label_tests {
     }
 
     #[test]
-    fn app_role_as_str_and_from_str_round_trip() {
+    async fn app_role_as_str_and_from_str_round_trip() {
         assert_eq!(AppRole::Viewer.as_str(), "viewer");
         assert_eq!(AppRole::Editor.as_str(), "editor");
         assert_eq!("viewer".parse::<AppRole>().unwrap(), AppRole::Viewer);
@@ -6752,12 +6752,12 @@ mod app_label_tests {
     }
 
     #[test]
-    fn panel_tab_kind_settings_default_apps_id_str() {
+    async fn panel_tab_kind_settings_default_apps_id_str() {
         assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
     }
 
     #[test]
-    fn app_ref_serde_round_trips_as_camel_case() {
+    async fn app_ref_serde_round_trips_as_camel_case() {
         let app_ref = AppRef { plugin_id: "s.cad".into(), app_id: "s.cad.cad@1/*#editor".into() };
         let json = serde_json::to_string(&app_ref).unwrap();
         assert_eq!(json, "{\"pluginId\":\"s.cad\",\"appId\":\"s.cad.cad@1/*#editor\"}");
@@ -6767,7 +6767,7 @@ mod app_label_tests {
 
     #[cfg(feature = "typegen")]
     #[test]
-    fn exports_typescript_bindings() {
+    async fn exports_typescript_bindings() {
         use ts_rs::TS;
         ui_wgpu::wgpu::IconName::export().unwrap();
         ui_wgpu::wgpu::ActionDescriptor::export().unwrap();

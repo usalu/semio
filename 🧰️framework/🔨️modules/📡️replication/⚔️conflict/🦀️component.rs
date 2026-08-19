@@ -20,12 +20,12 @@ impl ConflictId {
     /// `blake3::hash` primitive directly (the same hashing dependency `🌿️vcs`'s
     /// `content_addressed_entity_id` and `📡️spr/🎮️command`'s `descriptor_fingerprint` already use —
     /// no new dependency added).
-    pub fn new(kind: &ConflictKind, artifact_id: &crate::ids::ArtifactId, mutation_ids: &[crate::ids::MutationId], hlc: &crate::ids::HybridLogicalTimestamp) -> Self {
+    pub async fn new(kind: &ConflictKind, artifact_id: &crate::ids::ArtifactId, mutation_ids: &[crate::ids::MutationId], hlc: &crate::ids::HybridLogicalTimestamp) -> Self {
         let mut sorted: Vec<&str> = mutation_ids.iter().map(|id| id.0.as_str()).collect();
         sorted.sort_unstable();
 
         let mut input = Vec::new();
-        input.extend_from_slice(kind.tag().as_bytes());
+        input.extend_from_slice(kind.tag().await.as_bytes());
         input.push(0);
         input.extend_from_slice(artifact_id.0.as_bytes());
         input.push(0);
@@ -46,7 +46,7 @@ impl ConflictId {
 
 //#region 🔖️ConflictKind
 /// @emoji 🚧️ What kind of conflict this is. `Quarantined`: a whole incoming batch was rejected
-/// outright by `policy.rejects(worst)` — nothing in `envelopes` was applied; `resolve_conflict`'s
+/// outright by `policy.rejects(worst).await` — nothing in `envelopes` was applied; `resolve_conflict`'s
 /// `Accept` replays it under `LaissezFaire`, `Discard` seeds it into the causal DAG as already-seen
 /// without ever relaying it. `Degraded`: the batch WAS applied (its worst level was below the
 /// policy's reject floor but still `>= Warning`), so `edit_ids` names the already-durable edits worth
@@ -59,7 +59,7 @@ pub enum ConflictKind {
 }
 
 impl ConflictKind {
-    fn tag(&self) -> &'static str {
+    async fn tag(&self) -> &'static str {
         match self {
             ConflictKind::Quarantined { .. } => "quarantined",
             ConflictKind::Degraded { .. } => "degraded",
@@ -145,55 +145,55 @@ pub struct MergeReport {
 mod tests {
     use super::*;
 
-    fn hlc(actor: u64, physical_ms: u64) -> crate::ids::HybridLogicalTimestamp {
-        crate::ids::HybridLogicalTimestamp::new(actor, physical_ms)
+    async fn hlc(actor: u64, physical_ms: u64) -> crate::ids::HybridLogicalTimestamp {
+        crate::ids::HybridLogicalTimestamp::new(actor, physical_ms).await
     }
 
     //#region 🔖️ConflictId
-    #[test]
-    fn conflict_id_is_deterministic_and_content_sensitive() {
+    #[semio_framework_async_macros::async_test]
+    async fn conflict_id_is_deterministic_and_content_sensitive() {
         let artifact = crate::ids::ArtifactId("doc-1".into());
         let ids = vec![crate::ids::MutationId("op-2".into()), crate::ids::MutationId("op-1".into())];
         let ids_reordered = vec![crate::ids::MutationId("op-1".into()), crate::ids::MutationId("op-2".into())];
         let kind = ConflictKind::Degraded { edit_ids: vec!["e1".into()] };
-        let stamp = hlc(1, 100);
+        let stamp = hlc(1, 100).await;
 
-        let a = ConflictId::new(&kind, &artifact, &ids, &stamp);
-        let b = ConflictId::new(&kind, &artifact, &ids_reordered, &stamp);
-        assert_eq!(a, b, "mutation id order must not affect the conflict id (sorted before hashing)");
+        let a = ConflictId::new(&kind, &artifact, &ids, &stamp).await;
+        let b = ConflictId::new(&kind, &artifact, &ids_reordered, &stamp).await;
+        assert_eq!(a, b, "mutation id order must not affect the conflict id (sorted before hashing).await");
         assert!(a.0.starts_with("conflict-"));
 
-        let different_artifact = ConflictId::new(&kind, &crate::ids::ArtifactId("doc-2".into()), &ids, &stamp);
+        let different_artifact = ConflictId::new(&kind, &crate::ids::ArtifactId("doc-2".into()), &ids, &stamp).await;
         assert_ne!(a, different_artifact);
 
         let different_kind = ConflictKind::Quarantined { envelopes: Vec::new() };
-        let different_kind_id = ConflictId::new(&different_kind, &artifact, &ids, &stamp);
+        let different_kind_id = ConflictId::new(&different_kind, &artifact, &ids, &stamp).await;
         assert_ne!(a, different_kind_id, "Quarantined vs Degraded with the same mutation ids must diverge");
 
-        let different_hlc = ConflictId::new(&kind, &artifact, &ids, &hlc(1, 200));
+        let different_hlc = ConflictId::new(&kind, &artifact, &ids, &hlc(1, 200).await).await;
         assert_ne!(a, different_hlc);
     }
     //#endregion 🔖️ConflictId
 
     //#region 🔖️Reports
-    #[test]
-    fn dispatch_report_carries_worst_and_messages() {
+    #[semio_framework_async_macros::async_test]
+    async fn dispatch_report_carries_worst_and_messages() {
         let report = DispatchReport {
             policy: crate::MergePolicy::Vigilant,
             worst: Some(crate::diagnostic::Severity::Warning),
-            messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range")],
+            messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range").await],
         };
         assert_eq!(report.worst, Some(crate::diagnostic::Severity::Warning));
         assert_eq!(report.messages.len(), 1);
     }
 
-    #[test]
-    fn merge_report_round_trips_through_serde() {
+    #[semio_framework_async_macros::async_test]
+    async fn merge_report_round_trips_through_serde() {
         let report = MergeReport {
             policy: crate::MergePolicy::Normal,
             accepted: true,
             insertion_index: 3,
-            replayed: vec![EditMessages { edit_id: "e1".into(), messages: vec![crate::MutationMessage::info("mutation.cascade", "cascaded")] }],
+            replayed: vec![EditMessages { edit_id: "e1".into(), messages: vec![crate::MutationMessage::info("mutation.cascade", "cascaded").await] }],
             worst: Some(crate::diagnostic::Severity::Info),
             conflict: None,
         };
@@ -204,17 +204,17 @@ mod tests {
     //#endregion 🔖️Reports
 
     //#region 🔖️Conflict
-    #[test]
-    fn conflict_kind_status_resolution_are_distinct() {
+    #[semio_framework_async_macros::async_test]
+    async fn conflict_kind_status_resolution_are_distinct() {
         let artifact = crate::ids::ArtifactId("doc-1".into());
         let quarantined = ConflictKind::Quarantined { envelopes: Vec::new() };
         let degraded = ConflictKind::Degraded { edit_ids: vec!["e1".into()] };
-        let stamp = hlc(1, 100);
+        let stamp = hlc(1, 100).await;
         let conflict = Conflict {
-            id: ConflictId::new(&quarantined, &artifact, &[], &stamp),
+            id: ConflictId::new(&quarantined, &artifact, &[], &stamp).await,
             kind: quarantined,
             status: ConflictStatus::Open,
-            messages: vec![crate::MutationMessage::error("mutation.target-missing", "target missing")],
+            messages: vec![crate::MutationMessage::error("mutation.target-missing", "target missing").await],
             actors: vec![crate::ids::ActorId("actor-1".into())],
             timestamp: stamp,
         };

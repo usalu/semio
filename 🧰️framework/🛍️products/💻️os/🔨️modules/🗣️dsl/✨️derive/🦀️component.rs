@@ -4,6 +4,12 @@
 //!
 //! P6: `DslArtifact`/`DslOps` no longer emit `ArtifactDsl`/`ArtifactPack`/`OpText`/`OpBinary` —
 //! those traits are handcrafted per artifact. `DslRecord` stays for field helpers only.
+//!
+//! Whole crate is sync (E3): a proc-macro entry point's signature is language-fixed to
+//! `fn(TokenStream) -> TokenStream` and rustc rejects an `async fn` here outright (a proc macro
+//! runs inside rustc at compile time, where there is no executor to poll it). None of this
+//! crate's helpers do I/O, so every fn stays sync rather than threading `block_on` through code
+//! that has nothing to await.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -570,6 +576,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
 
 //#region 🔖️DslRecord
 #[proc_macro_derive(DslRecord, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -625,6 +632,7 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
 
 //#region 🔖️DslArtifact
 #[proc_macro_derive(DslArtifact, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -708,6 +716,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
 /// instead, routed through the same `store::pack_rt` the `ArtifactPack` impl above uses — every
 /// crate that already derives an operation/document alongside its diff already depends on `store`).
 #[proc_macro_derive(DslDiff, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -765,6 +774,7 @@ pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
 
 //#region 🔖️DslScalar
 #[proc_macro_derive(DslScalar, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -903,6 +913,7 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
 }
 
 #[proc_macro_derive(DslOps, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -922,6 +933,7 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
 /// used inside `#[dsl(statements)]`/`#[dsl(statements, block)]` collection fields without also
 /// gaining (and having to satisfy the bounds of) `store::OpText`.
 #[proc_macro_derive(DslEnum, attributes(dsl))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -975,6 +987,7 @@ fn parse_mutations_attrs(input: &DeriveInput) -> MutationsAttrs {
 /// findings a later policy scan has to catch. See
 /// `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md` §4.
 #[proc_macro_derive(Mutations, attributes(mutations))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_mutations(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
@@ -1139,6 +1152,7 @@ fn parse_composite_attrs(input: &DeriveInput) -> CompositeAttrs {
 /// checked against the struct's OWN kebab name (a composite kind is never wrapped in an enum
 /// variant the way a handcrafted `MutationKind` payload is).
 #[proc_macro_derive(CompositeMutation, attributes(composite))]
+// 🚫️async: E3 proc-macro entry
 pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();

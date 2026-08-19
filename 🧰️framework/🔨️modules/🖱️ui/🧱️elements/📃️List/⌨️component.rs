@@ -9,7 +9,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{ListState, WidgetSignal};
 
-pub(crate) fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) async fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSignal> {
     match ev.key {
         Key::Up if l.selected > 0 => {
             l.selected -= 1;
@@ -31,7 +31,7 @@ pub(crate) fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSign
     }
 }
 
-pub(crate) fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub(crate) async fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let bg = theme.surface(Surface::Window);
     for row in 0..rect.height {
         let idx = l.offset + usize::from(row);

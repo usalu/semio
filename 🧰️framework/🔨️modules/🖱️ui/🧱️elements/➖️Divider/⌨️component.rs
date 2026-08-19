@@ -8,7 +8,7 @@ use crate::tui::text::display_width;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::DividerState;
 
-pub(crate) fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) async fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));
     let fg = theme.role(Role::BorderNormal);
     buf.hline(Pos { x: rect.x, y: rect.y }, rect.width, '\u{2500}', fg, bg);

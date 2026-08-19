@@ -29,14 +29,14 @@ impl BodyReader {
     /// for BOTH `blob_read` (no chunked blob backend exists anywhere in this codebase — see
     /// `Host::blob_read`'s own doc) and `http_fetch` (the reactor's `append_chunk` reassembly hands
     /// `Host::http_fetch`'s Poll arm one complete buffer, never a live channel).
-    pub(crate) fn poll_buffered(bytes: Vec<u8>) -> Self {
+    pub(crate) async fn poll_buffered(bytes: Vec<u8>) -> Self {
         BodyReader::Poll { bytes, consumed: 0 }
     }
 
     /// 🌊️ Wraps a real host-async `stream<u8>` — see `Host::http_fetch`/`Host::blob_read`'s
     /// `Direct` arms, the only callers.
     #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-    pub(crate) fn direct(stream: wit_bindgen::StreamReader<u8>) -> Self {
+    pub(crate) async fn direct(stream: wit_bindgen::StreamReader<u8>) -> Self {
         BodyReader::Direct(stream)
     }
 
@@ -88,10 +88,10 @@ mod tests {
     /// ⏳️ A busy-loop `block_on` for the small, always-immediately-ready futures `BodyReader`'s
     /// `Poll` variant produces — mirrors `📮️requests/🦀️component.rs`'s own `futures_test_waker`
     /// idiom (a no-op `RawWaker`), since nothing here ever actually parks.
-    fn block_on<T>(future: impl std::future::Future<Output = T>) -> T {
+    async fn block_on<T>(future: impl std::future::Future<Output = T>) -> T {
         use std::task::{Context, RawWaker, RawWakerVTable, Waker};
-        fn noop(_: *const ()) {}
-        fn clone(_: *const ()) -> RawWaker {
+        async fn noop(_: *const ()) {}
+        async fn clone(_: *const ()) -> RawWaker {
             RawWaker::new(std::ptr::null(), &VTABLE)
         }
         static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, noop, noop, noop);
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn poll_backed_reader_yields_the_whole_buffer_then_ends() {
+    async fn poll_backed_reader_yields_the_whole_buffer_then_ends() {
         let mut reader = BodyReader::poll_buffered(b"hello world".to_vec());
         let chunk = block_on(reader.next_chunk());
         assert_eq!(chunk, Some(b"hello world".to_vec()));
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn collect_reassembles_the_full_poll_buffer() {
+    async fn collect_reassembles_the_full_poll_buffer() {
         let reader = BodyReader::poll_buffered(vec![7u8; 1000]);
         let collected = block_on(reader.collect(10_000)).expect("under cap");
         assert_eq!(collected.len(), 1000);
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn collect_faults_over_cap_instead_of_truncating() {
+    async fn collect_faults_over_cap_instead_of_truncating() {
         let reader = BodyReader::poll_buffered(vec![1u8; 100]);
         let result = block_on(reader.collect(50));
         let fault = result.expect_err("100 bytes over a 50-byte cap must fault");
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_poll_body_yields_no_chunks() {
+    async fn an_empty_poll_body_yields_no_chunks() {
         let mut reader = BodyReader::poll_buffered(Vec::new());
         assert_eq!(block_on(reader.next_chunk()), None);
     }
