@@ -30,7 +30,7 @@ impl ArtifactSerializer for SemioValueToJson {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let nodes: HashMap<&ValueId, &SemioValue> = from.nodes.iter().map(|n| (&n.id, &n.value)).collect();
         let mut visiting: HashSet<ValueId> = HashSet::new();
         let value = json_value_from_semio(&from.root, &nodes, &mut visiting)?;
@@ -156,7 +156,7 @@ mod tests {
         };
         let s1_value = semio_value_from_json(&json);
         let s1 = SemioValueSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: s1_value, nodes: Vec::new() };
-        let json_x = SemioValueToJson::serialize(&s1).expect("serialize");
+        let json_x = semio_framework_plugin::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
         let s2_value = semio_value_from_json(&json_x.value);
         assert_eq!(s1.root, s2_value);
     }
@@ -168,7 +168,7 @@ mod tests {
             root: SemioValue::Map { entries: vec![SemioValueEntry { key: "linked".into(), value: SemioValue::Ref { id: ValueId::new("n1") } }] },
             nodes: vec![SemioValueNode { id: ValueId::new("n1"), value: SemioValue::Int { lexeme: "7".into() } }],
         };
-        let json_x = SemioValueToJson::serialize(&s1).expect("serialize");
+        let json_x = semio_framework_plugin::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
         match &json_x.value {
             JsonValue::Object { members } => {
                 assert_eq!(members[0].key, "linked");

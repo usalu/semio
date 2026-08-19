@@ -402,6 +402,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+When closing a ticket, then all files inside the ticket folder above 5MB and all folders inside the ticket folder above 10MB must be deleted (even if they are not checked in)
+
+---
+
 Introduce a new framework product: server
 A server contains everything from api, auth, database, ui for different kind of users with different permissions (admin, manager, …), realtime peer to peer communication, etc.
 It is designed to be compatible with the os as client and uses CQRS Dual-Bus Actor Model instead of CRUD, is collaborative-first, local-first with hot-attachable authorative backbone, etc.

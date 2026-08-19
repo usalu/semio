@@ -68,7 +68,7 @@ impl ArtifactSerializer for SemioDrawingToDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut drawing = DwgDrawing::default();
         for layer in &from.layers {
             let layer_index = drawing.ensure_layer(&layer.name);
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn real_round_trip_through_relocated_dwg_codec() {
         let drawing = sample_drawing();
-        let dwg = SemioDrawingToDwg::serialize(&drawing).expect("serialize");
+        let dwg = semio_framework_plugin::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");
         assert_eq!(dwg.version, DWG_CODEC_VERSION);
         let round_tripped = SemioDrawingFromDwg::deserialize(&dwg).expect("deserialize");
         assert_eq!(round_tripped.layers.len(), 1);

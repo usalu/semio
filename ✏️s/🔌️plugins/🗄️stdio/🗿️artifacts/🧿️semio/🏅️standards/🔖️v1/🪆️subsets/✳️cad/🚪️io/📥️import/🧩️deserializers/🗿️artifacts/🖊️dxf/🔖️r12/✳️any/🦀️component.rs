@@ -133,7 +133,7 @@ impl ArtifactDeserializer for SemioCadFromDxf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(SemioCadSnapshot {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: from.tables.layers.iter().map(cad_layer_from_dxf).collect(),
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn maps_layers_blocks_and_entities() {
-        let cad = SemioCadFromDxf::deserialize(&sample_dxf()).expect("deserialize");
+        let cad = semio_framework_plugin::resolve_ready(SemioCadFromDxf::deserialize(&sample_dxf())).expect("deserialize");
         assert_eq!(cad.layers.len(), 1);
         assert_eq!(cad.layers[0].visible, true);
         assert_eq!(cad.blocks.len(), 1);

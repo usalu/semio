@@ -28,7 +28,7 @@ impl ArtifactDeserializer for SemioImageFromGif {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.frames.is_empty() {
             return Err(store::PackError::Schema("gif→semio/image: at least one frame is required".into()));
         }
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn decodes_indices_through_gct_and_maps_comments() {
-        let semio = SemioImageFromGif::deserialize(&sample_gif()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioImageFromGif::deserialize(&sample_gif())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);
         assert_eq!(semio.colorspace, SemioColorspace::Indexed);

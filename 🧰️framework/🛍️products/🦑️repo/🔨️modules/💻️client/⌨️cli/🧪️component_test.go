@@ -17891,6 +17891,87 @@ func setupTicketDir(t *testing.T) (string, string) {
 	return tmpDir, ticketJSON
 }
 
+func writeSparseTicketArtifact(t *testing.T, path string, size int64) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Truncate(size); err != nil {
+		_ = f.Close()
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	ticketDir := filepath.Dir(ticketJSON)
+	now := time.Now().UTC()
+	ticket := &Ticket{
+		Year:       now.Year() % 100,
+		Month:      int(now.Month()),
+		Day:        now.Day(),
+		Slug:       "TEST-TICKET",
+		Title:      "Test Ticket",
+		Status:     TicketStatusOpen,
+		FolderPath: ticketDir,
+		JsonPath:   ticketJSON,
+		Interactions: []Interaction{{
+			Kind: "ticket.open",
+			Date: "2026-01-01 00:00:00",
+		}},
+	}
+
+	const mib = 1024 * 1024
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "large.bin"), 5*mib+1)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "exact-5mb.bin"), 5*mib)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, ".cache.bin"), 5*mib+1)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "huge-dir", "blob.bin"), 10*mib+1)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "small-dir", "small.bin"), 1*mib)
+
+	testFile := "changed.txt"
+	if err := os.WriteFile(filepath.Join(tmpDir, testFile), []byte("x"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := FinishTicket(ticket, "Summary", []string{testFile}, true, false); err != nil {
+		t.Fatalf("FinishTicket failed: %v", err)
+	}
+	if ticket.Status != TicketStatusClosed {
+		t.Fatalf("ticket status = %v, want closed", ticket.Status)
+	}
+
+	assertNotExists := func(path string) {
+		t.Helper()
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatalf("expected deleted: %s", path)
+		}
+	}
+	assertExists := func(path string) {
+		t.Helper()
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected kept: %s (%v)", path, err)
+		}
+	}
+
+	assertNotExists(filepath.Join(ticketDir, "large.bin"))
+	assertNotExists(filepath.Join(ticketDir, ".cache.bin"))
+	assertNotExists(filepath.Join(ticketDir, "huge-dir"))
+	assertExists(filepath.Join(ticketDir, "exact-5mb.bin"))
+	assertExists(filepath.Join(ticketDir, "small-dir", "small.bin"))
+	assertExists(ticketJSON)
+}
+
 func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 	t.Helper()
 	data, err := os.ReadFile(ticketJSON)

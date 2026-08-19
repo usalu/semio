@@ -136,6 +136,9 @@ pub mod app {
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
+    use std::future::Future;
+    use std::pin::Pin;
     /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
     /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
@@ -447,9 +450,9 @@ pub mod app {
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
     pub use semio_framework::{
-        io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose, wire_decode_composed_artifact,
-        wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, ComposeError, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource, IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError,
-        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
+        io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose,
+        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource, IoConfidence,
+        IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
     };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
@@ -459,7 +462,10 @@ pub mod app {
         type Into;
         const FROM: Dialect;
         const INTO: Dialect;
-        fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — every
+        /// existing leaf's `serialize` never truly awaits, so its future resolves the moment it
+        /// is first polled (see `resolve_ready` in the framework io module).
+        async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
     }
 
     /// 🧩️ Directed snapshot conversion from a foreign dialect into this dialect. One unit struct
@@ -469,7 +475,9 @@ pub mod app {
         type Into;
         const FROM: Dialect;
         const INTO: Dialect;
-        fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
+        /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
+        async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError>;
     }
 
     /// 🎹️ Subset-level composer: analyze foreign/native sources, build one snapshot in `WRITES`.
@@ -479,7 +487,9 @@ pub mod app {
         type Snapshot;
         const WRITES: Dialect;
         fn reads() -> &'static [Dialect];
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
+        /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
     }
 
     /// 🎹️ Erases a typed `ArtifactComposer` into a `ComposerEntry` row for `register_composer_entries`.
@@ -490,23 +500,25 @@ pub mod app {
     where
         C::Snapshot: ArtifactPack,
     {
-        fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             C::Snapshot: ArtifactPack,
         {
-            let typed_sources: Vec<ComposeSource<'_>> = sources
-                .iter()
-                .map(|s| ComposeSource {
-                    dialect: s.dialect,
-                    payload: match &s.payload {
-                        IoPayload::Text(t) => AnalyzeSource::Text(t.as_str()),
-                        IoPayload::Binary(b) => AnalyzeSource::Binary(b.as_slice()),
-                    },
-                })
-                .collect();
-            let composed = C::compose(&typed_sources)?;
-            let bytes = ArtifactPack::encode_pack(&composed.snapshot);
-            Ok(ComposedArtifact { dialect: C::WRITES, payload: IoPayload::Binary(bytes), diagnostics: composed.diagnostics, confidence: composed.confidence })
+            Box::pin(async move {
+                let typed_sources: Vec<ComposeSource<'_>> = sources
+                    .iter()
+                    .map(|s| ComposeSource {
+                        dialect: s.dialect,
+                        payload: match &s.payload {
+                            IoPayload::Text(t) => AnalyzeSource::Text(t.as_str()),
+                            IoPayload::Binary(b) => AnalyzeSource::Binary(b.as_slice()),
+                        },
+                    })
+                    .collect();
+                let composed = C::compose(&typed_sources).await?;
+                let bytes = ArtifactPack::encode_pack(&composed.snapshot);
+                Ok(ComposedArtifact { dialect: C::WRITES, payload: IoPayload::Binary(bytes), diagnostics: composed.diagnostics, confidence: composed.confidence })
+            })
         }
         ComposerEntry { writes: C::WRITES, reads: C::reads(), compose: erased_compose::<C> }
     }
@@ -524,28 +536,30 @@ pub mod app {
         D::From: ArtifactPack,
         D::Into: ArtifactPack,
     {
-        fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             D::From: ArtifactPack,
             D::Into: ArtifactPack,
         {
-            let source = match sources {
-                [one] => one,
-                other => {
-                    return Err(ComposeError { message: format!("deserializer {}->{} needs exactly 1 source, got {}", D::FROM.artifact_kind, D::INTO.artifact_kind, other.len()), diagnostics: Vec::new() });
-                }
-            };
-            let bytes = match &source.payload {
-                IoPayload::Binary(b) => b.as_slice(),
-                IoPayload::Text(_) => {
-                    return Err(ComposeError { message: format!("deserializer {}->{} source must be Binary (ArtifactPack-encoded)", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() });
-                }
-            };
-            let from =
-                <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let into = D::deserialize(&from).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
-            Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+            Box::pin(async move {
+                let source = match sources {
+                    [one] => one,
+                    other => {
+                        return Err(ComposeError { message: format!("deserializer {}->{} needs exactly 1 source, got {}", D::FROM.artifact_kind, D::INTO.artifact_kind, other.len()), diagnostics: Vec::new() });
+                    }
+                };
+                let bytes = match &source.payload {
+                    IoPayload::Binary(b) => b.as_slice(),
+                    IoPayload::Text(_) => {
+                        return Err(ComposeError { message: format!("deserializer {}->{} source must be Binary (ArtifactPack-encoded)", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() });
+                    }
+                };
+                let from =
+                    <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let into = D::deserialize(&from).await.map_err(|e| ComposeError { message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
+                Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+            })
         }
         ComposerEntry { writes: D::INTO, reads: &[D::FROM], compose: erased_compose::<D> }
     }
@@ -558,27 +572,29 @@ pub mod app {
         S::From: ArtifactPack,
         S::Into: ArtifactPack,
     {
-        fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
+        fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
         where
             S::From: ArtifactPack,
             S::Into: ArtifactPack,
         {
-            let source = match sources {
-                [one] => one,
-                other => {
-                    return Err(ComposeError { message: format!("serializer {}->{} needs exactly 1 source, got {}", S::FROM.artifact_kind, S::INTO.artifact_kind, other.len()), diagnostics: Vec::new() });
-                }
-            };
-            let bytes = match &source.payload {
-                IoPayload::Binary(b) => b.as_slice(),
-                IoPayload::Text(_) => {
-                    return Err(ComposeError { message: format!("serializer {}->{} source must be Binary (ArtifactPack-encoded)", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() });
-                }
-            };
-            let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let into = S::serialize(&from).map_err(|e| ComposeError { message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
-            Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+            Box::pin(async move {
+                let source = match sources {
+                    [one] => one,
+                    other => {
+                        return Err(ComposeError { message: format!("serializer {}->{} needs exactly 1 source, got {}", S::FROM.artifact_kind, S::INTO.artifact_kind, other.len()), diagnostics: Vec::new() });
+                    }
+                };
+                let bytes = match &source.payload {
+                    IoPayload::Binary(b) => b.as_slice(),
+                    IoPayload::Text(_) => {
+                        return Err(ComposeError { message: format!("serializer {}->{} source must be Binary (ArtifactPack-encoded)", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() });
+                    }
+                };
+                let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let into = S::serialize(&from).await.map_err(|e| ComposeError { message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
+                Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+            })
         }
         ComposerEntry { writes: S::INTO, reads: &[S::FROM], compose: erased_compose::<S> }
     }
@@ -887,7 +903,10 @@ pub mod app {
         /// path, so nothing about a non-composing artifact's behavior changes); falls through to
         /// `Spec::Composition::compose` otherwise (a mixed/foreign-dialect source set, or no
         /// declared slots at all).
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        /// 🌀️ `io-async-signatures`: async signature — behaviourally unchanged; the composition it
+        /// delegates to (`ArtifactComposition::compose`, `ArtifactChildren::compose_from_children`)
+        /// stays synchronous by design (see the framework io module's `resolve_ready` doc comment).
+        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let slots = <Spec::Children as ArtifactChildren>::slots();
             let all_child_sources = !slots.is_empty() && !sources.is_empty() && sources.iter().all(|source| slots.iter().any(|slot| slot.kind == source.dialect.artifact_kind));
             if all_child_sources {
@@ -8575,6 +8594,13 @@ pub mod app {
         /// `store::CompositionCoordinator::dispatch_group` as one atomic multi-document gesture — see
         /// that method's own doc comment for the two-phase validate/apply protocol.
         pub child_emits: Vec<ChildEmit>,
+        /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): zero-or-more tasks
+        /// spawned onto this actor's `LocalExecutor` alongside this SAME gesture — `dispatch_emit`
+        /// spawns each one (quota-gated, key-deduped) right after the mutation lanes above have
+        /// landed, so `TaskCtx.meta` always reflects state that was ACTUALLY committed, never just
+        /// requested. This is the ONLY way a command handler can await anything: `handle` itself
+        /// stays a pure synchronous reducer (see `AsyncTask`'s own doc for the full contract).
+        pub tasks: Vec<AsyncTask<Mutation, ConfigMutation, DraftMutation>>,
     }
 
     impl<Mutation, ConfigMutation, DraftMutation> Default for Emit<Mutation, ConfigMutation, DraftMutation> {
@@ -8589,9 +8615,105 @@ pub mod app {
                 events: Vec::new(),
                 ui_scope: semio_framework::kernel::UiDirtyScope::default(),
                 child_emits: Vec::new(),
+                tasks: Vec::new(),
             }
         }
     }
+
+    //#region 🔖️AsyncTask
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the ONLY way a plugin's code
+    /// can await anything. `ArtifactApp::handle` (the pure reducer) stays fully synchronous —
+    /// waiting happens entirely INSIDE a task's `run` future, which is handed a `TaskCtx` (the
+    /// awaitable `host::*` surface plus the ORIGINATING `ActionMeta`) once `dispatch_emit` actually
+    /// spawns it, and the task's eventual result re-enters the reducer as a FOLLOW-UP dispatch
+    /// (Elm's Msg-from-Cmd) — never by mutating anything directly from inside the future. Every
+    /// task is owned by the instance that spawned it and is cancelled the moment that instance
+    /// closes (`Event::InstanceClose`) — there is no detached/fire-and-forget spawn.
+    ///
+    /// `run`'s closure captures whatever the task needs (arguments, a `Rc`-shared cache, ...) and
+    /// is deliberately NOT `Send` — the guest is single-threaded and `LocalExecutor` is already
+    /// `Rc`-based, so nothing here ever crosses a real thread boundary.
+    pub struct AsyncTask<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
+        /// 🪪️ Diagnostic name — never parsed, only ever displayed (a quota-exceeded `Fault`'s
+        /// message names the task that was refused).
+        pub label: String,
+        /// 🔑️ Latest-wins dedupe: spawning a task under the same `(instance, key)` as one already
+        /// live cancels the live one first — the common "a new gesture supersedes an in-flight
+        /// autosave/search/etc for the same purpose" shape.
+        pub key: Option<String>,
+        /// 🔁️ OpBinary-encoded command bytes — if the actor restores from a checkpoint taken while
+        /// this task was still in flight, THIS is re-dispatched (as a fresh `TaskResolution::
+        /// Command`) on the first turn after restore instead of the task itself, which is never
+        /// serialized (design-abi.md §4: an in-flight async task is marked re-run-on-restore, not
+        /// resumed as though the host round-trip were still live). `None` (the default) means the
+        /// task is simply dropped, unrestarted, on restore — correct for idempotent/best-effort
+        /// work that a restore should not repeat.
+        pub restart: Option<Vec<u8>>,
+        run: Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>>>,
+    }
+
+    impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation, DraftMutation> {
+        /// 🌱️ Builds a task from an async closure. `run` is called once, at the moment
+        /// `dispatch_emit` actually spawns this task (never eagerly at `Emit` construction time),
+        /// with the `TaskCtx` it should await against.
+        pub fn new<F>(label: impl Into<String>, run: impl FnOnce(TaskCtx) -> F + 'static) -> Self
+        where
+            F: Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>> + 'static,
+        {
+            Self { label: label.into(), key: None, restart: None, run: Box::new(move |ctx| Box::pin(run(ctx))) }
+        }
+
+        /// 🔑️ See the `key` field's own doc.
+        pub fn keyed(mut self, key: impl Into<String>) -> Self {
+            self.key = Some(key.into());
+            self
+        }
+
+        /// 🔁️ See the `restart` field's own doc.
+        pub fn restartable(mut self, command: Vec<u8>) -> Self {
+            self.restart = Some(command);
+            self
+        }
+
+        /// 🧵️ `⚛️reactor::spawn_task`'s sole consumer — decomposes the task into its plain-data
+        /// bookkeeping fields plus the boxed closure, so the reactor (which has no reason to know
+        /// about `AsyncTask` as a named type beyond spawning it) never has to reconstruct one.
+        pub(crate) fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>>>) {
+            (self.label, self.key, self.restart, self.run)
+        }
+    }
+
+    /// 🪪️ Handed to an `AsyncTask::run` closure at spawn time — the awaitable `host::*` surface
+    /// (this actor's shared `RequestRegistry`, scoped to the spawning instance — see
+    /// `⚛️reactor::host`) plus the CLONED `ActionMeta` the task was spawned under, so its eventual
+    /// follow-up dispatch stays attributed to the same actor/instance even if a different one is
+    /// active by the time the task resolves.
+    pub struct TaskCtx {
+        pub host: crate::host::Host,
+        pub meta: ActionMeta,
+    }
+
+    /// 📬️ What an `AsyncTask` produces once its future resolves. Re-enters the (still pure/sync)
+    /// reducer as a follow-up rather than mutating anything directly — Elm's Msg-from-Cmd.
+    ///
+    /// `Command` is the CANONICAL form: the document may have drifted while the task awaited, so
+    /// the bytes re-enter `ArtifactApp::handle` against CURRENT state via the exact same
+    /// `OpBinary`-typed path (`PluginApp::handle_command_frame`) a fresh command uses, stamped
+    /// with the task's originating `ActionMeta`.
+    ///
+    /// `Emit` is a narrower, trivially-safe shortcut for a LITERAL mutation-lane follow-up that
+    /// skips re-entering `handle` entirely — only `artifact_mutations`/`config_mutations`/
+    /// `draft_mutations` are honored; `effects`/`events`/`child_emits`/`tasks` on this `Emit` are
+    /// NOT applied (use `Command` if the follow-up needs any of those).
+    ///
+    /// `Done` performs no follow-up dispatch at all — for a task whose only job was a
+    /// `TaskCtx::host` side effect (e.g. `host.notify(...)`) it already queued during its own run.
+    pub enum TaskResolution<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
+        Command(Vec<u8>),
+        Emit(Emit<Mutation, ConfigMutation, DraftMutation>),
+        Done,
+    }
+    //#endregion 🔖️AsyncTask
 
     //#region 🔖️EphemeralEmit
     /// @emoji 👥️🫧️ The two EPHEMERAL lanes' emission, deliberately separate from {@link Emit}.
@@ -8733,6 +8855,12 @@ pub mod app {
         /// @emoji 📣️ A single app event and no operations.
         pub fn event(event: AppEvent) -> Self {
             Self { events: vec![event], ..Default::default() }
+        }
+
+        /// @emoji 🧵️ A single spawned `AsyncTask` and no operations — the common case for "this
+        /// command's only job is to kick off host work" (e.g. a search-as-you-type debounce).
+        pub fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
+            Self { tasks: vec![task], ..Default::default() }
         }
     }
 
@@ -9228,13 +9356,20 @@ pub mod app {
         /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
         const ROLE: AppRole = AppRole::Editor;
         type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
+        // three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
+        // owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
+        // plugins declares a borrowed lifetime on any of these), but nothing forced the compiler to
+        // KNOW that until now: `⚛️reactor::spawn_task`'s `AsyncTask<M, C, D>` future must outlive
+        // the synchronous `dispatch_emit` call that spawns it, which needs `M/C/D: 'static` provable
+        // from `A: ArtifactApp` alone — the associated type itself, not merely `A`.
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + ArtifactPack;
-        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
         type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
-        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
         type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
         /// @emoji 👥️ Presence-lane operations applied to the app's typed presence snapshot.
@@ -9419,7 +9554,9 @@ pub mod app {
         /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
         /// this to handle them, falling through to `ArtifactApp::export_media`'s default via `_ =>` for
         /// `"document:out"` if desired).
-        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
+        /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
+        async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
@@ -9456,8 +9593,10 @@ pub mod app {
         /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
         /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
         /// materializing the full export (e.g. from a cached head edit id).
-        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
-            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`
+        /// above, behaviourally unchanged otherwise).
+        async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).await.map(|media| MediaFingerprint::of(&media))
         }
     }
 
@@ -9531,6 +9670,13 @@ pub mod app {
         pub interaction: Vec<u8>,
     }
 
+    /// 🌀️ `io-async-signatures`: the boxed, pinned future `PluginApp::{export_media,
+    /// media_fingerprint}` return — `PluginApp` is `dyn`-used pervasively (`Box<dyn PluginApp>`),
+    /// so its async methods are manually desugared (native `async fn`-in-trait is not
+    /// object-safe) rather than using the plain `async fn` sugar the rest of this sweep uses.
+    /// Generic over `Output` so both methods share one alias instead of two near-duplicates.
+    pub type PluginAppMediaFuture<'a, Output> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Output, MediaError>> + Send + 'a>>;
+
     /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
     /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
     /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
@@ -9566,6 +9712,15 @@ pub mod app {
         /// `command_bytes` directly as the app's typed `ArtifactApp::Command` via `OpBinary::decode_op`
         /// and calls the pure `ArtifactApp::handle`.
         fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
+        /// whose future resolved with `TaskResolution::Emit` — `artifact_ops`/`config_ops`/
+        /// `draft_ops` are the SAME `protocol::encode_ops_vec`/`OpBinary::encode_op`-wire triple
+        /// `take_last_emit_wire` drains, decoded back into this app's typed `Mutation`/
+        /// `ConfigMutation`/`DraftMutation` and applied via `dispatch_emit` DIRECTLY — no re-entry
+        /// into `ArtifactApp::handle` (see `TaskResolution::Emit`'s own doc for why this is
+        /// deliberately narrower than a `TaskResolution::Command` resume, which goes through
+        /// `handle_command_frame` above instead).
+        fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
         fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
         /// 🔀️ Drains the pending `TransactionProposalDraft` `dispatch_emit` stashed instead of
@@ -9695,17 +9850,20 @@ pub mod app {
             Vec::new()
         }
         /// 🎞️ Object-safe counterpart to `ArtifactApp::export_media` — the seam a headless workflow
-        /// runner calls without knowing the app's concrete `Snapshot`/`Mutation` types.
-        fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
-            Err(MediaError::NotImplemented)
+        /// runner calls without knowing the app's concrete `Snapshot`/`Mutation` types. Manually
+        /// boxed (`io-async-signatures`) rather than a bare `async fn`: this trait is `dyn`-used
+        /// pervasively (`Box<dyn PluginApp>`), which native `async fn`-in-trait cannot support.
+        fn export_media<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, Media> {
+            Box::pin(async move { Err(MediaError::NotImplemented) })
         }
         /// 🎞️ Object-safe counterpart to `ArtifactApp::import_media` — dispatches through the same
         /// `ArtifactStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
         fn import_media(&mut self, _port: &str, _media: &Media, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()))
         }
-        fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
-            Err(MediaError::NotImplemented)
+        /// 🌀️ `io-async-signatures`: boxed-future signature — see `export_media` above.
+        fn media_fingerprint<'a>(&'a mut self, _port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
+            Box::pin(async move { Err(MediaError::NotImplemented) })
         }
         /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜️world.wit`'s `produce-media`).
         /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
@@ -10826,7 +10984,7 @@ pub mod app {
         }
 
         fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits } = emit;
+            let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits, tasks } = emit;
 
             // 🔒️ Contract §2.3 clause 2 — hard backstop, unreachable through `ViewerApp` (its `handle`
             // builds `Emit` solely from `ViewEmit`'s three fields, contract §2.2), but this is what
@@ -10896,6 +11054,19 @@ pub mod app {
                 self.cache = None;
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
+            }
+
+            // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): spawn every task
+            // riding this gesture NOW — after the mutation lanes above have landed (so a task's
+            // `TaskCtx.meta` follow-up dispatch always sees state that was ACTUALLY committed, not
+            // merely requested), but before the child-emit/empty-result/solitary-edit branches
+            // below diverge, so every one of them still spawns these tasks exactly once. A quota
+            // fault here fails the WHOLE dispatch — the mutations above already applied to
+            // `self.store`/`self.config_store`/`self.draft_store` (this packet does not add
+            // rollback-on-task-refusal; a caller that needs atomicity across "mutate AND spawn"
+            // must keep its task count under quota, an honest, named gap, not a silent one).
+            for task in tasks {
+                crate::reactor::spawn_task::<A::Mutation, A::ConfigMutation, A::DraftMutation>(meta.instance_id, meta, task)?;
             }
 
             // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): a non-empty `child_emits` means this
@@ -11939,6 +12110,26 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "typed-command", result))
         }
 
+        /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
+        /// app's concrete `A::Mutation`/`A::ConfigMutation`/`A::DraftMutation` via `OpBinary::
+        /// decode_op` (the SAME decode idiom `dispatch_typed_command` uses for `A::Command`) and
+        /// dispatches them directly — see the trait method's own doc for why this skips `handle`.
+        fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
+                protocol::decode_ops_vec(bytes)
+                    .map_err(|error| error.into_fault())?
+                    .iter()
+                    .map(|op_bytes| <T as ::protocol::OpBinary>::decode_op(op_bytes).map_err(|error| error.into_fault()))
+                    .collect()
+            }
+            let log_generation_before = self.log_generation;
+            let artifact_mutations = decode_lane::<A::Mutation>(&artifact_ops)?;
+            let config_mutations = decode_lane::<A::ConfigMutation>(&config_ops)?;
+            let draft_mutations = decode_lane::<A::DraftMutation>(&draft_ops)?;
+            let result = self.dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta)?;
+            Ok(self.finish_recorded(log_generation_before, "task-resume-emit", result))
+        }
+
         fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
             self.last_emit_wire.take()
         }
@@ -12353,13 +12544,15 @@ pub mod app {
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
-        fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
-            self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
-            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
-            let _cfg = ConfigView { snapshot: config };
-            A::export_media(port, &doc)
+        fn export_media<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, Media> {
+            Box::pin(async move {
+                self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
+                let VcsArtifactApp { app: _, cache, children, .. } = self;
+                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
+                let _cfg = ConfigView { snapshot: config };
+                A::export_media(port, &doc).await
+            })
         }
 
         fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -12368,13 +12561,15 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, &format!("import-media:{port}"), result))
         }
 
-        fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
-            self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
-            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
-            let _cfg = ConfigView { snapshot: config };
-            A::media_fingerprint(port, &doc)
+        fn media_fingerprint<'a>(&'a mut self, port: &'a str) -> PluginAppMediaFuture<'a, MediaFingerprint> {
+            Box::pin(async move {
+                self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
+                let VcsArtifactApp { app: _, cache, children, .. } = self;
+                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
+                let _cfg = ConfigView { snapshot: config };
+                A::media_fingerprint(port, &doc).await
+            })
         }
     }
 
@@ -13273,7 +13468,8 @@ pub mod app {
         fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
-        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
+        async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
@@ -13298,8 +13494,9 @@ pub mod app {
                 None => Err(MediaError::NotImplemented),
             }
         }
-        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
-            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
+        async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).await.map(|media| MediaFingerprint::of(&media))
         }
     }
     //#endregion 🔖️ArtifactEditor
@@ -13385,7 +13582,8 @@ pub mod app {
         fn media_ports() -> Vec<MediaPortSpec> {
             Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
-        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+        /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
+        async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
@@ -13393,8 +13591,9 @@ pub mod app {
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
-        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
-            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
+        async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).await.map(|media| MediaFingerprint::of(&media))
         }
     }
     //#endregion 🔖️ArtifactViewer
@@ -13566,8 +13765,8 @@ pub mod app {
         fn media_ports() -> Vec<MediaPortSpec> {
             E::media_ports()
         }
-        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
-            E::export_media(port, doc)
+        async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            E::export_media(port, doc).await
         }
         fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             E::whole_document_operation(snapshot)
@@ -13575,8 +13774,8 @@ pub mod app {
         fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, MediaError> {
             E::import_media(port, media, doc)
         }
-        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
-            E::media_fingerprint(port, doc)
+        async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            E::media_fingerprint(port, doc).await
         }
     }
     //#endregion 🔖️EditorApp
@@ -13689,11 +13888,11 @@ pub mod app {
         fn media_ports() -> Vec<MediaPortSpec> {
             V::media_ports()
         }
-        fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
-            V::export_media(port, doc)
+        async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
+            V::export_media(port, doc).await
         }
-        fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
-            V::media_fingerprint(port, doc)
+        async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
+            V::media_fingerprint(port, doc).await
         }
     }
     //#endregion 🔖️ViewerApp
@@ -14766,7 +14965,10 @@ pub mod plugin_runtime {
 
     /// 🪪️ The actor id last recorded for `instance_id` via `set_instance_actor`, or `"local"` when no
     /// `Hello` has been processed yet (mirrors `plugin_handle_action`'s own `"local"` fallback).
-    fn instance_actor(instance_id: u32) -> String {
+    /// `pub(crate)`: also read by `⚛️reactor::restore_now` to best-effort attribute a replayed
+    /// `task_restarts` entry's `ActionMeta` (design-abi.md §4 — a checkpoint restart has no
+    /// "spawn time" meta of its own to snapshot from).
+    pub(crate) fn instance_actor(instance_id: u32) -> String {
         INSTANCE_ACTORS.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_else(|| "local".to_string())
     }
 
@@ -14786,6 +14988,19 @@ pub mod plugin_runtime {
     /// cycle's job now, not a manually-cleared guard.
     fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>>(f: F) -> Result<R, Fault> {
         INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
+    }
+
+    /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: registers `instance` directly into `INSTANCES`,
+    /// bypassing `plugin_create_app_with_id`'s `PLUGIN`/`PluginProgram` requirement — a real
+    /// `AsyncTask` resume test only needs A `dyn PluginApp` at a known id, not a fully assembled
+    /// plugin bundle. `#[cfg(test)]`-gated, never part of the real API surface.
+    #[cfg(test)]
+    pub(crate) fn test_push_instance(instance: AppInstance) {
+        with_instances_mut(|list| {
+            list.push(instance);
+            Ok(())
+        })
+        .expect("test_push_instance must not fail");
     }
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
@@ -15720,6 +15935,70 @@ pub mod plugin_runtime {
         pub events: Vec<Vec<u8>>,
     }
 
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): erased `AsyncTask` resolution
+    /// input for `plugin_resume_task` — mirrors `⚛️reactor`'s own (private) `TaskResumeOutcome`
+    /// minus its `Fault` case (a task that itself resolved `Err` never reaches `plugin_runtime` at
+    /// all — `⚛️reactor::drain_task_resumes` frames that straight to the shell). Kept as a SEPARATE
+    /// type, not a shared one, so the dependency direction stays what it already is everywhere else
+    /// in this file: `plugin_runtime` never imports `reactor`; `reactor` imports `plugin_runtime`.
+    pub enum TaskResumeInput {
+        Command(Vec<u8>),
+        Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    }
+
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes ONE `AsyncTask`
+    /// follow-up against `instance_id`'s live `dyn PluginApp` — `Command` re-enters through
+    /// `PluginApp::handle_command_frame` (the SAME typed-command path a fresh command uses,
+    /// against CURRENT state — Elm's Msg-from-Cmd), `Emit` through `PluginApp::resume_task_emit`
+    /// (decode + `dispatch_emit` directly, no re-entry into `handle`). Frames the result EXACTLY
+    /// like `AppCommand::PureCommand` does (`AppFrame::Emit`, carrying the SAME
+    /// `take_last_emit_wire()` triple `dispatch_emit` always captures) rather than
+    /// `AppFrame::Invocation` — a task follow-up is a guest-applied store-authority mutation, not a
+    /// live client's reply; `in_reply_to: 0` marks it unsolicited (no seq is awaiting it). An
+    /// app-level `Err` becomes an `Error` frame, exactly like every other dispatch path in this
+    /// module — this function itself never fails. Returns the SAME `(frames, effects, events)`
+    /// shape `PluginExchangeOutput` carries so the caller (`⚛️reactor::drain_task_resumes`) feeds
+    /// `frames` through the SAME `route_app_frame` a live turn's command frames go through.
+    pub fn plugin_resume_task(instance_id: u32, meta: &ActionMeta, input: TaskResumeInput) -> PluginExchangeOutput {
+        let mut frames: Vec<protocol::AppFrame> = Vec::new();
+        let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
+        let mut event_bytes: Vec<Vec<u8>> = Vec::new();
+
+        let dispatched = match input {
+            TaskResumeInput::Command(bytes) => with_instances_mut(|list| {
+                let instance = find_instance(list, instance_id)?;
+                instance.app.handle_command_frame(&bytes, meta)
+            }),
+            TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops } => with_instances_mut(|list| {
+                let instance = find_instance(list, instance_id)?;
+                instance.app.resume_task_emit(artifact_ops, config_ops, draft_ops, meta)
+            }),
+        };
+
+        match dispatched {
+            Ok(result) => {
+                let emit_wire = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    Ok(instance.app.take_last_emit_wire().unwrap_or_default())
+                })
+                .unwrap_or_default();
+                let (document_ops, config_ops, draft_ops) = emit_wire;
+                frames.push(protocol::AppFrame::Emit {
+                    in_reply_to: 0,
+                    document_ops,
+                    config_ops,
+                    draft_ops,
+                    output: encode_wire_serialized(&result.output),
+                    diagnostics: encode_wire_serialized(&result.diagnostics),
+                });
+                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result);
+            }
+            Err(fault) => push_app_fault(&mut frames, None, fault),
+        }
+
+        PluginExchangeOutput { frames: frames.iter().map(protocol::encode_app_frame).collect(), effects: effect_bytes, events: event_bytes }
+    }
+
     /// 🔀️ The single bidirectional entry point behind WIT `exchange` (see `📜️wit/📜️world.wit`'s
     /// `interface plugin` doc) — decodes each `protocol::AppCommand` in `commands`, dispatches it
     /// against `instance_id`, and returns every produced `protocol::AppFrame`/effect/event.
@@ -16048,7 +16327,7 @@ pub mod plugin_runtime {
                 protocol::AppCommand::MediaFingerprint { seq, port } => {
                     let fingerprint = with_instances_mut(|list| {
                         let instance = find_instance(list, instance_id)?;
-                        instance.app.media_fingerprint(&port).map_err(|error| plugin_internal_fault(error.to_string()))
+                        resolve_ready(instance.app.media_fingerprint(&port)).map_err(|error| plugin_internal_fault(error.to_string()))
                     });
                     match fingerprint {
                         Ok(fingerprint) => {
@@ -16661,10 +16940,11 @@ pub mod plugin_runtime {
         use ui_wgpu::wgpu::{Label, LocalizedLabel};
 
         use super::ContextMenuWireRequest;
-        use crate::app::{deserializer_entry_of, serializer_entry_of, ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
+        use crate::app::{deserializer_entry_of, resolve_ready, serializer_entry_of, ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
+        use crate::store::FaultFrom;
         use crate::app::{
-            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu,
-            NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, VcsArtifactApp,
+            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView,
+            Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp,
         };
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Mutation, MutationDiff};
@@ -16734,7 +17014,7 @@ pub mod plugin_runtime {
             type Into = TestSnapshot;
             const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
             const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
-            fn serialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
+            async fn serialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
                 Ok(from.clone())
             }
         }
@@ -16745,7 +17025,7 @@ pub mod plugin_runtime {
             type Into = TestSnapshot;
             const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
             const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
-            fn deserialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
+            async fn deserialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
                 Ok(from.clone())
             }
         }
@@ -16761,20 +17041,20 @@ pub mod plugin_runtime {
 
             let seed = TestSnapshot { count: 7, label: "x".into() };
             let bytes = ArtifactPack::encode_pack(&seed);
-            let composed = (ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }]).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
+            let composed = resolve_ready((ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
             assert_eq!(composed.dialect, DummySerializer::INTO);
             match composed.payload {
                 IoPayload::Binary(out) => assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&out).unwrap(), seed),
                 IoPayload::Text(_) => panic!("expected Binary payload"),
             }
 
-            let zero_sources_err = match (de.compose)(&[]) {
+            let zero_sources_err = match resolve_ready((de.compose)(&[])) {
                 Err(err) => err,
                 Ok(_) => panic!("deserializer_entry_of erased compose should reject 0 sources"),
             };
             assert!(zero_sources_err.message.contains("needs exactly 1 source"), "{}", zero_sources_err.message);
             let two_sources = [ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }, ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }];
-            let two_sources_err = match (de.compose)(&two_sources) {
+            let two_sources_err = match resolve_ready((de.compose)(&two_sources)) {
                 Err(err) => err,
                 Ok(_) => panic!("deserializer_entry_of erased compose should reject 2 sources"),
             };
@@ -17031,6 +17311,18 @@ pub mod plugin_runtime {
             /// test registered via `VcsArtifactApp::register_child` beforehand.
             #[dsl(key = "composite-edit")]
             CompositeEdit { slot: String, child_id: String, child_value: i32 },
+            /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: spawns an `AsyncTask` that awaits a real
+            /// `host::storage_read` round trip (parked on `RequestRegistry`, resolved by an
+            /// injected completion in the test — see `⚛️reactor`'s `test_support`), then resolves
+            /// with `TaskResolution::Command(ApplyCountFromTask)` — Elm's Msg-from-Cmd, exercised
+            /// end to end without a wasm32-wasip2 build.
+            #[dsl(key = "spawn-count-task")]
+            SpawnCountTask,
+            /// 🧵️ The follow-up command a `SpawnCountTask` resume redispatches — also directly
+            /// dispatchable on its own, so a test can assert the SAME command applied via a normal
+            /// dispatch and via a task resume produce byte-identical mutations.
+            #[dsl(key = "apply-count-from-task")]
+            ApplyCountFromTask { value: i32 },
         }
 
         impl ::protocol::OpText for TestCommand {
@@ -17132,6 +17424,8 @@ pub mod plugin_runtime {
                     TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
                     TestCommand::SetActiveUtility { .. } => "setActiveUtility",
                     TestCommand::CompositeEdit { .. } => "compositeEdit",
+                    TestCommand::SpawnCountTask => "spawnCountTask",
+                    TestCommand::ApplyCountFromTask { .. } => "applyCountFromTask",
                 }
             }
 
@@ -17173,6 +17467,17 @@ pub mod plugin_runtime {
                         child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), vec![TestMutation::SetCount { value: *child_value }])],
                         ..Default::default()
                     }),
+                    // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
+                    // task's eventual `TaskResolution::Command` follow-up is what mutates the
+                    // document, on a LATER dispatch (see `ApplyCountFromTask` below).
+                    TestCommand::SpawnCountTask => Ok(Emit::task(AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
+                        let bytes = ctx.host.storage_read("counter").await?;
+                        let value = i32::from_le_bytes(bytes.try_into().unwrap_or([0; 4]));
+                        let command = TestCommand::ApplyCountFromTask { value };
+                        let encoded = <TestCommand as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
+                        Ok(TaskResolution::Command(encoded))
+                    }))),
+                    TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount { value: *value }])),
                 }
             }
 
@@ -18686,6 +18991,228 @@ pub mod plugin_runtime {
             assert_eq!(stamped.peers, vec![UiPeerMark { actor: "user:alice#s1".to_string(), color: Some(3), hovered: false, selected: true, label: "user:alice#s1".to_string() }]);
         }
         //#endregion 🔖️InteractionDispatchTests
+
+        //#region 🔖️AsyncTaskTests
+        // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `⚛️reactor::poll`'s real
+        // event routing (`Event::Completed`, `run_until_idle`, `drain_task_resumes`) is
+        // wasm32-wasip2-only (`wit_bridge`) and cannot run under a native `cargo test`. These tests
+        // exercise the SAME underlying primitives `poll` itself drives — `⚛️reactor::spawn_task`,
+        // `⚛️reactor::test_support::{run_until_idle, resolve_request, pop_task_resume, ...}`, and
+        // `crate::plugin_runtime::plugin_resume_task` — directly, standing in for the wasm-only
+        // glue: `test_support::resolve_request` IS what `Event::Completed` routes to
+        // (`RequestRegistry::resolve`), and `pop_task_resume`/`plugin_resume_task` together ARE
+        // `drain_task_resumes` minus the frame-routing tail (`route_app_frame`, itself untouched by
+        // this packet). An honest, named gap: the wasm-only tail is not exercised natively.
+
+        /// 🌱️ A command spawns a task; the task awaits a REAL `host::storage_read` round trip
+        /// (genuinely parked on `RequestRegistry`, not a synchronously-ready future); an injected
+        /// completion (`test_support::resolve_request`, standing in for `Event::Completed`)
+        /// resolves it; the follow-up `TaskResolution::Command` mutates the store, stamped with
+        /// the task's CLONED originating `ActionMeta`.
+        #[test]
+        fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
+            let instance = 501;
+            let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance };
+            let mut app = VcsArtifactApp::new(TestApp::default());
+
+            let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).expect("dispatching SpawnCountTask must succeed");
+            assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
+            // 🪪️ `spawn_task` is keyed off `meta.instance_id` (`dispatch_emit`'s own `meta`, i.e.
+            // `spawn_meta` above, which shares `instance`'s value by construction).
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1, "dispatch_typed(SpawnCountTask) must have spawned exactly one task");
+
+            // ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
+            // genuinely pending, not synchronously resolved.
+            let pending = crate::reactor::test_support::run_until_idle(8);
+            assert!(pending, "the task must be parked on a real RequestRegistry await, not finished synchronously");
+            assert_eq!(crate::reactor::test_support::pending_request_count(), 1, "storage_read must have allocated exactly one RequestRegistry slot");
+            assert!(crate::reactor::test_support::pop_task_resume().is_none(), "nothing can have resolved yet — the task is still parked");
+
+            // ✅️ Inject the "completion" (`⚛️reactor::poll`'s `Event::Completed` arm calls the exact
+            // same `RequestRegistry::resolve`) — request id 1 is `storage_read`'s, the first (and
+            // only) request this test has allocated.
+            crate::reactor::test_support::resolve_request(1, Ok(42i32.to_le_bytes().to_vec()));
+            let pending = crate::reactor::test_support::run_until_idle(8);
+            assert!(!pending, "the task must run to completion once its await resolves");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(spawn_meta.instance_id), 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
+
+            let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().expect("the completed task must have queued exactly one resume");
+            assert_eq!(resumed_instance, spawn_meta.instance_id);
+            assert_eq!(resumed_meta.actor, "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
+            assert_eq!(resumed_meta.instance_id, spawn_meta.instance_id);
+            let crate::plugin_runtime::TaskResumeInput::Command(command_bytes) = resumed_input.expect("the task resolved Ok, not with a Fault") else {
+                panic!("SpawnCountTask's task resolves TaskResolution::Command, not ::Emit");
+            };
+            let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
+            assert_eq!(decoded_command, TestCommand::ApplyCountFromTask { value: 42 }, "the resolved command must carry the value the injected completion delivered");
+
+            // 🔀️ Re-enter through the SAME typed-command path a live command would — this IS
+            // `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
+            // directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
+            crate::plugin_runtime::test_push_instance(crate::plugin_runtime::AppInstance { id: resumed_instance, app: Box::new(app) });
+            let output = crate::plugin_runtime::plugin_resume_task(resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes));
+            assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
+            let frame = protocol::decode_app_frame(&output.frames[0]).expect("must decode back to an AppFrame");
+            let protocol::AppFrame::Emit { document_ops, .. } = frame else { panic!("a resumed Command follow-up must frame as AppFrame::Emit, matching dispatch_emit's own last_emit_wire idiom — got {frame:?}") };
+            let ops = protocol::decode_ops_vec(&document_ops).expect("document_ops must decode as an ops-vec");
+            assert_eq!(ops.len(), 1, "ApplyCountFromTask emits exactly one document mutation");
+            let applied_mutation = <TestMutation as ::protocol::OpBinary>::decode_op(&ops[0]).expect("must decode back to a TestMutation");
+            assert_eq!(applied_mutation, TestMutation::SetCount { value: 42 }, "the follow-up dispatch must have applied the SAME mutation ApplyCountFromTask{{value:42}} produces directly");
+        }
+
+        /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
+        /// silent drop — while earlier tasks and OTHER instances are unaffected.
+        #[test]
+        fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
+            let instance = 502;
+            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+            crate::reactor::test_support::set_instance_quota(instance, 2);
+
+            for label in ["first", "second"] {
+                let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new(label, |_ctx| async move { Ok(TaskResolution::Done) });
+                crate::reactor::spawn_task(instance, &meta, task).unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
+            }
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 2);
+
+            let third = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("third", |_ctx| async move { Ok(TaskResolution::Done) });
+            let error = crate::reactor::spawn_task(instance, &meta, third).expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
+            assert_eq!(error.code.0, "plugin.task.quota-exceeded");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 2, "a refused spawn must not have added a 3rd record");
+
+            // 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
+            let other_instance = 503;
+            let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance };
+            let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
+            crate::reactor::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
+        }
+
+        /// 🔑️ Spawning a second task under the SAME `(instance, key)` cancels the first — its
+        /// future is dropped (never runs to completion, never queues a resume) — and the dedupe
+        /// index tracks only the NEW task afterward.
+        #[test]
+        fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
+            let instance = 504;
+            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+            let first_ran = std::rc::Rc::new(std::cell::Cell::new(false));
+            let first_ran_inner = first_ran.clone();
+            let first = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("first", move |_ctx| async move {
+                first_ran_inner.set(true);
+                Ok(TaskResolution::Done)
+            })
+            .keyed("search");
+            crate::reactor::spawn_task(instance, &meta, first).expect("first must be admitted");
+            assert!(crate::reactor::test_support::task_key_is_live(instance, "search"));
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1);
+
+            let second_ran = std::rc::Rc::new(std::cell::Cell::new(false));
+            let second_ran_inner = second_ran.clone();
+            let second = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("second", move |_ctx| async move {
+                second_ran_inner.set(true);
+                Ok(TaskResolution::Done)
+            })
+            .keyed("search");
+            crate::reactor::spawn_task(instance, &meta, second).expect("second must be admitted, cancelling the first");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1, "the SAME key must never have two live tasks at once");
+
+            crate::reactor::test_support::run_until_idle(8);
+            assert!(!first_ran.get(), "the cancelled first task must never have run its body");
+            assert!(second_ran.get(), "the surviving second task must have run");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
+        }
+
+        /// 🚫️ `Event::InstanceClose` cancellation: every task an instance owns is dropped from the
+        /// executor (never runs to completion) and its pending `RequestRegistry` slot is gone too
+        /// — no leaked slot — while a DIFFERENT instance's live task/request is untouched.
+        #[test]
+        fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
+            let dying = 505;
+            let survivor = 506;
+            let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying };
+            let survivor_meta = ActionMeta { actor: "local".into(), instance_id: survivor };
+
+            let dying_ran = std::rc::Rc::new(std::cell::Cell::new(false));
+            let dying_ran_inner = dying_ran.clone();
+            let dying_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("dying", move |ctx: TaskCtx| async move {
+                let _ = ctx.host.storage_read("never-resolved").await; // parks forever in this test
+                dying_ran_inner.set(true);
+                Ok(TaskResolution::Done)
+            });
+            crate::reactor::spawn_task(dying, &dying_meta, dying_task).expect("dying instance's task must spawn");
+
+            let survivor_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("survivor", move |ctx: TaskCtx| async move {
+                let _ = ctx.host.storage_read("also-never-resolved").await;
+                Ok(TaskResolution::Done)
+            });
+            crate::reactor::spawn_task(survivor, &survivor_meta, survivor_task).expect("survivor instance's task must spawn");
+
+            let pending = crate::reactor::test_support::run_until_idle(8);
+            assert!(pending, "both tasks must have parked on their own storage_read");
+            assert_eq!(crate::reactor::test_support::pending_request_count(), 2, "one RequestRegistry slot per parked task");
+
+            crate::reactor::cancel_instance_tasks(dying);
+            // 🚫️ `cancel_instance_tasks` alone drops the future (and its parked `RequestFuture`
+            // with it); `RequestRegistry::cancel_instance` is the defense-in-depth sweep `poll`'s
+            // `Event::InstanceClose` arm runs right after — exercised here to prove BOTH steps
+            // together leave no slot behind, matching that call site exactly.
+            let removed = crate::reactor::test_support::cancel_instance_registry_requests(dying);
+            assert_eq!(removed, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
+
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(dying), 0, "the dying instance's task record must be gone");
+            assert_eq!(crate::reactor::test_support::pending_request_count(), 1, "only the SURVIVOR's request may remain pending");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(survivor), 1, "the survivor's task must be untouched");
+
+            let still_pending = crate::reactor::test_support::run_until_idle(8);
+            assert!(still_pending, "the survivor's task is still legitimately parked");
+            assert!(!dying_ran.get(), "the cancelled task must never observe its await resolving, because it never runs again");
+        }
+
+        /// 📸️ A task's `restart` command survives into the checkpoint pack (not the task itself —
+        /// design-abi.md §4) and `restore_now` queues it as an ordinary `Command` resume, ready for
+        /// `plugin_resume_task` on the very next turn — exercised end to end against a fresh
+        /// `TestApp` instance, exactly like a live task's own resume.
+        #[test]
+        fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
+            let instance = 507;
+            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+            let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
+
+            let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("checkpointed", {
+                let restart_command = restart_command.clone();
+                move |ctx: TaskCtx| async move {
+                    let _ = ctx.host.storage_read("never-resolved-either").await; // stays in flight
+                    Ok(TaskResolution::Done)
+                }
+            })
+            .restartable(restart_command.clone());
+            crate::reactor::spawn_task(instance, &meta, task).expect("must spawn");
+            crate::reactor::test_support::run_until_idle(8); // parks — still in flight when checkpointed
+
+            let packed = crate::reactor::checkpoint_now().expect("checkpoint must succeed while the task is in flight");
+
+            // 🚫️ The in-flight task (and its parked request) belong to the OLD actor incarnation —
+            // never resumed as though the host round-trip were still live (design-abi.md §4).
+            // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
+            crate::reactor::cancel_instance_tasks(instance);
+            crate::reactor::test_support::cancel_instance_registry_requests(instance);
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 0);
+
+            crate::reactor::restore_now(&packed).expect("restore must succeed");
+            let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().expect("restore must have queued exactly one resume for the restartable task");
+            assert_eq!(resumed_instance, instance);
+            assert_eq!(resumed_meta.instance_id, instance);
+            let crate::plugin_runtime::TaskResumeInput::Command(bytes) = resumed_input.expect("a restart resume is always Command, never Fault") else { panic!("expected Command") };
+            assert_eq!(bytes, restart_command, "restore_now must requeue the EXACT restart bytes the task declared via .restartable(..)");
+
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            // 🪪️ Confirm the restart replays correctly against a FRESH instance (a restore always
+            // re-creates instances from scratch — checkpoint::restore's own job, exercised
+            // separately by `📸️checkpoint`'s own tests; this test's job is only the task-restart
+            // requeue, so a directly-dispatched sanity check stands in for the full instance
+            // restore here).
+            let direct = app.dispatch_typed(TestCommand::ApplyCountFromTask { value: 7 }, &meta).expect("the SAME command dispatched directly must succeed");
+            assert_eq!(direct.mutations.len(), 1);
+        }
+        //#endregion 🔖️AsyncTaskTests
     }
     // #endregion plugin_runtime
 }
@@ -19578,6 +20105,7 @@ pub use app::{
     list_artifact_inference_services,
     node_graph_delete_selection_spec,
     register_artifact_inference_service,
+    resolve_ready,
     selection_count_phrase,
     selection_domains_from_surface,
     serializer_entry_of,
@@ -19626,8 +20154,10 @@ pub use app::{
     ArtifactSerializer,
     ArtifactView,
     ArtifactViewer,
+    AsyncComposeFn,
     // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
     ChildContentView,
+    ComposeFuture,
     Confidence,
     ConfigView,
     DecomposeSource,
@@ -19681,6 +20211,7 @@ pub use app::{
     PanelTreeBuilder,
     Plugin,
     PluginApp,
+    PluginAppMediaFuture,
     PluginAssemblyError,
     PluginBuilder,
     PluginProgram,
@@ -19819,12 +20350,12 @@ macro_rules! derive_artifact_facets {
             type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
             const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
             fn reads() -> &'static [$crate::Dialect] { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::reads() }
-            fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources) }
+            async fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources).await }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicate — see comment above $builder")]
         impl $composer {
-            pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
+            pub async fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources).await }
         }
     };
     // 🧩️ Internal dispatch arm (Task 5): resolves `DerivedArtifactSpec::Children` — `$children` if
@@ -19990,7 +20521,7 @@ mod derived_artifact_children_tests {
     #[test]
     fn derived_composer_compose_routes_matching_sources_through_compose_from_children() {
         let sources = vec![ComposeSource { dialect: Dialect { artifact_kind: "s.stdio.mesh", standard: StandardId("1"), subset: SubsetId::ANY }, payload: AnalyzeSource::Binary(&[1, 2, 3]) }];
-        let composed = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::compose(&sources).expect("child-slot-matching sources route through compose_from_children");
+        let composed = resolve_ready(<DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::compose(&sources)).expect("child-slot-matching sources route through compose_from_children");
         assert_eq!(composed.snapshot, ChildrenTestSnapshot);
     }
 

@@ -79,24 +79,24 @@ impl CompactionLease {
     }
 
     /// @emoji 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
-    pub fn acquire(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-        storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms)
+    pub async fn acquire(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+        storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
     /// @emoji ♻️ Extends `holder`'s existing compaction lease for `document`.
-    pub fn renew(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-        storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms)
+    pub async fn renew(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
     /// @emoji 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
     /// calls this once, even if the pass itself failed (see that method's doc).
-    pub fn release(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-        storage.release(&Self::resource(document), holder, fence)
+    pub async fn release(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+        storage.release(&Self::resource(document), holder, fence).await
     }
 
     /// @emoji 👀️ The compaction lease's current holder/fence for `document`, or `None` if unheld.
-    pub fn current(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
-        storage.current(&Self::resource(document), now_ms)
+    pub async fn current(storage: &dyn db_storage::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
+        storage.current(&Self::resource(document), now_ms).await
     }
 }
 
@@ -171,9 +171,9 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
 /// @emoji 🗑️ Applies `plan_wal_retention`'s output: deletes each selected segment from `storage`.
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
-pub fn apply_wal_retention(storage: &dyn db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
+pub async fn apply_wal_retention(storage: &dyn db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
     for &index in segments {
-        storage.delete_segment(document, index)?;
+        storage.delete_segment(document, index).await?;
     }
     Ok(segments.len() as u64)
 }
@@ -196,7 +196,7 @@ pub struct PayloadGcReport {
 /// stores don't need one for `put`/`get`/`delete`), so this crate cannot do a full mark-and-sweep
 /// over every payload ever stored; it can only trace liveness for a caller-supplied candidate set,
 /// which is exactly what `Compactor::run` derives from its own WAL retention pass.
-pub fn sweep_payloads(payload_storage: &dyn db_storage::PayloadStorage, records: &[db_wal::WalRecord], deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
+pub async fn sweep_payloads(payload_storage: &dyn db_storage::PayloadStorage, records: &[db_wal::WalRecord], deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
     let deleted_set: std::collections::HashSet<u64> = deleted_segments.iter().copied().collect();
     let mut candidates = std::collections::HashSet::new();
     let mut live = std::collections::HashSet::new();
@@ -215,7 +215,7 @@ pub fn sweep_payloads(payload_storage: &dyn db_storage::PayloadStorage, records:
         }
         report.candidates_checked += 1;
         if !live.contains(&hash) {
-            payload_storage.delete(&hash)?;
+            payload_storage.delete(&hash).await?;
             report.deleted += 1;
         }
     }
@@ -237,11 +237,11 @@ pub struct IndexKindReport {
 /// `IndexKind::Preview`/`Conflict` specifically, its share of "tombstone/preview GC": once a
 /// withdrawn preview key or a resolved conflict marker is the only thing a tombstone shadows,
 /// compacting reclaims it for good.
-pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &ArtifactId) -> Result<Vec<IndexKindReport>, DbError> {
+pub async fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &ArtifactId) -> Result<Vec<IndexKindReport>, DbError> {
     let mut reports = Vec::with_capacity(db_index::IndexKind::ALL.len());
     for kind in db_index::IndexKind::ALL {
         let handle = db_index::IndexHandle::new(storage, document.clone(), kind);
-        let stats = handle.compact()?;
+        let stats = handle.compact().await?;
         reports.push(IndexKindReport { kind, stats });
     }
     Ok(reports)
@@ -252,8 +252,8 @@ pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &Ar
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
-fn collect_chain_pages(manager: &db_snapshot::SnapshotManager<'_>, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
-    let combined = manager.materialize_chain(document, through_generation)?;
+async fn collect_chain_pages(manager: &db_snapshot::SnapshotManager<'_>, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
+    let combined = manager.materialize_chain(document, through_generation).await?;
     let mut handle = db_snapshot::open_latest(&combined)?;
     let latest_descriptor = handle.descriptor.clone();
     let mut seen = std::collections::HashSet::new();
@@ -300,8 +300,8 @@ impl<'storage> SnapshotConsolidator<'storage> {
     /// unreachable pages needs the application-level page-tree structure this crate doesn't have
     /// (see module doc's "diff collapse" scope note for the same underlying constraint) and is left
     /// as this crate's deliberate extension seam.
-    pub fn consolidate(&self, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<u64, DbError> {
-        let (latest, pages) = collect_chain_pages(&self.manager, document, through_generation, budget)?;
+    pub async fn consolidate(&self, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<u64, DbError> {
+        let (latest, pages) = collect_chain_pages(&self.manager, document, through_generation, budget).await?;
         let body = db_snapshot::SnapshotBody {
             head_seq: latest.head_seq,
             commit_seq: latest.commit_seq,
@@ -313,13 +313,13 @@ impl<'storage> SnapshotConsolidator<'storage> {
             roots: latest.roots,
             created_at_ms: latest.created_at_ms,
         };
-        self.manager.publish(document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, body)
+        self.manager.publish(document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, body).await
     }
 
     /// @emoji 🗑️ Forwards to `db_snapshot::SnapshotManager::retain_from` — `floor_generation` must
     /// itself be a full baseline (typically the generation `consolidate` just returned).
-    pub fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
-        self.manager.retain_from(document, floor_generation)
+    pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
+        self.manager.retain_from(document, floor_generation).await
     }
 }
 //#endregion 🔖️SnapshotConsolidation
@@ -334,8 +334,8 @@ impl<'storage> SnapshotConsolidator<'storage> {
 /// 🎯️ Scope boundary: `db_storage` defines no `ColdStorage` trait, so this crate returns the
 /// archive bytes rather than inventing a storage seam unilaterally in a crate that isn't
 /// `db_storage`'s own.
-pub fn build_cold_archive(storage: &dyn db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
-    db_snapshot::SnapshotManager::new(storage).materialize_chain(document, through_generation)
+pub async fn build_cold_archive(storage: &dyn db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
+    db_snapshot::SnapshotManager::new(storage).materialize_chain(document, through_generation).await
 }
 //#endregion 🔖️ColdArchive
 
@@ -370,10 +370,10 @@ impl<'storage> Compactor<'storage> {
     /// `DbError::Conflict` rather than silently racing another compactor. The lease is ALWAYS
     /// released before returning, including when a step fails partway through — a failed pass must
     /// never leave a document permanently unfenceable.
-    pub fn run(&self, document: &ArtifactId, holder: &str, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
-        let fence = CompactionLease::acquire(self.storage.lease(), document, holder, DEFAULT_LEASE_TTL_MS, now_ms)?;
-        let result = self.run_under_lease(document, wal_floor_head_seq, consolidate_snapshots, budget);
-        let release_result = CompactionLease::release(self.storage.lease(), document, holder, fence);
+    pub async fn run(&self, document: &ArtifactId, holder: &str, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
+        let fence = CompactionLease::acquire(self.storage.lease(), document, holder, DEFAULT_LEASE_TTL_MS, now_ms).await?;
+        let result = self.run_under_lease(document, wal_floor_head_seq, consolidate_snapshots, budget).await;
+        let release_result = CompactionLease::release(self.storage.lease(), document, holder, fence).await;
         match (result, release_result) {
             (Ok(report), Ok(())) => Ok(report),
             (Err(run_error), _) => Err(run_error),
@@ -383,30 +383,30 @@ impl<'storage> Compactor<'storage> {
 
     /// @emoji 🧭️ Convenience over `run`: derives `wal_floor_head_seq` from `document`'s current
     /// latest snapshot generation (or `0`, i.e. nothing deletable, if it has none yet).
-    pub fn run_from_latest_snapshot(&self, document: &ArtifactId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
-        let floor = db_snapshot::SnapshotManager::new(self.storage.snapshot()).load_latest(document)?.map_or(0, |(_, descriptor)| descriptor.head_seq);
-        self.run(document, holder, floor, consolidate_snapshots, budget, now_ms)
+    pub async fn run_from_latest_snapshot(&self, document: &ArtifactId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
+        let floor = db_snapshot::SnapshotManager::new(self.storage.snapshot()).load_latest(document).await?.map_or(0, |(_, descriptor)| descriptor.head_seq);
+        self.run(document, holder, floor, consolidate_snapshots, budget, now_ms).await
     }
 
-    fn run_under_lease(&self, document: &ArtifactId, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget) -> Result<CompactionReport, DbError> {
+    async fn run_under_lease(&self, document: &ArtifactId, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget) -> Result<CompactionReport, DbError> {
         let mut report = CompactionReport::default();
 
-        let records = db_wal::replay_document(self.storage.wal(), document)?;
+        let records = db_wal::replay_document(self.storage.wal(), document).await?;
         let horizons = segment_horizons(&records);
         let selected = plan_wal_retention(&horizons, wal_floor_head_seq, budget);
-        report.wal_segments_deleted = apply_wal_retention(self.storage.wal(), document, &selected)?;
-        report.payloads_deleted = sweep_payloads(self.storage.payload(), &records, &selected, budget)?.deleted;
+        report.wal_segments_deleted = apply_wal_retention(self.storage.wal(), document, &selected).await?;
+        report.payloads_deleted = sweep_payloads(self.storage.payload(), &records, &selected, budget).await?.deleted;
 
-        report.index_reports = compact_all_indexes(self.storage.index(), document)?;
+        report.index_reports = compact_all_indexes(self.storage.index(), document).await?;
 
         if consolidate_snapshots {
             let manager = db_snapshot::SnapshotManager::new(self.storage.snapshot());
-            if let Some((latest_generation, _)) = manager.load_latest(document)? {
+            if let Some((latest_generation, _)) = manager.load_latest(document).await? {
                 let consolidator = SnapshotConsolidator::new(self.storage.snapshot());
-                let new_generation = consolidator.consolidate(document, latest_generation, budget)?;
-                let before_retain = self.storage.snapshot().list_generations(document)?.len() as u64;
-                consolidator.retain_from(document, new_generation)?;
-                let after_retain = self.storage.snapshot().list_generations(document)?.len() as u64;
+                let new_generation = consolidator.consolidate(document, latest_generation, budget).await?;
+                let before_retain = self.storage.snapshot().list_generations(document).await?.len() as u64;
+                consolidator.retain_from(document, new_generation).await?;
+                let after_retain = self.storage.snapshot().list_generations(document).await?.len() as u64;
                 report.snapshot_consolidated_generation = Some(new_generation);
                 report.snapshot_generations_pruned = before_retain.saturating_sub(after_retain);
             }
@@ -458,14 +458,14 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
 
-        let fence = CompactionLease::acquire(&storage, &document, "holder-a", 1_000, 0).unwrap();
-        assert!(CompactionLease::current(&storage, &document, 0).unwrap().is_some());
+        let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 1_000, 0)).unwrap();
+        assert!(db_actor::block_on(CompactionLease::current(&storage, &document, 0)).unwrap().is_some());
 
-        CompactionLease::renew(&storage, &document, "holder-a", fence, 1_000, 500).unwrap();
-        assert!(matches!(CompactionLease::acquire(&storage, &document, "holder-b", 1_000, 500), Err(DbError::Conflict(_))));
+        db_actor::block_on(CompactionLease::renew(&storage, &document, "holder-a", fence, 1_000, 500)).unwrap();
+        assert!(matches!(db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-b", 1_000, 500)), Err(DbError::Conflict(_))));
 
-        CompactionLease::release(&storage, &document, "holder-a", fence).unwrap();
-        assert!(CompactionLease::current(&storage, &document, 500).unwrap().is_none());
+        db_actor::block_on(CompactionLease::release(&storage, &document, "holder-a", fence)).unwrap();
+        assert!(db_actor::block_on(CompactionLease::current(&storage, &document, 500)).unwrap().is_none());
 
         assert_ne!(CompactionLease::resource(&document), db_snapshot::SnapshotLease::resource(&document));
     }
@@ -520,16 +520,16 @@ mod tests {
     fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        storage.create_segment(&document, 0).unwrap();
-        storage.create_segment(&document, 1).unwrap();
-        storage.create_segment(&document, 2).unwrap();
+        db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
+        db_actor::block_on(storage.create_segment(&document, 1)).unwrap();
+        db_actor::block_on(storage.create_segment(&document, 2)).unwrap();
 
-        let deleted = apply_wal_retention(&storage, &document, &[0, 1]).unwrap();
+        let deleted = db_actor::block_on(apply_wal_retention(&storage, &document, &[0, 1])).unwrap();
         assert_eq!(deleted, 2);
-        assert_eq!(storage.list_segments(&document).unwrap(), vec![2]);
+        assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![2]);
 
-        apply_wal_retention(&storage, &document, &[0, 1]).unwrap();
-        assert_eq!(storage.list_segments(&document).unwrap(), vec![2]);
+        db_actor::block_on(apply_wal_retention(&storage, &document, &[0, 1])).unwrap();
+        assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![2]);
     }
     //#endregion 🔖️WalRetention
 
@@ -537,8 +537,8 @@ mod tests {
     #[test]
     fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
         let storage = MemoryStorage::new();
-        let orphan_hash = storage.put(b"orphan-payload").unwrap();
-        let shared_hash = storage.put(b"shared-payload").unwrap();
+        let orphan_hash = db_actor::block_on(storage.put(b"orphan-payload")).unwrap();
+        let shared_hash = db_actor::block_on(storage.put(b"shared-payload")).unwrap();
         let document = doc("doc-1");
 
         let records = vec![
@@ -549,22 +549,22 @@ mod tests {
             WalRecord::Payload(WalPayloadRef::CasRef(shared_hash)),
         ];
 
-        let report = sweep_payloads(&storage, &records, &[0], &CompactionBudget::default()).unwrap();
+        let report = db_actor::block_on(sweep_payloads(&storage, &records, &[0], &CompactionBudget::default())).unwrap();
         assert_eq!(report.candidates_checked, 2);
         assert_eq!(report.deleted, 1);
-        assert!(!storage.contains(&orphan_hash).unwrap());
-        assert!(storage.contains(&shared_hash).unwrap());
+        assert!(!db_actor::block_on(storage.contains(&orphan_hash)).unwrap());
+        assert!(db_actor::block_on(storage.contains(&shared_hash)).unwrap());
     }
 
     #[test]
     fn sweep_payloads_respects_the_budget_cap() {
         let storage = MemoryStorage::new();
-        let hash_a = storage.put(b"a").unwrap();
-        let hash_b = storage.put(b"b").unwrap();
+        let hash_a = db_actor::block_on(storage.put(b"a")).unwrap();
+        let hash_b = db_actor::block_on(storage.put(b"b")).unwrap();
         let document = doc("doc-1");
         let records = vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::Payload(WalPayloadRef::CasRef(hash_a)), WalRecord::Payload(WalPayloadRef::CasRef(hash_b))];
         let budget = CompactionBudget { max_payloads: 1, ..CompactionBudget::default() };
-        let report = sweep_payloads(&storage, &records, &[0], &budget).unwrap();
+        let report = db_actor::block_on(sweep_payloads(&storage, &records, &[0], &budget)).unwrap();
         assert_eq!(report.deleted, 1);
     }
     //#endregion 🔖️PayloadGc
@@ -575,11 +575,11 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command);
-        handle.put(b"a".to_vec(), b"1".to_vec()).unwrap();
-        handle.put(b"b".to_vec(), b"2".to_vec()).unwrap();
-        assert!(handle.stats().unwrap().run_count >= 2, "two separate put calls must land in separate runs below the auto-merge threshold");
+        db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).unwrap();
+        db_actor::block_on(handle.put(b"b".to_vec(), b"2".to_vec())).unwrap();
+        assert!(db_actor::block_on(handle.stats()).unwrap().run_count >= 2, "two separate put calls must land in separate runs below the auto-merge threshold");
 
-        let reports = compact_all_indexes(&storage, &document).unwrap();
+        let reports = db_actor::block_on(compact_all_indexes(&storage, &document)).unwrap();
         assert_eq!(reports.len(), db_index::IndexKind::ALL.len());
 
         let command_report = reports.iter().find(|report| report.kind == db_index::IndexKind::Command).unwrap();
@@ -596,18 +596,18 @@ mod tests {
         let manager = db_snapshot::SnapshotManager::new(&storage);
 
         let gen0_pages = vec![db_state::Page::new(b"base-a".to_vec()), db_state::Page::new(b"base-b".to_vec())];
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0))).unwrap();
 
         let gen1_pages = vec![db_state::Page::new(b"delta-a".to_vec())];
         let mut body1 = sample_body(5);
         body1.roots = vec![gen1_pages[0].hash, gen0_pages[1].hash];
-        manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, body1.clone()).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, body1.clone())).unwrap();
 
         let consolidator = SnapshotConsolidator::new(&storage);
-        let new_generation = consolidator.consolidate(&document, 1, &CompactionBudget::default()).unwrap();
+        let new_generation = db_actor::block_on(consolidator.consolidate(&document, 1, &CompactionBudget::default())).unwrap();
         assert_eq!(new_generation, 2);
 
-        let bytes = storage.read_generation(&document, new_generation).unwrap();
+        let bytes = db_actor::block_on(storage.read_generation(&document, new_generation)).unwrap();
         let handle = db_snapshot::open_latest(&bytes).unwrap();
         assert!(handle.parent_footer_offset().is_none(), "a consolidated generation must be a self-sufficient full baseline");
         assert_eq!(handle.descriptor.roots, body1.roots);
@@ -623,14 +623,14 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let manager = db_snapshot::SnapshotManager::new(&storage);
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0)).unwrap();
-        manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1))).unwrap();
 
         let consolidator = SnapshotConsolidator::new(&storage);
-        let new_generation = consolidator.consolidate(&document, 1, &CompactionBudget::default()).unwrap();
-        consolidator.retain_from(&document, new_generation).unwrap();
+        let new_generation = db_actor::block_on(consolidator.consolidate(&document, 1, &CompactionBudget::default())).unwrap();
+        db_actor::block_on(consolidator.retain_from(&document, new_generation)).unwrap();
 
-        assert_eq!(storage.list_generations(&document).unwrap(), vec![new_generation]);
+        assert_eq!(db_actor::block_on(storage.list_generations(&document)).unwrap(), vec![new_generation]);
     }
 
     #[test]
@@ -638,13 +638,13 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let manager = db_snapshot::SnapshotManager::new(&storage);
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0)).unwrap();
-        manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1)).unwrap();
-        manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(2)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(2))).unwrap();
 
         let consolidator = SnapshotConsolidator::new(&storage);
         let tight_budget = CompactionBudget { max_snapshot_generations: 1, ..CompactionBudget::default() };
-        assert!(matches!(consolidator.consolidate(&document, 2, &tight_budget), Err(DbError::LimitExceeded(_))));
+        assert!(matches!(db_actor::block_on(consolidator.consolidate(&document, 2, &tight_budget)), Err(DbError::LimitExceeded(_))));
     }
     //#endregion 🔖️SnapshotConsolidation
 
@@ -655,10 +655,10 @@ mod tests {
         let document = doc("doc-1");
         let manager = db_snapshot::SnapshotManager::new(&storage);
         let pages = vec![db_state::Page::new(b"page-a".to_vec())];
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, sample_body(0)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, sample_body(0))).unwrap();
 
-        let archive = build_cold_archive(&storage, &document, 0).unwrap();
-        let expected = manager.materialize_chain(&document, 0).unwrap();
+        let archive = db_actor::block_on(build_cold_archive(&storage, &document, 0)).unwrap();
+        let expected = db_actor::block_on(manager.materialize_chain(&document, 0)).unwrap();
         assert_eq!(archive, expected);
 
         let handle = db_snapshot::open_latest(&archive).unwrap();
@@ -671,13 +671,13 @@ mod tests {
     fn run_never_deletes_the_sole_or_active_wal_segment() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let mut wal = db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
-        wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100))], DurabilityClass::Fsync, 0).unwrap();
+        let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
+        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100))], DurabilityClass::Fsync, 0)).unwrap();
 
         let compactor = Compactor::new(&storage);
-        let report = compactor.run(&document, "holder-a", 1_000, false, &CompactionBudget::default(), 0).unwrap();
+        let report = db_actor::block_on(compactor.run(&document, "holder-a", 1_000, false, &CompactionBudget::default(), 0)).unwrap();
         assert_eq!(report.wal_segments_deleted, 0);
-        assert_eq!(storage.list_segments(&document).unwrap(), vec![0]);
+        assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![0]);
     }
 
     #[test]
@@ -686,54 +686,55 @@ mod tests {
         let document = doc("doc-1");
         let manager = db_snapshot::SnapshotManager::new(&storage);
         let gen0_pages = vec![db_state::Page::new(b"p0".to_vec())];
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0))).unwrap();
         let gen1_pages = vec![db_state::Page::new(b"p1".to_vec())];
-        manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, sample_body(5)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, sample_body(5))).unwrap();
 
         let command_handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command);
-        command_handle.put(b"k1".to_vec(), b"v1".to_vec()).unwrap();
-        command_handle.put(b"k2".to_vec(), b"v2".to_vec()).unwrap();
+        db_actor::block_on(command_handle.put(b"k1".to_vec(), b"v1".to_vec())).unwrap();
+        db_actor::block_on(command_handle.put(b"k2".to_vec(), b"v2".to_vec())).unwrap();
 
         let compactor = Compactor::new(&storage);
-        let report = compactor.run(&document, "holder-a", 0, true, &CompactionBudget::default(), 0).unwrap();
+        let report = db_actor::block_on(compactor.run(&document, "holder-a", 0, true, &CompactionBudget::default(), 0)).unwrap();
 
         assert_eq!(report.snapshot_consolidated_generation, Some(2));
         assert_eq!(report.snapshot_generations_pruned, 2);
-        assert_eq!(storage.list_generations(&document).unwrap(), vec![2]);
+        assert_eq!(db_actor::block_on(storage.list_generations(&document)).unwrap(), vec![2]);
 
         assert_eq!(report.index_reports.len(), db_index::IndexKind::ALL.len());
         let command_report = report.index_reports.iter().find(|entry| entry.kind == db_index::IndexKind::Command).unwrap();
         assert_eq!(command_report.stats.run_count, 1);
 
-        assert!(CompactionLease::current(&storage, &document, 0).unwrap().is_none(), "a successful run must release its lease");
+        assert!(db_actor::block_on(CompactionLease::current(&storage, &document, 0)).unwrap().is_none(), "a successful run must release its lease");
     }
 
     #[test]
     fn run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let fence = CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0).unwrap();
+        let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0)).unwrap();
 
         let compactor = Compactor::new(&storage);
-        let result = compactor.run(&document, "holder-b", 0, false, &CompactionBudget::default(), 0);
+        let result = db_actor::block_on(compactor.run(&document, "holder-b", 0, false, &CompactionBudget::default(), 0));
         assert!(matches!(result, Err(DbError::Conflict(_))));
 
-        CompactionLease::release(&storage, &document, "holder-a", fence).unwrap();
+        db_actor::block_on(CompactionLease::release(&storage, &document, "holder-a", fence)).unwrap();
     }
 
     #[test]
     fn run_releases_the_compaction_lease_even_when_a_step_fails() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        storage.create_segment(&document, 0).unwrap();
-        storage.append(&document, 0, b"not a valid spr segment at all").unwrap();
-        storage.seal(&document, 0).unwrap();
+        db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
+        db_actor::block_on(storage.append(&document, 0, b"not a valid spr segment at all")).unwrap();
+        db_actor::block_on(storage.seal(&document, 0)).unwrap();
 
         let compactor = Compactor::new(&storage);
-        let result = compactor.run(&document, "holder-a", 0, false, &CompactionBudget::default(), 0);
+        let budget = CompactionBudget::default();
+        let result = db_actor::block_on(compactor.run(&document, "holder-a", 0, false, &budget, 0));
         assert!(result.is_err());
 
-        assert!(CompactionLease::current(&storage, &document, 0).unwrap().is_none(), "the lease must be freed despite the failure");
+        assert!(db_actor::block_on(CompactionLease::current(&storage, &document, 0)).unwrap().is_none(), "the lease must be freed despite the failure");
     }
 
     #[test]
@@ -741,13 +742,13 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let manager = db_snapshot::SnapshotManager::new(&storage);
-        manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42))).unwrap();
 
-        let mut wal = db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
-        wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42))], DurabilityClass::Fsync, 0).unwrap();
+        let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
+        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42))], DurabilityClass::Fsync, 0)).unwrap();
 
         let compactor = Compactor::new(&storage);
-        let report = compactor.run_from_latest_snapshot(&document, "holder-a", false, &CompactionBudget::default(), 0).unwrap();
+        let report = db_actor::block_on(compactor.run_from_latest_snapshot(&document, "holder-a", false, &CompactionBudget::default(), 0)).unwrap();
         assert_eq!(report.wal_segments_deleted, 0, "the sole segment must still never be touched, even though its horizon is at the floor");
     }
     //#endregion 🔖️Compactor

@@ -67,7 +67,7 @@ pub mod io_registry {
     /// 🎯️ Compose into exactly one target dialect from a set of (possibly foreign-dialect) sources.
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BinaryComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
+        semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
     /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.

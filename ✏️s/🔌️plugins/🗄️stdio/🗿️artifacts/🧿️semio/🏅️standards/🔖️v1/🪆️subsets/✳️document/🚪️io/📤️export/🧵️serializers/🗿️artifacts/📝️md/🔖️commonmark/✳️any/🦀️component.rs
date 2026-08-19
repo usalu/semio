@@ -67,7 +67,7 @@ impl ArtifactSerializer for SemioDocumentToMd {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: from.blocks.iter().flat_map(map_semio_block).collect() })
     }
 }
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn maps_headings_lists_code_quotes_and_flattens_tables() {
-        let md = SemioDocumentToMd::serialize(&sample_semio()).expect("serialize");
+        let md = semio_framework_plugin::resolve_ready(SemioDocumentToMd::serialize(&sample_semio())).expect("serialize");
         assert!(matches!(&md.blocks[0], MdBlock::Heading { level: 2, inlines } if matches!(&inlines[0], MdInline::Strong { .. })));
         assert!(matches!(&md.blocks[1], MdBlock::Paragraph { .. }));
         assert!(matches!(&md.blocks[2], MdBlock::List { ordered: false, items, .. } if items.len() == 1));

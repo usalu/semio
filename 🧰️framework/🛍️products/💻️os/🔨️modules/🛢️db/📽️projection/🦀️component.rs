@@ -397,9 +397,9 @@ impl<'a> ProjectionEngine<'a> {
 
     /// @emoji 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
     /// bytes if nothing has been persisted at or before that point yet.
-    fn load_checkpoint(&self, projection: &dyn ErasedProjection, at_or_before: u64) -> Result<Vec<u8>, DbError> {
+    async fn load_checkpoint(&self, projection: &dyn ErasedProjection, at_or_before: u64) -> Result<Vec<u8>, DbError> {
         let index = self.index_for(projection.id());
-        match index.latest_at_or_before(projection.id(), at_or_before)? {
+        match index.latest_at_or_before(projection.id(), at_or_before).await? {
             Some((_, versioned_bytes)) => self.decode_checkpoint(projection, &versioned_bytes),
             None => Ok(projection.initial_bytes()),
         }
@@ -422,18 +422,18 @@ impl<'a> ProjectionEngine<'a> {
     /// says no to is left exactly as it was (no write, no frontier advance) and its prior state is
     /// carried forward unchanged for `DepView`/the returned map. Returns every projection's
     /// (possibly carried-forward) state, keyed by id.
-    pub fn apply_envelope(&self, command_seq: u64, envelope: &MutationEnvelope, touched: &TouchedSet) -> Result<PMap<String, Vec<u8>>, DbError> {
+    pub async fn apply_envelope(&self, command_seq: u64, envelope: &MutationEnvelope, touched: &TouchedSet) -> Result<PMap<String, Vec<u8>>, DbError> {
         self.require_matching_document(envelope)?;
         let mut deps = DepView::default();
         let mut out: PMap<String, Vec<u8>> = PMap::new();
         let mut changed_this_step: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
         for &index in &self.graph.order {
             let projection = self.projections[index].as_ref();
-            let prior = self.load_checkpoint(projection, command_seq.saturating_sub(1))?;
+            let prior = self.load_checkpoint(projection, command_seq.saturating_sub(1)).await?;
             let new_state = if should_run(projection, touched, &changed_this_step) {
                 let computed = projection.apply_bytes(&prior, envelope, &deps)?;
                 let index_handle = self.index_for(projection.id());
-                index_handle.record(projection.id(), command_seq, encode_versioned(projection.schema_version(), &computed))?;
+                index_handle.record(projection.id(), command_seq, encode_versioned(projection.schema_version(), &computed)).await?;
                 changed_this_step.insert(projection.id());
                 computed
             } else {
@@ -482,13 +482,13 @@ impl<'a> ProjectionEngine<'a> {
     /// checkpoint. This is the recovery path from a `DbError::Conflict` schema-version mismatch
     /// surfaced by `apply_envelope`/`state_at` — a projection whose `schema_version()` was bumped
     /// gets a fresh, current-version checkpoint by replaying its full history once.
-    pub fn rebuild_and_persist(&self, events: &[(u64, MutationEnvelope, TouchedSet)], final_command_seq: u64) -> Result<PMap<String, Vec<u8>>, DbError> {
+    pub async fn rebuild_and_persist(&self, events: &[(u64, MutationEnvelope, TouchedSet)], final_command_seq: u64) -> Result<PMap<String, Vec<u8>>, DbError> {
         let final_states = self.rebuild_in_memory(events)?;
         for projection in &self.projections {
             let id = projection.id().to_string();
             let bytes = final_states.get(&id).expect("rebuild_in_memory populates every registered projection id");
             let index_handle = self.index_for(projection.id());
-            index_handle.record(projection.id(), final_command_seq, encode_versioned(projection.schema_version(), bytes))?;
+            index_handle.record(projection.id(), final_command_seq, encode_versioned(projection.schema_version(), bytes)).await?;
         }
         Ok(final_states)
     }
@@ -496,10 +496,10 @@ impl<'a> ProjectionEngine<'a> {
     /// @emoji 🏔️ Historical query: `projection_id`'s persisted state at or before `frontier_seq`
     /// (past its version prefix), or `Ok(None)` if nothing was ever persisted at or before that
     /// frontier. Errors `DbError::Conflict` if the nearest checkpoint's schema version is stale.
-    pub fn state_at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
+    pub async fn state_at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
         let projection = self.projection_by_id(projection_id)?;
         let index_handle = self.index_for(projection_id);
-        match index_handle.latest_at_or_before(projection_id, frontier_seq)? {
+        match index_handle.latest_at_or_before(projection_id, frontier_seq).await? {
             None => Ok(None),
             Some((_, versioned_bytes)) => Ok(Some(self.decode_checkpoint(projection, &versioned_bytes)?)),
         }
@@ -512,16 +512,16 @@ impl<'a> ProjectionEngine<'a> {
     /// `ProjectionIndex::record`/any `IndexStorage` write). Dependency states for the preview step
     /// are the DEPENDENCIES' own canonical state at `base_frontier_seq` — a preview augments one
     /// projection, it does not cascade a preview through the whole DAG.
-    pub fn preview_augmented(&self, projection_id: &str, base_frontier_seq: u64, preview_envelope: &MutationEnvelope) -> Result<Vec<u8>, DbError> {
+    pub async fn preview_augmented(&self, projection_id: &str, base_frontier_seq: u64, preview_envelope: &MutationEnvelope) -> Result<Vec<u8>, DbError> {
         self.require_matching_document(preview_envelope)?;
         let projection = self.projection_by_id(projection_id)?;
-        let base = match self.state_at(projection_id, base_frontier_seq)? {
+        let base = match self.state_at(projection_id, base_frontier_seq).await? {
             Some(bytes) => bytes,
             None => projection.initial_bytes(),
         };
         let mut deps = DepView::default();
         for &dependency_id in projection.dependencies() {
-            if let Some(dependency_bytes) = self.state_at(dependency_id, base_frontier_seq)? {
+            if let Some(dependency_bytes) = self.state_at(dependency_id, base_frontier_seq).await? {
                 deps.states = deps.states.insert(dependency_id.to_string(), dependency_bytes);
             }
         }
@@ -703,14 +703,14 @@ mod tests {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
         for seq in 1..=3u64 {
-            let result = engine.apply_envelope(seq, &envelope("doc-1", &format!("op-{seq}"), seq), &touch(&["doc"])).unwrap();
+            let result = db_actor::block_on(engine.apply_envelope(seq, &envelope("doc-1", &format!("op-{seq}"), seq), &touch(&["doc"]))).unwrap();
             assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), seq);
         }
 
-        let persisted = engine.state_at("count", 3).unwrap().unwrap();
+        let persisted = db_actor::block_on(engine.state_at("count", 3)).unwrap().unwrap();
         assert_eq!(u64::decode(&persisted).unwrap(), 3);
-        assert_eq!(engine.state_at("count", 1).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
-        assert_eq!(engine.state_at("count", 0).unwrap(), None);
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 0)).unwrap(), None);
     }
 
     #[test]
@@ -718,7 +718,7 @@ mod tests {
         let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        assert!(matches!(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1), &touch(&["doc"])), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1), &touch(&["doc"]))), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -729,12 +729,12 @@ mod tests {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
         // Step 1: count -> 1, sum sees count's *this-step* value (1): sum = 1 + 1 = 2.
-        let result = engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"])).unwrap();
+        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
         assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), 1);
         assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).unwrap(), 2);
 
         // Step 2: count -> 2, sum = (prior sum 2) + 1 + (this-step count 2) = 5.
-        let result = engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"])).unwrap();
+        let result = db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"]))).unwrap();
         assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), 2);
         assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).unwrap(), 5);
     }
@@ -745,18 +745,18 @@ mod tests {
         {
             let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-            engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"])).unwrap();
+            db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
         }
         // A fresh engine registers the SAME projection id at a bumped schema version.
         let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        assert!(matches!(engine.state_at("count", 1), Err(DbError::Conflict(_))));
-        assert!(matches!(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"])), Err(DbError::Conflict(_))));
+        assert!(matches!(db_actor::block_on(engine.state_at("count", 1)), Err(DbError::Conflict(_))));
+        assert!(matches!(db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"]))), Err(DbError::Conflict(_))));
 
         // rebuild_and_persist recovers: replays from scratch and re-persists at the current version.
         let events = vec![(1u64, envelope("doc-1", "op-1", 1), touch(&["doc"]))];
-        engine.rebuild_and_persist(&events, 1).unwrap();
-        assert_eq!(engine.state_at("count", 1).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        db_actor::block_on(engine.rebuild_and_persist(&events, 1)).unwrap();
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
     }
 
     #[test]
@@ -764,15 +764,15 @@ mod tests {
         let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"])).unwrap();
+        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
 
-        let previewed = engine.preview_augmented("count", 1, &envelope("doc-1", "preview-op", 2)).unwrap();
+        let previewed = db_actor::block_on(engine.preview_augmented("count", 1, &envelope("doc-1", "preview-op", 2))).unwrap();
         assert_eq!(u64::decode(&previewed).unwrap(), 2);
 
         // Canonical state at the same frontier is untouched by the preview.
-        assert_eq!(engine.state_at("count", 1).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
         // And no checkpoint was ever recorded past seq 1 (the preview never persisted anything).
-        assert_eq!(engine.state_at("count", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
     }
     //#endregion 🔖️Engine
 
@@ -784,14 +784,14 @@ mod tests {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
         // Untouched: the projection must not run, and nothing must be persisted for it.
-        let result = engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"])).unwrap();
+        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"]))).unwrap();
         assert_eq!(u64::decode(result.get(&"counter".to_string()).unwrap()).unwrap(), 0, "carried-forward initial state, not incremented");
-        assert_eq!(engine.state_at("counter", 1).unwrap(), None, "an unaffected projection must not advance its frontier");
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "an unaffected projection must not advance its frontier");
 
         // Directly touched: now it runs and persists.
-        engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"])).unwrap();
-        assert_eq!(engine.state_at("counter", 1).unwrap(), None, "still nothing at seq 1 — the skip was never retroactively persisted");
-        assert_eq!(engine.state_at("counter", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"]))).unwrap();
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "still nothing at seq 1 — the skip was never retroactively persisted");
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
     }
 
     #[test]
@@ -806,15 +806,15 @@ mod tests {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
         // "counter" is untouched -> "cascade" has nothing to cascade from -> neither runs.
-        engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"])).unwrap();
-        assert_eq!(engine.state_at("counter", 1).unwrap(), None);
-        assert_eq!(engine.state_at("cascade", 1).unwrap(), None);
+        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"]))).unwrap();
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None);
+        assert_eq!(db_actor::block_on(engine.state_at("cascade", 1)).unwrap(), None);
 
         // "counter" is touched -> runs -> "cascade" cascades even though "unrelated" (not "counter")
         // is the only path in this step's touched set that "cascade" itself would ever have read.
-        engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"])).unwrap();
-        assert_eq!(engine.state_at("counter", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
-        assert_eq!(engine.state_at("cascade", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
+        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"]))).unwrap();
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("cascade", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
     }
     //#endregion 🔖️IncrementalTriggering
 
@@ -848,14 +848,14 @@ mod tests {
         {
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).unwrap();
             for (seq, env, touched) in &events[..3] {
-                engine.apply_envelope(*seq, env, touched).unwrap();
+                db_actor::block_on(engine.apply_envelope(*seq, env, touched)).unwrap();
             }
         }
         let incremental_final = {
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).unwrap();
             let mut last = PMap::new();
             for (seq, env, touched) in &events[3..] {
-                last = engine.apply_envelope(*seq, env, touched).unwrap();
+                last = db_actor::block_on(engine.apply_envelope(*seq, env, touched)).unwrap();
             }
             last
         };

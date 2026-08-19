@@ -217,7 +217,7 @@ impl ArtifactEditor for LayoutPlayApp {
     /// `export_document_svg` (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg`
     /// parameter reaches this method, so there is no config-carried "active page" to prefer over the
     /// first page.
-    fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
@@ -648,7 +648,7 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let app = LayoutPlayApp::default();
-        let media = LayoutPlayApp::export_media("layout:out", &doc).expect("export layout:out");
+        let media = semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("layout:out", &doc)).expect("export layout:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.layout");
@@ -662,7 +662,7 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let app = LayoutPlayApp::default();
-        let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
+        let media = semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("document:out", &doc)).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");

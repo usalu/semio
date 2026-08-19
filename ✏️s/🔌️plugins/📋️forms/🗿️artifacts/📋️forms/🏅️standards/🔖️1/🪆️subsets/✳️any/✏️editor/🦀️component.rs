@@ -367,7 +367,7 @@ impl ArtifactEditor for FormsPlayApp {
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
     /// `Self::Config`).
-    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
@@ -845,7 +845,7 @@ mod tests {
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = <FormsPlayApp as ArtifactEditor>::export_media("dictionary:out", &doc).expect("export dictionary:out");
+        let media = semio_framework_plugin::resolve_ready(<FormsPlayApp as ArtifactEditor>::export_media("dictionary:out", &doc)).expect("export dictionary:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "form.dictionary");
@@ -859,7 +859,7 @@ mod tests {
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = <FormsPlayApp as ArtifactEditor>::export_media("document:out", &doc).expect("export document:out");
+        let media = semio_framework_plugin::resolve_ready(<FormsPlayApp as ArtifactEditor>::export_media("document:out", &doc)).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");

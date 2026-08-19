@@ -31,10 +31,8 @@
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-runtime.md`.
 
 use std::collections::HashMap;
-use std::future::Future;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::task::{Context, Poll};
 
 use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestId, RequestOutcome};
 use semio_framework::{DslValue, MediaType};
@@ -179,37 +177,6 @@ fn clamp_deadline_ms(now_ms: u64, effect_deadline_ms: Option<u64>, lane: u8) -> 
     match effect_deadline_ms {
         Some(requested) => requested.min(ceiling),
         None => ceiling,
-    }
-}
-
-/// 🏁️ What [`race_deadline`] resolved to.
-pub enum Race<T> {
-    Finished(T),
-    TimedOut,
-}
-
-/// ⏱️ Minimal two-future race with zero extra dependencies (`std::future::poll_fn`, stable since
-/// 1.64) — needed because `StorageScheduler::submit`'s ticket does NOT race a deadline internally
-/// (`StorageScheduler`'s own doc: "Deadline racing ... is not wired for storage ops in this
-/// packet"); `AsyncEffectExecutor` supplies it at the call site instead. `HttpPool`/`ComputePool`
-/// already race their own deadline internally (via a hidden `tokio::select!` in
-/// `semio-framework-os-services`) and do not need this helper.
-pub async fn race_deadline<T: Send + 'static>(primary: impl Future<Output = T> + Send + 'static, deadline: Option<HostFuture<()>>) -> Race<T> {
-    match deadline {
-        None => Race::Finished(primary.await),
-        Some(mut sleep) => {
-            let mut primary = Box::pin(primary);
-            std::future::poll_fn(move |cx: &mut Context<'_>| {
-                if let Poll::Ready(value) = primary.as_mut().poll(cx) {
-                    return Poll::Ready(Race::Finished(value));
-                }
-                if let Poll::Ready(()) = sleep.as_mut().poll(cx) {
-                    return Poll::Ready(Race::TimedOut);
-                }
-                Poll::Pending
-            })
-            .await
-        }
     }
 }
 //#endregion ⏱️Deadlines
@@ -829,7 +796,6 @@ impl AsyncEffectExecutor {
     }
 
     fn dispatch_storage(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, req: RequestId, op: StorageOp) {
-        let runtime = self.services.runtime.clone();
         let storage = self.services.storage.clone();
         let backend = self.services.storage_backend.clone();
         let sink = self.sink.clone();
@@ -842,14 +808,11 @@ impl AsyncEffectExecutor {
             let bytes_hint = op.byte_hint();
             let submitted = storage.submit(&ctx_for_task, package, bytes_hint, move || op.run(backend.as_ref()));
             match submitted {
-                Ok(ticket) => {
-                    let deadline = ctx_for_task.deadline_ms.map(|deadline_ms| runtime.sleep_until(deadline_ms));
-                    match race_deadline(ticket.await_result(), deadline).await {
-                        Race::Finished(Ok(bytes)) => emit_completed_ok(&sink, &ctx_for_task, req, bytes),
-                        Race::Finished(Err(storage_error)) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()),
-                        Race::TimedOut => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "storage op exceeded its deadline"),
-                    }
-                }
+                Ok(ticket) => match ticket.await_result().await {
+                    Ok(bytes) => emit_completed_ok(&sink, &ctx_for_task, req, bytes),
+                    Err(StorageError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "storage op exceeded its deadline"),
+                    Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()),
+                },
                 Err(storage_error @ StorageError::BytesQuotaExceeded { .. }) => emit_completed_err(&sink, &ctx_for_task, req, "quota-exceeded", storage_error.to_string()),
                 Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()),
             }
@@ -1213,60 +1176,6 @@ mod tests {
         assert_eq!(ids, vec![1, 2, 3], "buffered completions must be delivered in the order they completed");
     }
     //#endregion ⏸️ParkBufferTests
-
-    //#region ⏰️DeadlineTests
-    #[test]
-    fn an_effects_deadline_is_enforced_and_the_loser_is_cancelled() {
-        let runtime = ManualRuntime::new(0);
-        let never_ready = std::future::pending::<u32>();
-        let deadline = Some(runtime.sleep_until(50));
-        let race = race_deadline(never_ready, deadline);
-        futures_lite_block(&runtime, race, |outcome| {
-            assert!(matches!(outcome, Race::TimedOut), "a primary future that never resolves must lose the race once the deadline elapses");
-        });
-    }
-
-    #[test]
-    fn race_deadline_returns_the_primary_result_when_it_finishes_first() {
-        let runtime = ManualRuntime::new(0);
-        let quick = std::future::ready(99u32);
-        let deadline = Some(runtime.sleep_until(1_000_000));
-        let race = race_deadline(quick, deadline);
-        futures_lite_block(&runtime, race, |outcome| match outcome {
-            Race::Finished(value) => assert_eq!(value, 99),
-            Race::TimedOut => panic!("the primary future resolved immediately; it must win the race"),
-        });
-    }
-
-    /// 🧪️ Drives `fut` to completion against `runtime`'s injected clock — advances time in small
-    /// steps (the deadline test's `sleep_until(50)` needs the clock to actually reach 50) and polls
-    /// with a no-op waker, mirroring `semio-framework-async`'s own `futures_poll_ready` test helper.
-    /// 🧪️ `Box::pin`s `fut` rather than requiring `Unpin` — an async-fn-generated future's
-    /// `Unpin`-ness depends on what it happens to hold across an await point, which is not a
-    /// contract this test wants to lean on.
-    fn futures_lite_block<T>(runtime: &ManualRuntime, fut: impl Future<Output = T>, assertion: impl FnOnce(T)) {
-        use std::task::Waker;
-        let waker = Waker::noop();
-        let mut cx = Context::from_waker(waker);
-        let mut fut = Box::pin(fut);
-        let mut elapsed = 0u64;
-        loop {
-            match fut.as_mut().poll(&mut cx) {
-                Poll::Ready(value) => {
-                    assertion(value);
-                    return;
-                }
-                Poll::Pending => {
-                    elapsed += 10;
-                    runtime.set_now_ms(elapsed);
-                    if elapsed > 10_000 {
-                        panic!("race_deadline never resolved");
-                    }
-                }
-            }
-        }
-    }
-    //#endregion ⏰️DeadlineTests
 
     //#region 🚰️BackpressureTests
     /// 🚰️ A completion burst is subject to the SAME mailbox bound every other channel honours —

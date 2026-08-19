@@ -49,7 +49,7 @@ impl ArtifactDeserializer for SemioModelFromBcf {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(model_from_bcf(from))
     }
 }

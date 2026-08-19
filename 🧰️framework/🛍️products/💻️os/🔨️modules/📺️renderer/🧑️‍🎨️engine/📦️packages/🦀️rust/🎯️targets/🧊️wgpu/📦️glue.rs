@@ -1312,24 +1312,24 @@ pub mod scale_bench {
         // the `io` profile's ONE-TIME `RequestCapability` effect is therefore typically emitted on
         // THIS very first `InstanceOpen` turn, not a dedicated follow-up. Checked on both turns so a
         // real request is never misread as absent just because it landed on turn 1.
-        let open_result = match runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget) {
+        let open_result = match semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget)) {
             Ok(result) => result,
             Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "InstanceOpen turn failed"),
         };
         let requested_on_open = open_result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id));
-        let requested_on_wake = match runtime.execute_turn(&mut inst, &[Event::Wake], budget) {
+        let requested_on_wake = match semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[Event::Wake], budget)) {
             Ok(result) => result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id)),
             Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "capability-request turn failed"),
         };
         let requested = requested_on_open || requested_on_wake;
         let revoke_event = Event::CapabilityChanged { change: CapabilityChange::Revoked { id: CapabilityId(cap_id.clone()) } };
-        let revoke_result = runtime.execute_turn(&mut inst, &[revoke_event], budget);
+        let revoke_result = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[revoke_event], budget));
         let survived_revoke = revoke_result.is_ok();
         let revoke_status = match &revoke_result {
             Ok(result) => format!("{:?}", result.status),
             Err(fault) => fault.to_string(),
         };
-        let followup = runtime.execute_turn(&mut inst, &[Event::Wake], budget);
+        let followup = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[Event::Wake], budget));
         let survived_followup = followup.is_ok();
         let pass = requested && survived_revoke && survived_followup;
         row(

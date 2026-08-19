@@ -25,7 +25,7 @@ impl ArtifactDeserializer for SemioValueFromXml {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_xml_document(&from.doc), nodes: Vec::new() })
     }
 }

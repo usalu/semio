@@ -33,7 +33,7 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let document = &from.document;
         let mut timelines = Vec::with_capacity(document.animations.len());
         for anim in &document.animations {
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn deserialize_maps_linear_translation_channel_with_named_node() {
-        let anim = SemioAnimationFromGltf::deserialize(&real_world_gltf()).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         assert_eq!(anim.timelines[0].name.as_deref(), Some("clip"));
         let ch = &anim.timelines[0].channels[0];
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn deserialize_strips_cubic_spline_tangents_keeping_only_the_real_value_third() {
-        let anim = SemioAnimationFromGltf::deserialize(&real_world_gltf()).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
         let ch = &anim.timelines[0].channels[1];
         assert_eq!(ch.target.node, "node#1"); // unnamed node -> synthesized name
         assert_eq!(ch.interpolation, AnimInterpolation::CubicSpline);

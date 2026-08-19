@@ -24877,6 +24877,141 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 	return strings.Join(lines, "\n")
 }
 
+const (
+	ticketOversizedFileBytes   = 5 << 20
+	ticketOversizedFolderBytes = 10 << 20
+)
+
+// 🧹️purgeOversizedTicketArtifacts deletes files above 5 MiB and subfolders above 10 MiB inside a closed ticket folder.
+func purgeOversizedTicketArtifacts(ticketDir string) error {
+	ticketDir = strings.TrimSpace(ticketDir)
+	if ticketDir == "" {
+		return nil
+	}
+	absDir, err := filepath.Abs(ticketDir)
+	if err != nil {
+		return err
+	}
+	info, err := os.Stat(absDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("ticket path is not a directory: %s", absDir)
+	}
+
+	type fileEntry struct {
+		path string
+		size int64
+	}
+	dirSizes := make(map[string]int64)
+	var dirs []string
+	var files []fileEntry
+
+	walkErr := filepath.WalkDir(absDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			writeWarningf("Failed to walk ticket folder %s: %v", path, err)
+			return nil
+		}
+		if !ticketPathContained(absDir, path) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.Type()&fs.ModeSymlink != 0 {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.IsDir() {
+			if path != absDir {
+				dirs = append(dirs, path)
+			}
+			return nil
+		}
+		fi, err := os.Lstat(path)
+		if err != nil {
+			writeWarningf("Failed to stat ticket artifact %s: %v", path, err)
+			return nil
+		}
+		if fi.Mode()&fs.ModeSymlink != 0 {
+			return nil
+		}
+		size := fi.Size()
+		files = append(files, fileEntry{path: path, size: size})
+		for parent := filepath.Dir(path); ticketPathContained(absDir, parent); parent = filepath.Dir(parent) {
+			dirSizes[parent] += size
+			if parent == absDir {
+				break
+			}
+		}
+		return nil
+	})
+	if walkErr != nil {
+		return walkErr
+	}
+
+	sort.Slice(dirs, func(i, j int) bool {
+		return strings.Count(dirs[i], string(os.PathSeparator)) > strings.Count(dirs[j], string(os.PathSeparator))
+	})
+
+	deleted := make(map[string]bool)
+	for _, dir := range dirs {
+		if ticketArtifactUnderDeleted(dir, deleted) {
+			continue
+		}
+		if dirSizes[dir] <= ticketOversizedFolderBytes {
+			continue
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			writeWarningf("Failed to delete oversized ticket folder %s: %v", dir, err)
+			continue
+		}
+		deleted[dir] = true
+	}
+
+	ticketJSONBase := "🎫️ticket.json"
+	for _, file := range files {
+		if ticketArtifactUnderDeleted(file.path, deleted) {
+			continue
+		}
+		if filepath.Base(file.path) == ticketJSONBase {
+			continue
+		}
+		if file.size <= ticketOversizedFileBytes {
+			continue
+		}
+		if err := os.Remove(file.path); err != nil {
+			writeWarningf("Failed to delete oversized ticket file %s: %v", file.path, err)
+		}
+	}
+	return nil
+}
+
+// 🛡️ticketPathContained reports whether path stays inside the ticket root directory.
+func ticketPathContained(root, path string) bool {
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+// 🗑️ticketArtifactUnderDeleted reports whether path lies inside a deleted ticket subtree.
+func ticketArtifactUnderDeleted(path string, deleted map[string]bool) bool {
+	for dir := range deleted {
+		if path == dir || strings.HasPrefix(path, dir+string(os.PathSeparator)) {
+			return true
+		}
+	}
+	return false
+}
+
 // 🔖️FinishTicket MUST return a non-nil error when the operation fails.
 func FinishTicket(ticket *Ticket, summary string, files []string, noManagement bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
@@ -25021,6 +25156,9 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 	}
 	if err := SaveTicket(ticket); err != nil {
 		return err
+	}
+	if err := purgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
+		writeWarningf("Failed to purge oversized ticket artifacts: %v", err)
 	}
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	fileList := files
@@ -46271,12 +46409,12 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientCodex:   "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
 	},
 	"tool_ticket_close": {
-		McpClientGeneric: "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
-		McpClientCursor:  "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientKiro:    "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
-		McpClientCopilot: "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
-		McpClientClaude:  "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientCodex:   "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
+		McpClientGeneric: "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+		McpClientCursor:  "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+		McpClientKiro:    "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+		McpClientCopilot: "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+		McpClientClaude:  "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+		McpClientCodex:   "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
 	},
 	"tool_ticket_reopen": {
 		McpClientGeneric: "Use when work must continue on a closed ticket before any new edits land.",

@@ -305,7 +305,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 
     /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
     /// `Structured{schema: Self::DOCUMENT_SCHEMA, json: base64}` — plus `"drawing:out"`.
-    fn export_media(port: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
                 let eval_json = crate::artifacts::procedural2d::schema::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
@@ -654,14 +654,14 @@ mod tests {
     #[test]
     fn export_drawing_out_returns_vector_media() {
         let mut app = app();
-        let media = app.export_media("drawing:out").expect("export drawing:out");
+        let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
     }
 
     #[test]
     fn export_document_out_returns_flow_media() {
         let mut app = app();
-        let media = app.export_media("document:out").expect("export document:out");
+        let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
         assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == PROCEDURAL_2D_SCHEMA));
     }

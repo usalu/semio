@@ -12,12 +12,21 @@ pub mod process_transport;
 // module's own doc.
 #[path = "⚡️effects/🦀️component.rs"]
 pub mod effects;
+// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-async-imports): the `world actor-async`
+// `interface host-async` import layer — 24 `async func` imports the guest can actually await, plus
+// the `emit`/`emit-patch` one-way doors. Reuses `effects::AsyncServices`/`RouterEffectHandler`
+// (above) as the real backends it awaits directly — see that module's own doc for the routing rule.
+#[path = "⏳️imports.rs"]
+pub mod imports;
 
 use semio_framework::{
     kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
     DslValue, PluginManifest,
 };
 use semio_framework_actor::ActorId as RuntimeActorId;
+// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): `GuestRuntime`'s turn/job/
+// checkpoint methods return this instead of a bare `Result` — see the trait's own doc comment.
+use semio_framework_async::HostFuture;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
 // (`semio_framework_actor`, packet A1), so a downstream crate that does not itself depend on
 // `semio_framework_actor` (e.g. `🏃️run`, which only depends on THIS crate) still needs a path to
@@ -487,24 +496,68 @@ pub enum TurnFault {
 /// compiled-artifact cache above) and `MockGuestRuntime` (test double, below) both implement this;
 /// nothing else in the host — `ShardLoop`, the task manager, `WasmtimeNodeHost` — talks to a guest
 /// through any other surface.
+///
+/// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): the turn/job/checkpoint
+/// methods return [`HostFuture`] (`semio_framework_async::HostFuture<T> = Pin<Box<dyn Future<Output
+/// = T> + Send + 'static>>`), not a bare `Result`, so a genuinely-suspending backend (a sibling
+/// packet's `WasmtimeAsyncRuntime`, built on wasmtime's `component-model-async`) can share this ONE
+/// trait with today's fully-synchronous `WasmtimeRuntime`/`MockGuestRuntime` — every `Arc<dyn
+/// GuestRuntime>` holder in the crate needs dynamic dispatch, and `async fn` in a trait is not
+/// dyn-compatible. `compile`/`instantiate`/`drop_instance` stay plain `Result`: `compile` is
+/// CPU-bound with no await point, `instantiate` only BUILDS a task spec for an async backend (never
+/// runs one), and `drop_instance` is a destructor. `WasmtimeRuntime`/`MockGuestRuntime` (both below)
+/// do today's exact synchronous work eagerly and return `Box::pin(std::future::ready(result))` — see
+/// [`poll_ready`], the helper every caller in this crate uses to consume that always-ready future
+/// without an executor.
 pub trait GuestRuntime: Send + Sync {
     fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault>;
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>>;
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
     /// (`start-job`/`step-job`/`cancel-job`), not one: a job cannot be stepped before it exists.
     /// `PluginInstanceHandle::run_job_to_completion` (`//#region 🔀️PostTurnRelay`) is the only caller.
-    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault>;
-    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
+    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> HostFuture<Result<(), TurnFault>>;
+    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>>;
     /// 🛑️ `jobs.wit`'s `cancel-job` export — added past `design-runtime.md` §2's literal trait
     /// listing for the SAME reason `start_job` was (that listing names only `execute_turn`/
     /// `step_job`, but `jobs.wit` declares three functions, and a generic `Effect::CancelJob`
     /// admission path — `🧵️shard/🦀️component.rs`'s `ShardLoop::pump` — needs somewhere to call).
-    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
-    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
-    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
+    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> HostFuture<Result<(), TurnFault>>;
+    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>>;
+    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> HostFuture<Result<(), PluginHostError>>;
     fn drop_instance(&self, inst: GuestInstance);
+}
+
+/// ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): every [`GuestRuntime`] impl in
+/// this crate today (`WasmtimeRuntime`, `MockGuestRuntime`) does its work eagerly and returns
+/// `Box::pin(std::future::ready(result))` — a future that is ALWAYS `Poll::Ready` on its very first
+/// poll, never `Poll::Pending`. `ShardLoop` (`🧵️shard/🦀️component.rs`) and `PluginInstanceHandle`
+/// (`//#region 🔀️PostTurnRelay`, below) have no executor of their own — they run on a plain OS
+/// thread loop, not inside a spawned task — so they cannot `.await`; this polls once with a no-op
+/// waker instead. The `.expect`-equivalent panic below is sound ONLY as long as every impl this
+/// crate hands to a `poll_ready` caller keeps the "always ready" contract; the day a genuinely-
+/// suspending backend (`WasmtimeAsyncRuntime`, a sibling packet) is wired into one of THESE
+/// call sites rather than driven some other way (e.g. a real task per actor), this helper is the
+/// wrong tool for that call site and the panic below is the loud signal that migration is overdue —
+/// never a silent hang, because a no-op waker that receives a wake from a truly-pending future has
+/// nothing listening on it anyway.
+///
+/// `pub`, not `pub(crate)` — every `Arc<dyn GuestRuntime>` holder outside this crate (e.g.
+/// `semio-framework-os-mcp`'s `activate_plugin_instance`/`PluginArtifactChannel::exchange_one_real`)
+/// is in the exact same "plain OS thread, no executor" position `ShardLoop`/`PluginInstanceHandle`
+/// are, so it needs the identical poll-once escape hatch rather than a second copy of it.
+pub fn poll_ready<T>(mut future: HostFuture<T>) -> T {
+    // 🐛️ terra-trait-asyncify: NOT `use std::future::Future;` here — this crate's edition (2021)
+    // already has `Future` in its prelude (confirmed by `cargo check`: an explicit import produced
+    // an `unused_imports` warning), so `.poll(...)` below resolves without it.
+    use std::task::{Context, Poll, Waker};
+    let waker = Waker::noop();
+    let mut cx = Context::from_waker(waker);
+    match future.as_mut().poll(&mut cx) {
+        Poll::Ready(value) => value,
+        Poll::Pending => panic!("poll_ready: GuestRuntime future was not ready on first poll — this call site assumes an eagerly-ready impl (see poll_ready's own doc comment)"),
+    }
 }
 
 //#region 🔖️MockGuestRuntime
@@ -610,16 +663,22 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
 
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
-        self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
-        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-        let queue = scripts.entry(inst.actor.0).or_default();
-        match queue.pop_front() {
-            Some(ScriptedOutcome::Turn(result)) => Ok(result),
-            Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
-            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-            None => Err(TurnFault::Exhausted),
-        }
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>> {
+        // ⏳️ terra-trait-asyncify: identical body to before this packet, just computed eagerly and
+        // handed back as an already-ready future — see `poll_ready`'s doc comment for why that is
+        // sound here (this impl never actually suspends).
+        let result = (|| -> Result<TurnResult, TurnFault> {
+            self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
+            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+            let queue = scripts.entry(inst.actor.0).or_default();
+            match queue.pop_front() {
+                Some(ScriptedOutcome::Turn(result)) => Ok(result),
+                Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
+                Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+                None => Err(TurnFault::Exhausted),
+            }
+        })();
+        Box::pin(std::future::ready(result))
     }
 
     /// 🎬️ `start-job` has no interesting return value on success (`jobs.wit`: `result<_,
@@ -627,22 +686,28 @@ impl GuestRuntime for MockGuestRuntime {
     /// — a test that needs a scripted `start-job` failure schedules a `ScriptedOutcome::Fault` and
     /// asserts it surfaces from the FIRST call after `start_job` (i.e. the first `step_job`), matching
     /// `run_job_to_completion`'s own call order (`start_job` then `step_job` in a loop).
-    fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
-        if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
-            return Err(TurnFault::Exhausted);
-        }
-        Ok(())
+    fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> HostFuture<Result<(), TurnFault>> {
+        let result = (|| -> Result<(), TurnFault> {
+            if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
+                return Err(TurnFault::Exhausted);
+            }
+            Ok(())
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> Result<JobStep, TurnFault> {
-        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-        let queue = scripts.entry(inst.actor.0).or_default();
-        match queue.pop_front() {
-            Some(ScriptedOutcome::Job(step)) => Ok(step),
-            Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
-            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-            None => Err(TurnFault::Exhausted),
-        }
+    fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>> {
+        let result = (|| -> Result<JobStep, TurnFault> {
+            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+            let queue = scripts.entry(inst.actor.0).or_default();
+            match queue.pop_front() {
+                Some(ScriptedOutcome::Job(step)) => Ok(step),
+                Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
+                Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+                None => Err(TurnFault::Exhausted),
+            }
+        })();
+        Box::pin(std::future::ready(result))
     }
 
     /// 🛑️ Mirrors `run_job_to_completion`'s own assumption that cancellation just drops
@@ -650,25 +715,31 @@ impl GuestRuntime for MockGuestRuntime {
     /// no scripted outcome to consume, since a cancelled job is never stepped again by whichever
     /// caller cancelled it (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump` removes it from
     /// `running_jobs` in the SAME turn it sees the `Effect::CancelJob`).
-    fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
-        Ok(())
+    fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> HostFuture<Result<(), TurnFault>> {
+        Box::pin(std::future::ready(Ok(())))
     }
 
-    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
-        let GuestInstanceState::Mock(state) = &mut inst.state else {
-            return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
-        };
-        let bytes = format!("mock-checkpoint:{}", inst.actor.0).into_bytes();
-        state.checkpoint = Some(bytes.clone());
-        Ok(bytes)
+    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>> {
+        let result = (|| -> Result<Vec<u8>, PluginHostError> {
+            let GuestInstanceState::Mock(state) = &mut inst.state else {
+                return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
+            };
+            let bytes = format!("mock-checkpoint:{}", inst.actor.0).into_bytes();
+            state.checkpoint = Some(bytes.clone());
+            Ok(bytes)
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
-        let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
-            return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
-        };
-        mock_state.checkpoint = Some(state.to_vec());
-        Ok(())
+    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> HostFuture<Result<(), PluginHostError>> {
+        let result = (|| -> Result<(), PluginHostError> {
+            let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
+                return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
+            };
+            mock_state.checkpoint = Some(state.to_vec());
+            Ok(())
+        })();
+        Box::pin(std::future::ready(result))
     }
 
     fn drop_instance(&self, inst: GuestInstance) {
@@ -698,9 +769,9 @@ mod mock_guest_runtime_tests {
         runtime.script_turn(actor, first);
         runtime.script_turn(actor, second);
 
-        let got_first = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("first scripted turn");
+        let got_first = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("first scripted turn");
         assert_eq!(got_first.fuel_used, 7);
-        let got_second = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("second scripted turn");
+        let got_second = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("second scripted turn");
         assert_eq!(got_second.fuel_used, 9);
     }
 
@@ -710,7 +781,7 @@ mod mock_guest_runtime_tests {
         let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2) }, &[]).expect("compile");
         let actor = RuntimeActorId(7);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        let error = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect_err("no script queued");
+        let error = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("no script queued");
         assert!(matches!(error, TurnFault::Exhausted));
     }
 
@@ -721,7 +792,7 @@ mod mock_guest_runtime_tests {
         let actor = RuntimeActorId(9);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
         runtime.script_fault(actor, "epoch deadline exceeded");
-        let error = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect_err("scripted fault");
+        let error = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("scripted fault");
         assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
     }
 
@@ -731,10 +802,10 @@ mod mock_guest_runtime_tests {
         let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4) }, &[]).expect("compile");
         let actor = RuntimeActorId(11);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        let snapshot = runtime.checkpoint(&mut inst).expect("checkpoint");
+        let snapshot = poll_ready(runtime.checkpoint(&mut inst)).expect("checkpoint");
 
         let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("re-instantiate");
-        runtime.restore(&mut restored, &snapshot).expect("restore");
+        poll_ready(runtime.restore(&mut restored, &snapshot)).expect("restore");
         let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
         assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
     }
@@ -900,112 +971,134 @@ impl GuestRuntime for WasmtimeRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
     }
 
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
-        };
-        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        state.store.set_epoch_deadline(budget.deadline_ms as u64);
-        let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-        let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
-        let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
-        let poll_result = match call_result {
-            Ok(inner) => inner,
-            Err(trap) => {
-                let message = trap.to_string();
-                let lowered = message.to_ascii_lowercase();
-                return Err(if lowered.contains("fuel") {
-                    TurnFault::FuelExhausted
-                } else if lowered.contains("epoch") || lowered.contains("interrupt") {
-                    TurnFault::DeadlineExceeded
-                } else {
-                    TurnFault::Trapped(message)
-                });
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>> {
+        // ⏳️ terra-trait-asyncify: identical body to before this packet (fuel/epoch setup, the
+        // fuel/epoch trap-message sniffing, effect conversion, `TurnResult` shape all byte-for-byte
+        // unchanged) — computed eagerly, handed back as an already-ready future. See `poll_ready`'s
+        // doc comment for why every caller in this crate may safely assume that.
+        let result = (|| -> Result<TurnResult, TurnFault> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
+            };
+            state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+            state.store.set_epoch_deadline(budget.deadline_ms as u64);
+            let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+            let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
+            let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
+            let poll_result = match call_result {
+                Ok(inner) => inner,
+                Err(trap) => {
+                    let message = trap.to_string();
+                    let lowered = message.to_ascii_lowercase();
+                    return Err(if lowered.contains("fuel") {
+                        TurnFault::FuelExhausted
+                    } else if lowered.contains("epoch") || lowered.contains("interrupt") {
+                        TurnFault::DeadlineExceeded
+                    } else {
+                        TurnFault::Trapped(message)
+                    });
+                }
+            };
+            let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
+            for effect in wit_turn_result.effects {
+                effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
             }
-        };
-        let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-        let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
-        for effect in wit_turn_result.effects {
-            effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
-        }
-        Ok(TurnResult {
-            // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
-            // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
-            // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
-            // report.md`'s `## blocked-on` — tracked there, not silently dropped).
-            ui_patches: Vec::new(),
-            effects,
-            next_wake: wit_turn_result.next_wake,
-            status: wit_turn_status_to_kernel(wit_turn_result.status),
-            fuel_used: wit_turn_result.fuel_used,
-        })
+            Ok(TurnResult {
+                // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
+                // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
+                // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
+                // report.md`'s `## blocked-on` — tracked there, not silently dropped).
+                ui_patches: Vec::new(),
+                effects,
+                next_wake: wit_turn_result.next_wake,
+                status: wit_turn_status_to_kernel(wit_turn_result.status),
+                fuel_used: wit_turn_result.fuel_used,
+            })
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        state
-            .bindings
-            .semio_framework_jobs()
-            .call_start_job(&mut state.store, job, kind, &input)
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
+    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> HostFuture<Result<(), TurnFault>> {
+        let result = (|| -> Result<(), TurnFault> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
+            };
+            state
+                .bindings
+                .semio_framework_jobs()
+                .call_start_job(&mut state.store, job, kind, &input)
+                .map_err(|error| TurnFault::Trapped(error.to_string()))?
+                .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        state.store.set_epoch_deadline(budget.deadline_ms as u64);
-        let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
-        let step = state
-            .bindings
-            .semio_framework_jobs()
-            .call_step_job(&mut state.store, job, wit_budget)
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-        Ok(match step {
-            wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
-            wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
-            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
-        })
+    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>> {
+        let result = (|| -> Result<JobStep, TurnFault> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
+            };
+            state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+            state.store.set_epoch_deadline(budget.deadline_ms as u64);
+            let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
+            let step = state
+                .bindings
+                .semio_framework_jobs()
+                .call_step_job(&mut state.store, job, wit_budget)
+                .map_err(|error| TurnFault::Trapped(error.to_string()))?
+                .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            Ok(match step {
+                wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
+                wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
+                wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
+            })
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
-        // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
-        // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
-        // `start_job`/`step_job` need.
-        state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
+    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> HostFuture<Result<(), TurnFault>> {
+        let result = (|| -> Result<(), TurnFault> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
+            };
+            // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
+            // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
+            // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
+            // `start_job`/`step_job` need.
+            state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
-        };
-        state
-            .bindings
-            .semio_framework_checkpoint()
-            .call_checkpoint(&mut state.store)
-            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
-            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>> {
+        let result = (|| -> Result<Vec<u8>, PluginHostError> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
+            };
+            state
+                .bindings
+                .semio_framework_checkpoint()
+                .call_checkpoint(&mut state.store)
+                .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+                .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+        })();
+        Box::pin(std::future::ready(result))
     }
 
-    fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> Result<(), PluginHostError> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
-        };
-        state
-            .bindings
-            .semio_framework_checkpoint()
-            .call_restore(&mut state.store, state_bytes)
-            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
-            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+    fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> HostFuture<Result<(), PluginHostError>> {
+        let result = (|| -> Result<(), PluginHostError> {
+            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+                return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
+            };
+            state
+                .bindings
+                .semio_framework_checkpoint()
+                .call_restore(&mut state.store, state_bytes)
+                .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+                .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+        })();
+        Box::pin(std::future::ready(result))
     }
 
     fn drop_instance(&self, _inst: GuestInstance) {
@@ -1348,9 +1441,9 @@ impl PluginInstanceHandle {
     fn run_job_to_completion(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let mut instance = self.instance.lock().map_err(|_| PluginHostError::LockPoisoned("plugin instance handle"))?;
-        self.runtime.start_job(&mut instance, job, kind, input).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
+        poll_ready(self.runtime.start_job(&mut instance, job, kind, input)).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
         loop {
-            match self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
+            match poll_ready(self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET)).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
                 JobStep::Done { output } => return Ok(output),
                 JobStep::Failed { error } => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&error)))),
                 JobStep::Running { .. } => continue,
@@ -1387,6 +1480,50 @@ impl PluginInstanceHandle {
     /// call already took exactly one opaque payload.
     pub fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         self.run_job_to_completion("semio.infer", request.to_vec())
+    }
+
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest mutation-plan
+    /// call — the absorbed `contributor.artifact-mutation-plan` export, now `semio.mutation-plan`.
+    /// `request`/the result are the SAME DSL wire-pack bytes `ArtifactMutationRouter::plan` already
+    /// builds via `encode_wire_dsl`/decodes via `decode_wire_dsl` (this region's own helpers,
+    /// `HostArtifactMutationPlanRequest`/`Result`'s field-for-field guest mirror) — no tuple
+    /// wrapping needed, mirroring `infer`'s own doc note above.
+    pub fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        self.run_job_to_completion("semio.mutation-plan", request.to_vec())
+    }
+
+    /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest versioned
+    /// re-encode — the absorbed `migrate-artifact` export, now `semio.migrate`. `from`/`to` are
+    /// `io_schema::ArtifactDialect::to_coordinate()` strings; `pack` is the bytes to re-encode.
+    /// Bundles all three into one JSON tuple the SAME way `io_run` above bundles its own former
+    /// three separate export parameters (`⚛️reactor/💼️jobs/🔀️migrate/🦀️component.rs`'s own
+    /// `MigrateInput` decodes a struct positionally from this tuple, matching `IoRunInput`'s
+    /// established idiom). The caller that resolves WHICH `PluginInstanceHandle` to migrate through
+    /// belongs to the pending runtime/db refactor (this method only provides the dispatch, not its
+    /// call site — see this packet's report `## lease-requests`).
+    pub fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        let input = serde_json::to_vec(&(from, to, pack))?;
+        self.run_job_to_completion("semio.migrate", input)
+    }
+
+    /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): routes to this plugin's own
+    /// `semio.compose` cold job — design-abi.md §2: "`artifact-compose` ... become well-known cold
+    /// job kinds ... driven by `start-job` + `step-job`". The guest body is owned by the live
+    /// `compose-await` packet (`ComposeStepper`/`ComposeState`, deliberately NOT defined here or
+    /// anywhere in this file) — until it registers `"semio.compose"` via `register_job_kind`, this
+    /// fails with the ordinary `job.unknown-kind` fault `step_job` already produces for any
+    /// unregistered kind, not a hand-written host refusal. `key_bytes` is the JSON `IoKey`
+    /// `IoRouter::compose` already resolved ownership from; `sources_bytes` passes through
+    /// byte-for-byte. This wire shape is provisional until `compose-await`'s own guest decode is
+    /// defined — coordinate any format change with that packet before altering it here.
+    pub fn compose(&self, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        #[derive(serde::Serialize)]
+        struct ComposeInput<'a> {
+            key: &'a [u8],
+            sources: &'a [u8],
+        }
+        let input = serde_json::to_vec(&ComposeInput { key: key_bytes, sources: sources_bytes })?;
+        self.run_job_to_completion("semio.compose", input)
     }
 }
 
@@ -2009,15 +2146,15 @@ impl IoRouter {
     /// `io-compose` again, so every route is exactly one hop — the self-route guard is what keeps a
     /// plugin from ever needing to reason about calling back into its own in-flight `Store` mutex
     /// (which would deadlock, since that mutex is already held by the caller of this very host call).
-    /// 🚧️ Resolution (this method) is unchanged; DISPATCH is not yet wired — `artifact-compose` is
-    /// not an export of `world actor` (only `reactor`/`jobs`/`checkpoint`/`describe` are,
-    /// `📜️component.wit`'s `world actor` block) and no `jobs.wit` cold job kind for the OLD
-    /// `IoKey`-keyed compose mechanism exists yet (only `semio.io-run`/`semio.io-sniff`/`semio.infer`
-    /// are named anywhere in the WIT) — unlike `run_io`/`identify` below (the NEW `io_entries`
-    /// mechanism), there is no real guest entry point this host can call yet. Documented gap, not a
-    /// silently wrong guess at an undocumented wire format (same policy B1's `EffectEventMarshal`
-    /// already applies to `Effect::IoRun`, `📓️terra-B1-host-native-report.md` `## 3`).
-    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], _sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): resolution (unchanged) now feeds a
+    /// REAL dispatch — `PluginInstanceHandle::compose` driving the owner's own `semio.compose` cold
+    /// job to completion via `run_job_to_completion`, the same post-turn relay `run_io`/`identify`
+    /// below already use. The guest body is the live `compose-await` packet's, not this file's —
+    /// until it registers `"semio.compose"`, this surfaces the OWNER's own `job.unknown-kind` fault
+    /// (a real, dynamic failure reflecting actual guest state) rather than the previous hand-written
+    /// permanent host refusal. Once `compose-await` lands, this exact code starts succeeding with no
+    /// further host change.
+    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let key: semio_framework::IoKey = serde_json::from_slice(key_bytes)?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let owner = state
@@ -2028,13 +2165,9 @@ impl IoRouter {
         if owner == calling_plugin_id {
             return Err(PluginHostError::Plugin(format!("io-compose refused: plugin `{calling_plugin_id}` would be routing to itself (should have resolved locally)")));
         }
-        if !state.runtimes.contains_key(&owner) {
-            return Err(PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")));
-        }
+        let handle = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")))?;
         drop(state);
-        Err(PluginHostError::Plugin(format!(
-            "io-compose resolved to plugin `{owner}` but dispatch is not yet wired: `world actor` has no `artifact-compose` export and no cold job kind for the OLD IoKey-keyed compose mechanism exists in `jobs.wit` yet"
-        )))
+        handle.compose(key_bytes, sources_bytes)
     }
 
     /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
@@ -2871,18 +3004,28 @@ pub enum MutationOwnership {
 /// the same key is an error unless byte-identical.
 pub struct ArtifactMutationRouter {
     routes: Mutex<BTreeMap<(String, String), (String, HostMutationRosterEntry)>>,
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): mirrors `ArtifactInferenceRouter`'s
+    /// own `runtimes` field EXACTLY (same shape, same purpose) — kept by `register_plugin`/
+    /// `unregister_plugin` for `plan`'s dispatch. Production today calls `register_roster` directly
+    /// (see `🏃️run/🦀️component.rs`, outside this packet's owned paths), which never touches this
+    /// field — see this packet's report `## lease-requests` for the one-line change that wires it.
+    runtimes: Mutex<HashMap<String, Arc<PluginInstanceHandle>>>,
 }
 
 impl ArtifactMutationRouter {
     pub fn new() -> Self {
-        Self { routes: Mutex::new(BTreeMap::new()) }
+        Self { routes: Mutex::new(BTreeMap::new()), runtimes: Mutex::new(HashMap::new()) }
     }
 
     /// 📌️ Decodes `roster_wire_bytes` (the exact `contributor.list-artifact-mutations` wire
-    /// payload) and registers every row — see `register_roster` for the gating rules.
-    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+    /// payload), registers every row (see `register_roster` for the gating rules), and keeps
+    /// `handle` for `plan`'s later dispatch — mirrors `ArtifactInferenceRouter::register_plugin`'s
+    /// exact 4-argument shape (`plugin_id, dependencies, handle, roster_wire_bytes`).
+    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes)?;
-        self.register_roster(plugin_id, dependencies, roster)
+        self.register_roster(plugin_id, dependencies, roster)?;
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.insert(plugin_id.to_string(), handle);
+        Ok(())
     }
 
     /// 🧪️ Pure half of `register_plugin`, split out for deterministic testing without any wasm —
@@ -2957,14 +3100,33 @@ impl ArtifactMutationRouter {
         Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?.values().map(|(_, entry)| entry.clone()).collect())
     }
 
+    /// 🎯️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): contract §5.3 dispatch — resolves
+    /// `(artifact_kind, mutation_id)` (reusing `resolve` above, never duplicating that lookup) then
+    /// drives the owning/contributing plugin's own `semio.mutation-plan` cold job to completion.
+    /// Mirrors `ArtifactInferenceRouter::infer`'s exact shape: raw wire bytes in, raw wire bytes out
+    /// (`request_bytes`/the return are both the DSL wire form `HostArtifactMutationPlanRequest`/
+    /// `Result` already use elsewhere in this region — `PluginInstanceHandle::mutation_plan` passes
+    /// them straight through, no re-encoding).
+    pub fn plan(&self, request_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let request: HostArtifactMutationPlanRequest = decode_wire_dsl(request_bytes)?;
+        let plugin_id = match self.resolve(&request.artifact_kind, &request.mutation_id)? {
+            MutationOwnership::Contributed { plugin_id } | MutationOwnership::Owner { plugin_id } => plugin_id,
+        };
+        let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
+        handle.mutation_plan(request_bytes)
+    }
+
     /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed
-    /// rows it reported under an owner artifact kind) — called on unload/hot-reload.
+    /// rows it reported under an owner artifact kind) and its runtime handle — called on
+    /// unload/hot-reload.
     pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
         let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
         routes.retain(|_, (owner_plugin, entry)| {
             let reporter = entry.contributor.as_deref().unwrap_or(owner_plugin.as_str());
             reporter != plugin_id
         });
+        drop(routes);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.remove(plugin_id);
         Ok(())
     }
 }
@@ -3030,6 +3192,47 @@ mod artifact_mutation_router_tests {
         router.unregister_plugin("contributor").unwrap();
         assert_eq!(router.roster().unwrap().len(), 1);
         assert!(router.resolve("s.owner.widget", "widget.doc#set-color").is_ok());
+    }
+
+    fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<PluginInstanceHandle>) {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+        let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
+        let handle = Arc::new(PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance));
+        (mock, handle)
+    }
+
+    /// 🎯️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `register_plugin` keeps the handle
+    /// `plan` later needs, and `plan` resolves ownership THEN drives the owner's real
+    /// `semio.mutation-plan` job to completion (`MockGuestRuntime`-backed, not mocked-away resolution
+    /// alone) — proves this router's new `runtimes` field/`plan` method actually reach a handle, not
+    /// just that `resolve` still works.
+    #[test]
+    fn plan_drives_the_registered_owners_mutation_plan_job_to_completion() {
+        let router = ArtifactMutationRouter::new();
+        let (mock, handle) = mock_handle(RuntimeActorId(300));
+        let roster_bytes = encode_wire_dsl(&vec![owner_entry("widget.doc#set-color")]).expect("encode roster");
+        router.register_plugin("owner", &[], handle, &roster_bytes).expect("register_plugin must register the roster AND keep the handle");
+
+        let request = HostArtifactMutationPlanRequest { artifact_kind: "s.owner.widget".to_string(), mutation_id: "widget.doc#set-color".to_string(), revision: 1, generation: 1, snapshot_pack: vec![1, 2, 3], payload: vec![4, 5] };
+        let request_bytes = encode_wire_dsl(&request).expect("encode request");
+        let expected_result = HostArtifactMutationPlanResult { artifact_kind: request.artifact_kind.clone(), mutation_id: request.mutation_id.clone(), revision: 1, generation: 1, owner_ops: vec![vec![9]], label: "mocked".to_string(), foreign: Vec::new() };
+        mock.script_job_step(RuntimeActorId(300), JobStep::Done { output: encode_wire_dsl(&expected_result).expect("encode expected result") });
+
+        let result_bytes = router.plan(&request_bytes).expect("plan must resolve ownership AND drive the job to completion");
+        let result: HostArtifactMutationPlanResult = decode_wire_dsl(&result_bytes).expect("decode plan result");
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn plan_fails_with_a_named_error_when_the_owner_is_not_loaded() {
+        let router = ArtifactMutationRouter::new();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).expect("register the owner row");
+        let request = HostArtifactMutationPlanRequest { artifact_kind: "s.owner.widget".to_string(), mutation_id: "widget.doc#set-color".to_string(), revision: 1, generation: 1, snapshot_pack: Vec::new(), payload: Vec::new() };
+        let request_bytes = encode_wire_dsl(&request).expect("encode request");
+        let error = router.plan(&request_bytes).expect_err("resolve succeeds but no handle was ever registered, so plan must still fail");
+        assert!(matches!(error, PluginHostError::Plugin(message) if message.contains("not loaded")), "unexpected error");
     }
 }
 //#endregion 🎯️MutationRouter
@@ -4312,6 +4515,38 @@ mod tests {
         assert_eq!(rank, 3);
     }
 
+    /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `PluginInstanceHandle::migrate`
+    /// drives `semio.migrate` through a `Running` slice before `Done`, exactly like the `io_run`
+    /// test above — proves this is a real `start-job`/`step-job` loop, not a single call.
+    #[test]
+    fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completion() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = RuntimeActorId(102);
+        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) }, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+        mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] });
+        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+
+        let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).expect("job-backed migrate must drive start-job + step-job to Done");
+        assert_eq!(result, vec![1, 2, 3, 0xAB]);
+    }
+
+    /// 🧬️ `PluginInstanceHandle::mutation_plan` passes DSL wire-pack bytes straight through, both
+    /// directions — no re-encoding at this layer (that's `ArtifactMutationRouter::plan`'s job).
+    #[test]
+    fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = RuntimeActorId(103);
+        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() });
+        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+
+        let result = handle.mutation_plan(b"request-wire-bytes").expect("job-backed mutation_plan must drive start-job + step-job to Done");
+        assert_eq!(result, b"planned");
+    }
+
     /// 🌉️ End-to-end through the REAL `IoRouter`, not just `PluginInstanceHandle` directly: registers
     /// two mock-backed plugins (`stdio` owns `binary->gif87a`, `gif` owns `gif87a->gif89a`) using the
     /// SAME `register_plugin`/`run_io` production code path a live `🏃️run` boot would use, then
@@ -4369,20 +4604,24 @@ mod tests {
         assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
     }
 
-    /// 🚧️ `IoRouter::compose` resolution still works (unchanged pure algorithm) but dispatch
-    /// correctly refuses rather than guessing an undocumented wire format — see `compose`'s own doc
-    /// comment. Registers a mock-backed plugin (proving `register_plugin`'s OLD-mechanism
-    /// `artifact_dialect_entries` merge still works without any wasm call) then asserts `compose`
-    /// resolves ownership and THEN reports "not yet wired", not a silent success or a resolution
-    /// failure — the two are distinguishable by the error message.
+    /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `IoRouter::compose` resolution
+    /// (unchanged pure algorithm) now feeds a REAL dispatch through `PluginInstanceHandle::compose`
+    /// — replaces the retired `io_router_compose_resolves_ownership_but_dispatch_is_not_yet_wired`,
+    /// which pinned down the OLD hand-written host refusal this packet deleted. `MockGuestRuntime`'s
+    /// `start_job`/`step_job` don't inspect `kind` at all (only whatever is scripted), so scripting a
+    /// `Done` here proves the host-side plumbing — resolve ownership, find the handle,
+    /// `start-job`/`step-job` to completion — is fully real end to end; the real guest kind
+    /// `"semio.compose"` itself is `compose-await`'s to register.
     #[test]
-    fn io_router_compose_resolves_ownership_but_dispatch_is_not_yet_wired() {
+    fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_to_completion() {
         let router = IoRouter::new();
         let mock = Arc::new(MockGuestRuntime::new());
         let actor = RuntimeActorId(202);
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
         let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([5u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+        mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() });
         let handle = Arc::new(PluginInstanceHandle::new(actor, mock as Arc<dyn GuestRuntime>, instance));
 
         let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
@@ -4391,7 +4630,7 @@ mod tests {
         // 🧭️ Key orientation matches what `register_plugin` actually derives from a `(writes, reads)`
         // pair: the Export route is keyed on the READ dialect with the WRITE dialect as its format
         // (see the `candidate_routes` loop above). Asserting the inverse orientation here would fail
-        // on route resolution and never reach the dispatch gap this test exists to pin down.
+        // on route resolution before ever reaching dispatch.
         let key = semio_framework::IoKey {
             artifact_kind: "s.stdio.step".to_string(),
             standard: "ap214".to_string(),
@@ -4402,10 +4641,37 @@ mod tests {
             format_subset: "*".to_string(),
         };
         let key_bytes = serde_json::to_vec(&key).expect("encode io key");
-        let error = router.compose("stdio", &key_bytes, &[]).expect_err("dispatch is not yet wired, so this must error, not silently succeed");
-        let message = error.to_string();
-        assert!(message.contains("cad"), "the error must still name the correctly-resolved owner, proving resolution ran: {message}");
-        assert!(message.contains("not yet wired"), "the error must be the documented dispatch gap, not a resolution failure: {message}");
+        let result = router.compose("stdio", &key_bytes, b"sources").expect("compose must resolve ownership AND drive the job to completion, not hard-error");
+        assert_eq!(result, b"composed", "the SCRIPTED job outcome must be what comes out, proving real start-job/step-job dispatch reached the resolved owner's handle");
+    }
+
+    /// 🧬️ `IoRouter::compose` still refuses to route back into the calling plugin itself — that
+    /// guard runs BEFORE dispatch, so it must fire even though dispatch is now real.
+    #[test]
+    fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin() {
+        let router = IoRouter::new();
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = RuntimeActorId(203);
+        let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+        let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
+        let handle = Arc::new(PluginInstanceHandle::new(actor, mock as Arc<dyn GuestRuntime>, instance));
+
+        let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
+        router.register_plugin("cad", handle, &dialects, &[]).expect("register cad");
+
+        let key = semio_framework::IoKey {
+            artifact_kind: "s.stdio.step".to_string(),
+            standard: "ap214".to_string(),
+            subset: "*".to_string(),
+            direction: semio_framework::IoDirection::Export,
+            format_kind: "s.cad".to_string(),
+            format_standard: "1".to_string(),
+            format_subset: "*".to_string(),
+        };
+        let key_bytes = serde_json::to_vec(&key).expect("encode io key");
+        let error = router.compose("cad", &key_bytes, b"sources").expect_err("a plugin routing to its own key must be refused, not dispatched");
+        assert!(error.to_string().contains("routing to itself"), "unexpected message: {error}");
     }
     //#endregion 🔖️IoRouterPostTurnRelay
 }

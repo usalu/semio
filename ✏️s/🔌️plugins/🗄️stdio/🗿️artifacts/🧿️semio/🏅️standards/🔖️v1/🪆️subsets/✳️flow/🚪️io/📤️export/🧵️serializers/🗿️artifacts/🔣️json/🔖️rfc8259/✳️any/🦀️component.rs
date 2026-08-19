@@ -58,7 +58,7 @@ impl ArtifactSerializer for SemioFlowToJson {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }), member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() })]);
         Ok(JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn maps_nodes_and_edges_to_json() {
-        let json = SemioFlowToJson::serialize(&sample_semio()).expect("serialize");
+        let json = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let root = match &json.value {
             JsonValue::Object { members } => members,
             other => panic!("expected object, got {other:?}"),
@@ -101,7 +101,7 @@ mod tests {
     /// is not just structurally right but genuinely re-parseable RFC8259 text.
     #[test]
     fn serialized_json_round_trips_through_the_real_json_text_codec() {
-        let json1 = SemioFlowToJson::serialize(&sample_semio()).expect("serialize");
+        let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let text = crate::artifacts::json::schema::snapshot::write_json_text(&json1.value);
         let reparsed = crate::artifacts::json::schema::snapshot::parse_json_text(&text).expect("re-parse emitted json text");
         assert_eq!(reparsed, json1.value);

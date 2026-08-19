@@ -65,7 +65,7 @@ impl ArtifactSerializer for SemioDocumentToDocx {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let styles = from.styles.iter().map(|s| DocxStyle { id: s.id.clone(), name: s.name.clone(), based_on: s.based_on.clone() }).collect();
         let body = from.blocks.iter().flat_map(map_semio_block).collect();
         Ok(DocxSnapshot::from_parts(OpcPackage::default(), DocxDocument { body, styles }))
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn maps_heading_paragraph_and_table() {
-        let docx = SemioDocumentToDocx::serialize(&sample_semio()).expect("serialize");
+        let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(docx.document.styles.len(), 1);
         assert_eq!(docx.document.body.len(), 3);
         assert!(matches!(&docx.document.body[0], DocxBlock::Paragraph(p) if p.style.as_deref() == Some("Heading1") && p.runs[0].bold));
@@ -115,7 +115,7 @@ mod tests {
                 DocBlock::PageBreak,
             ],
         };
-        let docx = SemioDocumentToDocx::serialize(&snap).expect("serialize");
+        let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&snap)).expect("serialize");
         // list item + quote paragraph + image-alt paragraph = 3 blocks; PageBreak drops entirely.
         assert_eq!(docx.document.body.len(), 3);
         assert!(matches!(&docx.document.body[2], DocxBlock::Paragraph(p) if p.runs[0].text == "alt text"));

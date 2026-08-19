@@ -162,7 +162,7 @@ pub mod io_registry {
 
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XlsxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        (entry.compose)(sources)
+        semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
     pub fn register() {

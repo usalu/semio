@@ -76,7 +76,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let vertex_el = from.elements.iter().find(|e| e.name == "vertex").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: file has no 'vertex' element".to_string()))?;
 
         let x_idx = property_index(&vertex_el.properties, "x").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'x' property".to_string()))?;
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn deserialize_builds_a_real_indexed_mesh_with_colors() {
-        let semio = SemioMeshFromPly::deserialize(&sample_ply()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&sample_ply())).expect("deserialize");
         let prim = &semio.meshes[0].primitives[0];
         assert_eq!(prim.topology, SemioTopology::Triangles);
         assert_eq!(prim.positions.len(), 4, "vertex pool stays 4 entries -- a real shared index space");
@@ -195,7 +195,7 @@ mod tests {
     fn no_face_element_yields_a_points_primitive() {
         let mut ply = sample_ply();
         ply.elements.retain(|e| e.name != "face");
-        let semio = SemioMeshFromPly::deserialize(&ply).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
         let prim = &semio.meshes[0].primitives[0];
         assert_eq!(prim.topology, SemioTopology::Points);
         assert!(prim.indices.is_empty());

@@ -61,7 +61,7 @@ impl ArtifactSerializer for SemioMeshToPly {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
 
         let mut properties = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
-        let ply = SemioMeshToPly::serialize(&original).expect("serialize");
+        let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&original)).expect("serialize");
         assert_eq!(ply.elements[0].name, "vertex");
         assert_eq!(ply.elements[0].rows.len(), 4);
         assert_eq!(ply.elements[1].name, "face");
@@ -204,7 +204,7 @@ mod tests {
             indices: Vec::new(),
             material_id: None,
         });
-        let err = SemioMeshToPly::serialize(&semio).expect_err("mixed color presence must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("mixed color presence must error");
         assert!(format!("{err:?}").contains("colors"), "got {err:?}");
     }
 
@@ -212,7 +212,7 @@ mod tests {
     fn non_triangle_non_points_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::LineStrip;
-        let err = SemioMeshToPly::serialize(&semio).expect_err("LineStrip must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("LineStrip must error");
         assert!(format!("{err:?}").contains("Triangles/Points"), "got {err:?}");
     }
 }

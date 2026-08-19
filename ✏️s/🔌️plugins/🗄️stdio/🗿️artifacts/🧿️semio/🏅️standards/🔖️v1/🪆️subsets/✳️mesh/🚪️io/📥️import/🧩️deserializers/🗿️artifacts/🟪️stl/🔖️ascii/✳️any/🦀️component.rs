@@ -28,7 +28,7 @@ impl ArtifactDeserializer for SemioMeshFromStl {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut positions = Vec::with_capacity(from.triangles.len() * 3);
         let mut normals = Vec::with_capacity(from.triangles.len() * 3);
         for tri in &from.triangles {
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
-        let semio = SemioMeshFromStl::deserialize(&sample_stl()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&sample_stl())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "pyramid");
         let prim = &semio.meshes[0].primitives[0];
@@ -77,7 +77,7 @@ mod tests {
     fn empty_solid_name_falls_back_to_a_generated_mesh_id() {
         let mut stl = sample_stl();
         stl.solid_name.clear();
-        let semio = SemioMeshFromStl::deserialize(&stl).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&stl)).expect("deserialize");
         assert_eq!(semio.meshes[0].id, "mesh-0");
     }
 }

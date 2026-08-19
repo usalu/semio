@@ -23,7 +23,7 @@ pub mod executor;
 
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
-use super::{GuestInstance, GuestRuntime, JobBudget, JobStep, PluginHostError, TurnFault};
+use super::{poll_ready, GuestInstance, GuestRuntime, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
 use std::collections::{BTreeSet, HashMap};
@@ -307,7 +307,12 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget) {
+            // ⏳️ terra-trait-asyncify: `GuestRuntime::execute_turn` now returns a `HostFuture` — this
+            // loop has no executor of its own (a plain per-shard OS thread, `🏃️executor.rs`), so
+            // `poll_ready` consumes it by polling once with a no-op waker. Sound because every impl
+            // `ShardLoop` is ever handed is eagerly-ready by construction — see `poll_ready`'s own
+            // doc comment in `🖥️host/🦀️component.rs`.
+            let outcome = match poll_ready(self.runtime.execute_turn(instance, &events, turn_budget)) {
                 Ok(result) => {
                     // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
                     // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
@@ -321,7 +326,7 @@ impl ShardLoop {
                     // lease-request).
                     for effect in &result.effects {
                         match effect {
-                            Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()) {
+                            Effect::SpawnJob { job, kind, input, placement } => match poll_ready(self.runtime.start_job(instance, *job, kind, input.clone())) {
                                 Ok(()) => {
                                     self.running_jobs.insert((actor_id, *job));
                                     self.job_placement.insert((actor_id, *job), *placement);
@@ -333,7 +338,7 @@ impl ShardLoop {
                             Effect::CancelJob { job } => {
                                 if self.running_jobs.remove(&(actor_id, *job)) {
                                     self.job_placement.remove(&(actor_id, *job));
-                                    let _ = self.runtime.cancel_job(instance, *job);
+                                    let _ = poll_ready(self.runtime.cancel_job(instance, *job));
                                 }
                             }
                             _ => {}
@@ -378,7 +383,7 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.step_job(instance, job, job_budget) {
+            let outcome = match poll_ready(self.runtime.step_job(instance, job, job_budget)) {
                 Ok(step) => {
                     match &step {
                         JobStep::Running { .. } => {}
@@ -460,7 +465,7 @@ impl ShardLoop {
                 let actor_id = envelope.to.0;
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) if checkpoint => match self.runtime.checkpoint(instance) {
+                    Some(instance) if checkpoint => match poll_ready(self.runtime.checkpoint(instance)) {
                         Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
                         Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
                     },
@@ -476,7 +481,7 @@ impl ShardLoop {
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
                     Some(instance) => match checkpoint {
-                        Some(state) => match self.runtime.restore(instance, &state) {
+                        Some(state) => match poll_ready(self.runtime.restore(instance, &state)) {
                             Ok(()) => ShardOutcome::Resumed { actor: actor_id },
                             Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
                         },
@@ -501,7 +506,7 @@ impl ShardLoop {
                     let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
                     if let Some(instance) = self.instances.get_mut(&actor_id) {
                         for job in jobs {
-                            let _ = self.runtime.cancel_job(instance, job);
+                            let _ = poll_ready(self.runtime.cancel_job(instance, job));
                         }
                     }
                     self.unregister(ActorId(actor_id));
@@ -1057,25 +1062,25 @@ mod tests {
             Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::super::MockInstanceState::default()) })
         }
         fn drop_instance(&self, _inst: GuestInstance) {}
-        fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> semio_framework_async::HostFuture<Result<TurnResult, TurnFault>> {
             *self.last_turn_budget.lock().expect("lock") = Some(budget);
-            Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
+            Box::pin(std::future::ready(Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })))
         }
-        fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
-            Ok(())
+        fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> semio_framework_async::HostFuture<Result<(), TurnFault>> {
+            Box::pin(std::future::ready(Ok(())))
         }
-        fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> semio_framework_async::HostFuture<Result<JobStep, TurnFault>> {
             *self.last_job_budget.lock().expect("lock") = Some(budget);
-            Ok(JobStep::Running { progress: None })
+            Box::pin(std::future::ready(Ok(JobStep::Running { progress: None })))
         }
-        fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
-            Ok(())
+        fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> semio_framework_async::HostFuture<Result<(), TurnFault>> {
+            Box::pin(std::future::ready(Ok(())))
         }
-        fn checkpoint(&self, _inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
-            Ok(vec![])
+        fn checkpoint(&self, _inst: &mut GuestInstance) -> semio_framework_async::HostFuture<Result<Vec<u8>, PluginHostError>> {
+            Box::pin(std::future::ready(Ok(vec![])))
         }
-        fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> Result<(), PluginHostError> {
-            Ok(())
+        fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> semio_framework_async::HostFuture<Result<(), PluginHostError>> {
+            Box::pin(std::future::ready(Ok(())))
         }
     }
 

@@ -83,7 +83,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
         Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }))
     }
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn maps_shapes_positions_and_placeholder_kind() {
-        let pptx = SemioPresentationToPptx::serialize(&sample_semio()).expect("serialize");
+        let pptx = semio_framework_plugin::resolve_ready(SemioPresentationToPptx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pptx.presentation.slides.len(), 1);
         let shapes = &pptx.presentation.slides[0].shapes;
         assert_eq!(shapes.len(), 3);

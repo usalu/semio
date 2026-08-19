@@ -39,7 +39,7 @@ impl ArtifactSerializer for SemioMeshToLas {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut points = Vec::new();
         for mesh in &from.meshes {
             for prim in &mesh.primitives {
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_positions_and_colors_within_las_quantization() {
         let original = sample_semio_mesh();
-        let las = SemioMeshToLas::serialize(&original).expect("serialize");
+        let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&original)).expect("serialize");
         assert_eq!(las.points.len(), 2);
         assert_eq!(las.points[0].rgb, Some((65535, 0, 0)));
         let round_tripped = SemioMeshFromLas::deserialize(&las).expect("deserialize");
@@ -130,7 +130,7 @@ mod tests {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::Triangles;
         semio.meshes[0].primitives[0].indices = vec![0, 1, 0];
-        let las = SemioMeshToLas::serialize(&semio).expect("triangle -> point-cloud flatten must succeed, not error");
+        let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&semio)).expect("triangle -> point-cloud flatten must succeed, not error");
         assert_eq!(las.points.len(), 2, "connectivity dropped, positions kept");
     }
 }

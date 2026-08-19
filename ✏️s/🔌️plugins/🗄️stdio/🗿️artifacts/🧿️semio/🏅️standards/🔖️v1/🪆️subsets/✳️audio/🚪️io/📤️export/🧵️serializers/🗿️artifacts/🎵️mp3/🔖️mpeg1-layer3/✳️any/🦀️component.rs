@@ -25,7 +25,7 @@ impl ArtifactSerializer for SemioAudioToMp3 {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.channels.iter().all(|c| c.samples.is_empty()) {
             // 📦️ A snapshot with no real sample content (e.g. one THIS bridge's own deserializer
             // just produced from an mp3 source) has nothing an encoder would need to invent --
@@ -59,21 +59,21 @@ mod tests {
             tags: vec![SemioAudioTag { key: "title".into(), value: "x".into() }],
             ..SemioAudioSnapshot::default()
         };
-        let result = SemioAudioToMp3::serialize(&snap);
+        let result = semio_framework_plugin::resolve_ready(SemioAudioToMp3::serialize(&snap));
         assert!(result.is_err(), "must not silently fabricate MP3 frame payloads from raw samples");
     }
 
     #[test]
     fn empty_sample_content_round_trips_to_an_empty_container_without_erroring() {
         let snap = SemioAudioSnapshot { sample_rate: 44_100, channels: vec![SemioAudioChannel { samples: vec![] }], ..SemioAudioSnapshot::default() };
-        let mp3 = SemioAudioToMp3::serialize(&snap).expect("no real content -- nothing to fabricate");
+        let mp3 = semio_framework_plugin::resolve_ready(SemioAudioToMp3::serialize(&snap)).expect("no real content -- nothing to fabricate");
         assert!(mp3.frames.is_empty());
     }
 
     #[test]
     fn default_empty_snapshot_serializes_cleanly() {
         let snap = SemioAudioSnapshot::default();
-        assert!(SemioAudioToMp3::serialize(&snap).is_ok());
+        assert!(semio_framework_plugin::resolve_ready(SemioAudioToMp3::serialize(&snap)).is_ok());
     }
 }
 //#endregion 🔖️Tests

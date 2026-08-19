@@ -9,6 +9,14 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate as db_core;
 pub use crate as db;
 
+// 🌉️ Re-exported so a `db_storage::DbFuture`-driving caller outside this crate (`db_cli`'s own
+// module glob covers `db_cli` itself; `🌎️hub`'s bin entry needs it directly) can name
+// `HostAsyncRuntime`/`ScopeHandle`/etc. to build the runtime `FsStorage::open`/
+// `db_storage_sqlite::SqliteStorage::open` require, without that caller's own `Cargo.toml` naming
+// `semio-framework-async` a second time — this crate already depends on it (see `db_storage`'s
+// "Async-first" module doc).
+pub use semio_framework_async;
+
 #[path = "../../🦀️component.rs"]
 mod db_facade;
 pub use db_facade::*;

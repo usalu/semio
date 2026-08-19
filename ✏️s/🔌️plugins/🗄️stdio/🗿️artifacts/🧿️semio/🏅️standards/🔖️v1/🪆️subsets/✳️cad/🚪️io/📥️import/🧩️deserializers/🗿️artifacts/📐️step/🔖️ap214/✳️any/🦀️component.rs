@@ -96,7 +96,7 @@ impl ArtifactDeserializer for SemioCadFromStep {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let idx: HashMap<u64, &StepEntity> = from.entities.iter().map(|e| (e.id, e)).collect();
         let entities = from
             .entities
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn resolves_line_and_circle_through_the_real_entity_graph() {
         let step = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse real step text");
-        let cad = SemioCadFromStep::deserialize(&step).expect("deserialize");
+        let cad = semio_framework_plugin::resolve_ready(SemioCadFromStep::deserialize(&step)).expect("deserialize");
         assert_eq!(cad.entities.len(), 2);
         match &cad.entities[0].entity {
             CadEntity::Line { a, b } => {

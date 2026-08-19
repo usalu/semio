@@ -32,7 +32,7 @@ impl ArtifactDeserializer for SemioAnimationFromGif {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut cumulative_cs: u32 = 0;
         let keyframes = from
             .frames
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
-        let anim = SemioAnimationFromGif::deserialize(&real_world_gif()).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&real_world_gif())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         let ch = &anim.timelines[0].channels[0];
         assert_eq!(ch.target.node, GIF_FRAME_NODE);
@@ -96,7 +96,7 @@ mod tests {
     fn zero_frames_yields_zero_timelines() {
         let mut gif = real_world_gif();
         gif.frames.clear();
-        let anim = SemioAnimationFromGif::deserialize(&gif).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&gif)).expect("deserialize");
         assert!(anim.timelines.is_empty());
     }
 }

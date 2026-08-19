@@ -1,0 +1,20 @@
+[host] echo import called from inside guest await: ping:41
+[host] ping(41) = 42
+[host] run(stream) summed = 21
+[host] G3 PASS
+[host] S1: burn(0) = 2850874112, burn(1) = 2850874112, elapsed = 326.129416ms, epoch_deadline_callback hits = 144
+[host] S1: progress log has 19532 entries
+[host] S1: FAIL — no interleaving observed (last id=0 at Some(9765), first id=1 at Some(9766))
+[host] S3/S5: run() parked on manual first poll = true
+[host] S3: PASS — checkpoint() = 42 succeeded while run() was parked
+[host] S5: PASS — run() resumed after delayed wake, summed = 150 (7 poll_produce calls)
+[host] hang(99) started, awaiting pending forever until dropped
+[host] echo import called from inside guest await: post-cancel-sync
+[host] S2: PASS — hang()'s host future was dropped after guest-side cancel
+[host] S6: PASS — nested Rc<RefCell> executor resumed correctly, got "delayed:nested"
+[host] ==== VERDICTS ====
+[host] S1: FAIL — no interleaving observed (last id=0 at Some(9765), first id=1 at Some(9766))
+[host] S3: PASS — checkpoint() = 42 succeeded while run() was parked
+[host] S5: PASS — run() resumed after delayed wake, summed = 150 (7 poll_produce calls)
+[host] S2: PASS — hang()'s host future was dropped after guest-side cancel
+[host] S6: PASS — nested Rc<RefCell> executor resumed correctly, got "delayed:nested"

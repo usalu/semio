@@ -31,7 +31,7 @@ impl ArtifactDeserializer for SemioAudioFromWav {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let channel_count = from.fmt.channels.max(1) as usize;
         let (format, interleaved): (SemioAudioFormat, Vec<f32>) = match &from.data {
             WavData::Pcm16(samples) => (SemioAudioFormat::Pcm16, samples.iter().map(|&s| s as f32 / 32_768.0).collect()),
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn deserialize_deinterleaves_pcm16_into_real_f32_channels() {
-        let audio = SemioAudioFromWav::deserialize(&real_world_wav()).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&real_world_wav())).expect("deserialize");
         assert_eq!(audio.sample_rate, 44_100);
         assert_eq!(audio.format, SemioAudioFormat::Pcm16);
         assert_eq!(audio.channels.len(), 2);
@@ -86,7 +86,7 @@ mod tests {
         let mut wav = real_world_wav();
         wav.fmt.bits_per_sample = 24;
         wav.data = WavData::Raw(vec![0u8; 18]);
-        let audio = SemioAudioFromWav::deserialize(&wav).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
         assert_eq!(audio.format, SemioAudioFormat::Pcm24);
         assert_eq!(audio.channels.len(), 2);
         for ch in &audio.channels {

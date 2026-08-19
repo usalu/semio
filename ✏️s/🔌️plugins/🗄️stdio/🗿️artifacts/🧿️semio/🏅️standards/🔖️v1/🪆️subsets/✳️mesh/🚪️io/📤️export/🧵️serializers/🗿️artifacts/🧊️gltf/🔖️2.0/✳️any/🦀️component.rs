@@ -70,7 +70,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut buf: Vec<u8> = Vec::new();
         let mut buffer_views: Vec<GltfBufferView> = Vec::new();
         let mut accessors: Vec<GltfAccessor> = Vec::new();
@@ -215,7 +215,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
-        let gltf = SemioMeshToGltf::serialize(&original).expect("serialize");
+        let gltf = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&original)).expect("serialize");
         assert_eq!(gltf.document.meshes.len(), 1);
         assert_eq!(gltf.document.meshes[0].primitives[0].mode, Some(4));
         let round_tripped = SemioMeshFromGltf::deserialize(&gltf).expect("deserialize");
@@ -226,7 +226,7 @@ mod tests {
     fn unknown_material_reference_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].material_id = Some("does-not-exist".into());
-        let err = SemioMeshToGltf::serialize(&semio).expect_err("dangling material ref must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&semio)).expect_err("dangling material ref must error");
         assert!(format!("{err:?}").contains("does-not-exist"), "got {err:?}");
     }
 
@@ -234,7 +234,7 @@ mod tests {
     fn empty_positions_is_a_hard_error_not_a_fabricated_accessor() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].positions.clear();
-        let err = SemioMeshToGltf::serialize(&semio).expect_err("empty positions must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&semio)).expect_err("empty positions must error");
         assert!(format!("{err:?}").contains("positions"), "got {err:?}");
     }
 }

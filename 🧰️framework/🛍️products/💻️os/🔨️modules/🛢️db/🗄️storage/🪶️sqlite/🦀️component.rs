@@ -17,6 +17,14 @@
 //! `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` — the entire implementation lives
 //! in a wasm32-gated inner module; a wasm32 build of this crate is an (intentionally) empty shell.
 //!
+//! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
+//! `rusqlite` is a genuinely BLOCKING C client (unlike `sqlx`/`neo4rs`) — every `db_storage`
+//! sub-trait method here returns a `db_storage::DbFuture` whose body dispatches through
+//! `semio_framework_async::HostAsyncRuntime::run_blocking` (via `db_storage`'s own
+//! `run_blocking_op` bridge) rather than ever running the SQLite call on the calling async task's
+//! own thread. This crate names no `tokio`/executor of its own — mirrors `db_storage::FsStorage`'s
+//! identical crossing.
+//!
 //! 🔒️ Durability choice: the connection is opened with `PRAGMA synchronous = FULL` (in `WAL`
 //! journal mode, this fsyncs the WAL file on every commit — see SQLite's own docs on
 //! `synchronous`/`journal_mode`). Every write in this crate is a single autocommit statement (or
@@ -39,10 +47,11 @@
 mod sqlite_storage {
     use crate::db_ids::{check_len, DbError, ArtifactId};
     use crate::db_durability::{DurabilityClass, EpochFence};
-    use crate::db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+    use crate::db_storage::{run_blocking_op, CatalogStorage, DbFuture, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
-    use std::sync::Mutex;
+    use semio_framework_async::{HostAsyncRuntime, ScopeHandle};
+    use std::sync::{Arc, Mutex};
 
     //#region 🔖️Schema
     /// @emoji 🧱️ One document's WAL segment, keyed `(document, segment_index)`. `sealed` is
@@ -121,37 +130,51 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️Errors
 
     //#region 🔖️Connection
-    /// @emoji 🗄️ SQLite-backed `DbStorage`. One `rusqlite::Connection` behind a `Mutex` —
-    /// `rusqlite` is synchronous, and every method here is a short, bounded query/transaction, so
-    /// holding the mutex for a call's duration never becomes a real bottleneck at this crate's
+    /// @emoji 🗄️ SQLite-backed `DbStorage`. One `rusqlite::Connection` behind an `Arc<Mutex<_>>`
+    /// (the `Arc` is what lets every trait method's blocking closure — dispatched through
+    /// `run_blocking_op`, see module doc — carry its own `'static` handle to the same connection)
+    /// — `rusqlite` is synchronous, and every method here is a short, bounded query/transaction,
+    /// so holding the mutex for a call's duration never becomes a real bottleneck at this crate's
     /// scope.
     pub struct SqliteStorage {
-        conn: Mutex<Connection>,
+        conn: Arc<Mutex<Connection>>,
+        runtime: Arc<dyn HostAsyncRuntime>,
+        scope: ScopeHandle,
+    }
+
+    /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
+    /// single panicking caller must not turn every subsequent storage call into a cascading
+    /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
+    fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
+        conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
     impl SqliteStorage {
         /// @emoji 🚀️ Opens (creating the file and its parent directories if absent) a
         /// `SqliteStorage` at `path` and bootstraps the schema. Safe to call repeatedly against
-        /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched).
-        pub fn open(path: &std::path::Path) -> Result<Self, DbError> {
+        /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched). Dispatches every
+        /// subsequent trait call's blocking body through `runtime`'s `run_blocking`, scoped to
+        /// `scope` — this constructor itself stays synchronous (a one-time, small open+DDL, not
+        /// part of any `DbStorage` trait method's hot path), mirroring `FsStorage::open`.
+        pub fn open(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, path: &std::path::Path) -> Result<Self, DbError> {
             if let Some(parent) = path.parent() {
                 if !parent.as_os_str().is_empty() {
                     std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
                 }
             }
             let conn = Connection::open(path).map_err(sqlite_err)?;
-            Self::init(conn)
+            Self::init(conn, runtime, scope)
         }
 
         /// @emoji 🧪️ Opens a private, in-memory `SqliteStorage` — never durable across process
         /// exit; exists for fast unit tests that don't care about on-disk persistence (the
         /// crash/reopen laws are exercised against a real file in `//#region 🧪️Tests` instead).
-        pub fn open_in_memory() -> Result<Self, DbError> {
+        pub fn open_in_memory(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle) -> Result<Self, DbError> {
             let conn = Connection::open_in_memory().map_err(sqlite_err)?;
-            Self::init(conn)
+            Self::init(conn, runtime, scope)
         }
 
-        fn init(conn: Connection) -> Result<Self, DbError> {
+        fn init(conn: Connection, runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle) -> Result<Self, DbError> {
             // 🎯️ `journal_mode = WAL` is a no-op (silently stays `memory`) on an in-memory
             // connection — SQLite doesn't error on the pragma either way, so `open_in_memory`
             // shares this path.
@@ -159,378 +182,640 @@ CREATE TABLE IF NOT EXISTS lease (
             conn.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
             conn.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
             conn.execute_batch(SCHEMA).map_err(sqlite_err)?;
-            Ok(Self { conn: Mutex::new(conn) })
-        }
-
-        /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
-        /// single panicking caller must not turn every subsequent storage call into a cascading
-        /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
-        fn lock(&self) -> std::sync::MutexGuard<'_, Connection> {
-            self.conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+            Ok(Self { conn: Arc::new(Mutex::new(conn)), runtime, scope })
         }
     }
     //#endregion 🔖️Connection
 
     //#region 🔖️WalStorage
     impl WalStorage for SqliteStorage {
-        fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let index = to_sql_i64(index, "wal_storage::create_segment index")?;
-            let conn = self.lock();
-            let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
-            if exists {
-                return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
-            }
-            conn.execute("INSERT INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)", params![document.0, index]).map_err(sqlite_err)?;
-            Ok(())
+        fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let index = to_sql_i64(index, "wal_storage::create_segment index")?;
+                    let conn = lock(&conn);
+                    let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
+                    if exists {
+                        return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
+                    }
+                    conn.execute("INSERT INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)", params![document.0, index]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
-            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append")?;
-            let sql_index = to_sql_i64(index, "wal_storage::append index")?;
-            let conn = self.lock();
-            let sealed: i64 = conn
-                .query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            if sealed != 0 {
-                return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
+        fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
+            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append") {
+                return Box::pin(async move { Err(err) });
             }
-            // 🎯️ `CAST(... AS BLOB)`: SQLite's `||` operator degrades a BLOB||BLOB concatenation
-            // to TEXT when the left-hand accumulator started life as the zero-length `x''`
-            // literal from `create_segment` — an explicit cast keeps the column's stored type
-            // BLOB regardless, so a later `row.get::<_, Vec<u8>>` never sees `Invalid column
-            // type Text`.
-            conn.execute("UPDATE wal_segment SET bytes = CAST(bytes || ?3 AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, bytes]).map_err(sqlite_err)?;
-            let new_len: i64 = conn.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0)).map_err(sqlite_err)?;
-            Ok(new_len as u64)
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let bytes = bytes.to_vec();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::append index")?;
+                    let conn = lock(&conn);
+                    let sealed: i64 = conn
+                        .query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+                    if sealed != 0 {
+                        return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
+                    }
+                    // 🎯️ `CAST(... AS BLOB)`: SQLite's `||` operator degrades a BLOB||BLOB concatenation
+                    // to TEXT when the left-hand accumulator started life as the zero-length `x''`
+                    // literal from `create_segment` — an explicit cast keeps the column's stored type
+                    // BLOB regardless, so a later `row.get::<_, Vec<u8>>` never sees `Invalid column
+                    // type Text`.
+                    conn.execute("UPDATE wal_segment SET bytes = CAST(bytes || ?3 AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, bytes]).map_err(sqlite_err)?;
+                    let new_len: i64 = conn.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0)).map_err(sqlite_err)?;
+                    Ok(new_len as u64)
+                })
+                .await
+            })
         }
 
-        fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
+        fn sync<'a>(&'a self, _document: &'a ArtifactId, _index: u64, _class: DurabilityClass) -> DbFuture<'a, ()> {
             // 🎯️ See module doc's "Durability choice": `synchronous = FULL` already fsyncs every
             // commit, so every class this crate could be asked to sync to is already satisfied.
-            Ok(())
+            Box::pin(async { Ok(()) })
         }
 
-        fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
-            let conn = self.lock();
-            // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
-            // `sealed`'s value actually flips, so this is idempotent-if-already-sealed for free:
-            // `0` means no such row (not found), `1` means the row exists (sealed now, or
-            // already was).
-            let changed = conn.execute("UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
-            if changed == 0 {
-                return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
+        fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
+                    let conn = lock(&conn);
+                    // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
+                    // `sealed`'s value actually flips, so this is idempotent-if-already-sealed for free:
+                    // `0` means no such row (not found), `1` means the row exists (sealed now, or
+                    // already was).
+                    let changed = conn.execute("UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
+                    if changed == 0 {
+                        return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
+                    }
+                    Ok(())
+                })
+                .await
+            })
+        }
+
+        fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
+            if let Err(err) = check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read") {
+                return Box::pin(async move { Err(err) });
             }
-            Ok(())
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::read index")?;
+                    let conn = lock(&conn);
+                    let bytes: Vec<u8> = conn
+                        .query_row("SELECT bytes FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+                    let start = range.offset as usize;
+                    let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
+                    if end > bytes.len() {
+                        return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", bytes.len())));
+                    }
+                    Ok(bytes[start..end].to_vec())
+                })
+                .await
+            })
         }
 
-        fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
-            check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read")?;
-            let sql_index = to_sql_i64(index, "wal_storage::read index")?;
-            let conn = self.lock();
-            let bytes: Vec<u8> = conn
-                .query_row("SELECT bytes FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            let start = range.offset as usize;
-            let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
-            if end > bytes.len() {
-                return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", bytes.len())));
-            }
-            Ok(bytes[start..end].to_vec())
+        fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
+                    let conn = lock(&conn);
+                    let len: i64 = conn
+                        .query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+                    Ok(len as u64)
+                })
+                .await
+            })
         }
 
-        fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
-            let conn = self.lock();
-            let len: i64 = conn
-                .query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            Ok(len as u64)
+        fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
+                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
+                    let mut out = Vec::new();
+                    for row in rows {
+                        out.push(row.map_err(sqlite_err)? as u64);
+                    }
+                    Ok(out)
+                })
+                .await
+            })
         }
 
-        fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock();
-            let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
-            let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-            let mut out = Vec::new();
-            for row in rows {
-                out.push(row.map_err(sqlite_err)? as u64);
-            }
-            Ok(out)
+        fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
+                    let conn = lock(&conn);
+                    let (sealed, current_len): (i64, i64) = conn
+                        .query_row("SELECT sealed, length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| Ok((row.get(0)?, row.get(1)?)))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+                    if sealed != 0 {
+                        return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
+                    }
+                    if new_len > current_len as u64 {
+                        return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
+                    }
+                    let sql_new_len = to_sql_i64(new_len, "wal_storage::truncate_tail new_len")?;
+                    conn.execute("UPDATE wal_segment SET bytes = CAST(substr(bytes, 1, ?3) AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, sql_new_len]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
-            let conn = self.lock();
-            let (sealed, current_len): (i64, i64) = conn
-                .query_row("SELECT sealed, length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| Ok((row.get(0)?, row.get(1)?)))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            if sealed != 0 {
-                return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
-            }
-            if new_len > current_len as u64 {
-                return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
-            }
-            let sql_new_len = to_sql_i64(new_len, "wal_storage::truncate_tail new_len")?;
-            conn.execute("UPDATE wal_segment SET bytes = CAST(substr(bytes, 1, ?3) AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, sql_new_len]).map_err(sqlite_err)?;
-            Ok(())
-        }
-
-        fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
-            let conn = self.lock();
-            conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
-            Ok(())
+        fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
+                    let conn = lock(&conn);
+                    conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️WalStorage
 
     //#region 🔖️SnapshotStorage
     impl SnapshotStorage for SqliteStorage {
-        fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation")?;
-            let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
-            let conn = self.lock();
-            conn.execute(
-                "INSERT INTO snapshot_generation (document, generation, bytes) VALUES (?1, ?2, ?3)
-             ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
-                params![document.0, sql_generation, bytes],
-            )
-            .map_err(sqlite_err)?;
-            Ok(())
-        }
-
-        fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-            let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
-            let conn = self.lock();
-            conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
-        }
-
-        fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            let conn = self.lock();
-            let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
-            Ok(max.map(|value| value as u64))
-        }
-
-        fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock();
-            let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
-            let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-            let mut out = Vec::new();
-            for row in rows {
-                out.push(row.map_err(sqlite_err)? as u64);
+        fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation") {
+                return Box::pin(async move { Err(err) });
             }
-            Ok(out)
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let bytes = bytes.to_vec();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
+                    let conn = lock(&conn);
+                    conn.execute(
+                        "INSERT INTO snapshot_generation (document, generation, bytes) VALUES (?1, ?2, ?3)
+                     ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
+                        params![document.0, sql_generation, bytes],
+                    )
+                    .map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
-            let conn = self.lock();
-            conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
-            Ok(())
+        fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
+                    let conn = lock(&conn);
+                    conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
+                })
+                .await
+            })
+        }
+
+        fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
+                    Ok(max.map(|value| value as u64))
+                })
+                .await
+            })
+        }
+
+        fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
+                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
+                    let mut out = Vec::new();
+                    for row in rows {
+                        out.push(row.map_err(sqlite_err)? as u64);
+                    }
+                    Ok(out)
+                })
+                .await
+            })
+        }
+
+        fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
+                    let conn = lock(&conn);
+                    conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️SnapshotStorage
 
     //#region 🔖️PayloadStorage
     impl PayloadStorage for SqliteStorage {
-        fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
-            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put")?;
-            let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-            let conn = self.lock();
-            conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes, bytes.len() as i64]).map_err(sqlite_err)?;
-            Ok(hash)
+        fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
+            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put") {
+                return Box::pin(async move { Err(err) });
+            }
+            let conn = self.conn.clone();
+            let bytes = bytes.to_vec();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
+                    let conn = lock(&conn);
+                    conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes, bytes.len() as i64]).map_err(sqlite_err)?;
+                    Ok(hash)
+                })
+                .await
+            })
         }
 
-        fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let conn = self.lock();
-            conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
+        fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
+            let conn = self.conn.clone();
+            let hash = *hash;
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
+                })
+                .await
+            })
         }
 
-        fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            let conn = self.lock();
-            conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
+        fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
+            let conn = self.conn.clone();
+            let hash = *hash;
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
+                })
+                .await
+            })
         }
 
-        fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            let conn = self.lock();
-            conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
-            Ok(())
+        fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let hash = *hash;
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let conn = self.lock();
-            let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
-            Ok(len as u64)
+        fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
+            let conn = self.conn.clone();
+            let hash = *hash;
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
+                    Ok(len as u64)
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️PayloadStorage
 
     //#region 🔖️CatalogStorage
     impl CatalogStorage for SqliteStorage {
-        fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-            let conn = self.lock();
-            let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
-            Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
+        fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
+            let conn = self.conn.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
+                    Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
+                })
+                .await
+            })
         }
 
-        fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
-            check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root")?;
-            let mut conn = self.lock();
-            // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
-            // (another thread OR another OS process against the same file) can't slip a write in
-            // between this read and this write — see module doc's "CAS choice".
-            let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-            let current_epoch: Option<i64> = tx.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
-            let current_fence = current_epoch.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 });
-            expected.check(current_fence)?;
-            let new_fence = expected.next();
-            let sql_epoch = to_sql_i64(new_fence.epoch, "catalog_storage::cas_root epoch")?;
-            tx.execute(
-                "INSERT INTO catalog_root (id, bytes, epoch) VALUES (0, ?1, ?2)
-             ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
-                params![new_bytes, sql_epoch],
-            )
-            .map_err(sqlite_err)?;
-            tx.commit().map_err(sqlite_err)?;
-            Ok(new_fence)
+        fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
+            if let Err(err) = check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root") {
+                return Box::pin(async move { Err(err) });
+            }
+            let conn = self.conn.clone();
+            let new_bytes = new_bytes.to_vec();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let mut conn = lock(&conn);
+                    // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
+                    // (another thread OR another OS process against the same file) can't slip a write in
+                    // between this read and this write — see module doc's "CAS choice".
+                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let current_epoch: Option<i64> = tx.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
+                    let current_fence = current_epoch.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 });
+                    expected.check(current_fence)?;
+                    let new_fence = expected.next();
+                    let sql_epoch = to_sql_i64(new_fence.epoch, "catalog_storage::cas_root epoch")?;
+                    tx.execute(
+                        "INSERT INTO catalog_root (id, bytes, epoch) VALUES (0, ?1, ?2)
+                     ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
+                        params![new_bytes, sql_epoch],
+                    )
+                    .map_err(sqlite_err)?;
+                    tx.commit().map_err(sqlite_err)?;
+                    Ok(new_fence)
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️CatalogStorage
 
     //#region 🔖️IndexStorage
     impl IndexStorage for SqliteStorage {
-        fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run")?;
-            let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
-            let conn = self.lock();
-            conn.execute(
-                "INSERT INTO index_run (document, run_id, bytes) VALUES (?1, ?2, ?3)
-             ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
-                params![document.0, sql_run_id, bytes],
-            )
-            .map_err(sqlite_err)?;
-            Ok(())
-        }
-
-        fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-            let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
-            let conn = self.lock();
-            conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
-        }
-
-        fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock();
-            let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
-            let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-            let mut out = Vec::new();
-            for row in rows {
-                out.push(row.map_err(sqlite_err)? as u64);
+        fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run") {
+                return Box::pin(async move { Err(err) });
             }
-            Ok(out)
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let bytes = bytes.to_vec();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
+                    let conn = lock(&conn);
+                    conn.execute(
+                        "INSERT INTO index_run (document, run_id, bytes) VALUES (?1, ?2, ?3)
+                     ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
+                        params![document.0, sql_run_id, bytes],
+                    )
+                    .map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
-            let conn = self.lock();
-            conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
-            Ok(())
+        fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
+                    let conn = lock(&conn);
+                    conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
+                })
+                .await
+            })
+        }
+
+        fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
+                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
+                    let mut out = Vec::new();
+                    for row in rows {
+                        out.push(row.map_err(sqlite_err)? as u64);
+                    }
+                    Ok(out)
+                })
+                .await
+            })
+        }
+
+        fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let document = document.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
+                    let conn = lock(&conn);
+                    conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️IndexStorage
 
     //#region 🔖️LeaseStorage
     impl LeaseStorage for SqliteStorage {
-        fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let mut conn = self.lock();
-            let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-            let existing: Option<(String, i64, i64)> = tx.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
-            let fence = match existing {
-                Some((existing_holder, epoch, expires_at_ms)) if (now_ms as i64) < expires_at_ms => {
+        fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
+            let conn = self.conn.clone();
+            let resource = resource.to_string();
+            let holder = holder.to_string();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let mut conn = lock(&conn);
+                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> = tx.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
+                    let fence = match existing {
+                        Some((existing_holder, epoch, expires_at_ms)) if (now_ms as i64) < expires_at_ms => {
+                            if existing_holder != holder {
+                                return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
+                            }
+                            EpochFence { epoch: epoch as u64 }
+                        }
+                        Some((_, epoch, _)) => EpochFence { epoch: epoch as u64 }.next(),
+                        None => EpochFence::INITIAL,
+                    };
+                    let sql_epoch = to_sql_i64(fence.epoch, "lease_storage::acquire epoch")?;
+                    let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::acquire expires_at_ms")?;
+                    tx.execute(
+                        "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4)
+                     ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
+                        params![resource, holder, sql_epoch, sql_expires_at_ms],
+                    )
+                    .map_err(sqlite_err)?;
+                    tx.commit().map_err(sqlite_err)?;
+                    Ok(fence)
+                })
+                .await
+            })
+        }
+
+        fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let resource = resource.to_string();
+            let holder = holder.to_string();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let mut conn = lock(&conn);
+                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
+                        .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+                    if now_ms as i64 >= expires_at_ms {
+                        return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
+                    }
                     if existing_holder != holder {
-                        return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
+                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
                     }
-                    EpochFence { epoch: epoch as u64 }
-                }
-                Some((_, epoch, _)) => EpochFence { epoch: epoch as u64 }.next(),
-                None => EpochFence::INITIAL,
-            };
-            let sql_epoch = to_sql_i64(fence.epoch, "lease_storage::acquire epoch")?;
-            let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::acquire expires_at_ms")?;
-            tx.execute(
-                "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4)
-             ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
-                params![resource, holder, sql_epoch, sql_expires_at_ms],
-            )
-            .map_err(sqlite_err)?;
-            tx.commit().map_err(sqlite_err)?;
-            Ok(fence)
+                    fence.check(EpochFence { epoch: epoch as u64 })?;
+                    let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::renew expires_at_ms")?;
+                    tx.execute("UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1", params![resource, sql_expires_at_ms]).map_err(sqlite_err)?;
+                    tx.commit().map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
         }
 
-        fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let mut conn = self.lock();
-            let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-            let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
-                .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-            if now_ms as i64 >= expires_at_ms {
-                return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
-            }
-            if existing_holder != holder {
-                return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-            }
-            fence.check(EpochFence { epoch: epoch as u64 })?;
-            let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::renew expires_at_ms")?;
-            tx.execute("UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1", params![resource, sql_expires_at_ms]).map_err(sqlite_err)?;
-            tx.commit().map_err(sqlite_err)?;
-            Ok(())
-        }
-
-        fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let mut conn = self.lock();
-            let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-            let (existing_holder, epoch): (String, i64) = tx
-                .query_row("SELECT holder, epoch FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?)))
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-            if existing_holder != holder {
-                return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-            }
-            fence.check(EpochFence { epoch: epoch as u64 })?;
-            tx.execute("DELETE FROM lease WHERE resource = ?1", params![resource]).map_err(sqlite_err)?;
-            tx.commit().map_err(sqlite_err)?;
-            Ok(())
-        }
-
-        fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let conn = self.lock();
-            let existing: Option<(String, i64, i64)> = conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
-            Ok(existing.and_then(
-                |(holder, epoch, expires_at_ms)| {
-                    if (now_ms as i64) < expires_at_ms {
-                        Some(LeaseInfo { resource: resource.to_string(), holder, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 })
-                    } else {
-                        None
+        fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
+            let conn = self.conn.clone();
+            let resource = resource.to_string();
+            let holder = holder.to_string();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let mut conn = lock(&conn);
+                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let (existing_holder, epoch): (String, i64) = tx
+                        .query_row("SELECT holder, epoch FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?)))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+                    if existing_holder != holder {
+                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
                     }
-                },
-            ))
+                    fence.check(EpochFence { epoch: epoch as u64 })?;
+                    tx.execute("DELETE FROM lease WHERE resource = ?1", params![resource]).map_err(sqlite_err)?;
+                    tx.commit().map_err(sqlite_err)?;
+                    Ok(())
+                })
+                .await
+            })
+        }
+
+        fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
+            let conn = self.conn.clone();
+            let resource = resource.to_string();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            Box::pin(async move {
+                run_blocking_op(&*runtime, &scope, move || {
+                    let conn = lock(&conn);
+                    let existing: Option<(String, i64, i64)> = conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
+                    Ok(existing.and_then(
+                        |(holder, epoch, expires_at_ms)| {
+                            if (now_ms as i64) < expires_at_ms {
+                                Some(LeaseInfo { resource: resource.clone(), holder, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 })
+                            } else {
+                                None
+                            }
+                        },
+                    ))
+                })
+                .await
+            })
         }
     }
     //#endregion 🔖️LeaseStorage
@@ -571,6 +856,26 @@ CREATE TABLE IF NOT EXISTS lease (
     #[cfg(test)]
     mod tests {
         use super::*;
+        use std::future::Future;
+
+        /// @emoji ✅️ Test-only: mirrors `db_storage`'s own `block_on_ready` — every `DbFuture` a
+        /// `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands back
+        /// resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously), so
+        /// this drives one to completion without needing a real executor.
+        fn block_on_ready<'a, T>(mut fut: DbFuture<'a, T>) -> Result<T, DbError> {
+            let waker = std::task::Waker::noop();
+            let mut cx = std::task::Context::from_waker(&waker);
+            match fut.as_mut().poll(&mut cx) {
+                std::task::Poll::Ready(value) => value,
+                std::task::Poll::Pending => panic!("db_storage_sqlite test helper expected an already-ready future"),
+            }
+        }
+
+        fn test_runtime_and_scope() -> (Arc<dyn HostAsyncRuntime>, ScopeHandle) {
+            let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
+            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_sqlite_test"), None);
+            (runtime, scope)
+        }
 
         static SCRATCH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -585,7 +890,8 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn sqlite_scratch(name: &str) -> SqliteStorage {
-            SqliteStorage::open(&sqlite_scratch_path(name)).unwrap()
+            let (runtime, scope) = test_runtime_and_scope();
+            SqliteStorage::open(runtime, scope, &sqlite_scratch_path(name)).unwrap()
         }
 
         //#region 🔖️WalStorage
@@ -594,37 +900,37 @@ CREATE TABLE IF NOT EXISTS lease (
             let storage = sqlite_scratch("wal_laws");
             let document: ArtifactId = "doc-wal".into();
 
-            storage.create_segment(&document, 0).unwrap();
-            assert!(matches!(storage.create_segment(&document, 0), Err(DbError::AlreadyExists(_))));
+            block_on_ready(storage.create_segment(&document, 0)).unwrap();
+            assert!(matches!(block_on_ready(storage.create_segment(&document, 0)), Err(DbError::AlreadyExists(_))));
 
-            let len_after_first = storage.append(&document, 0, b"hello ").unwrap();
+            let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).unwrap();
             assert_eq!(len_after_first, 6);
-            let len_after_second = storage.append(&document, 0, b"world").unwrap();
+            let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).unwrap();
             assert_eq!(len_after_second, 11);
-            assert_eq!(storage.segment_len(&document, 0).unwrap(), 11);
+            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 11);
 
-            let read_back = storage.read(&document, 0, ByteRange { offset: 6, len: 5 }).unwrap();
+            let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).unwrap();
             assert_eq!(read_back, b"world");
-            assert!(matches!(storage.read(&document, 0, ByteRange { offset: 6, len: 100 }), Err(DbError::InvalidArgument(_))));
+            assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })), Err(DbError::InvalidArgument(_))));
 
-            storage.sync(&document, 0, DurabilityClass::Fsync).unwrap();
+            block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).unwrap();
 
-            storage.truncate_tail(&document, 0, 6).unwrap();
-            assert_eq!(storage.segment_len(&document, 0).unwrap(), 6);
-            assert_eq!(storage.read(&document, 0, ByteRange { offset: 0, len: 6 }).unwrap(), b"hello ");
+            block_on_ready(storage.truncate_tail(&document, 0, 6)).unwrap();
+            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 6);
+            assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).unwrap(), b"hello ");
 
-            storage.create_segment(&document, 1).unwrap();
-            assert_eq!(storage.list_segments(&document).unwrap(), vec![0, 1]);
+            block_on_ready(storage.create_segment(&document, 1)).unwrap();
+            assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0, 1]);
 
-            storage.seal(&document, 0).unwrap();
-            storage.seal(&document, 0).unwrap(); // idempotent
-            assert!(matches!(storage.append(&document, 0, b"!"), Err(DbError::InvalidArgument(_))));
-            assert!(matches!(storage.truncate_tail(&document, 0, 0), Err(DbError::InvalidArgument(_))));
+            block_on_ready(storage.seal(&document, 0)).unwrap();
+            block_on_ready(storage.seal(&document, 0)).unwrap(); // idempotent
+            assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")), Err(DbError::InvalidArgument(_))));
+            assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)), Err(DbError::InvalidArgument(_))));
 
-            storage.delete_segment(&document, 1).unwrap();
-            assert_eq!(storage.list_segments(&document).unwrap(), vec![0]);
+            block_on_ready(storage.delete_segment(&document, 1)).unwrap();
+            assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0]);
 
-            assert!(matches!(storage.append(&document, 99, b"x"), Err(DbError::NotFound(_))));
+            assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")), Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️WalStorage
 
@@ -633,20 +939,20 @@ CREATE TABLE IF NOT EXISTS lease (
         fn snapshot_storage_generations_overwrite_and_delete_laws() {
             let storage = sqlite_scratch("snapshot_laws");
             let document: ArtifactId = "doc-snap".into();
-            assert_eq!(storage.latest_generation(&document).unwrap(), None);
+            assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), None);
 
-            storage.write_generation(&document, 0, b"gen-zero-bytes").unwrap();
-            storage.write_generation(&document, 1, b"gen-one-bytes").unwrap();
-            assert_eq!(storage.list_generations(&document).unwrap(), vec![0, 1]);
-            assert_eq!(storage.latest_generation(&document).unwrap(), Some(1));
-            assert_eq!(storage.read_generation(&document, 0).unwrap(), b"gen-zero-bytes");
+            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).unwrap();
+            block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).unwrap();
+            assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![0, 1]);
+            assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), Some(1));
+            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-bytes");
 
-            storage.write_generation(&document, 0, b"gen-zero-overwritten").unwrap();
-            assert_eq!(storage.read_generation(&document, 0).unwrap(), b"gen-zero-overwritten");
+            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).unwrap();
+            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-overwritten");
 
-            storage.delete_generation(&document, 0).unwrap();
-            assert!(matches!(storage.read_generation(&document, 0), Err(DbError::NotFound(_))));
-            assert_eq!(storage.list_generations(&document).unwrap(), vec![1]);
+            block_on_ready(storage.delete_generation(&document, 0)).unwrap();
+            assert!(matches!(block_on_ready(storage.read_generation(&document, 0)), Err(DbError::NotFound(_))));
+            assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![1]);
         }
         //#endregion 🔖️SnapshotStorage
 
@@ -655,22 +961,22 @@ CREATE TABLE IF NOT EXISTS lease (
         fn payload_storage_is_content_addressed_and_idempotent() {
             let storage = sqlite_scratch("payload_laws");
             let bytes = b"a payload blob that gets content-addressed";
-            let hash_a = storage.put(bytes).unwrap();
-            let hash_b = storage.put(bytes).unwrap();
+            let hash_a = block_on_ready(storage.put(bytes)).unwrap();
+            let hash_b = block_on_ready(storage.put(bytes)).unwrap();
             assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
             assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
 
-            assert!(storage.contains(&hash_a).unwrap());
-            assert_eq!(storage.get(&hash_a).unwrap(), bytes);
-            assert_eq!(storage.len(&hash_a).unwrap(), bytes.len() as u64);
+            assert!(block_on_ready(storage.contains(&hash_a)).unwrap());
+            assert_eq!(block_on_ready(storage.get(&hash_a)).unwrap(), bytes);
+            assert_eq!(block_on_ready(storage.len(&hash_a)).unwrap(), bytes.len() as u64);
 
             let other_hash = ContentHash([0xAB; 32]);
-            assert!(!storage.contains(&other_hash).unwrap());
-            assert!(matches!(storage.get(&other_hash), Err(DbError::NotFound(_))));
+            assert!(!block_on_ready(storage.contains(&other_hash)).unwrap());
+            assert!(matches!(block_on_ready(storage.get(&other_hash)), Err(DbError::NotFound(_))));
 
-            storage.delete(&hash_a).unwrap();
-            assert!(!storage.contains(&hash_a).unwrap());
-            assert!(matches!(storage.get(&hash_a), Err(DbError::NotFound(_))));
+            block_on_ready(storage.delete(&hash_a)).unwrap();
+            assert!(!block_on_ready(storage.contains(&hash_a)).unwrap());
+            assert!(matches!(block_on_ready(storage.get(&hash_a)), Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️PayloadStorage
 
@@ -678,20 +984,20 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn catalog_storage_cas_root_fences_stale_writers() {
             let storage = sqlite_scratch("catalog_laws");
-            assert_eq!(storage.read_root().unwrap(), None);
+            assert_eq!(block_on_ready(storage.read_root()).unwrap(), None);
 
-            let epoch_1 = storage.cas_root(EpochFence::INITIAL, b"root-v1").unwrap();
+            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).unwrap();
             assert_eq!(epoch_1, EpochFence::INITIAL.next());
-            let (bytes, fence) = storage.read_root().unwrap().unwrap();
+            let (bytes, fence) = block_on_ready(storage.read_root()).unwrap().unwrap();
             assert_eq!(bytes, b"root-v1");
             assert_eq!(fence, epoch_1);
 
             // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
-            assert!(matches!(storage.cas_root(EpochFence::INITIAL, b"root-stale"), Err(DbError::Fenced { .. })));
+            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")), Err(DbError::Fenced { .. })));
 
-            let epoch_2 = storage.cas_root(epoch_1, b"root-v2").unwrap();
+            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).unwrap();
             assert_eq!(epoch_2, epoch_1.next());
-            assert_eq!(storage.read_root().unwrap().unwrap().0, b"root-v2");
+            assert_eq!(block_on_ready(storage.read_root()).unwrap().unwrap().0, b"root-v2");
         }
         //#endregion 🔖️CatalogStorage
 
@@ -700,14 +1006,14 @@ CREATE TABLE IF NOT EXISTS lease (
         fn index_storage_runs_list_read_and_delete_laws() {
             let storage = sqlite_scratch("index_laws");
             let document: ArtifactId = "doc-index".into();
-            storage.write_run(&document, 0, b"run-zero").unwrap();
-            storage.write_run(&document, 1, b"run-one").unwrap();
-            assert_eq!(storage.list_runs(&document).unwrap(), vec![0, 1]);
-            assert_eq!(storage.read_run(&document, 1).unwrap(), b"run-one");
+            block_on_ready(storage.write_run(&document, 0, b"run-zero")).unwrap();
+            block_on_ready(storage.write_run(&document, 1, b"run-one")).unwrap();
+            assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![0, 1]);
+            assert_eq!(block_on_ready(storage.read_run(&document, 1)).unwrap(), b"run-one");
 
-            storage.delete_run(&document, 0).unwrap();
-            assert_eq!(storage.list_runs(&document).unwrap(), vec![1]);
-            assert!(matches!(storage.read_run(&document, 0), Err(DbError::NotFound(_))));
+            block_on_ready(storage.delete_run(&document, 0)).unwrap();
+            assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![1]);
+            assert!(matches!(block_on_ready(storage.read_run(&document, 0)), Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️IndexStorage
 
@@ -715,48 +1021,49 @@ CREATE TABLE IF NOT EXISTS lease (
         #[test]
         fn lease_storage_acquire_renew_fence_and_handoff_laws() {
             let storage = sqlite_scratch("lease_laws");
-            let fence_1 = storage.acquire("shard-1", "node-a", 1_000, 0).unwrap();
+            let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).unwrap();
             assert_eq!(fence_1, EpochFence::INITIAL);
 
             // Re-acquiring the same, unexpired lease by the same holder is idempotent (same fence).
-            let fence_reacquire = storage.acquire("shard-1", "node-a", 1_000, 100).unwrap();
+            let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).unwrap();
             assert_eq!(fence_reacquire, fence_1);
 
             // A different holder cannot acquire an unexpired lease.
-            assert!(matches!(storage.acquire("shard-1", "node-b", 1_000, 100), Err(DbError::Conflict(_))));
+            assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)), Err(DbError::Conflict(_))));
 
-            storage.renew("shard-1", "node-a", fence_1, 1_000, 500).unwrap();
-            assert!(matches!(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500), Err(DbError::Fenced { .. })));
-            assert!(matches!(storage.renew("shard-1", "node-b", fence_1, 1_000, 500), Err(DbError::Unauthorized(_))));
+            block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).unwrap();
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)), Err(DbError::Fenced { .. })));
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)), Err(DbError::Unauthorized(_))));
 
-            let current = storage.current("shard-1", 600).unwrap().unwrap();
+            let current = block_on_ready(storage.current("shard-1", 600)).unwrap().unwrap();
             assert_eq!(current.holder, "node-a");
             assert_eq!(current.fence, fence_1);
 
             // After expiry (renewed at 500 for 1_000ms => expires at 1_500), a different holder can
             // take over, bumping the fence — the fencing law a stale former holder is later rejected by.
-            assert_eq!(storage.current("shard-1", 2_000).unwrap(), None);
-            let fence_2 = storage.acquire("shard-1", "node-b", 1_000, 2_000).unwrap();
+            assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).unwrap(), None);
+            let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).unwrap();
             assert_eq!(fence_2, fence_1.next());
 
             // The old holder's stale fence is now rejected.
-            assert!(matches!(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100), Err(DbError::Unauthorized(_))));
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)), Err(DbError::Unauthorized(_))));
 
-            storage.release("shard-1", "node-b", fence_2).unwrap();
-            assert_eq!(storage.current("shard-1", 2_100).unwrap(), None);
-            assert!(matches!(storage.release("shard-1", "node-b", fence_2), Err(DbError::NotFound(_))));
+            block_on_ready(storage.release("shard-1", "node-b", fence_2)).unwrap();
+            assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).unwrap(), None);
+            assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)), Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️LeaseStorage
 
         //#region 🔖️DbStorage
         #[test]
         fn db_storage_accessors_and_capabilities() {
-            let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(sqlite_scratch("umbrella"));
+            let (runtime, scope) = test_runtime_and_scope();
+            let storage: std::sync::Arc<dyn DbStorage> = std::sync::Arc::new(SqliteStorage::open(runtime, scope, &sqlite_scratch_path("umbrella")).unwrap());
             let document: ArtifactId = "doc-umbrella".into();
-            storage.wal().create_segment(&document, 0).unwrap();
-            storage.catalog().cas_root(EpochFence::INITIAL, b"root").unwrap();
-            storage.index().write_run(&document, 0, b"run").unwrap();
-            assert_eq!(storage.index().read_run(&document, 0).unwrap(), b"run");
+            block_on_ready(storage.wal().create_segment(&document, 0)).unwrap();
+            block_on_ready(storage.catalog().cas_root(EpochFence::INITIAL, b"root")).unwrap();
+            block_on_ready(storage.index().write_run(&document, 0, b"run")).unwrap();
+            assert_eq!(block_on_ready(storage.index().read_run(&document, 0)).unwrap(), b"run");
 
             let capabilities = storage.capabilities();
             assert!(capabilities.durable);
@@ -771,26 +1078,29 @@ CREATE TABLE IF NOT EXISTS lease (
         fn write_survives_reopen_across_instances_against_a_real_file() {
             let path = sqlite_scratch_path("reopen");
             {
-                let storage = SqliteStorage::open(&path).unwrap();
+                let (runtime, scope) = test_runtime_and_scope();
+                let storage = SqliteStorage::open(runtime, scope, &path).unwrap();
                 let document: ArtifactId = "doc-reopen".into();
-                storage.write_generation(&document, 0, b"persisted across reopen").unwrap();
-                storage.payload().put(b"payload persisted across reopen").unwrap();
+                block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).unwrap();
+                block_on_ready(storage.payload().put(b"payload persisted across reopen")).unwrap();
             }
             {
-                let storage = SqliteStorage::open(&path).unwrap();
+                let (runtime, scope) = test_runtime_and_scope();
+                let storage = SqliteStorage::open(runtime, scope, &path).unwrap();
                 let document: ArtifactId = "doc-reopen".into();
-                assert_eq!(storage.read_generation(&document, 0).unwrap(), b"persisted across reopen");
+                assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"persisted across reopen");
                 let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
-                assert_eq!(storage.payload().get(&hash).unwrap(), b"payload persisted across reopen");
+                assert_eq!(block_on_ready(storage.payload().get(&hash)).unwrap(), b"payload persisted across reopen");
             }
         }
 
         #[test]
         fn in_memory_storage_works_without_a_file() {
-            let storage = SqliteStorage::open_in_memory().unwrap();
+            let (runtime, scope) = test_runtime_and_scope();
+            let storage = SqliteStorage::open_in_memory(runtime, scope).unwrap();
             let document: ArtifactId = "doc-mem".into();
-            storage.create_segment(&document, 0).unwrap();
-            assert_eq!(storage.append(&document, 0, b"in memory").unwrap(), 9);
+            block_on_ready(storage.create_segment(&document, 0)).unwrap();
+            assert_eq!(block_on_ready(storage.append(&document, 0, b"in memory")).unwrap(), 9);
         }
         //#endregion 🔖️Connection
     }

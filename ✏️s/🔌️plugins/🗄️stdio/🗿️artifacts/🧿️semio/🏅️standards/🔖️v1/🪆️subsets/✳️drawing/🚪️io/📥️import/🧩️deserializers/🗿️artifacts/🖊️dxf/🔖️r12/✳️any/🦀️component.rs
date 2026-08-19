@@ -103,7 +103,7 @@ impl ArtifactDeserializer for SemioDrawingFromDxf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut order: Vec<String> = Vec::new();
         let mut buckets: std::collections::HashMap<String, Vec<DrawNode>> = std::collections::HashMap::new();
         for e in &from.entities {
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn buckets_entities_by_layer_and_drops_unmodeled() {
-        let drawing = SemioDrawingFromDxf::deserialize(&sample_dxf()).expect("deserialize");
+        let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDxf::deserialize(&sample_dxf())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 2);
         assert_eq!(drawing.layers[0].id, "0");
         assert_eq!(drawing.layers[1].id, "walls");

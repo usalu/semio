@@ -13,7 +13,7 @@ impl ArtifactDeserializer for BinaryFromBinaryRawAny {
     type Into = BinarySnapshot;
     const FROM: Dialect = DIALECT;
     const INTO: Dialect = DIALECT;
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(from.clone())
     }
 }

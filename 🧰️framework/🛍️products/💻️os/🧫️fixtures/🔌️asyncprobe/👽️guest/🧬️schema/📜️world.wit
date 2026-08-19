@@ -1,12 +1,62 @@
 package semio:asyncprobe@0.1.0;
 
-/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-S1 spike, go/no-go for the async ABI slice).
-/// Standalone WIT world, NOT the production `semio:framework` package — exists only to exercise the
-/// three component-model-async / WASI 0.3 shapes the real design needs: an async export taking a
-/// plain scalar, an async import the guest awaits mid-call, and an async export that reads a
-/// host-written `stream<u32>`.
+/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-S1 + terra-probe-spikes W6). Standalone WIT
+/// world, NOT the production `semio:framework` package — exercises the async ABI shapes the pooled
+/// actor plan needs: plain async export/import (G3), plus the W6 S1-S6 runtime-behaviour spikes
+/// (epoch-yield fairness, host-import drop-on-cancel, cross-export concurrency, custom
+/// `StreamProducer` wake choreography, nested guest-side executors).
 world asyncprobe {
   import echo: async func(s: string) -> string;
+  /// 🧪️ S6: resolves only after the host deliberately returns `Poll::Pending` once, forcing a real
+  /// wake round-trip through any guest-side indirection (e.g. a nested local executor).
+  import delayed-echo: async func(s: string) -> string;
+  /// 🧪️ S2: never resolves. Exists purely so its host future can be observed being dropped when the
+  /// guest cancels the subtask awaiting it.
+  import hang: async func(id: u32) -> u32;
+  import was-hang-dropped: func() -> bool;
+  import was-hang-started: func() -> bool;
+  /// 🧪️ S1: sync host import guest instances call from inside a CPU-bound loop to record
+  /// interleaving; not an escape hatch for cooperative yielding, epoch interruption must do that.
+  /// The host reads its own log directly off `HostState` afterwards — no WIT roundtrip needed.
+  import progress: func(guest-id: u32, step: u32);
+  /// 🧪️ S7: async host import requiring several polls before resolving (deterministic
+  /// Pending-then-Ready, no wall-clock timing) — the coordinator's `jobs`/`checkpoint` question:
+  /// can a SYNC-lifted export drive an ASYNC-lowered import to completion at all?
+  import s7-slow-op: async func(id: u32) -> u32;
+
   export ping: async func(n: u32) -> u32;
   export run: async func(events: stream<u32>) -> u32;
+  /// 🧪️ S1: CPU-bound loop with no internal await points; fairness must come from epoch-Yield
+  /// preemption alone.
+  export burn: async func(guest-id: u32, iters: u32) -> u32;
+  /// 🧪️ S1c: identical CPU-bound loop to `burn`, but with ZERO host-import calls anywhere inside
+  /// it — no `progress`, no logging, nothing that can create a guest->host call boundary. Exists
+  /// to isolate whether epoch/fuel-Yield ALONE (with no import-await confound) can preempt a pure
+  /// CPU-bound guest task across separate Stores. `burn`'s periodic `progress` import call was a
+  /// confound S1/S1b did not control for.
+  export burn-pure: async func(guest-id: u32, iters: u32) -> u32;
+  /// 🧪️ S3: export invoked from the host while another export call is parked mid-`run`. Must be
+  /// `async func` — the store is configured for component-model-async throughout, and a plain sync
+  /// `func` export's generated call errors at runtime ("store configuration requires that `*_async`
+  /// functions are used instead") rather than actually attempting a concurrent call. See report.
+  export checkpoint: async func() -> u32;
+  /// 🧪️ S2: awaits `hang` via a manually-driven (single-poll-then-drop) future to exercise the
+  /// guest-side subtask cancellation path.
+  export cancel-probe: async func() -> bool;
+  /// 🧪️ S6: awaits `delayed-echo` through a hand-rolled `Rc<RefCell>`-backed single-task local
+  /// executor simulating the SDK's `LocalExecutor` shape.
+  export nested-exec-probe: async func() -> string;
+
+  /// 🧪️ S7 Q1a: trivial SYNC export, zero import calls — isolates "can a plain sync `func` export
+  /// be called at all on a component-model-async-enabled store, from WITHIN a `run_concurrent`
+  /// session" from "can it await an import". Mirrors the real schema's `jobs`/`checkpoint`
+  /// interfaces, which are plain `func`, not `async func`.
+  export s7-sync-noop: func(id: u32) -> u32;
+  /// 🧪️ S7 Q1b/Q2: SYNC export whose body manually polls `s7-slow-op`'s future to completion — the
+  /// only way a sync (non-`async fn`) export body COULD drive an async import, since it cannot
+  /// write `.await`. Mirrors a `step-job` implementation that needs `JobCtx::host()`.
+  export s7-sync-awaits-import: func(id: u32) -> u32;
+  /// 🧪️ S7 Q3 control group: ASYNC-declared twin of the above, for direct side-by-side comparison
+  /// — this is the `jobs-async`/`checkpoint-async` shape the coordinator asked about as a fallback.
+  export s7-async-awaits-import: async func(id: u32) -> u32;
 }

@@ -489,7 +489,7 @@ impl ArtifactEngine {
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
         let core_id = to_core_document_id(&document);
-        let wal = db_wal::ArtifactWal::create(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms)?;
+        let wal = db_actor::block_on(db_wal::ArtifactWal::create(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms))?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config))
     }
 
@@ -507,10 +507,10 @@ impl ArtifactEngine {
         let mut applied_head_seq = 0u64;
         let mut vcs_head = None;
         let snapshot_manager = db_snapshot::SnapshotManager::new(storage.snapshot());
-        if let Some((generation, descriptor)) = snapshot_manager.load_latest(&core_id)? {
+        if let Some((generation, descriptor)) = db_actor::block_on(snapshot_manager.load_latest(&core_id))? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
-            let combined = snapshot_manager.materialize_chain(&core_id, generation)?;
+            let combined = db_actor::block_on(snapshot_manager.materialize_chain(&core_id, generation))?;
             let handle = db_snapshot::open_latest(&combined)?;
             for hash in &descriptor.roots {
                 let page_bytes = db_snapshot::read_page(&combined, &handle, *hash)?;
@@ -525,13 +525,13 @@ impl ArtifactEngine {
             vcs_head = descriptor.vcs_head;
         }
 
-        let (wal, wal_recovery) = db_wal::ArtifactWal::open(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms)?;
+        let (wal, wal_recovery) = db_actor::block_on(db_wal::ArtifactWal::open(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms))?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
         let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config);
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
-        let records = db_wal::replay_document(storage.wal(), &core_id)?;
+        let records = db_actor::block_on(db_wal::replay_document(storage.wal(), &core_id))?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
         for record in records {
@@ -735,23 +735,23 @@ impl ArtifactEngine {
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
-        self.wal.submit(self.storage.wal(), &records, options.durability, now_ms)?;
+        db_actor::block_on(self.wal.submit(self.storage.wal(), &records, options.durability, now_ms))?;
         self.frontier = new_frontier.clone();
 
         // publish: durable indices
         let command_index = db_index::CommandIndex::new(self.storage.index(), self.document.clone());
         let inverse_index = db_index::InverseIndex::new(self.storage.index(), self.document.clone());
         let actor_seq_index = db_index::ActorSeqIndex::new(self.storage.index(), self.document.clone());
-        db_index::FrontierIndex::new(self.storage.index(), self.document.clone()).record(&new_frontier)?;
+        db_actor::block_on(db_index::FrontierIndex::new(self.storage.index(), self.document.clone()).record(&new_frontier))?;
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
             let seq = base_seq + offset as u64 + 1;
             let location = db_index::RecordLocation { segment: self.wal.active_segment_index(), offset: seq, len: 1 };
-            command_index.record(seq, location)?;
-            inverse_index.record(seq, location)?;
+            db_actor::block_on(command_index.record(seq, location))?;
+            db_actor::block_on(inverse_index.record(seq, location))?;
             let core_actor = to_core_actor_id(&envelope.actor);
             let actor_seq = *self.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
-            actor_seq_index.record(&core_actor, actor_seq, seq)?;
+            db_actor::block_on(actor_seq_index.record(&core_actor, actor_seq, seq))?;
         }
 
         // project: run every registered projection over each newly-applied envelope
@@ -759,7 +759,7 @@ impl ArtifactEngine {
         if !projection_classes.is_empty() {
             let engine = db_projection::ProjectionEngine::new(self.storage.index(), self.document.clone(), projection_classes)?;
             for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
-                engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched)?;
+                db_actor::block_on(engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched))?;
             }
         }
 
@@ -833,7 +833,7 @@ impl ArtifactEngine {
         let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
         let page = db_state::Page::new(encode_state_page(&entries));
         let snapshot_manager = db_snapshot::SnapshotManager::new(self.storage.snapshot());
-        let origin = if snapshot_manager.load_latest(&self.document)?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
+        let origin = if db_actor::block_on(snapshot_manager.load_latest(&self.document))?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
         let body = db_snapshot::SnapshotBody {
             head_seq: self.frontier.head_seq,
             commit_seq: self.frontier.commit_seq,
@@ -845,7 +845,7 @@ impl ArtifactEngine {
             roots: vec![page.hash],
             created_at_ms: now_ms,
         };
-        snapshot_manager.publish(&self.document, origin, &[page], body)
+        db_actor::block_on(snapshot_manager.publish(&self.document, origin, &[page], body))
     }
     //#endregion 🔖️Snapshot
 
@@ -864,10 +864,10 @@ impl ArtifactEngine {
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
-            db_query::resolve_consistency(&consistency, &resolver)?;
+            db_actor::block_on(db_query::resolve_consistency(&consistency, &resolver))?;
         }
         let source = StateQuerySource(&self.state.values);
-        db_query::execute(&query, &source, None, &db_query::QueryLimits::default())
+        db_actor::block_on(db_query::execute(&query, &source, None, &db_query::QueryLimits::default()))
     }
 
     /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
@@ -889,7 +889,7 @@ impl ArtifactEngine {
         let limits = db_query::QueryLimits::default();
         let mut diffs = Vec::new();
         for (id, live_query) in self.live_queries.iter_mut() {
-            if let Ok(diff) = live_query.refresh(&source, None, &limits) {
+            if let Ok(diff) = db_actor::block_on(live_query.refresh(&source, None, &limits)) {
                 if !diff.added.is_empty() || !diff.removed.is_empty() || !diff.updated.is_empty() {
                     diffs.push((*id, diff));
                 }

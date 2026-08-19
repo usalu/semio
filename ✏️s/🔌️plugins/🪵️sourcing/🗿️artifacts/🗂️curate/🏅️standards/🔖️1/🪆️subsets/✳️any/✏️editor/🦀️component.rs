@@ -195,7 +195,7 @@ impl ArtifactEditor for SourcingCurateApp {
     /// plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated inline —
     /// overriding `export_media` shadows the trait's provided body for every port on this app, not just
     /// the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
@@ -632,7 +632,7 @@ mod tests {
     #[test]
     fn sourcing_curate_io_and_catalog_export_round_trip() {
         let mut app = crate::editor::sourcing::testkit::new_app();
-        let media = app.export_media("catalog:out").expect("catalog export");
+        let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
         assert_eq!(media.media_type.class, MediaClass::Kit);
         assert_eq!(media.media_type.form, MediaForm::Type);
         match media.payload {

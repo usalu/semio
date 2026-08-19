@@ -53,6 +53,13 @@ pub struct PluginBuilder<State> {
     artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
+    /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
+    /// `.job(kind, run)` declarations, folded into `⚛️reactor/💼️jobs::register_job_kind` at the end
+    /// of `try_build()` ("registered on bundle install like other builder registrations" per this
+    /// packet's brief) rather than stored on `Plugin` itself — the job registry is a thread-local
+    /// keyed by `kind`, not a `Plugin`-scoped table, since `step_job`/`start_job` never carry a
+    /// plugin id to look one up by.
+    jobs: Vec<(&'static str, crate::reactor::jobs::JobFn)>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     host_media_handlers: Vec<HostMediaHandlerDeclaration>,
     flow_extensions: Vec<FlowExtensionDeclaration>,
@@ -100,6 +107,7 @@ impl PluginBuilder<NeedsLabel> {
             artifact_definitions: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
+            jobs: Vec::new(),
             artifact_kinds: Vec::new(),
             host_media_handlers: Vec::new(),
             flow_extensions: Vec::new(),
@@ -132,6 +140,7 @@ impl PluginBuilder<NeedsLabel> {
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
+            jobs: self.jobs,
             artifact_kinds: self.artifact_kinds,
             host_media_handlers: self.host_media_handlers,
             flow_extensions: self.flow_extensions,
@@ -166,6 +175,7 @@ impl PluginBuilder<NeedsVersion> {
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
+            jobs: self.jobs,
             artifact_kinds: self.artifact_kinds,
             host_media_handlers: self.host_media_handlers,
             flow_extensions: self.flow_extensions,
@@ -232,6 +242,16 @@ impl PluginBuilder<Ready> {
     /// 🎮️ Declares a plugin-owned command and its program-level handler.
     pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
         self.commands.push((command, handler));
+        self
+    }
+
+    /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
+    /// declares one cold job kind this plugin authors, resolved by `⚛️reactor/💼️jobs::start_job`
+    /// through the SAME `kind` string a `spawn-job` effect names. `try_build()` folds every
+    /// declared entry into `⚛️reactor/💼️jobs::register_job_kind` at bundle-install time — see that
+    /// field's own doc comment for why the registry lives there rather than on `Plugin`.
+    pub fn job(mut self, kind: &'static str, run: crate::reactor::jobs::JobFn) -> Self {
+        self.jobs.push((kind, run));
         self
     }
 
@@ -478,6 +498,7 @@ impl PluginBuilder<Ready> {
             artifact_definitions,
             mut capabilities,
             commands,
+            jobs,
             artifact_kinds,
             host_media_handlers,
             flow_extensions,
@@ -576,6 +597,13 @@ impl PluginBuilder<Ready> {
         for (command, handler) in commands {
             plugin = plugin.plugin_command(command, handler);
         }
+        // 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime) — "registered on bundle
+        // install like other builder registrations" per this packet's brief: folded here, in the
+        // SAME `try_build()` call that installs every other builder registration, rather than
+        // deferred to a separate hook.
+        for (kind, run) in jobs {
+            crate::reactor::jobs::register_job_kind(kind, run);
+        }
         for kind in artifact_kinds {
             plugin = plugin.artifact_kind(kind);
         }
@@ -607,6 +635,11 @@ mod plugin_builder_dependency_tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     static MESH_DWG_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);
+    /// 🔒️ `MESH_DWG_EXECUTIONS` is process-global, and BOTH tests that read it reset it to 0 first,
+    /// so running them concurrently makes each one observe the other's increments — a race that is
+    /// invisible whenever either test is run alone. Every test touching that counter takes this
+    /// guard, which is what actually makes the assertions about it meaningful.
+    static MESH_DWG_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     fn host_media_kind() -> semio_framework::ArtifactKindSpec {
         semio_framework::ArtifactKindSpec {
@@ -734,6 +767,7 @@ mod plugin_builder_dependency_tests {
 
     #[test]
     fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
+        let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
         let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("typed bridge declaration");
@@ -754,6 +788,7 @@ mod plugin_builder_dependency_tests {
 
     #[test]
     fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
+        let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
         let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("first bridge");

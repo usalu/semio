@@ -1,0 +1,52 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript
+
+stderr | 📜️script.ts > buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel) > continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once
+plugin build failed, continuing with remaining targets: cargo-fails Error: boom
+    at cargoFn (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:4879:48)
+    at buildPluginCatalog (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:1033:27)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:4887:41
+    at processTicksAndRejections (native)
+
+stderr | 📜️script.ts > buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel) > continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once
+plugin materialize failed: materialize-fails Error: boom
+    at materializeFn (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:4884:54)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:1043:17
+    at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:982:22)
+    at buildPluginCatalog (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:1051:17)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/ðï¸script.ts:4887:41
+    at processTicksAndRejections (native)
+
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > scanBuiltPluginModules (plugin hot-swap SSE snapshot) > returns nothing for a missing root 3ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > scanBuiltPluginModules (plugin hot-swap SSE snapshot) > skips a plugin dir with no core wasm output yet 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > scanBuiltPluginModules (plugin hot-swap SSE snapshot) > skips the shared _vendor dir 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > scanBuiltPluginModules (plugin hot-swap SSE snapshot) > reports a built plugin's newest core wasm mtime 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > scanBuiltPluginModules (plugin hot-swap SSE snapshot) > reports one row per plugin dir, largest mtime among multiple core wasm chunks 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > PluginHotSwapMarker JSON round-trip (SSE `built` event payload) > parses the exact shape buildPlugin writes to .hot-swap 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > catalog state transition probe > selects only common explicitly-id'd app controls in semantic priority order 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > catalog state transition probe > records selected-state and topology changes but ignores focus-only movement 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > createConcurrencyLimiter (T-P8 bounded-parallel materialize primitive) > never runs more than `limit` callbacks concurrently, and still runs every one to completion 19ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel) > never overlaps two cargo calls, overlaps materialize up to the cap, and emits every plugin 49ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel) > continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once 7ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > backboneDbHandleFor (T-P8 per-path sqlite handle cache) > returns the SAME handle for the same path across repeated calls 4ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > backboneDbHandleFor (T-P8 per-path sqlite handle cache) > returns DISTINCT handles for distinct paths 2ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > sweepStaleExtensionModuleOutputs (T-P8 pre-ABI-flip generated-output sweep) > removes a planted stale 🟨️plugin-worker.js unconditionally (no code path writes that file anymore) 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > sweepStaleExtensionModuleOutputs (T-P8 pre-ABI-flip generated-output sweep) > removes a planted stale 🟨️host-shim.js whose content predates the current pure-only ABI 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > sweepStaleExtensionModuleOutputs (T-P8 pre-ABI-flip generated-output sweep) > keeps a 🟨️host-shim.js whose content already matches the current hostShimSource() 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > sweepStaleExtensionModuleOutputs (T-P8 pre-ABI-flip generated-output sweep) > is a no-op against a missing root 1ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitTcpReady (W6 poll-census helper) > honours its deadline and reports timeout — no real sleeps: fake clock + fake probe 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitTcpReady (W6 poll-census helper) > resolves ready as soon as the injected probe reports the port open 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitTcpReady (W6 poll-census helper) > resolves closed-mode ready once the injected probe reports the port free 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitTcpReady (W6 poll-census helper) > resolves dead as soon as isDead() reports true, before the deadline 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitHttpOk (W6 poll-census helper) > honours its deadline and reports timeout — no real sleeps: fake clock + always-throwing fetch 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitHttpOk (W6 poll-census helper) > resolves ready once the injected fetch stops throwing 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitHttpOk (W6 poll-census helper) > resolves dead as soon as isDead() reports true, before attempting to fetch 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitChildExit (W6 event-driven fix — replaces polling child.exitCode) > resolves as soon as the child's own 'exit' event fires, without polling 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitChildExit (W6 event-driven fix — replaces polling child.exitCode) > resolves immediately for a child that had already exited before the call 0ms
+ ✓ |@semio-tech/framework-os-dev| 📜️script.ts > awaitChildExit (W6 event-driven fix — replaces polling child.exitCode) > still times out for a hung child that never emits 'exit' — fake deadline, no real sleep 0ms
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  10:34:39
+   Duration  1.06s (transform 447ms, setup 0ms, import 527ms, tests 95ms, environment 370ms)
+

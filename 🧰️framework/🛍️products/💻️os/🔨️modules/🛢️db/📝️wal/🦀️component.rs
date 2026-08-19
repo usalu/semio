@@ -475,13 +475,13 @@ pub struct WalRecoveryReport {
 /// expected fully trusted (a torn sealed segment is `DbError::Corrupt`, since `truncate_tail` only
 /// targets an unsealed segment); the last (possibly active, possibly unsealed) segment is
 /// recovered via `protocol::format::recover` first.
-pub fn replay_document(storage: &dyn db_storage::WalStorage, document: &ArtifactId) -> Result<Vec<WalRecord>, DbError> {
-    let mut indices = storage.list_segments(document)?;
+pub async fn replay_document(storage: &dyn db_storage::WalStorage, document: &ArtifactId) -> Result<Vec<WalRecord>, DbError> {
+    let mut indices = storage.list_segments(document).await?;
     indices.sort_unstable();
     let mut all = Vec::new();
     for index in indices {
-        let len = storage.segment_len(document, index)?;
-        let bytes = storage.read(document, index, pack::ByteRange { offset: 0, len })?;
+        let len = storage.segment_len(document, index).await?;
+        let bytes = storage.read(document, index, pack::ByteRange { offset: 0, len }).await?;
         let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
         if report.bytes_recovered != bytes.len() as u64 {
             return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted)", report.bytes_recovered, bytes.len())));
@@ -511,13 +511,13 @@ impl SegmentWriter {
     /// @emoji 🆕️ Creates segment `index` in `storage`, writes its `WAL_SEGMENT_HEADER` record, and
     /// commits+flushes immediately (a segment's own identity/chain-link should never be lost to a
     /// crash before the segment records anything else).
-    fn begin(storage: &dyn db_storage::WalStorage, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
-        storage.create_segment(&document, index)?;
+    async fn begin(storage: &dyn db_storage::WalStorage, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
+        storage.create_segment(&document, index).await?;
         let buf = SharedBuf::new();
         let writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).map_err(protocol_err)?;
         let mut segment = Self { document: document.clone(), index, buf, writer, flushed_len: 0, pending_records: 0, oldest_pending_at_ms: None };
         segment.append_record(&WalRecord::SegmentHeader { document, segment_index: index, prev_chain_hash }, now_ms)?;
-        segment.commit_and_flush(storage, DurabilityClass::Fsync)?;
+        segment.commit_and_flush(storage, DurabilityClass::Fsync).await?;
         Ok(segment)
     }
 
@@ -546,15 +546,15 @@ impl SegmentWriter {
     /// flushes the newly-committed suffix to `WalStorage::append` + `sync(class)` — the group-
     /// commit primitive `ArtifactWal::submit`/`force_flush`/`rotate` all funnel through. A no-op
     /// (`Ok(None)`) if nothing is pending.
-    fn commit_and_flush(&mut self, storage: &dyn db_storage::WalStorage, class: DurabilityClass) -> Result<Option<u64>, DbError> {
+    async fn commit_and_flush(&mut self, storage: &dyn db_storage::WalStorage, class: DurabilityClass) -> Result<Option<u64>, DbError> {
         if self.pending_records == 0 {
             return Ok(None);
         }
         let commit_offset = self.writer.commit().map_err(protocol_err)?;
         let snapshot = self.buf.snapshot();
         let delta = &snapshot[self.flushed_len as usize..];
-        let new_len = storage.append(&self.document, self.index, delta)?;
-        storage.sync(&self.document, self.index, class)?;
+        let new_len = storage.append(&self.document, self.index, delta).await?;
+        storage.sync(&self.document, self.index, class).await?;
         self.flushed_len = new_len;
         self.pending_records = 0;
         self.oldest_pending_at_ms = None;
@@ -616,8 +616,8 @@ pub struct ArtifactWal {
 impl ArtifactWal {
     /// @emoji 🌱️ Creates a brand new WAL for `document` (segment 0, genesis — no prior segment to
     /// chain from). Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub fn create(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, DbError> {
-        let active = SegmentWriter::begin(storage, document.clone(), 0, None, now_ms)?;
+    pub async fn create(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, DbError> {
+        let active = SegmentWriter::begin(storage, document.clone(), 0, None, now_ms).await?;
         Ok(Self { document, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: 1, active, next_tx_id: 1 })
     }
 
@@ -627,25 +627,25 @@ impl ArtifactWal {
     /// segment is treated as possibly-active and recovered via `protocol::format::recover`,
     /// discarding any torn tail. Creates a fresh WAL (equivalent to `create`) if `document` has no
     /// segments yet.
-    pub fn open(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
-        let mut indices = storage.list_segments(&document)?;
+    pub async fn open(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
+        let mut indices = storage.list_segments(&document).await?;
         indices.sort_unstable();
         if indices.is_empty() {
-            return Ok((Self::create(storage, document, policy, now_ms)?, WalRecoveryReport::default()));
+            return Ok((Self::create(storage, document, policy, now_ms).await?, WalRecoveryReport::default()));
         }
         let last_index = *indices.last().expect("checked non-empty above");
 
         for &index in &indices[..indices.len() - 1] {
-            let len = storage.segment_len(&document, index)?;
-            let bytes = storage.read(&document, index, pack::ByteRange { offset: 0, len })?;
+            let len = storage.segment_len(&document, index).await?;
+            let bytes = storage.read(&document, index, pack::ByteRange { offset: 0, len }).await?;
             let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
             if report.bytes_recovered != bytes.len() as u64 {
                 return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted) but is not the active segment", report.bytes_recovered, bytes.len())));
             }
         }
 
-        let len = storage.segment_len(&document, last_index)?;
-        let bytes = storage.read(&document, last_index, pack::ByteRange { offset: 0, len })?;
+        let len = storage.segment_len(&document, last_index).await?;
+        let bytes = storage.read(&document, last_index, pack::ByteRange { offset: 0, len }).await?;
         let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
         let torn_tail_bytes = bytes.len() as u64 - report.bytes_recovered;
         let records = decode_records(&bytes[..report.bytes_recovered as usize])?;
@@ -658,8 +658,8 @@ impl ArtifactWal {
         // reproduces the exact same logical WAL content (fewer, coalesced commit frames is fine —
         // recovery only has to restore the committed record set, not the original commit
         // boundaries).
-        storage.delete_segment(&document, last_index)?;
-        storage.create_segment(&document, last_index)?;
+        storage.delete_segment(&document, last_index).await?;
+        storage.create_segment(&document, last_index).await?;
         let buf = SharedBuf::new();
         let mut writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).map_err(protocol_err)?;
         for record in &records {
@@ -667,7 +667,7 @@ impl ArtifactWal {
             writer.write_record(kind, critical, &payload, pack::CodecId(0)).map_err(protocol_err)?;
         }
         let mut active = SegmentWriter { document: document.clone(), index: last_index, buf, writer, flushed_len: 0, pending_records: records.len() as u32, oldest_pending_at_ms: if records.is_empty() { None } else { Some(now_ms) } };
-        active.commit_and_flush(storage, DurabilityClass::Fsync)?;
+        active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
 
         let next_tx_id = records.iter().filter_map(WalRecord::tx_id).max().map_or(1, |id| id + 1);
         let recovery = WalRecoveryReport { segments_seen: indices.len() as u64, records_replayed: records.len() as u64, torn_tail_bytes };
@@ -687,7 +687,7 @@ impl ArtifactWal {
     /// immediate commit, since deferring one can never satisfy a durability request stronger than
     /// what's already flushed. Rotates to a new segment (sealing this one first, which forces a
     /// commit if anything is still pending) once the active segment crosses `max_segment_bytes`.
-    pub fn submit(&mut self, storage: &dyn db_storage::WalStorage, records: &[WalRecord], durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
+    pub async fn submit(&mut self, storage: &dyn db_storage::WalStorage, records: &[WalRecord], durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
         let tx_id = self.next_tx_id;
         self.next_tx_id += 1;
         let segment_index = self.active.index;
@@ -702,10 +702,10 @@ impl ArtifactWal {
         let due = forced || self.policy.is_due(self.active.pending_bytes(), self.active.pending_records, self.active.oldest_pending_at_ms, now_ms);
         let mut committed = false;
         if due {
-            committed = self.active.commit_and_flush(storage, durability)?.is_some();
+            committed = self.active.commit_and_flush(storage, durability).await?.is_some();
         }
         if self.active.total_len() >= self.max_segment_bytes {
-            self.rotate(storage, now_ms)?;
+            self.rotate(storage, now_ms).await?;
             committed = true;
         }
         Ok(WalAppendReceipt { segment_index, tx_id, committed })
@@ -714,21 +714,21 @@ impl ArtifactWal {
     /// @emoji 🚿️ Forces a commit+flush of whatever is currently pending, regardless of policy —
     /// the primitive a timer-driven group-commit loop or a clean-shutdown drain calls. Returns
     /// `true` iff there was anything to flush.
-    pub fn force_flush(&mut self, storage: &dyn db_storage::WalStorage) -> Result<bool, DbError> {
-        Ok(self.active.commit_and_flush(storage, DurabilityClass::Fsync)?.is_some())
+    pub async fn force_flush(&mut self, storage: &dyn db_storage::WalStorage) -> Result<bool, DbError> {
+        Ok(self.active.commit_and_flush(storage, DurabilityClass::Fsync).await?.is_some())
     }
 
     /// @emoji 🔄️ Seals the active segment (after a final commit+flush) and begins a fresh one,
     /// carrying the sealed segment's tip `chain_hash` forward as the new segment's
     /// `WAL_SEGMENT_HEADER.prev_chain_hash` — the cross-segment hash-chain link.
-    fn rotate(&mut self, storage: &dyn db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
-        self.active.commit_and_flush(storage, DurabilityClass::Fsync)?;
+    async fn rotate(&mut self, storage: &dyn db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
+        self.active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
         let chain_hash = self.active.tip_chain_hash()?;
         let sealed_index = self.active.index;
-        storage.seal(&self.document, sealed_index)?;
+        storage.seal(&self.document, sealed_index).await?;
         let new_index = self.next_segment_index;
         self.next_segment_index += 1;
-        self.active = SegmentWriter::begin(storage, self.document.clone(), new_index, Some(chain_hash), now_ms)?;
+        self.active = SegmentWriter::begin(storage, self.document.clone(), new_index, Some(chain_hash), now_ms).await?;
         Ok(())
     }
 }
@@ -868,19 +868,19 @@ mod tests {
     fn single_segment_write_commit_flush_recovers_cleanly() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
 
-        let receipt = wal.submit(&storage, &[WalRecord::Command(b"cmd-1".to_vec())], DurabilityClass::Fsync, 1).unwrap();
+        let receipt = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"cmd-1".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
         assert!(receipt.committed, "Fsync durability must force an immediate commit");
         assert_eq!(receipt.tx_id, 1);
 
-        let len = storage.segment_len(&document, 0).unwrap();
-        let bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len }).unwrap();
+        let len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
+        let bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len })).unwrap();
         let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
         assert_eq!(report.bytes_recovered, bytes.len() as u64);
         assert_eq!(report.torn_tail_bytes, 0);
 
-        let records = replay_document(&storage, &document).unwrap();
+        let records = db_actor::block_on(replay_document(&storage, &document)).unwrap();
         assert_eq!(records, vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::TxBegin { tx_id: 1 }, WalRecord::Command(b"cmd-1".to_vec()), WalRecord::TxCommit { tx_id: 1, record_count: 1 },]);
     }
 
@@ -889,19 +889,19 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let policy = GroupCommitPolicy { max_delay_ms: 1_000_000, max_bytes: u64::MAX, max_records: 5 };
-        let mut wal = ArtifactWal::create(&storage, document.clone(), policy, 0).unwrap();
+        let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), policy, 0)).unwrap();
 
         // Each submit writes 3 records (begin/command/commit); Memory durability never forces a
         // commit, so nothing should be flushed to storage until pending_records >= 5.
-        let receipt_1 = wal.submit(&storage, &[WalRecord::Command(b"a".to_vec())], DurabilityClass::Memory, 10).unwrap();
+        let receipt_1 = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"a".to_vec())], DurabilityClass::Memory, 10)).unwrap();
         assert!(!receipt_1.committed);
-        assert_eq!(storage.segment_len(&document, 0).unwrap(), wal.active.flushed_len, "nothing new should have flushed yet");
+        assert_eq!(db_actor::block_on(storage.segment_len(&document, 0)).unwrap(), wal.active.flushed_len, "nothing new should have flushed yet");
 
         // Second submit pushes pending_records to 6 (>= max_records 5), which must commit.
-        let receipt_2 = wal.submit(&storage, &[WalRecord::Command(b"b".to_vec())], DurabilityClass::Memory, 11).unwrap();
+        let receipt_2 = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"b".to_vec())], DurabilityClass::Memory, 11)).unwrap();
         assert!(receipt_2.committed);
         assert_eq!(wal.active.pending_records, 0);
-        assert!(storage.segment_len(&document, 0).unwrap() > 32, "flush must have appended past the bare header");
+        assert!(db_actor::block_on(storage.segment_len(&document, 0)).unwrap() > 32, "flush must have appended past the bare header");
     }
 
     #[test]
@@ -909,8 +909,8 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         let policy = GroupCommitPolicy { max_delay_ms: u64::MAX, max_bytes: u64::MAX, max_records: u32::MAX };
-        let mut wal = ArtifactWal::create(&storage, document, policy, 0).unwrap();
-        let receipt = wal.submit(&storage, &[WalRecord::Command(b"a".to_vec())], DurabilityClass::Fsync, 0).unwrap();
+        let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document, policy, 0)).unwrap();
+        let receipt = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"a".to_vec())], DurabilityClass::Fsync, 0)).unwrap();
         assert!(receipt.committed);
     }
 
@@ -919,27 +919,27 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         {
-            let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
-            wal.submit(&storage, &[WalRecord::Command(b"trusted".to_vec())], DurabilityClass::Fsync, 1).unwrap();
+            let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
+            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"trusted".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
         }
 
         // Simulate a crash mid-append: bytes physically present past the last trusted commit,
         // written directly to storage (bypassing SprWriter, exactly like a torn OS-level write).
-        storage.append(&document, 0, b"\x0Fgarbage-not-a-valid-frame-tail").unwrap();
+        db_actor::block_on(storage.append(&document, 0, b"\x0Fgarbage-not-a-valid-frame-tail")).unwrap();
 
-        let (wal, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100).unwrap();
+        let (wal, report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
         assert!(report.torn_tail_bytes > 0);
         assert_eq!(report.segments_seen, 1);
         drop(wal);
 
-        let records = replay_document(&storage, &document).unwrap();
+        let records = db_actor::block_on(replay_document(&storage, &document)).unwrap();
         assert_eq!(
             records,
             vec![WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None }, WalRecord::TxBegin { tx_id: 1 }, WalRecord::Command(b"trusted".to_vec()), WalRecord::TxCommit { tx_id: 1, record_count: 1 },]
         );
 
-        let len = storage.segment_len(&document, 0).unwrap();
-        let bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len }).unwrap();
+        let len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
+        let bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len })).unwrap();
         let post_recovery = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
         assert_eq!(post_recovery.bytes_recovered, bytes.len() as u64, "the rebuilt segment must itself be torn-tail-free");
     }
@@ -949,16 +949,16 @@ mod tests {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
         {
-            let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
-            wal.submit(&storage, &[WalRecord::Command(b"one".to_vec())], DurabilityClass::Fsync, 1).unwrap();
-            wal.submit(&storage, &[WalRecord::Command(b"two".to_vec())], DurabilityClass::Fsync, 2).unwrap();
+            let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
+            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"one".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
+            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"two".to_vec())], DurabilityClass::Fsync, 2)).unwrap();
         }
 
-        let (mut wal, _report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3).unwrap();
-        let receipt = wal.submit(&storage, &[WalRecord::Command(b"three".to_vec())], DurabilityClass::Fsync, 4).unwrap();
+        let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3)).unwrap();
+        let receipt = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"three".to_vec())], DurabilityClass::Fsync, 4)).unwrap();
         assert_eq!(receipt.tx_id, 3, "recovery must resume tx ids strictly past whatever was already durable");
 
-        let records = replay_document(&storage, &document).unwrap();
+        let records = db_actor::block_on(replay_document(&storage, &document)).unwrap();
         let commands: Vec<_> = records.into_iter().filter(|record| matches!(record, WalRecord::Command(_))).collect();
         assert_eq!(commands, vec![WalRecord::Command(b"one".to_vec()), WalRecord::Command(b"two".to_vec()), WalRecord::Command(b"three".to_vec())]);
     }
@@ -967,20 +967,20 @@ mod tests {
     fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         wal.max_segment_bytes = 200; // force rotation quickly for this test
 
         for i in 0..20u32 {
-            wal.submit(&storage, &[WalRecord::Command(format!("cmd-{i}").into_bytes())], DurabilityClass::Fsync, u64::from(i)).unwrap();
+            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(format!("cmd-{i}").into_bytes())], DurabilityClass::Fsync, u64::from(i))).unwrap();
         }
 
-        let segments = storage.list_segments(&document).unwrap();
+        let segments = db_actor::block_on(storage.list_segments(&document)).unwrap();
         assert!(segments.len() >= 2, "the byte threshold must have forced at least one rotation");
 
         // Cross-check segment 1's WAL_SEGMENT_HEADER.prev_chain_hash against segment 0's
         // independently-recomputed tip chain_hash.
-        let seg0_len = storage.segment_len(&document, 0).unwrap();
-        let seg0_bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len }).unwrap();
+        let seg0_len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
+        let seg0_bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len })).unwrap();
         let seg0_report = protocol::format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
         let commit_frame_end = (seg0_report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
         let mut cursor = protocol::FrameCursor::new(&seg0_bytes[seg0_report.last_commit_offset as usize..commit_frame_end], 0);
@@ -989,8 +989,8 @@ mod tests {
 
         let seg0_records = decode_records(&seg0_bytes[..seg0_report.bytes_recovered as usize]).unwrap();
         let seg1_records = {
-            let seg1_len = storage.segment_len(&document, 1).unwrap();
-            let seg1_bytes = storage.read(&document, 1, pack::ByteRange { offset: 0, len: seg1_len }).unwrap();
+            let seg1_len = db_actor::block_on(storage.segment_len(&document, 1)).unwrap();
+            let seg1_bytes = db_actor::block_on(storage.read(&document, 1, pack::ByteRange { offset: 0, len: seg1_len })).unwrap();
             let seg1_report = protocol::format::recover(&seg1_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
             decode_records(&seg1_bytes[..seg1_report.bytes_recovered as usize]).unwrap()
         };
@@ -1003,7 +1003,7 @@ mod tests {
         }
         assert!(matches!(seg0_records[0], WalRecord::SegmentHeader { segment_index: 0, prev_chain_hash: None, .. }));
 
-        let full_replay = replay_document(&storage, &document).unwrap();
+        let full_replay = db_actor::block_on(replay_document(&storage, &document)).unwrap();
         let commands_in_order: Vec<String> = full_replay
             .into_iter()
             .filter_map(|record| match record {
@@ -1019,22 +1019,22 @@ mod tests {
     fn recovery_rejects_a_torn_non_active_sealed_segment() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         wal.max_segment_bytes = 1; // rotate on the very next submit
-        wal.submit(&storage, &[WalRecord::Command(b"forces-rotation".to_vec())], DurabilityClass::Fsync, 0).unwrap();
-        assert!(storage.list_segments(&document).unwrap().len() >= 2);
+        db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"forces-rotation".to_vec())], DurabilityClass::Fsync, 0)).unwrap();
+        assert!(db_actor::block_on(storage.list_segments(&document)).unwrap().len() >= 2);
 
         // Corrupt the now-sealed segment 0 by truncating a byte off its tail directly in storage
         // — WalStorage::truncate_tail refuses a sealed segment, so simulate on-disk bit rot
         // instead via delete+recreate+append of a shortened copy.
-        let seg0_len = storage.segment_len(&document, 0).unwrap();
-        let seg0_bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len }).unwrap();
-        storage.delete_segment(&document, 0).unwrap();
-        storage.create_segment(&document, 0).unwrap();
-        storage.append(&document, 0, &seg0_bytes[..seg0_bytes.len() - 1]).unwrap();
-        storage.seal(&document, 0).unwrap();
+        let seg0_len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
+        let seg0_bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len })).unwrap();
+        db_actor::block_on(storage.delete_segment(&document, 0)).unwrap();
+        db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
+        db_actor::block_on(storage.append(&document, 0, &seg0_bytes[..seg0_bytes.len() - 1])).unwrap();
+        db_actor::block_on(storage.seal(&document, 0)).unwrap();
 
-        let result = ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 100);
+        let result = db_actor::block_on(ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 100));
         assert!(matches!(result, Err(DbError::Corrupt(_))), "a torn sealed (non-active) segment must be a hard recovery error");
     }
 
@@ -1042,10 +1042,10 @@ mod tests {
     fn empty_document_open_creates_a_fresh_wal() {
         let storage = MemoryStorage::new();
         let document = doc("doc-1");
-        let (wal, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 0).unwrap();
+        let (wal, report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         assert_eq!(report, WalRecoveryReport::default());
         assert_eq!(wal.active_segment_index(), 0);
-        assert_eq!(storage.list_segments(&document).unwrap(), vec![0]);
+        assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![0]);
     }
     //#endregion 🔖️Segment + ArtifactWal
 }

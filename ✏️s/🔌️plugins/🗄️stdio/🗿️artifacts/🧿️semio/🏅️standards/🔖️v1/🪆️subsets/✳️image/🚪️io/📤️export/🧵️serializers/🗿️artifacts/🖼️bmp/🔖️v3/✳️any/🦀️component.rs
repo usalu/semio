@@ -25,7 +25,7 @@ impl ArtifactSerializer for SemioImageToBmp {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→bmp: no frames to export".into()))?;
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→bmp: frame pixel length does not match width*height*4".into()));
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn real_byte_round_trip_through_bmp_codec() {
         let semio = sample_semio();
-        let bmp = SemioImageToBmp::serialize(&semio).expect("serialize");
+        let bmp = semio_framework_plugin::resolve_ready(SemioImageToBmp::serialize(&semio)).expect("serialize");
         assert_eq!(bmp.x_pixels_per_meter, 2835);
         let bytes = crate::artifacts::bmp::engine::encode_bmp(&bmp).expect("encode real bmp bytes");
         let decoded = crate::artifacts::bmp::engine::decode_bmp(&bytes).expect("decode real bmp bytes");

@@ -134,20 +134,20 @@ pub struct ShardOwnership {
 impl ShardOwnership {
     /// @emoji 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
     /// wrapper over `LeaseStorage::acquire` that also remembers the resulting fence locally.
-    pub fn acquire(storage: &dyn db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
-        let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms)?;
+    pub async fn acquire(storage: &dyn db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
+        let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms).await?;
         Ok(ShardOwnership { shard: shard.to_string(), holder, fence })
     }
 
     /// @emoji ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
     /// another node has since won the shard (see `LeaseStorage::renew`'s doc).
-    pub fn renew(&self, storage: &dyn db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-        storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms)
+    pub async fn renew(&self, storage: &dyn db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms).await
     }
 
     /// @emoji 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
-    pub fn release(&self, storage: &dyn db_storage::LeaseStorage) -> Result<(), DbError> {
-        storage.release(&self.shard, &self.holder.0, self.fence)
+    pub async fn release(&self, storage: &dyn db_storage::LeaseStorage) -> Result<(), DbError> {
+        storage.release(&self.shard, &self.holder.0, self.fence).await
     }
 
     /// @emoji ✅️ Validates a write presented under `presented` against this ownership's fence — the
@@ -166,8 +166,8 @@ pub enum OwnershipStatus {
 }
 
 /// @emoji 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
-pub fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
-    Ok(match storage.current(shard, now_ms)? {
+pub async fn ownership_status(storage: &dyn db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
+    Ok(match storage.current(shard, now_ms).await? {
         Some(info) => OwnershipStatus::Held { holder: NodeId(info.holder), fence: info.fence, expires_at_ms: info.expires_at_ms },
         None => OwnershipStatus::Vacant,
     })
@@ -197,27 +197,27 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub fn replicate_document(leader: &dyn DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
-    let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone())?;
-    let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone())?;
+pub async fn replicate_document(leader: &dyn DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone()).await?;
+    let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone()).await?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
         return Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier });
     }
-    let plan = db_sync::decide_bootstrap(&leader_state, leader.snapshot(), Some(&follower_state.frontier))?;
+    let plan = db_sync::decide_bootstrap(&leader_state, leader.snapshot(), Some(&follower_state.frontier)).await?;
     match plan {
         db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
         db_sync::BootstrapPlan::Tail { envelopes } => {
             let count = envelopes.len();
-            let (mut wal, _report) = db_wal::ArtifactWal::open(follower.wal(), document.clone(), policy, now_ms)?;
+            let (mut wal, _report) = db_wal::ArtifactWal::open(follower.wal(), document.clone(), policy, now_ms).await?;
             for envelope in &envelopes {
                 let bytes = db_sync::encode_command_envelope(envelope);
-                wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms)?;
+                wal.submit(follower.wal(), &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms).await?;
             }
-            let frontier = db_sync::replay_sync_state(follower.wal(), document)?.frontier;
+            let frontier = db_sync::replay_sync_state(follower.wal(), document).await?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
         }
         db_sync::BootstrapPlan::Snapshot { generation, bytes, pack_hash } => {
-            follower.snapshot().write_generation(&document, generation, &bytes)?;
+            follower.snapshot().write_generation(&document, generation, &bytes).await?;
             Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
         }
     }
@@ -353,8 +353,8 @@ pub fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainO
 /// `storage`'s actual current state, since another node may have already won a failover while it
 /// was partitioned. A still-matching holder+fence is confirmed as `LocalWins` (not a `Tie` — it's
 /// not actually contested); anything else is decided by `resolve_split_brain` on the two fences.
-pub fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
-    match ownership_status(storage, shard, now_ms)? {
+pub async fn reconcile_shard_owner(storage: &dyn db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
+    match ownership_status(storage, shard, now_ms).await? {
         OwnershipStatus::Vacant => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { holder, fence, .. } if holder == claimed.holder && fence == claimed.fence => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { fence, .. } => Ok(resolve_split_brain(claimed.fence, fence)),
@@ -465,41 +465,41 @@ mod tests {
     #[test]
     fn shard_ownership_acquire_renew_and_validate_round_trip() {
         let storage = db_storage::MemoryStorage::new();
-        let owner = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0).unwrap();
+        let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         assert_eq!(owner.fence, EpochFence::INITIAL);
         assert!(owner.validate(EpochFence::INITIAL).is_ok());
         assert!(owner.validate(EpochFence::INITIAL.next()).is_err());
 
-        owner.renew(&storage, 1_000, 500).unwrap();
-        assert_eq!(ownership_status(&storage, "shard-0", 500).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: EpochFence::INITIAL, expires_at_ms: 1_500 });
+        db_actor::block_on(owner.renew(&storage, 1_000, 500)).unwrap();
+        assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 500)).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: EpochFence::INITIAL, expires_at_ms: 1_500 });
     }
 
     #[test]
     fn ownership_status_reports_vacant_before_any_acquire() {
         let storage = db_storage::MemoryStorage::new();
-        assert_eq!(ownership_status(&storage, "shard-0", 0).unwrap(), OwnershipStatus::Vacant);
+        assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
     }
 
     #[test]
     fn shard_ownership_release_frees_the_resource_for_a_fresh_acquire() {
         let storage = db_storage::MemoryStorage::new();
-        let owner = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0).unwrap();
-        owner.release(&storage).unwrap();
-        assert_eq!(ownership_status(&storage, "shard-0", 0).unwrap(), OwnershipStatus::Vacant);
+        let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
+        db_actor::block_on(owner.release(&storage)).unwrap();
+        assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
 
-        let reacquired = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 1_000, 0).unwrap();
+        let reacquired = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 1_000, 0)).unwrap();
         assert_eq!(reacquired.fence, EpochFence::INITIAL);
     }
 
     #[test]
     fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader() {
         let storage = db_storage::MemoryStorage::new();
-        let stale = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 100, 0).unwrap();
+        let stale = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 100, 0)).unwrap();
         assert_eq!(stale.fence, EpochFence::INITIAL);
 
-        let fresh = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 100, 200).unwrap();
+        let fresh = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-b"), 100, 200)).unwrap();
         assert_eq!(fresh.fence, EpochFence::INITIAL.next());
-        assert_eq!(reconcile_shard_owner(&storage, "shard-0", &stale, 200).unwrap(), SplitBrainOutcome::RemoteWins);
+        assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &stale, 200)).unwrap(), SplitBrainOutcome::RemoteWins);
     }
     //#endregion 🔖️Ownership
 
@@ -517,11 +517,11 @@ mod tests {
     }
 
     fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &ArtifactId, count: u64) {
-        let mut wal = db_wal::ArtifactWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i);
             let bytes = db_sync::encode_command_envelope(&envelope);
-            wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, i).unwrap();
+            db_actor::block_on(wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, i)).unwrap();
         }
     }
 
@@ -532,7 +532,7 @@ mod tests {
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4);
 
-        let outcome = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
             ReplicationOutcome::TailApplied { frontier, count } => {
                 assert_eq!(count, 4);
@@ -541,7 +541,7 @@ mod tests {
             other => panic!("expected TailApplied, got {other:?}"),
         }
 
-        let follower_state = db_sync::replay_sync_state(&follower, document).unwrap();
+        let follower_state = db_actor::block_on(db_sync::replay_sync_state(&follower, document)).unwrap();
         assert_eq!(follower_state.commands.len(), 4);
         assert_eq!(follower_state.commands[0].mutation_id.0, "op-0");
         assert_eq!(follower_state.commands[3].mutation_id.0, "op-3");
@@ -554,10 +554,10 @@ mod tests {
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2);
 
-        let first = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let first = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         assert!(matches!(first, ReplicationOutcome::TailApplied { count: 2, .. }));
 
-        let second = replicate_document(&leader, &follower, document, db_wal::GroupCommitPolicy::default(), 100).unwrap();
+        let second = db_actor::block_on(replicate_document(&leader, &follower, document, db_wal::GroupCommitPolicy::default(), 100)).unwrap();
         assert!(matches!(second, ReplicationOutcome::UpToDate { .. }));
     }
 
@@ -570,12 +570,12 @@ mod tests {
 
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         {
-            let (mut wal, _report) = db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000).unwrap();
-            wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000).unwrap();
+            let (mut wal, _report) = db_actor::block_on(db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000)).unwrap();
+            db_actor::block_on(wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000)).unwrap();
         }
-        db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes").unwrap();
+        db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
 
-        let outcome = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).unwrap();
+        let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
             ReplicationOutcome::SnapshotTransferred { generation, pack_hash } => {
                 assert_eq!(generation, 9);
@@ -583,7 +583,7 @@ mod tests {
             }
             other => panic!("expected SnapshotTransferred, got {other:?}"),
         }
-        let copied = db_storage::SnapshotStorage::read_generation(&follower, &document, 9).unwrap();
+        let copied = db_actor::block_on(db_storage::SnapshotStorage::read_generation(&follower, &document, 9)).unwrap();
         assert_eq!(copied, b"snapshot-bytes");
     }
     //#endregion 🔖️Replication
@@ -669,15 +669,15 @@ mod tests {
     #[test]
     fn reconcile_shard_owner_confirms_a_still_valid_local_claim() {
         let storage = db_storage::MemoryStorage::new();
-        let owner = ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0).unwrap();
-        assert_eq!(reconcile_shard_owner(&storage, "shard-0", &owner, 0).unwrap(), SplitBrainOutcome::LocalWins);
+        let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
+        assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }
 
     #[test]
     fn reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win() {
         let storage = db_storage::MemoryStorage::new();
         let owner = ShardOwnership { shard: "shard-0".to_string(), holder: NodeId::from("node-a"), fence: EpochFence::INITIAL };
-        assert_eq!(reconcile_shard_owner(&storage, "shard-0", &owner, 0).unwrap(), SplitBrainOutcome::LocalWins);
+        assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }
     //#endregion 🔖️SplitBrain
 

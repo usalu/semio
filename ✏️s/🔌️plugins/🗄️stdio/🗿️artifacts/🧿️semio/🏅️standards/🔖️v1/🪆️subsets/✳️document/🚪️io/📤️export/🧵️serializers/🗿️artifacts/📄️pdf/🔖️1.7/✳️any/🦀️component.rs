@@ -54,7 +54,7 @@ impl ArtifactSerializer for SemioDocumentToPdf {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut pages = Vec::new();
         if !from.blocks.is_empty() {
             let mut current: Vec<String> = Vec::new();
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn splits_pages_on_pagebreak() {
-        let pdf = SemioDocumentToPdf::serialize(&sample_semio()).expect("serialize");
+        let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pdf.pages.len(), 2);
         assert_eq!(pdf.pages[0].text, "Page one text.");
         assert_eq!(pdf.pages[1].text, "Page two text.");
@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn empty_document_yields_zero_pages() {
         let snap = SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks: Vec::new() };
-        let pdf = SemioDocumentToPdf::serialize(&snap).expect("serialize");
+        let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&snap)).expect("serialize");
         assert!(pdf.pages.is_empty());
     }
 }

@@ -5,14 +5,18 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: every `db_storage` sub-trait method is deliberately synchronous (`fn ... ->
-//! Result<_, DbError>`, no `async fn`) so `db_actor`'s default `std::thread`-based mailbox core
-//! stays tokio-free — but `sqlx`'s Postgres driver is async-only (Postgres has no blocking C
-//! client to wrap, unlike sqlite). This crate is the one place in the `db_storage_*` family that
-//! bridges that gap: `PostgresStorage` owns a dedicated multi-thread `tokio::runtime::Runtime` and
-//! every trait method blocks on it via `block_on` (see `//#region 🔖️Runtime`). This is the
-//! contract-sanctioned reason this crate (unlike its sqlite/neo4j-with-sync-driver siblings) pulls
-//! in `tokio` below `db_engine`.
+//! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
+//! every `db_storage` sub-trait method returns a `db_storage::DbFuture` — `sqlx`'s Postgres driver
+//! is async-only (Postgres has no blocking C client to wrap, unlike sqlite), and this backend used
+//! to bridge that onto the family's then-synchronous trait signatures by owning a dedicated
+//! multi-thread `tokio::runtime::Runtime` and `block_on`-ing every call. That runtime (and its
+//! `block_on` bridge) is GONE: every method body here is the SAME already-async `sqlx` code that
+//! runtime used to drive, now handed straight back as `Box::pin(async move { .. })` — the calling
+//! task's own executor (ultimately the hub's `#[tokio::main]`) drives it, so this crate spends no
+//! thread of its own parked in `block_on` per call. `connect`/`connect_to_database` are async too,
+//! for the same reason. This crate names no `tokio` anywhere (the repo's "`tokio` only in
+//! `🛎️services`" rule) — `sqlx`'s `runtime-tokio` feature selects ITS internal executor binding at
+//! ITS compile time, it does not require this crate to depend on `tokio` itself.
 //!
 //! 🐘️ On-disk shape: six tables (`db_wal_segment`, `db_snapshot_generation`, `db_payload`,
 //! `db_catalog_root`, `db_index_run`, `db_lease`), bootstrapped idempotently on `connect`. Every
@@ -72,10 +76,10 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 }
 //#endregion 🔖️Schema
 
-//#region 🔖️Runtime
+//#region 🔖️Connection
 use crate::db_ids::{check_len, DbError, ArtifactId};
 use crate::db_durability::{DurabilityClass, EpochFence};
-use crate::db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{CatalogStorage, DbFuture, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 
@@ -84,48 +88,25 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 /// length is allocated, per the repo's "validate before allocating" invariant.
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 
-/// @emoji 🐘️ A `db_storage::DbStorage` backend over PostgreSQL. `pool` is the connection pool;
-/// `runtime` is the dedicated background executor `block_on` falls back to when the calling thread
-/// isn't already inside a tokio context (see `block_on`'s doc for the dual-path bridge).
+/// @emoji 🐘️ A `db_storage::DbStorage` backend over PostgreSQL — `pool` is the connection pool
+/// every trait method below runs its query against directly (no runtime of its own to bridge
+/// through anymore — see module doc).
 pub struct PostgresStorage {
     pool: PgPool,
-    runtime: tokio::runtime::Runtime,
 }
 
 impl PostgresStorage {
-    /// @emoji 🔌️ Connects to `database_url`, bootstraps the schema (idempotent, no migration
-    /// framework — matches the deleted `os-semio_hub-storage-postgres` precedent), and returns a ready
-    /// `PostgresStorage`. Builds its own dedicated multi-thread runtime to drive the pool and every
-    /// subsequent synchronous trait call.
-    pub fn connect(database_url: &str) -> Result<Self, DbError> {
-        let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().map_err(|err| DbError::Io(err.to_string()))?;
-        let pool = runtime.block_on(async {
-            let pool = PgPoolOptions::new().max_connections(16).connect(database_url).await.map_err(map_sqlx_error)?;
-            bootstrap_schema(&pool).await?;
-            Ok::<_, DbError>(pool)
-        })?;
-        Ok(Self { pool, runtime })
-    }
-
-    /// @emoji 🌉️ Bridges this crate's synchronous `db_storage` trait methods onto `sqlx`'s
-    /// async-only Postgres driver. If the calling thread is already inside a tokio runtime (e.g. a
-    /// `db_engine` built with its `tokio` feature), escapes via `block_in_place` and drives the
-    /// future on THAT runtime's handle — calling `self.runtime.block_on` in that situation would
-    /// panic ("cannot start a runtime from within a runtime"), a real tokio limitation regardless of
-    /// which runtime instance is targeted. Otherwise (the common case: a `db_actor` mailbox thread,
-    /// which is plain `std::thread` by default) falls back to this storage's own dedicated runtime.
-    /// 🚧️ Extension seam: `block_in_place` requires the ambient runtime to be multi-threaded — a
-    /// `db_engine` built on a single-threaded tokio runtime and calling into this bridge from an
-    /// async task would still panic. Not addressed here since no caller in this campaign wave
-    /// constructs a current-thread runtime around `db_storage_postgres`.
-    fn block_on<F: std::future::Future>(&self, fut: F) -> F::Output {
-        match tokio::runtime::Handle::try_current() {
-            Ok(handle) => tokio::task::block_in_place(|| handle.block_on(fut)),
-            Err(_) => self.runtime.block_on(fut),
-        }
+    /// @emoji 🔌️ Connects to `database_url` and bootstraps the schema (idempotent, no migration
+    /// framework — matches the deleted `os-semio_hub-storage-postgres` precedent), returning a ready
+    /// `PostgresStorage`. `async` because connecting a pool and running DDL are themselves I/O — the
+    /// caller (ultimately the hub's `#[tokio::main]`) already awaits this on a real runtime.
+    pub async fn connect(database_url: &str) -> Result<Self, DbError> {
+        let pool = PgPoolOptions::new().max_connections(16).connect(database_url).await.map_err(map_sqlx_error)?;
+        bootstrap_schema(&pool).await?;
+        Ok(Self { pool })
     }
 }
-//#endregion 🔖️Runtime
+//#endregion 🔖️Connection
 
 //#region 🔖️ErrorMapping
 /// @emoji 🚨️ Maps a `sqlx::Error` to this family's `DbError` — the only place `sqlx::Error` is
@@ -200,9 +181,9 @@ fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(),
 
 //#region 🔖️WalStorage
 impl WalStorage for PostgresStorage {
-    fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn create_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             sqlx::query("INSERT INTO db_wal_segment (document_id, segment_index) VALUES ($1, $2)")
                 .bind(document.0.as_str())
                 .bind(idx)
@@ -213,9 +194,9 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn append<'a>(&'a self, document: &'a ArtifactId, index: u64, bytes: &'a [u8]) -> DbFuture<'a, u64> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             let doc = document.0.as_str();
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let row: Option<(bool,)> = sqlx::query_as("SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_sqlx_error)?;
@@ -230,7 +211,7 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn sync(&self, _document: &ArtifactId, _index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    fn sync<'a>(&'a self, _document: &'a ArtifactId, _index: u64, class: DurabilityClass) -> DbFuture<'a, ()> {
         // 🎯️ Every write above already ran as a committed statement/transaction, and Postgres
         // fsyncs its own WAL at COMMIT under the default `synchronous_commit = on` — so `Fsync` is
         // already satisfied by the time `append`/`truncate_tail` return, with nothing left for this
@@ -239,22 +220,22 @@ impl WalStorage for PostgresStorage {
         // connection pool can negotiate — deliberately left as an extension seam rather than a
         // half-implemented `SET synchronous_commit` toggle here.
         let _ = class;
-        Ok(())
+        Box::pin(async { Ok(()) })
     }
 
-    fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn seal<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             let result: Option<(bool,)> =
                 sqlx::query_as("UPDATE db_wal_segment SET sealed = TRUE WHERE document_id = $1 AND segment_index = $2 RETURNING sealed").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             result.map(|_| ()).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
         })
     }
 
-    fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
-        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn read<'a>(&'a self, document: &'a ArtifactId, index: u64, range: ByteRange) -> DbFuture<'a, Vec<u8>> {
+        Box::pin(async move {
+            check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+            let idx = to_i64(index)?;
             let doc = document.0.as_str();
             let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(doc).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let current_len = len_row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0 as u64;
@@ -265,24 +246,24 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn segment_len<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, u64> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
         })
     }
 
-    fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-        self.block_on(async {
+    fn list_segments<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        Box::pin(async move {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(index,)| index as u64).collect())
         })
     }
 
-    fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn truncate_tail<'a>(&'a self, document: &'a ArtifactId, index: u64, new_len: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             let doc = document.0.as_str();
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let row: Option<(bool, i64)> =
@@ -295,9 +276,9 @@ impl WalStorage for PostgresStorage {
         })
     }
 
-    fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-        let idx = to_i64(index)?;
-        self.block_on(async {
+    fn delete_segment<'a>(&'a self, document: &'a ArtifactId, index: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let idx = to_i64(index)?;
             sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -307,9 +288,9 @@ impl WalStorage for PostgresStorage {
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for PostgresStorage {
-    fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
-        let gen = to_i64(generation)?;
-        self.block_on(async {
+    fn write_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let gen = to_i64(generation)?;
             sqlx::query(
                 "INSERT INTO db_snapshot_generation (document_id, generation, bytes) VALUES ($1, $2, $3)
                  ON CONFLICT (document_id, generation) DO UPDATE SET bytes = EXCLUDED.bytes",
@@ -324,9 +305,9 @@ impl SnapshotStorage for PostgresStorage {
         })
     }
 
-    fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-        let gen = to_i64(generation)?;
-        self.block_on(async {
+    fn read_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, Vec<u8>> {
+        Box::pin(async move {
+            let gen = to_i64(generation)?;
             let doc = document.0.as_str();
             let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?.0;
@@ -336,23 +317,23 @@ impl SnapshotStorage for PostgresStorage {
         })
     }
 
-    fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-        self.block_on(async {
+    fn latest_generation<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Option<u64>> {
+        Box::pin(async move {
             let row: (Option<i64>,) = sqlx::query_as("SELECT MAX(generation) FROM db_snapshot_generation WHERE document_id = $1").bind(document.0.as_str()).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(row.0.map(|generation| generation as u64))
         })
     }
 
-    fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-        self.block_on(async {
+    fn list_generations<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        Box::pin(async move {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(generation,)| generation as u64).collect())
         })
     }
 
-    fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-        let gen = to_i64(generation)?;
-        self.block_on(async {
+    fn delete_generation<'a>(&'a self, document: &'a ArtifactId, generation: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let gen = to_i64(generation)?;
             sqlx::query("DELETE FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(document.0.as_str()).bind(gen).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -362,17 +343,17 @@ impl SnapshotStorage for PostgresStorage {
 
 //#region 🔖️PayloadStorage
 impl PayloadStorage for PostgresStorage {
-    fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-        self.block_on(async {
+    fn put<'a>(&'a self, bytes: &'a [u8]) -> DbFuture<'a, ContentHash> {
+        Box::pin(async move {
+            check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
+            let hash = ContentHash(*blake3::hash(bytes).as_bytes());
             sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(bytes).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(hash)
         })
     }
 
-    fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-        self.block_on(async {
+    fn get<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, Vec<u8>> {
+        Box::pin(async move {
             let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?.0;
             check_len(len as u64, MAX_READ_BYTES, "payload_storage::get")?;
@@ -381,22 +362,22 @@ impl PayloadStorage for PostgresStorage {
         })
     }
 
-    fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-        self.block_on(async {
+    fn contains<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, bool> {
+        Box::pin(async move {
             let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(row.0 > 0)
         })
     }
 
-    fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-        self.block_on(async {
+    fn delete<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, ()> {
+        Box::pin(async move {
             sqlx::query("DELETE FROM db_payload WHERE hash = $1").bind(&hash.0[..]).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
     }
 
-    fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-        self.block_on(async {
+    fn len<'a>(&'a self, hash: &'a ContentHash) -> DbFuture<'a, u64> {
+        Box::pin(async move {
             let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
         })
@@ -406,16 +387,16 @@ impl PayloadStorage for PostgresStorage {
 
 //#region 🔖️CatalogStorage
 impl CatalogStorage for PostgresStorage {
-    fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-        self.block_on(async {
+    fn read_root<'a>(&'a self) -> DbFuture<'a, Option<(Vec<u8>, EpochFence)>> {
+        Box::pin(async move {
             let (epoch, bytes): (i64, Option<Vec<u8>>) = sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes.map(|bytes| (bytes, EpochFence { epoch: epoch as u64 })))
         })
     }
 
-    fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
-        check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
-        self.block_on(async {
+    fn cas_root<'a>(&'a self, expected: EpochFence, new_bytes: &'a [u8]) -> DbFuture<'a, EpochFence> {
+        Box::pin(async move {
+            check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             // 🎯️ The bootstrap-seeded singleton row (`id = 1`) always exists, so `SELECT ... FOR
             // UPDATE` here is a real, always-present row lock — unlike `FsStorage::cas_root`'s
@@ -435,9 +416,9 @@ impl CatalogStorage for PostgresStorage {
 
 //#region 🔖️IndexStorage
 impl IndexStorage for PostgresStorage {
-    fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
-        let run = to_i64(run_id)?;
-        self.block_on(async {
+    fn write_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64, bytes: &'a [u8]) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let run = to_i64(run_id)?;
             sqlx::query(
                 "INSERT INTO db_index_run (document_id, run_id, bytes) VALUES ($1, $2, $3)
                  ON CONFLICT (document_id, run_id) DO UPDATE SET bytes = EXCLUDED.bytes",
@@ -452,9 +433,9 @@ impl IndexStorage for PostgresStorage {
         })
     }
 
-    fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-        let run = to_i64(run_id)?;
-        self.block_on(async {
+    fn read_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, Vec<u8>> {
+        Box::pin(async move {
+            let run = to_i64(run_id)?;
             let doc = document.0.as_str();
             let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?.0;
@@ -464,16 +445,16 @@ impl IndexStorage for PostgresStorage {
         })
     }
 
-    fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-        self.block_on(async {
+    fn list_runs<'a>(&'a self, document: &'a ArtifactId) -> DbFuture<'a, Vec<u64>> {
+        Box::pin(async move {
             let rows: Vec<(i64,)> = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(run_id,)| run_id as u64).collect())
         })
     }
 
-    fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-        let run = to_i64(run_id)?;
-        self.block_on(async {
+    fn delete_run<'a>(&'a self, document: &'a ArtifactId, run_id: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
+            let run = to_i64(run_id)?;
             sqlx::query("DELETE FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(document.0.as_str()).bind(run).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -551,8 +532,8 @@ where
 }
 
 impl LeaseStorage for PostgresStorage {
-    fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-        self.block_on(async {
+    fn acquire<'a>(&'a self, resource: &'a str, holder: &'a str, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, EpochFence> {
+        Box::pin(async move {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let existing = read_existing_lease_for_update(&mut *tx, resource).await?;
             let fence = lease_acquire_decision(existing.as_ref(), holder, now_ms)?;
@@ -573,8 +554,8 @@ impl LeaseStorage for PostgresStorage {
         })
     }
 
-    fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-        self.block_on(async {
+    fn renew<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> DbFuture<'a, ()> {
+        Box::pin(async move {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let existing = read_existing_lease_for_update(&mut *tx, resource).await?;
             lease_renew_check(existing.as_ref(), holder, fence, now_ms)?;
@@ -584,8 +565,8 @@ impl LeaseStorage for PostgresStorage {
         })
     }
 
-    fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-        self.block_on(async {
+    fn release<'a>(&'a self, resource: &'a str, holder: &'a str, fence: EpochFence) -> DbFuture<'a, ()> {
+        Box::pin(async move {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let existing = read_existing_lease_for_update(&mut *tx, resource).await?;
             lease_release_check(existing.as_ref(), holder, fence)?;
@@ -595,8 +576,8 @@ impl LeaseStorage for PostgresStorage {
         })
     }
 
-    fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-        self.block_on(async {
+    fn current<'a>(&'a self, resource: &'a str, now_ms: u64) -> DbFuture<'a, Option<LeaseInfo>> {
+        Box::pin(async move {
             let existing = read_existing_lease(&self.pool, resource).await?;
             Ok(existing.and_then(|info| if now_ms < info.expires_at_ms { Some(LeaseInfo { resource: resource.to_string(), holder: info.holder, fence: info.fence, expires_at_ms: info.expires_at_ms }) } else { None }))
         })

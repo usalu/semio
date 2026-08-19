@@ -979,7 +979,7 @@ impl ArtifactEditor for CadPlayApp {
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
     /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
     /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
-    fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
         if port != "brep:out" {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);

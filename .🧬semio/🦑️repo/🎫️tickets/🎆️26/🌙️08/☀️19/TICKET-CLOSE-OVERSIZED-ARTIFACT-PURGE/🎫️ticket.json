@@ -1,0 +1,6 @@
+{
+  "title": "Ticket Close Oversized Artifact Purge",
+  "status": "closed",
+  "summary": "FinishTicket now deletes ticket-folder files above 5 MiB and subfolders above 10 MiB on close, including gitignored artifacts, while preserving the ticket root and ticket.json. MCP tool_ticket_close descriptions updated. TestFinishTicketPurgesOversizedArtifacts passes.",
+  "client": "cursor-chat"
+}

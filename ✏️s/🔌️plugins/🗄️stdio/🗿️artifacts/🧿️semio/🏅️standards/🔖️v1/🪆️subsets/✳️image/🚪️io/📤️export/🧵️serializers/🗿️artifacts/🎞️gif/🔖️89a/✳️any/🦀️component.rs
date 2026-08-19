@@ -71,7 +71,7 @@ impl ArtifactSerializer for SemioImageToGif {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.frames.is_empty() {
             return Err(store::PackError::Schema("semio/image→gif: no frames to export".into()));
         }
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn quantizes_and_real_byte_round_trips_through_gif_codec() {
         let semio = sample_semio();
-        let gif = SemioImageToGif::serialize(&semio).expect("serialize");
+        let gif = semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).expect("serialize");
         assert_eq!(gif.frames.len(), 1);
         assert_eq!(gif.frames[0].indices.len(), 2);
         assert_eq!(gif.loop_count, Some(0));
@@ -145,7 +145,7 @@ mod tests {
             rgba.extend_from_slice(&[(i % 256) as u8, ((i / 2) % 256) as u8, ((i / 3) % 256) as u8, 255]);
         }
         let semio = SemioImageSnapshot { width: 257, height: 1, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: rgba }], ..SemioImageSnapshot::default() };
-        assert!(SemioImageToGif::serialize(&semio).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).is_err());
     }
 }
 //#endregion 🔖️Tests

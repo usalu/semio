@@ -25,7 +25,7 @@ impl ArtifactSerializer for SemioVideoToAvi {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let streams: Vec<AviStream> = from
             .streams
             .iter()
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn video_to_avi_to_video_round_trips_everything_the_video_subset_can_represent() {
         let original = real_world_video();
-        let avi = SemioVideoToAvi::serialize(&original).expect("serialize");
+        let avi = semio_framework_plugin::resolve_ready(SemioVideoToAvi::serialize(&original)).expect("serialize");
         assert_eq!(avi.streams.len(), 1);
         assert_eq!(avi.streams[0].strh.fcc_type, "vids");
         assert_eq!(avi.streams[0].strh.scale, 1);
@@ -129,7 +129,7 @@ mod tests {
     fn subtitle_kind_folds_to_auds_fcc_type_honestly_documented() {
         let mut snap = real_world_video();
         snap.streams[0].kind = SemioVideoStreamKind::Subtitle;
-        let avi = SemioVideoToAvi::serialize(&snap).expect("serialize");
+        let avi = semio_framework_plugin::resolve_ready(SemioVideoToAvi::serialize(&snap)).expect("serialize");
         assert_eq!(avi.streams[0].strh.fcc_type, "auds");
     }
 }

@@ -508,7 +508,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    fn export_media(port: &str, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
                 let fixture_json = after_fixture_json(doc.snapshot);
@@ -979,7 +979,7 @@ mod tests {
     #[test]
     fn export_media_graph_out_reflects_rule_applied_fixture() {
         let mut app = new_app();
-        let graph_out = app.export_media("graph:out").expect("graph:out export");
+        let graph_out = semio_framework_plugin::resolve_ready(app.export_media("graph:out")).expect("graph:out export");
         let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
         let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");

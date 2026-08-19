@@ -160,7 +160,7 @@ impl ArtifactEditor for ImperativePlayApp {
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
     /// `computation.imperative`-kinded output); `"document:out"` replicates `ArtifactEditor::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
-    fn export_media(port: &str, doc: &ArtifactView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let host = crate::editor::imperative::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());

@@ -51,7 +51,7 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let drawing: DwgDrawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
         let layers = drawing
             .layers
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn buckets_entities_by_layer_in_entity_order() {
-        let drawing = SemioDrawingFromDwg::deserialize(&sample_dwg()).expect("deserialize");
+        let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 1);
         assert_eq!(drawing.layers[0].id, "annotations");
         match &drawing.layers[0].root {
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn rejects_malformed_payload() {
         let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmin: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
-        assert!(SemioDrawingFromDwg::deserialize(&bad).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&bad)).is_err());
     }
 }
 //#endregion 🔖️Tests

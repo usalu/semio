@@ -432,7 +432,7 @@ impl ArtifactEditor for RemodelPlayApp {
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
     /// default (the pack of `doc.snapshot`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 // 🧩️ `results.mesh.mesh` is now a composed `s.stdio.semio/v1/mesh` CHILD handle
@@ -1130,7 +1130,7 @@ mod tests {
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let media = RemodelPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
+        let media = semio_framework_plugin::resolve_ready(RemodelPlayApp::export_media("mesh:out", &doc)).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);
         match media.payload {

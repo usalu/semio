@@ -155,7 +155,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// 🎞️ `scene:out` (see `gis3d_scene_media` in `🔖️Io` above) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
             "document:out" => {
@@ -427,7 +427,7 @@ mod tests {
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
+        let media = semio_framework_plugin::resolve_ready(Gis3dPlayApp::export_media("scene:out", &doc)).expect("scene:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "3d.mesh");
         assert!(json.contains("exaggeration"));

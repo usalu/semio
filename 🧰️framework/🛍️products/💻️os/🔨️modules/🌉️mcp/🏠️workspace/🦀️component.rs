@@ -324,7 +324,7 @@ pub fn activate_plugin_instance(
         capabilities: caps,
         quotas: descriptor.quotas.clone(),
     };
-    let turn = runtime.execute_turn(&mut instance, &[open_event], budget).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
+    let turn = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut instance, &[open_event], budget)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
     let turn_status = format!("{:?}", turn.status);
     let outcome = PluginActivationOutcome { plugin_id: entry.plugin_id.clone(), app_id: app_ref.app_id.clone(), actor, turn_status, effects_emitted: turn.effects.len(), fuel_used: turn.fuel_used };
     Ok((instance, outcome))
@@ -396,7 +396,7 @@ impl PluginArtifactChannel {
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
         let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
         let event = semio_framework::kernel::Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)), seq, command: command_bytes };
-        let turn = self.runtime.execute_turn(guest, &[event], budget).map_err(|error| Self::not_wired("execute_turn", error))?;
+        let turn = semio_framework_plugin_host::poll_ready(self.runtime.execute_turn(guest, &[event], budget)).map_err(|error| Self::not_wired("execute_turn", error))?;
         for effect in turn.effects {
             if let semio_framework::kernel::Effect::Respond { req, result } = effect {
                 if req.0 != seq {

@@ -184,7 +184,7 @@ impl ArtifactEditor for Block5dPlayApp {
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in `block5d_io`.
     /// Falls through to the default whole-document pack export for every other port
     /// (`"document:out"`).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -479,7 +479,7 @@ mod tests {
     fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
-        let media = app.export_media("catalog:out").expect("export catalog");
+        let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
             MediaPayload::Structured { schema, json } => {

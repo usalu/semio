@@ -15,6 +15,12 @@ path = "📦️glue.rs"
 default = []
 component-guest = []
 component-extension-guest = []
+# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (W6-A, jobs-runtime): selects `world actor-async`, where a
+# job body may await host imports directly. It MUST be declared even while no consumer enables it yet —
+# an undeclared feature makes every `#[cfg(feature = "component-guest-async")]` block silently unreachable,
+# so the code inside is never type-checked by any build (the standing `cfg`-gated-code trap). `JobCtx::host()`
+# lives behind exactly this gate.
+component-guest-async = []
 
 [dependencies]
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

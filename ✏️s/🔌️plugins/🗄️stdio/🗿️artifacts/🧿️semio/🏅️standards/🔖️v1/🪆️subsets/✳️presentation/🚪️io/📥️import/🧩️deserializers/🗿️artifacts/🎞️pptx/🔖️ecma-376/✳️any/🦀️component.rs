@@ -73,7 +73,7 @@ impl ArtifactDeserializer for SemioPresentationFromPptx {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.presentation.slides.iter().enumerate().map(|(i, slide)| Slide { id: format!("slide{i}"), layout_id: None, shapes: slide.shapes.iter().filter_map(map_shape).collect(), notes: Vec::new() }).collect();
         Ok(SemioPresentationSnapshot { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides })
     }
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn maps_shapes_and_drops_other() {
-        let semio = SemioPresentationFromPptx::deserialize(&sample_pptx()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&sample_pptx())).expect("deserialize");
         assert!(semio.masters.is_empty() && semio.layouts.is_empty());
         assert_eq!(semio.slides.len(), 1);
         let slide = &semio.slides[0];

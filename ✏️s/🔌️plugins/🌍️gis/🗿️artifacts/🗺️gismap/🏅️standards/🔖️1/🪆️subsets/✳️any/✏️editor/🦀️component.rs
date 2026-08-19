@@ -249,7 +249,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// 🎞️ `map:out` (see `gis2d_map_media` in `🔖️Io` below) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
         match port {
             "map:out" => Ok(gis2d_map_media(doc.snapshot)),
             "document:out" => {
@@ -642,7 +642,7 @@ mod tests {
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = Gis2dPlayApp::export_media("map:out", &doc).expect("map:out export");
+        let media = semio_framework_plugin::resolve_ready(Gis2dPlayApp::export_media("map:out", &doc)).expect("map:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.map");
         assert!(json.contains("positions"));

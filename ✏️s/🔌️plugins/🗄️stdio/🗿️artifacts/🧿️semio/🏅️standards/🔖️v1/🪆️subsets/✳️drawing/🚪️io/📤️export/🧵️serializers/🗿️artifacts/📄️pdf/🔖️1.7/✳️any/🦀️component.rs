@@ -39,7 +39,7 @@ impl ArtifactSerializer for SemioDrawingToPdf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.layers.is_empty() {
             return Err(store::PackError::Schema("semio/drawing→pdf: no layers to export".into()));
         }
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn real_byte_round_trip_through_pdf_codec() {
         let drawing = sample_drawing();
-        let pdf = SemioDrawingToPdf::serialize(&drawing).expect("serialize");
+        let pdf = semio_framework_plugin::resolve_ready(SemioDrawingToPdf::serialize(&drawing)).expect("serialize");
         assert_eq!(pdf.pages.len(), 1);
         assert_eq!(pdf.pages[0].text, "hello\nsemio");
 

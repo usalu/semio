@@ -116,7 +116,7 @@ impl ArtifactEditor for Din16798PlayApp {
     /// ðï¸ `"report:out"`/`"document:out"` â see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Din16798Snapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Din16798Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<DinEn16798Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
@@ -353,7 +353,7 @@ mod tests {
     #[test]
     fn report_out_exports_the_computed_check_report() {
         let mut app = testkit::new_app();
-        let media = PluginApp::export_media(&mut app, "report:out").expect("export report:out");
+        let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
         assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
         let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");

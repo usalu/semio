@@ -409,7 +409,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
     /// JSON text in a `Structured` payload. A document with no load cases, or a solve failure, is
     /// reported as `MediaError::Payload` rather than an empty/panicking export.
-    fn export_media(port: &str, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
@@ -829,7 +829,7 @@ mod tests {
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let media = Fem3dPlayApp::export_media("results:out", &doc).expect("results:out exports");
+        let media = semio_framework_plugin::resolve_ready(Fem3dPlayApp::export_media("results:out", &doc)).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
@@ -846,7 +846,7 @@ mod tests {
         let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
+        let err = semio_framework_plugin::resolve_ready(Fem3dPlayApp::export_media("results:out", &doc)).expect_err("no load cases should error");
         assert!(matches!(err, MediaError::Payload(..)));
     }
 

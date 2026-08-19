@@ -1,17 +1,70 @@
-//! 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4 + `important.md`'s io
-//! absorption mapping). Bookkeeping for the `jobs` WIT export (`start-job`/`step-job`/
-//! `cancel-job`) plus the two well-known cold job kinds this packet absorbs from the peer W1-D
-//! io mechanism: `semio.io-run`/`semio.io-sniff` — the plugin's own single-hop local
-//! `io_mechanism` registry lookup, previously the guest WIT exports `io-run`/`io-sniff`.
+//! 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4 + §6). Makes
+//! jobs authorable: a `kind` string registry (`register_job_kind`) resolved by `start_job`, each
+//! entry an async `JobFn` sliced across repeated `step_job` calls by parking on `JobCtx::tick()`.
+//! This replaces the old closed hard-coded `match` (deleted) that only ever knew `semio.io-run`/
+//! `semio.io-sniff` and accepted `job-budget` without reading it — those two kinds are preserved
+//! as ordinary registry entries below (`job_io_run`/`job_io_sniff`), their bodies byte-identical to
+//! the pre-rewrite `run_io_run`/`run_io_sniff`, only reshaped from `JobOutcome` returns into
+//! `Result<Vec<u8>, Fault>` so every kind — builtin or plugin-authored — shares one outcome type.
 //!
-//! Every kind implemented here completes synchronously inside one `step-job` call (each hop is
-//! already bounded by a local registry lookup, never an unbounded search), so `job-budget` is
-//! accepted but not metered yet — a future kind that genuinely spans multiple `step-job` calls
-//! (WFC, FEM solve, SfM, brep tessellation — see design-abi.md §6) will need real fuel/deadline
-//! bookkeeping in `JobRecord`; not needed by anything landing in this wave.
+//! ## Slicing mechanics
+//! `start_job` looks up `kind` in `KIND_REGISTRY`, calls it to build the job's future, and spawns
+//! that future PARKED (ready-but-not-yet-run) on `JOBS_EXECUTOR` — a dedicated `⚛️reactor/🧵️executor::
+//! LocalExecutor` instance, deliberately NOT the reactor turn loop's own `EXECUTOR`, so a job slice
+//! never competes with UI-turn tasks for one `poll`'s `run_until_idle` iterations (design-abi.md
+//! §4's granularity split made explicit: async is the waiting model, jobs are the compute model).
+//! `step_job(job, budget)` stores `budget` on the job's shared `JobState`, grants exactly one more
+//! `JobCtx::tick()` resolution (`tick_budget += 1`), wakes the job's task by id, and runs
+//! `JOBS_EXECUTOR` until either that task parks on the NEXT `tick()`/a host await or the job's
+//! future finishes — never running any OTHER job's task, since nothing else was woken. `JobCtx::
+//! tick()`'s own future (`JobTick`) needs no waker bookkeeping at all: it just compares
+//! `ticks_consumed` against `tick_budget`, so `LocalExecutor::wake(task)` re-queuing the task by id
+//! is sufficient to let it observe the newly granted slice on the next poll.
+//!
+//! ## Host-await restriction (deliberate, v1)
+//! `JobCtx::host()` is gated to `#[cfg(feature = "component-guest-async")]` — NEVER ungate this for
+//! `world actor` (the poll world). `🖥️host/🦀️component.rs`'s `PluginInstanceHandle::
+//! run_job_to_completion` loops `step_job` in a tight `start_job` → `step_job`* relay WITHOUT ever
+//! pumping the actor's `poll` in between (by design — it runs strictly POST-TURN, never re-entrant
+//! into an in-flight turn's own `Store`). A poll-world job that awaited a host effect would park on
+//! a `RequestFuture` whose resolution only ever happens inside `poll`'s `Event::Completed` routing
+//! — which that relay loop never calls again for this job — so the loop would spin on `Running`
+//! forever. `world actor-async`'s `runner::run` has no such gap (the host interleaves completions
+//! into the same long-lived call), which is exactly why this accessor is scoped to that world's
+//! guest feature. Poll-world jobs therefore receive every input they need up front, in `input`/
+//! `restored`, and drive it through `JobCtx::tick()` alone.
+//!
+//! ## Stall guard
+//! If `step_job` returns `Running` with no progress bytes AND the caller passed the SAME
+//! `JobBudget` as last time (no fuel/deadline change to indicate the host is doing anything
+//! differently) for `STALL_LIMIT` consecutive calls, the job fails with `job.stalled` instead of
+//! being steppable forever — see `step_job`'s own doc for the exact bookkeeping.
+//!
+//! ## Checkpoint (via lease into `⚛️reactor/📸️checkpoint/🦀️component.rs`)
+//! `checkpoint_jobs()`/`restore_job()` are the two functions that side of the lease calls — see
+//! this ticket's `📓️terra-jobs-runtime-report.md`, `## lease-requests` section, for the exact diff
+//! text sol applies.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
+use std::rc::Rc;
+use std::task::{Context, Poll};
+
+// 🧊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): the three remaining well-known cold job
+// kinds design-abi.md §2 names (`semio.infer`/`semio.mutation-plan`/`semio.migrate` — `semio.compose`
+// is the live `compose-await` packet's, not this one's). Each is one submodule under this directory
+// (mirrors `⚛️reactor`'s own one-`component.rs`-per-directory convention) registered into
+// `builtin_registry()` below, exactly like `job_io_run`/`job_io_sniff` already are.
+#[path = "💡️infer/🦀️component.rs"]
+mod infer;
+#[path = "🧬️mutation-plan/🦀️component.rs"]
+mod mutation_plan;
+#[path = "🔀️migrate/🦀️component.rs"]
+mod migrate;
+
+//#region 🔖️PublicTypes
 
 /// 🗺️ Absorbed from the peer's guest export `io-run` (single hop, this plugin's own registry —
 /// never chains into another plugin; multi-hop routing is the host's `io-run` EFFECT, not this
@@ -19,57 +72,434 @@ use std::collections::HashMap;
 pub const JOB_KIND_IO_RUN: &str = "semio.io-run";
 /// 🗺️ Absorbed from the peer's guest export `io-sniff`.
 pub const JOB_KIND_IO_SNIFF: &str = "semio.io-sniff";
+/// 💡️ design-abi.md §2: absorbed from the deleted `contributor.artifact-infer` export — see
+/// `💡️infer/🦀️component.rs`.
+pub const JOB_KIND_INFER: &str = "semio.infer";
+/// 🧬️ design-abi.md §2: absorbed from the deleted `contributor.artifact-mutation-plan` export —
+/// see `🧬️mutation-plan/🦀️component.rs`.
+pub const JOB_KIND_MUTATION_PLAN: &str = "semio.mutation-plan";
+/// 🔀️ design-abi.md §2: absorbed from the deleted `migrate-artifact` export — see
+/// `🔀️migrate/🦀️component.rs`.
+pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
 
-pub enum JobOutcome {
+/// ⛽️ Plain-Rust mirror of `jobs.wit`'s `record job-budget` — this module is NOT gated to
+/// `component-guest`/wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
+/// WIT-generated type directly; the WIT boundary conversion lives in the (leased) `JobsGuest` impl
+/// in `🔌️plugin/🦀️component.rs`, field-for-field.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct JobBudget {
+    pub fuel: u64,
+    pub deadline_ms: u32,
+}
+
+/// ▶️ Plain-Rust mirror of `jobs.wit`'s `variant job-step` — see `JobBudget`'s doc for why this
+/// isn't the WIT-generated type itself.
+pub enum JobStep {
+    Running(Option<Vec<u8>>),
     Done(Vec<u8>),
     Failed(Vec<u8>),
 }
 
-struct JobRecord {
-    kind: String,
-    input: Vec<u8>,
-}
+/// 🧬️ One registry entry: given a `JobCtx` (the slice/progress/checkpoint/budget handle), the raw
+/// `input` bytes `start-job` was called with, and — only on a checkpoint-restore replay —
+/// `Some(checkpoint)` bytes this SAME kind last handed to `JobCtx::checkpoint()`, returns the
+/// future that IS the job's whole run, from first slice to `Done`/`Failed`. A plain `fn` pointer
+/// (not a closure) so `PluginBuilder::job(kind, run)` can register it without capturing anything —
+/// mirrors `PluginCommandHandler`'s own non-capturing-preferred shape one level up.
+pub type JobFn = fn(JobCtx, Vec<u8>, Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>>;
+
+//#endregion
+
+//#region 🔖️Registry
 
 thread_local! {
-    static JOBS: RefCell<HashMap<u64, JobRecord>> = RefCell::new(HashMap::new());
+    static KIND_REGISTRY: RefCell<HashMap<&'static str, JobFn>> = RefCell::new(builtin_registry());
 }
 
-/// 📥️ `jobs::start-job` — records `kind`/`input` under `job`, overwriting any previous record for
-/// the same id (the host never reuses a live job id, but a restarted-from-checkpoint actor may
-/// legitimately replay a `start-job` for one still in flight from the caller's point of view).
-pub fn start_job(job: u64, kind: &str, input: &[u8]) {
-    JOBS.with(|jobs| {
-        jobs.borrow_mut().insert(job, JobRecord { kind: kind.to_string(), input: input.to_vec() });
+/// 🧬️ `semio.io-run`/`semio.io-sniff` are registered unconditionally for every plugin, the same
+/// "for free" behaviour the old hard-coded `match` gave every plugin — no `PluginBuilder::job(...)`
+/// call is required to get them.
+fn builtin_registry() -> HashMap<&'static str, JobFn> {
+    let mut map: HashMap<&'static str, JobFn> = HashMap::new();
+    map.insert(JOB_KIND_IO_RUN, job_io_run as JobFn);
+    map.insert(JOB_KIND_IO_SNIFF, job_io_sniff as JobFn);
+    map.insert(JOB_KIND_INFER, infer::job_infer as JobFn);
+    map.insert(JOB_KIND_MUTATION_PLAN, mutation_plan::job_mutation_plan as JobFn);
+    map.insert(JOB_KIND_MIGRATE, migrate::job_migrate as JobFn);
+    map
+}
+
+/// 📤️ Called by `PluginBuilder::try_build()` (`🏗️builder/🦀️component.rs`) once per `.job(kind, run)`
+/// declaration, at bundle-install time — "registered on bundle install like other builder
+/// registrations" per this packet's brief. A later registration for the same `kind` overwrites an
+/// earlier one (including a builtin), matching `plugin_command`'s own last-writer convention one
+/// layer up minus the duplicate-id assertion (a plugin legitimately overriding `semio.io-run`'s
+/// default body is not an error here).
+pub fn register_job_kind(kind: &'static str, run: JobFn) {
+    KIND_REGISTRY.with(|registry| {
+        registry.borrow_mut().insert(kind, run);
     });
 }
 
-/// 🛑️ `jobs::cancel-job` — every kind here is already synchronous/instantaneous by the time the
-/// host could observe it running, so cancellation just drops the bookkeeping record.
+//#endregion
+
+//#region 🔖️Ctx
+
+/// 🪪️ Shared between a job's spawned task and every `JobCtx`/`step_job` call that touches it via
+/// `Rc<RefCell<_>>` — `progress`/`checkpoint` are written by the job body (through `JobCtx`), read
+/// and cleared/kept by `step_job` (through the `JOBS` slot); `tick_budget`/`ticks_consumed` are
+/// `step_job`'s own slicing counters, read by `JobTick::poll`.
+struct JobState {
+    budget: JobBudget,
+    /// ⏱️ Incremented by one on every `step_job` call — grants the job's task exactly one more
+    /// `JobCtx::tick()` resolution.
+    tick_budget: u64,
+    /// ⏱️ Incremented by one every time a `JobTick` actually resolves — compared against
+    /// `tick_budget` to decide Ready vs Pending; never reset.
+    ticks_consumed: u64,
+    /// 📈️ Cleared at the START of every `step_job` call, before running — so a slice that never
+    /// calls `JobCtx::progress()` reports `Running(None)`, not stale bytes from a prior slice.
+    progress: Option<Vec<u8>>,
+    /// 📸️ NOT cleared between slices — "latest kept" (this packet's brief, verbatim): the most
+    /// recent bytes any `JobCtx::checkpoint()` call handed in, carried into the actor checkpoint
+    /// pack by `checkpoint_jobs()` regardless of how long ago it was set.
+    checkpoint: Option<Vec<u8>>,
+    outcome: Option<Result<Vec<u8>, semio_framework::Fault>>,
+    /// 🛑️ Stall guard bookkeeping — see `step_job`'s doc comment for the exact rule.
+    last_budget_seen: Option<JobBudget>,
+    stall_count: u32,
+}
+
+impl Default for JobState {
+    fn default() -> Self {
+        Self { budget: JobBudget::default(), tick_budget: 0, ticks_consumed: 0, progress: None, checkpoint: None, outcome: None, last_budget_seen: None, stall_count: 0 }
+    }
+}
+
+/// ⏳️ The per-job handle a `JobFn` runs with — see module doc for the slicing mechanics `tick()`
+/// implements and the `host()` restriction.
+pub struct JobCtx {
+    job: u64,
+    state: Rc<RefCell<JobState>>,
+    /// 🚧️ Only present in the async world's guest build — see module doc's "Host-await
+    /// restriction". A future reader must not "helpfully" ungate this for `world actor`
+    /// (the poll world): `🖥️host/🦀️component.rs`'s `run_job_to_completion` never pumps `poll`
+    /// between `step_job` calls, so a poll-world job awaiting a host completion would spin on
+    /// `Running` forever, never observing the `Event::Completed` that could resolve it.
+    #[cfg(feature = "component-guest-async")]
+    host: crate::host::Host,
+}
+
+impl JobCtx {
+    /// 🪪️ The `job` id this ctx belongs to — mirrors `start-job`'s own `job: u64` parameter.
+    pub fn id(&self) -> u64 {
+        self.job
+    }
+
+    /// ⏳️ Slice boundary: parks the job's task until the NEXT `step_job` call grants another tick,
+    /// then resolves re-reading whatever `JobBudget` that call passed (see `budget()`). Every await
+    /// point a `JobFn` body wants treated as "pause here until the host calls `step_job` again"
+    /// goes through this — see module doc's slicing-mechanics section for why the future itself
+    /// needs no waker bookkeeping.
+    pub async fn tick(&self) {
+        JobTick { state: self.state.clone() }.await
+    }
+
+    /// 📈️ Surfaces as `JobStep::Running(Some(bytes))` → `Event::JobProgress` on the SAME slice this
+    /// was called during; a later slice that never calls this again reports `Running(None)`.
+    pub fn progress(&self, bytes: Vec<u8>) {
+        self.state.borrow_mut().progress = Some(bytes);
+    }
+
+    /// 📸️ Latest-kept — see `JobState::checkpoint`'s own doc. Carried into the actor checkpoint
+    /// pack by `checkpoint_jobs()`.
+    pub fn checkpoint(&self, bytes: Vec<u8>) {
+        self.state.borrow_mut().checkpoint = Some(bytes);
+    }
+
+    /// ⛽️ The `JobBudget` from the MOST RECENT `step_job` call — updated before the job's task is
+    /// woken, so a `tick()` that just resolved always observes the budget that granted it.
+    pub fn budget(&self) -> JobBudget {
+        self.state.borrow().budget
+    }
+
+    /// 🌐️ See module doc's "Host-await restriction" — `#[cfg]`-gated on purpose, do not ungate for
+    /// the poll world.
+    #[cfg(feature = "component-guest-async")]
+    pub fn host(&self) -> &crate::host::Host {
+        &self.host
+    }
+}
+
+/// ⏳️ `JobCtx::tick()`'s future. Deliberately ignores the `Context`/waker it's polled with — a
+/// fresh `Waker` is constructed by `LocalExecutor` on every poll anyway (see `🧵️executor`'s own
+/// `waker_for`), and `step_job` re-queues this job's task BY ID via `LocalExecutor::wake`, not by
+/// invoking a stored waker — so all this needs to decide is Ready-vs-Pending from the two counters.
+struct JobTick {
+    state: Rc<RefCell<JobState>>,
+}
+
+impl Future for JobTick {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<()> {
+        let mut state = self.state.borrow_mut();
+        if state.ticks_consumed < state.tick_budget {
+            state.ticks_consumed += 1;
+            Poll::Ready(())
+        } else {
+            Poll::Pending
+        }
+    }
+}
+
+//#endregion
+
+//#region 🔖️Slots
+
+enum JobBody {
+    Running { task: super::executor::TaskId, state: Rc<RefCell<JobState>> },
+    /// 🧬️ `start_job` never rejects an unrecognised `kind` (matches the old hard-coded `match`'s own
+    /// behaviour, and the existing `JobsGuest::start_job` lease contract: it always returns `Ok(())`
+    /// — the failure surfaces on the first `step_job` instead, as `job.unknown-kind`).
+    UnknownKind,
+}
+
+struct JobSlot {
+    kind: String,
+    input: Vec<u8>,
+    body: JobBody,
+}
+
+thread_local! {
+    static JOBS: RefCell<HashMap<u64, JobSlot>> = RefCell::new(HashMap::new());
+    /// 🧵️ A SEPARATE `LocalExecutor` instance from the reactor turn loop's own — see module doc.
+    static JOBS_EXECUTOR: super::executor::LocalExecutor = super::executor::LocalExecutor::new();
+}
+
+/// ▶️ Same bound the reactor turn loop's own `EXECUTOR.run_until_idle` uses — a defensive cap
+/// against a job task that keeps re-waking itself forever inside one `step_job` call.
+const SLICE_MAX_ITERATIONS: u32 = 64;
+
+/// 🛑️ Number of consecutive `step_job` calls a job may return `Running` with no progress bytes AND
+/// an unchanged `JobBudget` before the stall guard fails it — see `step_job`'s doc.
+const STALL_LIMIT: u32 = 3;
+
+//#endregion
+
+//#region 🔖️Lifecycle
+
+/// 📥️ `jobs::start-job` — spawns `kind`'s registered `JobFn` PARKED on `JOBS_EXECUTOR` (not yet
+/// run; the first `step_job` call drives it). An id already in flight is overwritten, matching the
+/// old file's own doc note: the host never reuses a live job id, but a restarted-from-checkpoint
+/// actor may legitimately replay a `start-job` for one still in flight from the caller's point of
+/// view — see `restore_job` for the checkpoint-replay counterpart, which threads `restored` bytes
+/// this entry point always passes as `None`.
+pub fn start_job(job: u64, kind: &str, input: &[u8]) {
+    spawn_job(job, kind, input, None);
+}
+
+/// 📸️ Checkpoint-restore replay counterpart to `start_job` — never called from the WIT boundary
+/// directly (the `jobs` WIT interface has no `restored` parameter on `start-job`); called from the
+/// (leased) `⚛️reactor/📸️checkpoint/🦀️component.rs::restore` for every entry `checkpoint_jobs()`
+/// packed, handing each kind's `JobFn` the last `checkpoint()` bytes it produced before the actor
+/// was torn down.
+pub fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<Vec<u8>>) {
+    spawn_job(job, kind, input, checkpoint);
+}
+
+fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
+    let Some(run) = KIND_REGISTRY.with(|registry| registry.borrow().get(kind).copied()) else {
+        JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::UnknownKind }));
+        return;
+    };
+    let state = Rc::new(RefCell::new(JobState::default()));
+    let ctx = JobCtx {
+        job,
+        state: state.clone(),
+        #[cfg(feature = "component-guest-async")]
+        host: crate::reactor::host(),
+    };
+    let future = run(ctx, input.to_vec(), restored);
+    let outcome_state = state.clone();
+    let task = JOBS_EXECUTOR.with(|executor| {
+        executor.spawn(async move {
+            let result = future.await;
+            outcome_state.borrow_mut().outcome = Some(result);
+        })
+    });
+    JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::Running { task, state } }));
+}
+
+/// 🛑️ `jobs::cancel-job` — drops the job's bookkeeping slot so a later `step_job` on the same id
+/// reports `job.unknown`, matching the pre-rewrite behaviour exactly. The task's own slot inside
+/// `JOBS_EXECUTOR` is left in place (its `Rc<RefCell<JobState>>` becomes unreachable from here and
+/// is dropped, but `LocalExecutor` exposes no by-id removal — see this packet's report `## honest
+/// gaps`); the parked future itself never resumes since nothing ever wakes or re-steps it again.
 pub fn cancel_job(job: u64) {
     JOBS.with(|jobs| {
         jobs.borrow_mut().remove(&job);
     });
 }
 
-/// ▶️ `jobs::step-job` — every absorbed kind resolves to `Done`/`Failed` on its first step (never
-/// `Running`); an unknown job id or job kind is `Failed`, never a WIT-level error, since the
-/// caller is asking about a specific job's outcome, not making a malformed protocol call.
-pub fn step_job(job: u64) -> JobOutcome {
-    let record = JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
-    let Some(record) = record else {
-        return JobOutcome::Failed(fault_bytes("job.unknown", format!("no job registered for id {job}")));
+/// ▶️ `jobs::step-job` — an unknown job id is `Failed(job.unknown)`; an id started with an
+/// unrecognised kind is `Failed(job.unknown-kind)` (and the slot is dropped either way, matching
+/// the pre-rewrite one-shot-failure behaviour for both). Otherwise: records `budget` on the job's
+/// shared state, clears this slice's `progress`, grants one more `JobCtx::tick()`, wakes the task
+/// by id, and runs `JOBS_EXECUTOR` until it parks or finishes.
+///
+/// Stall guard: BEFORE running, compares `budget` against the previous call's — if unchanged AND
+/// (after running) no `progress` bytes were set this slice, `stall_count` increments; any slice
+/// with new progress OR a changed budget resets it to zero. Reaching `STALL_LIMIT` fails the job as
+/// `job.stalled` instead of returning `Running` forever.
+pub fn step_job(job: u64, budget: JobBudget) -> JobStep {
+    let Some((kind, running)) = JOBS.with(|jobs| {
+        jobs.borrow().get(&job).map(|slot| {
+            let running = match &slot.body {
+                JobBody::UnknownKind => None,
+                JobBody::Running { task, state } => Some((*task, state.clone())),
+            };
+            (slot.kind.clone(), running)
+        })
+    }) else {
+        return JobStep::Failed(fault_bytes("job.unknown", format!("no job registered for id {job}")));
     };
-    match record.kind.as_str() {
-        JOB_KIND_IO_RUN => run_io_run(&record.input),
-        JOB_KIND_IO_SNIFF => run_io_sniff(&record.input),
-        other => JobOutcome::Failed(fault_bytes("job.unknown-kind", format!("unknown job kind {other:?}"))),
+    let Some((task, state)) = running else {
+        JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
+        return JobStep::Failed(fault_bytes("job.unknown-kind", format!("unknown job kind {kind:?}")));
+    };
+
+    let budget_static = {
+        let mut state = state.borrow_mut();
+        let is_static = state.last_budget_seen == Some(budget);
+        state.last_budget_seen = Some(budget);
+        state.budget = budget;
+        state.progress = None;
+        state.tick_budget += 1;
+        is_static
+    };
+
+    JOBS_EXECUTOR.with(|executor| {
+        executor.wake(task);
+        executor.run_until_idle(SLICE_MAX_ITERATIONS);
+    });
+
+    let (outcome, progress, stalled) = {
+        let mut state = state.borrow_mut();
+        let outcome = state.outcome.take();
+        let progress = state.progress.clone();
+        if outcome.is_none() {
+            if progress.is_none() && budget_static {
+                state.stall_count += 1;
+            } else {
+                state.stall_count = 0;
+            }
+        }
+        (outcome, progress, state.stall_count >= STALL_LIMIT)
+    };
+
+    if let Some(outcome) = outcome {
+        JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
+        return match outcome {
+            Ok(bytes) => JobStep::Done(bytes),
+            Err(fault) => JobStep::Failed(dsl::encode_fault_bytes(&fault)),
+        };
     }
+
+    if stalled {
+        JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
+        return JobStep::Failed(fault_bytes("job.stalled", format!("job {job} ({kind}) made no progress across {STALL_LIMIT} consecutive step-job calls with an unchanged budget")));
+    }
+
+    JobStep::Running(progress)
+}
+
+//#endregion
+
+//#region 🔖️Checkpoint
+
+/// 📸️ One entry of the checkpoint pack's `jobs: Vec<{job, kind, input, checkpoint}>` — see module
+/// doc's checkpoint section and this packet's `## lease-requests` for the exact diff into
+/// `⚛️reactor/📸️checkpoint/🦀️component.rs` that embeds these.
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct JobCheckpointEntry {
+    pub job: u64,
+    pub kind: String,
+    pub input: Vec<u8>,
+    pub checkpoint: Option<Vec<u8>>,
+}
+
+/// 📸️ Every job this actor currently has open, in no particular order — `restore_job` (called by
+/// the leased `checkpoint::restore` for each entry) is what re-establishes them.
+pub fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
+    JOBS.with(|jobs| {
+        jobs.borrow()
+            .iter()
+            .map(|(job, slot)| {
+                let checkpoint = match &slot.body {
+                    JobBody::Running { state, .. } => state.borrow().checkpoint.clone(),
+                    JobBody::UnknownKind => None,
+                };
+                JobCheckpointEntry { job: *job, kind: slot.kind.clone(), input: slot.input.clone(), checkpoint }
+            })
+            .collect()
+    })
+}
+
+//#endregion
+
+//#region 🔖️Fault
+
+fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
+    semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new(code), message.into())
 }
 
 fn fault_bytes(code: &str, message: String) -> Vec<u8> {
-    dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new(code), message))
+    dsl::encode_fault_bytes(&fault(code, message))
 }
 
+//#endregion
+
+//#region 🔖️Phased
+/// 🌗️ Shared 2-tick shape for `semio.infer`/`semio.mutation-plan`/`semio.migrate`
+/// (`💡️infer`/`🧬️mutation-plan`/`🔀️migrate`, all three submodules of this one): none of their
+/// underlying native calls (`crate::app::wire_artifact_infer`, `crate::plugin_runtime::
+/// wire_artifact_mutation_plan`, `store::migrate_document`) are themselves chunked — real
+/// sub-call preemption is the same "blocked upstream" gap the dormant WFC solver names
+/// (`✏️s/🔌️plugins/🌀️procedural/🦀️component.rs`'s own comment) — but the JOB ITSELF must still be
+/// genuinely sliceable: at least two real `step_job` calls, monotonic progress each slice, and a
+/// correct checkpoint/restore resume, not a single call dressed up as a job. `decode` runs on the
+/// FIRST slice only (validates `input` and reports identity-shaped progress bytes, then
+/// checkpoints `PHASE_DECODED` so a restore skips straight past it); `execute` runs on the slice
+/// after, whether that is the second slice of an uninterrupted run or the first slice after a
+/// restore. Both closures independently re-read `input` from scratch (never threading a decoded
+/// value across the `tick()` boundary) — a second cheap parse is harmless and keeps `restore`
+/// correct without a second, richer checkpoint payload.
+const PHASE_DECODED: &[u8] = b"phase.decoded";
+
+async fn run_two_phase<D, E>(ctx: JobCtx, restored: Option<Vec<u8>>, decode: D, execute: E) -> Result<Vec<u8>, semio_framework::Fault>
+where
+    D: FnOnce() -> Result<Vec<u8>, semio_framework::Fault>,
+    E: FnOnce() -> Result<Vec<u8>, semio_framework::Fault>,
+{
+    if restored.as_deref() != Some(PHASE_DECODED) {
+        ctx.tick().await;
+        let progress = decode()?;
+        ctx.progress(progress);
+        ctx.checkpoint(PHASE_DECODED.to_vec());
+    }
+    ctx.tick().await;
+    let result = execute()?;
+    ctx.progress(b"phase.executed".to_vec());
+    Ok(result)
+}
+//#endregion
+
+//#region 🔖️BuiltinKinds
+
+/// 🌉️ `input` is the JSON-encoded `{source, target, payload}` the WIT guest export `io-run` used
+/// to take as three separate params; `Ok` carries the JSON-encoded `io_schema::IoPayload` result,
+/// matching the old export's ok return exactly.
 #[derive(serde::Deserialize)]
 struct IoRunInput {
     source: String,
@@ -77,72 +507,61 @@ struct IoRunInput {
     payload: semio_framework::io_schema::IoPayload,
 }
 
-/// 🌉️ `input` is the JSON-encoded `{source, target, payload}` the WIT guest export `io-run` used
-/// to take as three separate params; `Done` carries the JSON-encoded `io_schema::IoPayload`
-/// result, matching the old export's ok return exactly.
-fn run_io_run(input: &[u8]) -> JobOutcome {
-    let Ok(IoRunInput { source, target, payload }) = serde_json::from_slice::<IoRunInput>(input) else {
-        return JobOutcome::Failed(fault_bytes("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")));
-    };
-    let fail = |message: String| JobOutcome::Failed(fault_bytes("job.io-run", message));
-    let source = match semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source) {
-        Ok(dialect) => dialect,
-        Err(message) => return fail(message),
-    };
-    let target = match semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target) {
-        Ok(dialect) => dialect,
-        Err(message) => return fail(message),
-    };
-    let Some(descriptor) = semio_framework::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) else {
-        return fail(format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate()));
-    };
-    let fidelity = descriptor.fidelity;
-    let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-    match semio_framework::io::io_mechanism::io_run(&route, payload) {
-        Ok(outcome) => match serde_json::to_vec(&outcome.value) {
-            Ok(bytes) => JobOutcome::Done(bytes),
-            Err(error) => fail(error.to_string()),
-        },
-        Err(error) => fail(error.message),
-    }
+fn job_io_run(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move { run_io_run(&input) })
 }
 
-/// 🔍️ `input` is the same JSON `{source, target, payload}` shape as `run_io_run`; `Done` carries a
-/// single-byte `Vec<u8>` of `io_schema::Confidence::rank()` (`0..=3`) — matches the old export's
-/// `u8` return, now boxed as job output bytes.
-fn run_io_sniff(input: &[u8]) -> JobOutcome {
-    let Ok(IoRunInput { source, target, payload }) = serde_json::from_slice::<IoRunInput>(input) else {
-        return JobOutcome::Failed(fault_bytes("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")));
-    };
-    let fail = |message: String| JobOutcome::Failed(fault_bytes("job.io-sniff", message));
-    let source = match semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source) {
-        Ok(dialect) => dialect,
-        Err(message) => return fail(message),
-    };
-    let target = match semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target) {
-        Ok(dialect) => dialect,
-        Err(message) => return fail(message),
-    };
+fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move { run_io_sniff(&input) })
+}
+
+/// 🌉️ Body unchanged from the pre-rewrite `run_io_run` — only the return type moved from
+/// `JobOutcome` to `Result<Vec<u8>, Fault>` so every registry entry (builtin or plugin-authored)
+/// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
+fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
+    let descriptor = semio_framework::io::io_mechanism::io_entries()
+        .into_iter()
+        .find(|entry| entry.from == source && entry.into == target)
+        .ok_or_else(|| fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate())))?;
+    let fidelity = descriptor.fidelity;
+    let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
+    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).map_err(|error| fault("job.io-run", error.message))?;
+    serde_json::to_vec(&outcome.value).map_err(|error| fault("job.io-run", error.to_string()))
+}
+
+/// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of
+/// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
+fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
     let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
         semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
         semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
     });
     if source != carrier {
-        return JobOutcome::Done(vec![semio_framework::io_schema::Confidence::None.rank()]);
+        return Ok(vec![semio_framework::io_schema::Confidence::None.rank()]);
     }
     let confidence = semio_framework::io::io_mechanism::io_identify(&payload).into_iter().find(|(dialect, _)| *dialect == target).map(|(_, confidence)| confidence).unwrap_or(semio_framework::io_schema::Confidence::None);
-    JobOutcome::Done(vec![confidence.rank()])
+    Ok(vec![confidence.rank()])
 }
+
+//#endregion
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    //#region 🔖️PreRewriteParity
+
     #[test]
     fn step_job_on_an_unknown_id_fails_without_panicking() {
-        match step_job(999) {
-            JobOutcome::Failed(_) => {}
-            JobOutcome::Done(_) => panic!("an unregistered job id must fail, not succeed"),
+        match step_job(999, JobBudget::default()) {
+            JobStep::Failed(_) => {}
+            _ => panic!("an unregistered job id must fail, not succeed"),
         }
     }
 
@@ -150,21 +569,195 @@ mod tests {
     fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
         start_job(1, JOB_KIND_IO_RUN, b"{}");
         cancel_job(1);
-        match step_job(1) {
-            JobOutcome::Failed(_) => {}
-            JobOutcome::Done(_) => panic!("a cancelled job must not still be steppable"),
+        match step_job(1, JobBudget::default()) {
+            JobStep::Failed(_) => {}
+            _ => panic!("a cancelled job must not still be steppable"),
         }
     }
 
     #[test]
     fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
         start_job(2, "semio.not-a-real-kind", b"{}");
-        match step_job(2) {
-            JobOutcome::Failed(bytes) => {
+        match step_job(2, JobBudget::default()) {
+            JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.unknown-kind");
             }
-            JobOutcome::Done(_) => panic!("an unknown job kind must fail"),
+            _ => panic!("an unknown job kind must fail"),
         }
     }
+
+    /// 🗺️ `semio.io-run`/`semio.io-sniff` dispatch through the registry (not an "unknown kind"
+    /// fault) and preserve their pre-rewrite decode-failure fault codes exactly — the old file had
+    /// no fixture for a REAL io-run hop either (that coverage lives in `🖥️host`'s mock-backed
+    /// integration tests), so this is the same scope the pre-rewrite suite actually had.
+    #[test]
+    fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
+        start_job(3, JOB_KIND_IO_RUN, b"not json");
+        match step_job(3, JobBudget::default()) {
+            JobStep::Failed(bytes) => {
+                let fault = dsl::decode_fault_bytes(&bytes);
+                assert_eq!(fault.code.0, "job.io-run.decode", "must reach run_io_run, not job.unknown-kind");
+            }
+            _ => panic!("garbage io-run input must fail, got a non-Failed step"),
+        }
+    }
+
+    #[test]
+    fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
+        start_job(4, JOB_KIND_IO_SNIFF, b"not json");
+        match step_job(4, JobBudget::default()) {
+            JobStep::Failed(bytes) => {
+                let fault = dsl::decode_fault_bytes(&bytes);
+                assert_eq!(fault.code.0, "job.io-sniff.decode", "must reach run_io_sniff, not job.unknown-kind");
+            }
+            _ => panic!("garbage io-sniff input must fail"),
+        }
+    }
+
+    //#endregion
+
+    //#region 🔖️SlicingFixtures
+
+    /// 🧬️ Three ticks, three slices: waits for a grant, does one unit of work (`count += 1`,
+    /// progress/checkpoint bytes = `count`), then loops until `count` reaches 3. Resumable from
+    /// `restored` (a one-byte `count`), which is what the checkpoint/restore test below exercises.
+    fn resumable_counter_job(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+        Box::pin(async move {
+            let mut count: u8 = restored.and_then(|bytes| bytes.first().copied()).unwrap_or(0);
+            while count < 3 {
+                ctx.tick().await;
+                count += 1;
+                ctx.checkpoint(vec![count]);
+                ctx.progress(vec![count]);
+            }
+            Ok(vec![count, input.first().copied().unwrap_or(0)])
+        })
+    }
+
+    #[test]
+    fn a_three_slice_job_returns_running_running_done_with_progress_each_slice() {
+        register_job_kind("test.resumable-counter", resumable_counter_job);
+        start_job(10, "test.resumable-counter", &[7]);
+
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+            JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![1]),
+            _ => panic!("slice 1 must be Running(Some([1])), got a Done/Failed/None step"),
+        }
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+            JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![2]),
+            _ => panic!("slice 2 must be Running(Some([2]))"),
+        }
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+            JobStep::Done(bytes) => assert_eq!(bytes, vec![3, 7]),
+            _ => panic!("slice 3 must be Done([3, 7])"),
+        }
+    }
+
+    #[test]
+    fn the_budget_a_tick_observes_is_whatever_step_job_most_recently_passed() {
+        fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+            Box::pin(async move {
+                ctx.tick().await;
+                ctx.progress(vec![ctx.budget().fuel as u8]);
+                ctx.tick().await;
+                ctx.progress(vec![ctx.budget().fuel as u8]);
+                ctx.tick().await;
+                Ok(vec![0])
+            })
+        }
+        register_job_kind("test.budget-echo", budget_echo_job);
+        start_job(11, "test.budget-echo", b"[]");
+
+        match step_job(11, JobBudget { fuel: 5, deadline_ms: 1 }) {
+            JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![5], "first tick must see the first budget"),
+            _ => panic!("slice 1 must be Running"),
+        }
+        match step_job(11, JobBudget { fuel: 9, deadline_ms: 1 }) {
+            JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![9], "second tick must see the NEW budget, not the stale one"),
+            _ => panic!("slice 2 must be Running"),
+        }
+    }
+
+    #[test]
+    fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
+        register_job_kind("test.resumable-counter", resumable_counter_job);
+        start_job(12, "test.resumable-counter", b"[]");
+        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }) {
+            JobStep::Running(_) => {}
+            _ => panic!("job must be mid-slice (parked) before cancelling"),
+        }
+        cancel_job(12);
+        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }) {
+            JobStep::Failed(bytes) => {
+                let fault = dsl::decode_fault_bytes(&bytes);
+                assert_eq!(fault.code.0, "job.unknown", "the id must be free, not still bound to the cancelled task");
+            }
+            _ => panic!("a job cancelled mid-slice must not still be steppable"),
+        }
+    }
+
+    #[test]
+    fn checkpoint_restore_resumes_and_matches_an_uninterrupted_run() {
+        register_job_kind("test.resumable-counter", resumable_counter_job);
+
+        // Uninterrupted baseline.
+        start_job(20, "test.resumable-counter", &[42]);
+        step_job(20, JobBudget::default());
+        step_job(20, JobBudget::default());
+        let baseline = match step_job(20, JobBudget::default()) {
+            JobStep::Done(bytes) => bytes,
+            _ => panic!("uninterrupted run must finish Done within 3 slices"),
+        };
+
+        // Interrupted: one real slice, capture the checkpoint pack, simulate the actor tearing
+        // down (cancel_job — the same bookkeeping a trap-then-restart would leave behind), then
+        // replay through restore_job exactly like the leased checkpoint::restore would.
+        start_job(21, "test.resumable-counter", &[42]);
+        step_job(21, JobBudget::default());
+        let entries = checkpoint_jobs();
+        let entry = entries.iter().find(|entry| entry.job == 21).expect("job 21 must appear in checkpoint_jobs()");
+        assert_eq!(entry.kind, "test.resumable-counter");
+        assert_eq!(entry.input, vec![42]);
+        let checkpoint = entry.checkpoint.clone();
+        cancel_job(21);
+
+        restore_job(21, "test.resumable-counter", &[42], checkpoint);
+        step_job(21, JobBudget::default());
+        let restored_final = match step_job(21, JobBudget::default()) {
+            JobStep::Done(bytes) => bytes,
+            _ => panic!("restored run must finish Done within 2 more slices"),
+        };
+        assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
+    }
+
+    #[test]
+    fn the_stall_guard_fires_after_repeated_no_progress_static_budget_slices() {
+        fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+            Box::pin(async move {
+                loop {
+                    ctx.tick().await;
+                }
+            })
+        }
+        register_job_kind("test.never-progresses", never_progresses_job);
+        start_job(30, "test.never-progresses", b"[]");
+
+        let same_budget = JobBudget { fuel: 100, deadline_ms: 50 };
+        for call in 0..STALL_LIMIT {
+            match step_job(30, same_budget) {
+                JobStep::Running(None) => {}
+                _ => panic!("call {call} must still be Running(None) before the stall limit"),
+            }
+        }
+        match step_job(30, same_budget) {
+            JobStep::Failed(bytes) => {
+                let fault = dsl::decode_fault_bytes(&bytes);
+                assert_eq!(fault.code.0, "job.stalled");
+            }
+            _ => panic!("the stall guard must fire once STALL_LIMIT consecutive no-progress static-budget calls have elapsed"),
+        }
+    }
+
+    //#endregion
 }

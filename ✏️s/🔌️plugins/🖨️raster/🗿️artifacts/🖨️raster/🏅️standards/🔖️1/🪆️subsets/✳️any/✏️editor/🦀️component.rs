@@ -189,7 +189,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// `raster_composite_media`) plus the inherited `document:out` default (the pack of
     /// `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new ones).
-    fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.snapshot),
             "document:out" => {
@@ -783,12 +783,12 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
         let app = RasterPlayApp;
-        let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
+        let image_out = semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("image:out", &doc)).expect("image:out");
         let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.image");
         assert!(!json.is_empty());
-        assert!(RasterPlayApp::export_media("document:out", &doc).is_ok());
-        assert!(matches!(RasterPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
+        assert!(semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("document:out", &doc)).is_ok());
+        assert!(matches!(semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("unknown:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
     #[test]

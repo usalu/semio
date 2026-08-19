@@ -223,7 +223,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// `Structured` payload — `MediaPayload::Structured.json` doesn't require a `pack`-encoded value. A
     /// document with no load cases, or a solve failure, is reported as `MediaError::Payload` rather than
     /// an empty/panicking export.
-    fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
@@ -701,7 +701,7 @@ mod tests {
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let media = Fem2dPlayApp::export_media("document:out", &doc).expect("document:out exports");
+        let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("document:out", &doc)).expect("document:out exports");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Vector);
         let empty_projection = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
@@ -722,7 +722,7 @@ mod tests {
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let media = Fem2dPlayApp::export_media("results:out", &doc).expect("results:out exports");
+        let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
         match media.payload {
@@ -746,7 +746,7 @@ mod tests {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
+        let error = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect_err("no load cases means no results to export");
         match error {
             MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
             other => panic!("expected MediaError::Payload, got {other:?}"),
@@ -759,7 +759,7 @@ mod tests {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
+        assert!(matches!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("bogus:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
     #[test]

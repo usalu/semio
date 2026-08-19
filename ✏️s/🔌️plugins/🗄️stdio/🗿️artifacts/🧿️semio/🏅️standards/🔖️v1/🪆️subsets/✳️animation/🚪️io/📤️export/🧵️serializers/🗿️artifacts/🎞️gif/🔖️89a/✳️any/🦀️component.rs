@@ -28,7 +28,7 @@ impl ArtifactSerializer for SemioAnimationToGif {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let keyframes = from.timelines.first().and_then(|t| t.channels.first()).map(|c| c.keyframes.as_slice()).unwrap_or(&[]);
         let mut frames = Vec::with_capacity(keyframes.len());
         let mut last_delay: u16 = 1;
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn serialize_derives_real_delay_from_keyframe_time_deltas() {
-        let gif = SemioAnimationToGif::serialize(&real_world_animation()).expect("serialize");
+        let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&real_world_animation())).expect("serialize");
         assert_eq!(gif.frames.len(), 3);
         assert_eq!(gif.frames[0].delay_cs, 10);
         assert_eq!(gif.frames[1].delay_cs, 20);
@@ -90,7 +90,7 @@ mod tests {
                 }],
             }],
         };
-        let gif = SemioAnimationToGif::serialize(&snap).expect("serialize");
+        let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&snap)).expect("serialize");
         assert_eq!(gif.frames.len(), 1);
         assert_eq!(gif.frames[0].delay_cs, 1);
     }
@@ -98,7 +98,7 @@ mod tests {
     #[test]
     fn empty_animation_serializes_to_zero_frames() {
         let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
-        let gif = SemioAnimationToGif::serialize(&snap).expect("serialize");
+        let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&snap)).expect("serialize");
         assert!(gif.frames.is_empty());
     }
 }

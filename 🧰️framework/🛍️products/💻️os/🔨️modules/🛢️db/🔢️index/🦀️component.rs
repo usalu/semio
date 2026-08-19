@@ -383,23 +383,23 @@ impl<'a> IndexHandle<'a> {
 
     /// @emoji 📋️ This handle's live run ids, ascending by sequence (oldest first) — every other id
     /// belonging to a different kind for the same document is filtered out.
-    fn kind_run_ids(&self) -> Result<Vec<u64>, DbError> {
-        Ok(self.storage.list_runs(&self.document)?.into_iter().filter(|id| kind_tag_of_run_id(*id) == self.kind.tag()).collect())
+    async fn kind_run_ids(&self) -> Result<Vec<u64>, DbError> {
+        Ok(self.storage.list_runs(&self.document).await?.into_iter().filter(|id| kind_tag_of_run_id(*id) == self.kind.tag()).collect())
     }
 
     /// @emoji ⏭️ The sequence the next `put_batch` should claim: one past the newest live run's
     /// sequence, or `0` if this kind has no runs yet.
-    fn next_sequence(&self) -> Result<u64, DbError> {
-        Ok(self.kind_run_ids()?.last().map_or(0, |id| sequence_of_run_id(*id) + 1))
+    async fn next_sequence(&self) -> Result<u64, DbError> {
+        Ok(self.kind_run_ids().await?.last().map_or(0, |id| sequence_of_run_id(*id) + 1))
     }
 
-    fn load_run(&self, run_id: u64) -> Result<Vec<RunEntry>, DbError> {
-        decode_run(&self.storage.read_run(&self.document, run_id)?, self.kind)
+    async fn load_run(&self, run_id: u64) -> Result<Vec<RunEntry>, DbError> {
+        decode_run(&self.storage.read_run(&self.document, run_id).await?, self.kind)
     }
 
     /// @emoji ✍️ Durably appends `entries` as one new, newest run (via `build_run` + `encode_run`),
     /// then applies `MergePolicy`. A no-op (no run written) if `entries` is empty.
-    pub fn put_batch(&self, entries: Vec<(Vec<u8>, RunValue)>) -> Result<(), DbError> {
+    pub async fn put_batch(&self, entries: Vec<(Vec<u8>, RunValue)>) -> Result<(), DbError> {
         if entries.is_empty() {
             return Ok(());
         }
@@ -411,26 +411,26 @@ impl<'a> IndexHandle<'a> {
         }
         let built = build_run(entries);
         let encoded = encode_run(self.kind, &built)?;
-        let run_id = make_run_id(self.kind, self.next_sequence()?)?;
-        self.storage.write_run(&self.document, run_id, &encoded)?;
-        self.maybe_auto_merge()
+        let run_id = make_run_id(self.kind, self.next_sequence().await?)?;
+        self.storage.write_run(&self.document, run_id, &encoded).await?;
+        self.maybe_auto_merge().await
     }
 
     /// @emoji ➕️ Convenience over `put_batch` for a single key.
-    pub fn put(&self, key: Vec<u8>, value: Vec<u8>) -> Result<(), DbError> {
-        self.put_batch(vec![(key, RunValue::Put(value))])
+    pub async fn put(&self, key: Vec<u8>, value: Vec<u8>) -> Result<(), DbError> {
+        self.put_batch(vec![(key, RunValue::Put(value))]).await
     }
 
     /// @emoji 🪦️ Convenience over `put_batch` for a single tombstone.
-    pub fn delete(&self, key: &[u8]) -> Result<(), DbError> {
-        self.put_batch(vec![(key.to_vec(), RunValue::Tombstone)])
+    pub async fn delete(&self, key: &[u8]) -> Result<(), DbError> {
+        self.put_batch(vec![(key.to_vec(), RunValue::Tombstone)]).await
     }
 
     /// @emoji 🔎️ Resolves `key` by scanning runs newest-to-oldest and returning the first match —
     /// `Ok(None)` if the first match is a tombstone, or if no run has ever held `key`.
-    pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, DbError> {
-        for run_id in self.kind_run_ids()?.into_iter().rev() {
-            let entries = self.load_run(run_id)?;
+    pub async fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, DbError> {
+        for run_id in self.kind_run_ids().await?.into_iter().rev() {
+            let entries = self.load_run(run_id).await?;
             if let Ok(position) = entries.binary_search_by(|entry| entry.key.as_slice().cmp(key)) {
                 return Ok(match &entries[position].value {
                     RunValue::Put(value) => Some(value.clone()),
@@ -444,11 +444,11 @@ impl<'a> IndexHandle<'a> {
     /// @emoji 📜️ Every live (non-tombstoned) `(key, value)` whose key starts with `prefix`,
     /// ascending by key — merges every run (newest wins on collision, tombstones dropped since this
     /// is a complete view across the whole kind) then filters.
-    pub fn scan_prefix(&self, prefix: &[u8]) -> Result<KeyValuePairs, DbError> {
-        let run_ids = self.kind_run_ids()?;
+    pub async fn scan_prefix(&self, prefix: &[u8]) -> Result<KeyValuePairs, DbError> {
+        let run_ids = self.kind_run_ids().await?;
         let mut runs = Vec::with_capacity(run_ids.len());
         for run_id in run_ids {
-            runs.push(self.load_run(run_id)?);
+            runs.push(self.load_run(run_id).await?);
         }
         let merged = merge_runs(&runs, true);
         let mut out = Vec::new();
@@ -468,46 +468,46 @@ impl<'a> IndexHandle<'a> {
     /// older's `run_id`, preserving the oldest-first ordering invariant `kind_run_ids` relies on;
     /// the younger's `run_id` is then deleted). Tombstones are preserved (`drop_tombstones: false`)
     /// since runs even older than these two may still exist.
-    fn maybe_auto_merge(&self) -> Result<(), DbError> {
+    async fn maybe_auto_merge(&self) -> Result<(), DbError> {
         loop {
-            let run_ids = self.kind_run_ids()?;
+            let run_ids = self.kind_run_ids().await?;
             if run_ids.len() <= self.policy.max_runs_before_merge {
                 return Ok(());
             }
             let (oldest, second_oldest) = (run_ids[0], run_ids[1]);
-            let merged = merge_runs(&[self.load_run(oldest)?, self.load_run(second_oldest)?], false);
-            self.storage.write_run(&self.document, oldest, &encode_run(self.kind, &merged)?)?;
-            self.storage.delete_run(&self.document, second_oldest)?;
+            let merged = merge_runs(&[self.load_run(oldest).await?, self.load_run(second_oldest).await?], false);
+            self.storage.write_run(&self.document, oldest, &encode_run(self.kind, &merged)?).await?;
+            self.storage.delete_run(&self.document, second_oldest).await?;
         }
     }
 
     /// @emoji 🧹️ Merges EVERY live run for this kind into exactly one (dropping tombstones, since
     /// nothing older remains beneath a complete merge), written back under the oldest run's
     /// `run_id`. A no-op if already at zero or one runs. Returns the post-compaction `stats()`.
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        let run_ids = self.kind_run_ids()?;
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        let run_ids = self.kind_run_ids().await?;
         if run_ids.len() > 1 {
             let mut runs = Vec::with_capacity(run_ids.len());
             for &run_id in &run_ids {
-                runs.push(self.load_run(run_id)?);
+                runs.push(self.load_run(run_id).await?);
             }
             let merged = merge_runs(&runs, true);
-            self.storage.write_run(&self.document, run_ids[0], &encode_run(self.kind, &merged)?)?;
+            self.storage.write_run(&self.document, run_ids[0], &encode_run(self.kind, &merged)?).await?;
             for &run_id in &run_ids[1..] {
-                self.storage.delete_run(&self.document, run_id)?;
+                self.storage.delete_run(&self.document, run_id).await?;
             }
         }
-        self.stats()
+        self.stats().await
     }
 
     /// @emoji 📊️ Current shape of this kind's runs — see `IndexStats`'s doc for what `entry_count`
     /// does and doesn't count. Cheap: reads every run's bytes but only parses each one's header.
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        let run_ids = self.kind_run_ids()?;
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        let run_ids = self.kind_run_ids().await?;
         let mut entry_count = 0u64;
         let mut total_bytes = 0u64;
         for &run_id in &run_ids {
-            let bytes = self.storage.read_run(&self.document, run_id)?;
+            let bytes = self.storage.read_run(&self.document, run_id).await?;
             total_bytes += bytes.len() as u64;
             entry_count += peek_entry_count(&bytes, self.kind)?;
         }
@@ -516,9 +516,9 @@ impl<'a> IndexHandle<'a> {
 
     /// @emoji ✅️ Fully decodes (checksum + structural validation) every live run for this kind,
     /// surfacing the first `DbError::Corrupt` found rather than any value — `db_cli verify`'s hook.
-    pub fn verify(&self) -> Result<(), DbError> {
-        for run_id in self.kind_run_ids()? {
-            self.load_run(run_id)?;
+    pub async fn verify(&self) -> Result<(), DbError> {
+        for run_id in self.kind_run_ids().await? {
+            self.load_run(run_id).await?;
         }
         Ok(())
     }
@@ -565,16 +565,16 @@ impl<'a> SeqLocationIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, kind) }
     }
 
-    fn record(&self, seq: u64, location: RecordLocation) -> Result<(), DbError> {
-        self.handle.put(seq.to_be_bytes().to_vec(), encode_location(location))
+    async fn record(&self, seq: u64, location: RecordLocation) -> Result<(), DbError> {
+        self.handle.put(seq.to_be_bytes().to_vec(), encode_location(location)).await
     }
 
-    fn lookup(&self, seq: u64) -> Result<Option<RecordLocation>, DbError> {
-        self.handle.get(&seq.to_be_bytes())?.map(|bytes| decode_location(&bytes)).transpose()
+    async fn lookup(&self, seq: u64) -> Result<Option<RecordLocation>, DbError> {
+        self.handle.get(&seq.to_be_bytes()).await?.map(|bytes| decode_location(&bytes)).transpose()
     }
 
-    fn remove(&self, seq: u64) -> Result<(), DbError> {
-        self.handle.delete(&seq.to_be_bytes())
+    async fn remove(&self, seq: u64) -> Result<(), DbError> {
+        self.handle.delete(&seq.to_be_bytes()).await
     }
 }
 //#endregion 🔖️RecordLocation
@@ -590,24 +590,24 @@ impl<'a> CommandIndex<'a> {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Command))
     }
 
-    pub fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
-        self.0.record(command_seq, location)
+    pub async fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
+        self.0.record(command_seq, location).await
     }
 
-    pub fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
-        self.0.lookup(command_seq)
+    pub async fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
+        self.0.lookup(command_seq).await
     }
 
-    pub fn remove(&self, command_seq: u64) -> Result<(), DbError> {
-        self.0.remove(command_seq)
+    pub async fn remove(&self, command_seq: u64) -> Result<(), DbError> {
+        self.0.remove(command_seq).await
     }
 
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.stats()
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        self.0.handle.stats().await
     }
 
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.compact()
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        self.0.handle.compact().await
     }
 }
 //#endregion 🔖️CommandIndex
@@ -622,24 +622,24 @@ impl<'a> InverseIndex<'a> {
         Self(SeqLocationIndex::new(storage, document, IndexKind::Inverse))
     }
 
-    pub fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
-        self.0.record(command_seq, location)
+    pub async fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
+        self.0.record(command_seq, location).await
     }
 
-    pub fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
-        self.0.lookup(command_seq)
+    pub async fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
+        self.0.lookup(command_seq).await
     }
 
-    pub fn remove(&self, command_seq: u64) -> Result<(), DbError> {
-        self.0.remove(command_seq)
+    pub async fn remove(&self, command_seq: u64) -> Result<(), DbError> {
+        self.0.remove(command_seq).await
     }
 
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.stats()
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        self.0.handle.stats().await
     }
 
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.compact()
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        self.0.handle.compact().await
     }
 }
 //#endregion 🔖️InverseIndex
@@ -680,21 +680,21 @@ impl<'a> ActorSeqIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::ActorSeq) }
     }
 
-    pub fn record(&self, actor: &ActorId, actor_seq: u64, command_seq: u64) -> Result<(), DbError> {
-        self.handle.put(actor_seq_key(actor, actor_seq)?, command_seq.to_le_bytes().to_vec())
+    pub async fn record(&self, actor: &ActorId, actor_seq: u64, command_seq: u64) -> Result<(), DbError> {
+        self.handle.put(actor_seq_key(actor, actor_seq)?, command_seq.to_le_bytes().to_vec()).await
     }
 
-    pub fn lookup(&self, actor: &ActorId, actor_seq: u64) -> Result<Option<u64>, DbError> {
-        self.handle.get(&actor_seq_key(actor, actor_seq)?)?.map(|bytes| decode_u64_le(&bytes)).transpose()
+    pub async fn lookup(&self, actor: &ActorId, actor_seq: u64) -> Result<Option<u64>, DbError> {
+        self.handle.get(&actor_seq_key(actor, actor_seq)?).await?.map(|bytes| decode_u64_le(&bytes)).transpose()
     }
 
     /// @emoji 🥇️ The highest `(actor_seq, command_seq)` pair recorded for `actor`, or `None` if
     /// `actor` has never been recorded.
-    pub fn latest_for_actor(&self, actor: &ActorId) -> Result<Option<(u64, u64)>, DbError> {
+    pub async fn latest_for_actor(&self, actor: &ActorId) -> Result<Option<(u64, u64)>, DbError> {
         validate_actor_key_safe(actor)?;
         let mut prefix = actor.0.as_bytes().to_vec();
         prefix.push(0u8);
-        let entries = self.handle.scan_prefix(&prefix)?;
+        let entries = self.handle.scan_prefix(&prefix).await?;
         entries
             .into_iter()
             .last()
@@ -745,17 +745,17 @@ impl<'a> FrontierIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Frontier) }
     }
 
-    pub fn record(&self, frontier: &Frontier) -> Result<(), DbError> {
-        self.handle.put(frontier.commit_seq.to_be_bytes().to_vec(), encode_frontier(frontier))
+    pub async fn record(&self, frontier: &Frontier) -> Result<(), DbError> {
+        self.handle.put(frontier.commit_seq.to_be_bytes().to_vec(), encode_frontier(frontier)).await
     }
 
-    pub fn lookup(&self, commit_seq: u64) -> Result<Option<Frontier>, DbError> {
-        self.handle.get(&commit_seq.to_be_bytes())?.map(|bytes| decode_frontier(&bytes)).transpose()
+    pub async fn lookup(&self, commit_seq: u64) -> Result<Option<Frontier>, DbError> {
+        self.handle.get(&commit_seq.to_be_bytes()).await?.map(|bytes| decode_frontier(&bytes)).transpose()
     }
 
     /// @emoji 🥇️ The frontier recorded under the highest `commit_seq`, or `None` if none recorded.
-    pub fn latest(&self) -> Result<Option<Frontier>, DbError> {
-        self.handle.scan_prefix(&[])?.into_iter().last().map(|(_, value)| decode_frontier(&value)).transpose()
+    pub async fn latest(&self) -> Result<Option<Frontier>, DbError> {
+        self.handle.scan_prefix(&[]).await?.into_iter().last().map(|(_, value)| decode_frontier(&value)).transpose()
     }
 }
 //#endregion 🔖️FrontierIndex
@@ -795,16 +795,16 @@ impl<'a> TouchedRegionIndex<'a> {
 
     /// @emoji ➕️ Records that `command_seq` touched `region` — read-modify-write over the region's
     /// current posting list, kept sorted and deduplicated.
-    pub fn record_touch(&self, region: &[u8], command_seq: u64) -> Result<(), DbError> {
-        let mut postings = self.touching(region)?;
+    pub async fn record_touch(&self, region: &[u8], command_seq: u64) -> Result<(), DbError> {
+        let mut postings = self.touching(region).await?;
         if let Err(position) = postings.binary_search(&command_seq) {
             postings.insert(position, command_seq);
         }
-        self.handle.put(region.to_vec(), encode_postings(&postings))
+        self.handle.put(region.to_vec(), encode_postings(&postings)).await
     }
 
-    pub fn touching(&self, region: &[u8]) -> Result<Vec<u64>, DbError> {
-        match self.handle.get(region)? {
+    pub async fn touching(&self, region: &[u8]) -> Result<Vec<u64>, DbError> {
+        match self.handle.get(region).await? {
             Some(bytes) => decode_postings(&bytes),
             None => Ok(Vec::new()),
         }
@@ -825,12 +825,12 @@ impl<'a> CommitIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Commit) }
     }
 
-    pub fn record(&self, commit_id: &str, command_seq: u64) -> Result<(), DbError> {
-        self.handle.put(commit_id.as_bytes().to_vec(), command_seq.to_le_bytes().to_vec())
+    pub async fn record(&self, commit_id: &str, command_seq: u64) -> Result<(), DbError> {
+        self.handle.put(commit_id.as_bytes().to_vec(), command_seq.to_le_bytes().to_vec()).await
     }
 
-    pub fn lookup(&self, commit_id: &str) -> Result<Option<u64>, DbError> {
-        self.handle.get(commit_id.as_bytes())?.map(|bytes| decode_u64_le(&bytes)).transpose()
+    pub async fn lookup(&self, commit_id: &str) -> Result<Option<u64>, DbError> {
+        self.handle.get(commit_id.as_bytes()).await?.map(|bytes| decode_u64_le(&bytes)).transpose()
     }
 }
 //#endregion 🔖️CommitIndex
@@ -854,32 +854,32 @@ impl<'a> FullTextIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::FullText) }
     }
 
-    fn postings(&self, term_key: &[u8]) -> Result<Vec<u64>, DbError> {
-        match self.handle.get(term_key)? {
+    async fn postings(&self, term_key: &[u8]) -> Result<Vec<u64>, DbError> {
+        match self.handle.get(term_key).await? {
             Some(bytes) => decode_postings(&bytes),
             None => Ok(Vec::new()),
         }
     }
 
     /// @emoji ➕️ Tokenizes `text` and records `doc_ref` against every distinct term it contains.
-    pub fn index_document(&self, doc_ref: u64, text: &str) -> Result<(), DbError> {
+    pub async fn index_document(&self, doc_ref: u64, text: &str) -> Result<(), DbError> {
         let mut terms = tokenize(text);
         terms.sort();
         terms.dedup();
         for term in terms {
-            let mut postings = self.postings(term.as_bytes())?;
+            let mut postings = self.postings(term.as_bytes()).await?;
             if let Err(position) = postings.binary_search(&doc_ref) {
                 postings.insert(position, doc_ref);
             }
-            self.handle.put(term.into_bytes(), encode_postings(&postings))?;
+            self.handle.put(term.into_bytes(), encode_postings(&postings)).await?;
         }
         Ok(())
     }
 
     /// @emoji 🔎️ The posting list for `term` (case-folded to match `index_document`'s tokenizer),
     /// or an empty list if the term has never been indexed.
-    pub fn search(&self, term: &str) -> Result<Vec<u64>, DbError> {
-        self.postings(term.to_lowercase().as_bytes())
+    pub async fn search(&self, term: &str) -> Result<Vec<u64>, DbError> {
+        self.postings(term.to_lowercase().as_bytes()).await
     }
 }
 //#endregion 🔖️FullTextIndex
@@ -929,28 +929,28 @@ impl<'a> ConflictIndex<'a> {
     }
 
     /// @emoji ➕️ Appends `record` to `command_seq`'s conflict list.
-    pub fn record_conflict(&self, command_seq: u64, record: Vec<u8>) -> Result<(), DbError> {
+    pub async fn record_conflict(&self, command_seq: u64, record: Vec<u8>) -> Result<(), DbError> {
         check_len(record.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
-        let mut records = self.conflicts_for(command_seq)?;
+        let mut records = self.conflicts_for(command_seq).await?;
         records.push(record);
-        self.handle.put(command_seq.to_be_bytes().to_vec(), encode_blob_list(&records))
+        self.handle.put(command_seq.to_be_bytes().to_vec(), encode_blob_list(&records)).await
     }
 
     /// @emoji 📋️ Every conflict record recorded for `command_seq`, in the order they were
     /// recorded, or empty if none.
-    pub fn conflicts_for(&self, command_seq: u64) -> Result<Vec<Vec<u8>>, DbError> {
-        match self.handle.get(&command_seq.to_be_bytes())? {
+    pub async fn conflicts_for(&self, command_seq: u64) -> Result<Vec<Vec<u8>>, DbError> {
+        match self.handle.get(&command_seq.to_be_bytes()).await? {
             Some(bytes) => decode_blob_list(&bytes),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats()
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        self.handle.stats().await
     }
 
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact()
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        self.handle.compact().await
     }
 }
 //#endregion 🔖️ConflictIndex
@@ -987,25 +987,25 @@ impl<'a> ProjectionIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Projection) }
     }
 
-    pub fn record(&self, projection_id: &str, frontier_seq: u64, state: Vec<u8>) -> Result<(), DbError> {
-        self.handle.put(projection_key(projection_id, frontier_seq)?, state)
+    pub async fn record(&self, projection_id: &str, frontier_seq: u64, state: Vec<u8>) -> Result<(), DbError> {
+        self.handle.put(projection_key(projection_id, frontier_seq)?, state).await
     }
 
     /// @emoji 🎯️ The exact state recorded for `projection_id` at `frontier_seq`, or `None` if
     /// nothing was recorded at that exact sequence.
-    pub fn at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
-        self.handle.get(&projection_key(projection_id, frontier_seq)?)
+    pub async fn at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
+        self.handle.get(&projection_key(projection_id, frontier_seq)?).await
     }
 
     /// @emoji 🏔️ The state recorded at the greatest `frontier_seq' <= frontier_seq` for
     /// `projection_id` specifically — scoped to `projection_id`'s own key range (via the NUL
     /// separator) before scanning, so a projection with no entry at or before `frontier_seq` never
     /// wrongly surfaces a different, lexicographically-earlier projection's entry.
-    pub fn latest_at_or_before(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<(u64, Vec<u8>)>, DbError> {
+    pub async fn latest_at_or_before(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<(u64, Vec<u8>)>, DbError> {
         validate_projection_id_key_safe(projection_id)?;
         let mut prefix = projection_id.as_bytes().to_vec();
         prefix.push(0u8);
-        let entries = self.handle.scan_prefix(&prefix)?;
+        let entries = self.handle.scan_prefix(&prefix).await?;
         let mut result = None;
         for (key, value) in entries {
             let seq_bytes: [u8; 8] = key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("projection index key has a malformed suffix".to_string()))?;
@@ -1018,12 +1018,12 @@ impl<'a> ProjectionIndex<'a> {
         Ok(result)
     }
 
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats()
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        self.handle.stats().await
     }
 
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact()
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        self.handle.compact().await
     }
 }
 //#endregion 🔖️ProjectionIndex
@@ -1054,25 +1054,25 @@ impl<'a> PreviewIndex<'a> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Preview) }
     }
 
-    pub fn publish(&self, actor: &ActorId, preview_key: &str, value: Vec<u8>) -> Result<(), DbError> {
-        self.handle.put(encode_preview_key(actor, preview_key)?, value)
+    pub async fn publish(&self, actor: &ActorId, preview_key: &str, value: Vec<u8>) -> Result<(), DbError> {
+        self.handle.put(encode_preview_key(actor, preview_key)?, value).await
     }
 
-    pub fn withdraw(&self, actor: &ActorId, preview_key: &str) -> Result<(), DbError> {
-        self.handle.delete(&encode_preview_key(actor, preview_key)?)
+    pub async fn withdraw(&self, actor: &ActorId, preview_key: &str) -> Result<(), DbError> {
+        self.handle.delete(&encode_preview_key(actor, preview_key)?).await
     }
 
-    pub fn latest(&self, actor: &ActorId, preview_key: &str) -> Result<Option<Vec<u8>>, DbError> {
-        self.handle.get(&encode_preview_key(actor, preview_key)?)
+    pub async fn latest(&self, actor: &ActorId, preview_key: &str) -> Result<Option<Vec<u8>>, DbError> {
+        self.handle.get(&encode_preview_key(actor, preview_key)?).await
     }
 
     /// @emoji 📋️ Every currently-live `(preview_key, value)` published by `actor`.
-    pub fn for_actor(&self, actor: &ActorId) -> Result<Vec<(String, Vec<u8>)>, DbError> {
+    pub async fn for_actor(&self, actor: &ActorId) -> Result<Vec<(String, Vec<u8>)>, DbError> {
         validate_actor_key_safe(actor)?;
         let mut prefix = actor.0.as_bytes().to_vec();
         prefix.push(0u8);
         self.handle
-            .scan_prefix(&prefix)?
+            .scan_prefix(&prefix).await?
             .into_iter()
             .map(|(key, value)| {
                 let preview_key = String::from_utf8(key[prefix.len()..].to_vec()).map_err(|_| DbError::Corrupt("preview index key suffix is not valid utf-8".to_string()))?;
@@ -1081,12 +1081,12 @@ impl<'a> PreviewIndex<'a> {
             .collect()
     }
 
-    pub fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats()
+    pub async fn stats(&self) -> Result<IndexStats, DbError> {
+        self.handle.stats().await
     }
 
-    pub fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact()
+    pub async fn compact(&self) -> Result<IndexStats, DbError> {
+        self.handle.compact().await
     }
 }
 //#endregion 🔖️PreviewIndex
@@ -1201,36 +1201,36 @@ mod tests {
     fn index_handle_put_get_delete_round_trips() {
         let storage = MemoryStorage::new();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
-        handle.put(b"k1".to_vec(), b"v1".to_vec()).expect("put");
-        handle.put(b"k2".to_vec(), b"v2".to_vec()).expect("put");
-        assert_eq!(handle.get(b"k1").expect("get"), Some(b"v1".to_vec()));
-        assert_eq!(handle.get(b"k2").expect("get"), Some(b"v2".to_vec()));
-        assert_eq!(handle.get(b"missing").expect("get"), None);
+        db_actor::block_on(handle.put(b"k1".to_vec(), b"v1".to_vec())).expect("put");
+        db_actor::block_on(handle.put(b"k2".to_vec(), b"v2".to_vec())).expect("put");
+        assert_eq!(db_actor::block_on(handle.get(b"k1")).expect("get"), Some(b"v1".to_vec()));
+        assert_eq!(db_actor::block_on(handle.get(b"k2")).expect("get"), Some(b"v2".to_vec()));
+        assert_eq!(db_actor::block_on(handle.get(b"missing")).expect("get"), None);
 
-        handle.delete(b"k1").expect("delete");
-        assert_eq!(handle.get(b"k1").expect("get"), None);
-        assert_eq!(handle.get(b"k2").expect("get"), Some(b"v2".to_vec()));
+        db_actor::block_on(handle.delete(b"k1")).expect("delete");
+        assert_eq!(db_actor::block_on(handle.get(b"k1")).expect("get"), None);
+        assert_eq!(db_actor::block_on(handle.get(b"k2")).expect("get"), Some(b"v2".to_vec()));
     }
 
     #[test]
     fn index_handle_put_overwrites_earlier_value_for_same_key() {
         let storage = MemoryStorage::new();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
-        handle.put(b"k".to_vec(), b"first".to_vec()).expect("put");
-        handle.put(b"k".to_vec(), b"second".to_vec()).expect("put");
-        assert_eq!(handle.get(b"k").expect("get"), Some(b"second".to_vec()));
+        db_actor::block_on(handle.put(b"k".to_vec(), b"first".to_vec())).expect("put");
+        db_actor::block_on(handle.put(b"k".to_vec(), b"second".to_vec())).expect("put");
+        assert_eq!(db_actor::block_on(handle.get(b"k")).expect("get"), Some(b"second".to_vec()));
     }
 
     #[test]
     fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
         let storage = MemoryStorage::new();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
-        handle.put(b"a/1".to_vec(), b"1".to_vec()).expect("put");
-        handle.put(b"a/2".to_vec(), b"2".to_vec()).expect("put");
-        handle.put(b"b/1".to_vec(), b"3".to_vec()).expect("put");
-        handle.delete(b"a/2").expect("delete");
+        db_actor::block_on(handle.put(b"a/1".to_vec(), b"1".to_vec())).expect("put");
+        db_actor::block_on(handle.put(b"a/2".to_vec(), b"2".to_vec())).expect("put");
+        db_actor::block_on(handle.put(b"b/1".to_vec(), b"3".to_vec())).expect("put");
+        db_actor::block_on(handle.delete(b"a/2")).expect("delete");
 
-        let scanned = handle.scan_prefix(b"a/").expect("scan_prefix");
+        let scanned = db_actor::block_on(handle.scan_prefix(b"a/")).expect("scan_prefix");
         assert_eq!(scanned, vec![(b"a/1".to_vec(), b"1".to_vec())]);
     }
 
@@ -1240,12 +1240,12 @@ mod tests {
         let policy = MergePolicy { max_runs_before_merge: 2 };
         let handle = IndexHandle::with_policy(&storage, ArtifactId::from("doc-1"), IndexKind::Command, policy);
         for i in 0..6u64 {
-            handle.put(format!("k{i:03}").into_bytes(), i.to_le_bytes().to_vec()).expect("put");
+            db_actor::block_on(handle.put(format!("k{i:03}").into_bytes(), i.to_le_bytes().to_vec())).expect("put");
         }
-        let stats = handle.stats().expect("stats");
+        let stats = db_actor::block_on(handle.stats()).expect("stats");
         assert!(stats.run_count <= 2, "run_count {} should respect the merge policy", stats.run_count);
         for i in 0..6u64 {
-            let value = handle.get(format!("k{i:03}").as_bytes()).expect("get").expect("present");
+            let value = db_actor::block_on(handle.get(format!("k{i:03}").as_bytes())).expect("get").expect("present");
             assert_eq!(u64::from_le_bytes(value.try_into().expect("8 bytes")), i);
         }
     }
@@ -1254,25 +1254,25 @@ mod tests {
     fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
         let storage = MemoryStorage::new();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
-        handle.put(b"a".to_vec(), b"1".to_vec()).expect("put");
-        handle.put(b"b".to_vec(), b"2".to_vec()).expect("put");
-        handle.delete(b"a").expect("delete");
+        db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).expect("put");
+        db_actor::block_on(handle.put(b"b".to_vec(), b"2".to_vec())).expect("put");
+        db_actor::block_on(handle.delete(b"a")).expect("delete");
 
-        let stats = handle.compact().expect("compact");
+        let stats = db_actor::block_on(handle.compact()).expect("compact");
         assert_eq!(stats.run_count, 1);
         assert_eq!(stats.entry_count, 1);
-        assert_eq!(handle.get(b"a").expect("get"), None);
-        assert_eq!(handle.get(b"b").expect("get"), Some(b"2".to_vec()));
-        handle.verify().expect("verify");
+        assert_eq!(db_actor::block_on(handle.get(b"a")).expect("get"), None);
+        assert_eq!(db_actor::block_on(handle.get(b"b")).expect("get"), Some(b"2".to_vec()));
+        db_actor::block_on(handle.verify()).expect("verify");
     }
 
     #[test]
     fn index_handle_compact_of_one_run_is_a_no_op() {
         let storage = MemoryStorage::new();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command);
-        handle.put(b"a".to_vec(), b"1".to_vec()).expect("put");
-        let before = handle.stats().expect("stats");
-        let after = handle.compact().expect("compact");
+        db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).expect("put");
+        let before = db_actor::block_on(handle.stats()).expect("stats");
+        let after = db_actor::block_on(handle.compact()).expect("compact");
         assert_eq!(before, after);
     }
 
@@ -1283,13 +1283,13 @@ mod tests {
         let commands = IndexHandle::new(&storage, document.clone(), IndexKind::Command);
         let regions = IndexHandle::new(&storage, document, IndexKind::TouchedRegion);
 
-        commands.put(b"shared-key".to_vec(), b"command-value".to_vec()).expect("put");
-        regions.put(b"shared-key".to_vec(), b"region-value".to_vec()).expect("put");
+        db_actor::block_on(commands.put(b"shared-key".to_vec(), b"command-value".to_vec())).expect("put");
+        db_actor::block_on(regions.put(b"shared-key".to_vec(), b"region-value".to_vec())).expect("put");
 
-        assert_eq!(commands.get(b"shared-key").expect("get"), Some(b"command-value".to_vec()));
-        assert_eq!(regions.get(b"shared-key").expect("get"), Some(b"region-value".to_vec()));
-        assert_eq!(commands.stats().expect("stats").run_count, 1);
-        assert_eq!(regions.stats().expect("stats").run_count, 1);
+        assert_eq!(db_actor::block_on(commands.get(b"shared-key")).expect("get"), Some(b"command-value".to_vec()));
+        assert_eq!(db_actor::block_on(regions.get(b"shared-key")).expect("get"), Some(b"region-value".to_vec()));
+        assert_eq!(db_actor::block_on(commands.stats()).expect("stats").run_count, 1);
+        assert_eq!(db_actor::block_on(regions.stats()).expect("stats").run_count, 1);
     }
     //#endregion 🔖️IndexHandle
 
@@ -1299,11 +1299,11 @@ mod tests {
         let storage = MemoryStorage::new();
         let index = CommandIndex::new(&storage, ArtifactId::from("doc-1"));
         let location = RecordLocation { segment: 3, offset: 128, len: 64 };
-        index.record(42, location).expect("record");
-        assert_eq!(index.lookup(42).expect("lookup"), Some(location));
-        assert_eq!(index.lookup(43).expect("lookup"), None);
-        index.remove(42).expect("remove");
-        assert_eq!(index.lookup(42).expect("lookup"), None);
+        db_actor::block_on(index.record(42, location)).expect("record");
+        assert_eq!(db_actor::block_on(index.lookup(42)).expect("lookup"), Some(location));
+        assert_eq!(db_actor::block_on(index.lookup(43)).expect("lookup"), None);
+        db_actor::block_on(index.remove(42)).expect("remove");
+        assert_eq!(db_actor::block_on(index.lookup(42)).expect("lookup"), None);
     }
 
     #[test]
@@ -1311,8 +1311,8 @@ mod tests {
         let storage = MemoryStorage::new();
         let index = InverseIndex::new(&storage, ArtifactId::from("doc-1"));
         let location = RecordLocation { segment: 1, offset: 0, len: 16 };
-        index.record(7, location).expect("record");
-        assert_eq!(index.lookup(7).expect("lookup"), Some(location));
+        db_actor::block_on(index.record(7, location)).expect("record");
+        assert_eq!(db_actor::block_on(index.lookup(7)).expect("lookup"), Some(location));
     }
 
     #[test]
@@ -1321,15 +1321,15 @@ mod tests {
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1"));
         let alice = ActorId::from("alice");
         let bob = ActorId::from("bob");
-        index.record(&alice, 1, 100).expect("record");
-        index.record(&alice, 2, 101).expect("record");
-        index.record(&bob, 1, 200).expect("record");
+        db_actor::block_on(index.record(&alice, 1, 100)).expect("record");
+        db_actor::block_on(index.record(&alice, 2, 101)).expect("record");
+        db_actor::block_on(index.record(&bob, 1, 200)).expect("record");
 
-        assert_eq!(index.lookup(&alice, 1).expect("lookup"), Some(100));
-        assert_eq!(index.lookup(&alice, 2).expect("lookup"), Some(101));
-        assert_eq!(index.latest_for_actor(&alice).expect("latest"), Some((2, 101)));
-        assert_eq!(index.latest_for_actor(&bob).expect("latest"), Some((1, 200)));
-        assert_eq!(index.latest_for_actor(&ActorId::from("carol")).expect("latest"), None);
+        assert_eq!(db_actor::block_on(index.lookup(&alice, 1)).expect("lookup"), Some(100));
+        assert_eq!(db_actor::block_on(index.lookup(&alice, 2)).expect("lookup"), Some(101));
+        assert_eq!(db_actor::block_on(index.latest_for_actor(&alice)).expect("latest"), Some((2, 101)));
+        assert_eq!(db_actor::block_on(index.latest_for_actor(&bob)).expect("latest"), Some((1, 200)));
+        assert_eq!(db_actor::block_on(index.latest_for_actor(&ActorId::from("carol"))).expect("latest"), None);
     }
 
     #[test]
@@ -1337,7 +1337,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1"));
         let unsafe_actor = ActorId::from("bad\u{0}actor");
-        assert!(matches!(index.record(&unsafe_actor, 1, 1), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(index.record(&unsafe_actor, 1, 1)), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -1346,81 +1346,81 @@ mod tests {
         let index = FrontierIndex::new(&storage, ArtifactId::from("doc-1"));
         let first = Frontier { document: ArtifactId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
         let second = Frontier { document: ArtifactId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
-        index.record(&first).expect("record");
-        index.record(&second).expect("record");
+        db_actor::block_on(index.record(&first)).expect("record");
+        db_actor::block_on(index.record(&second)).expect("record");
 
-        assert_eq!(index.lookup(1).expect("lookup"), Some(first));
-        assert_eq!(index.latest().expect("latest"), Some(second));
+        assert_eq!(db_actor::block_on(index.lookup(1)).expect("lookup"), Some(first));
+        assert_eq!(db_actor::block_on(index.latest()).expect("latest"), Some(second));
     }
 
     #[test]
     fn touched_region_index_accumulates_sorted_unique_seqs() {
         let storage = MemoryStorage::new();
         let index = TouchedRegionIndex::new(&storage, ArtifactId::from("doc-1"));
-        index.record_touch(b"region-a", 5).expect("record_touch");
-        index.record_touch(b"region-a", 2).expect("record_touch");
-        index.record_touch(b"region-a", 5).expect("record_touch");
-        assert_eq!(index.touching(b"region-a").expect("touching"), vec![2, 5]);
-        assert_eq!(index.touching(b"region-b").expect("touching"), Vec::<u64>::new());
+        db_actor::block_on(index.record_touch(b"region-a", 5)).expect("record_touch");
+        db_actor::block_on(index.record_touch(b"region-a", 2)).expect("record_touch");
+        db_actor::block_on(index.record_touch(b"region-a", 5)).expect("record_touch");
+        assert_eq!(db_actor::block_on(index.touching(b"region-a")).expect("touching"), vec![2, 5]);
+        assert_eq!(db_actor::block_on(index.touching(b"region-b")).expect("touching"), Vec::<u64>::new());
     }
 
     #[test]
     fn commit_index_round_trips() {
         let storage = MemoryStorage::new();
         let index = CommitIndex::new(&storage, ArtifactId::from("doc-1"));
-        index.record("ck-abc123", 9).expect("record");
-        assert_eq!(index.lookup("ck-abc123").expect("lookup"), Some(9));
-        assert_eq!(index.lookup("ck-missing").expect("lookup"), None);
+        db_actor::block_on(index.record("ck-abc123", 9)).expect("record");
+        assert_eq!(db_actor::block_on(index.lookup("ck-abc123")).expect("lookup"), Some(9));
+        assert_eq!(db_actor::block_on(index.lookup("ck-missing")).expect("lookup"), None);
     }
 
     #[test]
     fn full_text_index_search_finds_indexed_documents() {
         let storage = MemoryStorage::new();
         let index = FullTextIndex::new(&storage, ArtifactId::from("doc-1"));
-        index.index_document(1, "The Quick Brown Fox").expect("index");
-        index.index_document(2, "quick jumps").expect("index");
+        db_actor::block_on(index.index_document(1, "The Quick Brown Fox")).expect("index");
+        db_actor::block_on(index.index_document(2, "quick jumps")).expect("index");
 
-        assert_eq!(index.search("quick").expect("search"), vec![1, 2]);
-        assert_eq!(index.search("QUICK").expect("search"), vec![1, 2]);
-        assert_eq!(index.search("fox").expect("search"), vec![1]);
-        assert_eq!(index.search("absent").expect("search"), Vec::<u64>::new());
+        assert_eq!(db_actor::block_on(index.search("quick")).expect("search"), vec![1, 2]);
+        assert_eq!(db_actor::block_on(index.search("QUICK")).expect("search"), vec![1, 2]);
+        assert_eq!(db_actor::block_on(index.search("fox")).expect("search"), vec![1]);
+        assert_eq!(db_actor::block_on(index.search("absent")).expect("search"), Vec::<u64>::new());
     }
 
     #[test]
     fn conflict_index_accumulates_multiple_records_per_command() {
         let storage = MemoryStorage::new();
         let index = ConflictIndex::new(&storage, ArtifactId::from("doc-1"));
-        index.record_conflict(5, b"region-collision".to_vec()).expect("record_conflict");
-        index.record_conflict(5, b"constraint-violation".to_vec()).expect("record_conflict");
-        index.record_conflict(6, b"other".to_vec()).expect("record_conflict");
+        db_actor::block_on(index.record_conflict(5, b"region-collision".to_vec())).expect("record_conflict");
+        db_actor::block_on(index.record_conflict(5, b"constraint-violation".to_vec())).expect("record_conflict");
+        db_actor::block_on(index.record_conflict(6, b"other".to_vec())).expect("record_conflict");
 
-        assert_eq!(index.conflicts_for(5).expect("conflicts_for"), vec![b"region-collision".to_vec(), b"constraint-violation".to_vec()]);
-        assert_eq!(index.conflicts_for(6).expect("conflicts_for"), vec![b"other".to_vec()]);
-        assert_eq!(index.conflicts_for(7).expect("conflicts_for"), Vec::<Vec<u8>>::new());
+        assert_eq!(db_actor::block_on(index.conflicts_for(5)).expect("conflicts_for"), vec![b"region-collision".to_vec(), b"constraint-violation".to_vec()]);
+        assert_eq!(db_actor::block_on(index.conflicts_for(6)).expect("conflicts_for"), vec![b"other".to_vec()]);
+        assert_eq!(db_actor::block_on(index.conflicts_for(7)).expect("conflicts_for"), Vec::<Vec<u8>>::new());
     }
 
     #[test]
     fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id() {
         let storage = MemoryStorage::new();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1"));
-        index.record("by-author", 10, b"state-10".to_vec()).expect("record");
-        index.record("by-author", 20, b"state-20".to_vec()).expect("record");
+        db_actor::block_on(index.record("by-author", 10, b"state-10".to_vec())).expect("record");
+        db_actor::block_on(index.record("by-author", 20, b"state-20".to_vec())).expect("record");
 
-        assert_eq!(index.at("by-author", 10).expect("at"), Some(b"state-10".to_vec()));
-        assert_eq!(index.at("by-author", 15).expect("at"), None);
-        assert_eq!(index.latest_at_or_before("by-author", 15).expect("latest_at_or_before"), Some((10, b"state-10".to_vec())));
-        assert_eq!(index.latest_at_or_before("by-author", 20).expect("latest_at_or_before"), Some((20, b"state-20".to_vec())));
-        assert_eq!(index.latest_at_or_before("by-author", 5).expect("latest_at_or_before"), None);
+        assert_eq!(db_actor::block_on(index.at("by-author", 10)).expect("at"), Some(b"state-10".to_vec()));
+        assert_eq!(db_actor::block_on(index.at("by-author", 15)).expect("at"), None);
+        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 15)).expect("latest_at_or_before"), Some((10, b"state-10".to_vec())));
+        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 20)).expect("latest_at_or_before"), Some((20, b"state-20".to_vec())));
+        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 5)).expect("latest_at_or_before"), None);
         // 🎯️ "by-color" sorts after "by-author" but has no entries at all — must not fall back to
         // a lexicographically-earlier projection's entry.
-        assert_eq!(index.latest_at_or_before("by-color", 100).expect("latest_at_or_before"), None);
+        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-color", 100)).expect("latest_at_or_before"), None);
     }
 
     #[test]
     fn projection_index_rejects_projection_id_with_embedded_nul() {
         let storage = MemoryStorage::new();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1"));
-        assert!(matches!(index.record("bad\u{0}id", 1, vec![1]), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(index.record("bad\u{0}id", 1, vec![1])), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -1429,20 +1429,20 @@ mod tests {
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1"));
         let alice = ActorId::from("alice");
 
-        index.publish(&alice, "drag-ghost", vec![1]).expect("publish");
-        assert_eq!(index.latest(&alice, "drag-ghost").expect("latest"), Some(vec![1]));
+        db_actor::block_on(index.publish(&alice, "drag-ghost", vec![1])).expect("publish");
+        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), Some(vec![1]));
 
-        index.publish(&alice, "drag-ghost", vec![2]).expect("publish");
-        assert_eq!(index.latest(&alice, "drag-ghost").expect("latest"), Some(vec![2]));
+        db_actor::block_on(index.publish(&alice, "drag-ghost", vec![2])).expect("publish");
+        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), Some(vec![2]));
 
-        index.publish(&alice, "cursor", vec![9]).expect("publish");
-        let mut for_alice = index.for_actor(&alice).expect("for_actor");
+        db_actor::block_on(index.publish(&alice, "cursor", vec![9])).expect("publish");
+        let mut for_alice = db_actor::block_on(index.for_actor(&alice)).expect("for_actor");
         for_alice.sort();
         assert_eq!(for_alice, vec![("cursor".to_string(), vec![9]), ("drag-ghost".to_string(), vec![2])]);
 
-        index.withdraw(&alice, "drag-ghost").expect("withdraw");
-        assert_eq!(index.latest(&alice, "drag-ghost").expect("latest"), None);
-        assert_eq!(index.for_actor(&alice).expect("for_actor"), vec![("cursor".to_string(), vec![9])]);
+        db_actor::block_on(index.withdraw(&alice, "drag-ghost")).expect("withdraw");
+        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), None);
+        assert_eq!(db_actor::block_on(index.for_actor(&alice)).expect("for_actor"), vec![("cursor".to_string(), vec![9])]);
     }
 
     #[test]
@@ -1450,7 +1450,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1"));
         let unsafe_actor = ActorId::from("bad\u{0}actor");
-        assert!(matches!(index.publish(&unsafe_actor, "k", vec![1]), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(index.publish(&unsafe_actor, "k", vec![1])), Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️TypedIndexes
 }

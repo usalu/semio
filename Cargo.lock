@@ -6868,13 +6868,13 @@ dependencies = [
  "blake3",
  "neo4rs",
  "rusqlite",
+ "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-replication",
  "serde",
  "serde_json",
  "sqlx",
  "thiserror 2.0.18",
- "tokio",
 ]
 
 [[package]]

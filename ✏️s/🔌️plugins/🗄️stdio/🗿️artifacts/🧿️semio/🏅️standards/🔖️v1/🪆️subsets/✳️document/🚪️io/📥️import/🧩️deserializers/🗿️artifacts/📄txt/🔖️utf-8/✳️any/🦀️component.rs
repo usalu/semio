@@ -19,7 +19,7 @@ impl ArtifactDeserializer for SemioDocumentFromTxt {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let blocks = from.lines.iter().map(|line| if line.is_empty() { DocBlock::Paragraph { style_id: None, runs: Vec::new() } } else { DocBlock::Paragraph { style_id: None, runs: vec![DocRun::plain(line.clone())] } }).collect();
         Ok(SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks })
     }
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn each_line_becomes_a_paragraph_blank_lines_become_empty_paragraphs() {
-        let semio = SemioDocumentFromTxt::deserialize(&sample_txt()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&sample_txt())).expect("deserialize");
         assert_eq!(semio.blocks.len(), 3);
         assert!(matches!(&semio.blocks[0], DocBlock::Paragraph { runs, .. } if runs[0].text == "First line."));
         assert!(matches!(&semio.blocks[1], DocBlock::Paragraph { runs, .. } if runs.is_empty()));

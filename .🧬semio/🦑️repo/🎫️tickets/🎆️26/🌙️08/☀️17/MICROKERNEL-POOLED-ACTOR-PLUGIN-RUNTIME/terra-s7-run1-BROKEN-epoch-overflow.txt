@@ -1,0 +1,40 @@
+[host] echo import called from inside guest await: ping:41
+[host] ping(41) = 42
+[host] run(stream) summed = 21
+[host] G3 PASS
+[host] S1: burn(0) = 2850874112, burn(1) = 2850874112, elapsed = 173.006292ms, epoch_deadline_callback hits = 139
+[host] S1: progress log has 19532 entries
+[host] S1: FAIL — no interleaving observed (last id=0 at Some(9765), first id=1 at Some(9766))
+[host] S3/S5: run() parked on manual first poll = true
+[host] S3: PASS — checkpoint() = 42 succeeded while run() was parked
+[host] S5: PASS — run() resumed after delayed wake, summed = 150 (7 poll_produce calls)
+[host] hang(99) started, awaiting pending forever until dropped
+[host] echo import called from inside guest await: post-cancel-sync
+[host] S2: PASS — hang()'s host future was dropped after guest-side cancel
+[host] S6: PASS — nested Rc<RefCell> executor resumed correctly, got "delayed:nested"
+[host] ==== VERDICTS ====
+[host] S1: FAIL — no interleaving observed (last id=0 at Some(9765), first id=1 at Some(9766))
+[host] S3: PASS — checkpoint() = 42 succeeded while run() was parked
+[host] S5: PASS — run() resumed after delayed wake, summed = 150 (7 poll_produce calls)
+[host] S2: PASS — hang()'s host future was dropped after guest-side cancel
+[host] S6: PASS — nested Rc<RefCell> executor resumed correctly, got "delayed:nested"
+[host] S1b: burn(20)=2850874112, burn(21)=2850874112, elapsed=170.034833ms, hits_a=67, hits_b=69, log entries=19532, switches=133
+[host] S1b: first entry id=20 step=0 t=132.583µs
+[host] S1b: last entry id=21 step=9765 t=170.125166ms
+[host] S1b: switch #0 — (id=20, step=247, t=2.255041ms) -> (id=21, step=0, t=2.262666ms)
+[host] S1b: switch #1 — (id=21, step=144, t=3.530833ms) -> (id=20, step=248, t=3.543458ms)
+[host] S1b: switch #2 — (id=20, step=391, t=4.813916ms) -> (id=21, step=145, t=4.825333ms)
+[host] S1b: switch #3 — (id=21, step=292, t=6.070541ms) -> (id=20, step=392, t=6.07875ms)
+[host] S1b: switch #4 — (id=20, step=538, t=7.324625ms) -> (id=21, step=293, t=7.335208ms)
+[host] S1b: switch #5 — (id=21, step=427, t=8.476166ms) -> (id=20, step=539, t=8.481833ms)
+[host] S1b: switch #6 — (id=20, step=676, t=9.733875ms) -> (id=21, step=428, t=9.742541ms)
+[host] S1b: switch #7 — (id=21, step=563, t=10.992291ms) -> (id=20, step=677, t=11.003375ms)
+[host] S1b: switch #8 — (id=20, step=826, t=12.264166ms) -> (id=21, step=564, t=12.280541ms)
+[host] S1b: switch #9 — (id=21, step=711, t=13.522166ms) -> (id=20, step=827, t=13.529083ms)
+[host] S1b: GO — 133 switches across 19532 entries; inter-store host-level `futures::join!` DOES interleave epoch-Yield(1)'d CPU-bound guests. Answers Q2: Yield(1) does return control to our executor, not just wasmtime's internal scheduler.
+[host] S1b-Q3 (fuel-only, no epoch): burn(30)=2850874112, burn(31)=2850874112, log entries=19532, GO — fuel_async_yield_interval(Some(500_000)) ALSO interleaves with NO epoch interruption enabled at all (3041 switches / 19532 entries). Answers Q3: fuel is an independent, sufficient lever, not merely epoch's helper.
+[host] S1c-sym-epoch: GO — epoch-Yield, symmetric pure-CPU (no imports): a=2850874112 t_a=233.083333ms, b=2850874112 t_b=233.390041ms, ratio=1.00 (~1.0 = interleaved). hits_a=92 hits_b=93
+[host] S1c-asym-epoch: GO — epoch-Yield, asymmetric pure-CPU (no imports): huge(a)=813049472 t_a=871.374834ms, tiny(b)=2249204832 t_b=30.249125ms — tiny finished BEFORE huge, proving it was not blocked behind it. hits_a=684 hits_b=12
+[host] S1c-sym-fuel: GO — fuel-only (no epoch at all), symmetric pure-CPU (no imports): a=2850874112 t_a=51.749667ms, b=2850874112 t_b=51.808167ms, ratio=1.00
+[host] S1c-asym-fuel: GO — fuel-only (no epoch at all), asymmetric pure-CPU (no imports): huge(a)=813049472 t_a=198.887167ms, tiny(b)=2249204832 t_b=6.337208ms — tiny finished BEFORE huge
+Error: wasm trap: interrupt

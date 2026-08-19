@@ -304,7 +304,7 @@ impl ArtifactEditor for WriterPlayApp {
     /// `writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended consumer. Falls through
     /// to the default whole-document-pack export for `"document:out"` (duplicated inline, not delegated
     /// — Rust traits have no `super` call for an overridden default).
-    fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
             let payload = writer_chapter_payload(doc.snapshot);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -727,7 +727,7 @@ mod tests {
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
-        let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
+        let media = semio_framework_plugin::resolve_ready(WriterPlayApp::export_media("text:out", &doc_view)).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
         let payload: WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
@@ -741,7 +741,7 @@ mod tests {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
-        assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
+        assert!(matches!(semio_framework_plugin::resolve_ready(WriterPlayApp::export_media("nonsense:out", &doc_view)), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
 

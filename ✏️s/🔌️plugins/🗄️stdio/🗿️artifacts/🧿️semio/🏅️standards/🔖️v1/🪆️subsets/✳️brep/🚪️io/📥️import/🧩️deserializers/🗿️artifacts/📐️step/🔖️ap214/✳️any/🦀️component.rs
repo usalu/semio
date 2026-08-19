@@ -300,7 +300,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
     const FROM: Dialect = STEP_DIALECT;
     const INTO: Dialect = SEMIO_BREP_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let resolver = Resolver::new(from);
         let mut vertices = Vec::new();
         let mut edges = Vec::new();
@@ -415,7 +415,7 @@ mod tests {
     #[test]
     fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
         let step = fixture_step_snapshot();
-        let brep = SemioBrepFromStep::deserialize(&step).expect("deserialize real fixture");
+        let brep = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize real fixture");
 
         assert_eq!(brep.vertices.len(), 3);
         assert_eq!(brep.edges.len(), 3);
@@ -449,7 +449,7 @@ mod tests {
         let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
         let step = StepSnapshot::from_part21_document(doc);
-        let result = SemioBrepFromStep::deserialize(&step);
+        let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
     }
 
@@ -459,7 +459,7 @@ mod tests {
         let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
         let step = StepSnapshot::from_part21_document(doc);
-        let result = SemioBrepFromStep::deserialize(&step);
+        let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "an unsupported surface entity must error, never silently become a Plane");
     }
 }

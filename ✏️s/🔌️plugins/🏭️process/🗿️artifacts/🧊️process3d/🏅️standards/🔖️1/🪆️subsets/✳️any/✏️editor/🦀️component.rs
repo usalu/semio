@@ -227,7 +227,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
                 .map_err(|error| MediaError::Payload("brep:out".into(), error))?
@@ -1317,7 +1317,7 @@ mod tests {
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
+        let media = semio_framework_plugin::resolve_ready(Process3dPlayApp::export_media("brep:out", &doc)).expect("export brep:out");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Brep);
         match media.payload {
@@ -1335,7 +1335,7 @@ mod tests {
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
+        assert!(matches!(semio_framework_plugin::resolve_ready(Process3dPlayApp::export_media("nonsense:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
     #[test]

@@ -64,7 +64,7 @@ impl ArtifactSerializer for SemioCadToStep {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut ids = IdGen(0);
         let mut entities = Vec::new();
         for rec in &from.entities {
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn real_text_round_trip_through_step_codec() {
         let cad = sample_cad();
-        let step = SemioCadToStep::serialize(&cad).expect("serialize");
+        let step = semio_framework_plugin::resolve_ready(SemioCadToStep::serialize(&cad)).expect("serialize");
         assert_eq!(step.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
         assert_eq!(step.entities.len(), 7, "4 for LINE + 3 for CIRCLE; Text is dropped");
 

@@ -28,7 +28,7 @@ impl ArtifactSerializer for SemioImageToJpg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→jpg: no frames to export".into()))?;
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→jpg: frame pixel length does not match width*height*4".into()));
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn real_byte_round_trip_through_jpg_codec() {
         let semio = sample_semio();
-        let jpg = SemioImageToJpg::serialize(&semio).expect("serialize");
+        let jpg = semio_framework_plugin::resolve_ready(SemioImageToJpg::serialize(&semio)).expect("serialize");
         assert_eq!(jpg.width, 2);
         assert_eq!(jpg.height, 1);
         assert_eq!(jpg.other_segments.len(), 1);

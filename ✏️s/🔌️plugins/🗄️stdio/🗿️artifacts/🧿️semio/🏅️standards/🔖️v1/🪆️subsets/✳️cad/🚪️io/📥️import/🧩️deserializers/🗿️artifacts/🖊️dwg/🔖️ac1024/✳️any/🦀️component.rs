@@ -25,7 +25,7 @@ impl ArtifactDeserializer for SemioCadFromDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.version.is_empty() {
             return Err(store::PackError::Schema("dwg→semio/cad: missing AC10xx version sentinel — not a real DWG file".into()));
         }
@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn produces_empty_but_valid_cad_snapshot() {
-        let cad = SemioCadFromDwg::deserialize(&sample_dwg()).expect("deserialize");
+        let cad = semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert!(cad.layers.is_empty());
         assert!(cad.blocks.is_empty());
         assert!(cad.entities.is_empty());
@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn rejects_missing_version() {
         let bad = DwgSnapshot { version: String::new(), ..DwgSnapshot::default() };
-        assert!(SemioCadFromDwg::deserialize(&bad).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&bad)).is_err());
     }
 }
 //#endregion 🔖️Tests

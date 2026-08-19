@@ -37,7 +37,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut buffers: Vec<Vec<u8>> = Vec::new();
         let mut buffer_views: Vec<GltfBufferView> = Vec::new();
         let mut accessors: Vec<GltfAccessor> = Vec::new();
@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn animation_to_gltf_to_animation_round_trips_everything_representable() {
         let original = real_world_animation();
-        let gltf = SemioAnimationToGltf::serialize(&original).expect("serialize");
+        let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&original)).expect("serialize");
         assert_eq!(gltf.document.animations.len(), 1);
         assert_eq!(gltf.document.animations[0].channels.len(), 2);
         assert_eq!(gltf.document.nodes.len(), 2);
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn accessors_decode_to_the_real_values_written() {
-        let gltf = SemioAnimationToGltf::serialize(&real_world_animation()).expect("serialize");
+        let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&real_world_animation())).expect("serialize");
         let sampler = &gltf.document.animations[0].samplers[0];
         let decoded = decode_accessor(&gltf.document, &gltf.buffers, sampler.output).expect("decode");
         assert_eq!(decoded.components, vec![0.0, 0.0, 0.0, 1.0, 0.5, 0.0]);
@@ -220,7 +220,7 @@ mod tests {
             interpolation: AnimInterpolation::Linear,
             keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }],
         });
-        let gltf = SemioAnimationToGltf::serialize(&snap).expect("serialize");
+        let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&snap)).expect("serialize");
         assert_eq!(gltf.document.animations[0].channels.len(), 2, "Custom channel must not appear in gltf's own channel list");
     }
 
@@ -228,7 +228,7 @@ mod tests {
     fn cubic_spline_downgrades_to_linear_on_export_documented() {
         let mut snap = real_world_animation();
         snap.timelines[0].channels[0].interpolation = AnimInterpolation::CubicSpline;
-        let gltf = SemioAnimationToGltf::serialize(&snap).expect("serialize");
+        let gltf = semio_framework_plugin::resolve_ready(SemioAnimationToGltf::serialize(&snap)).expect("serialize");
         assert_eq!(gltf.document.animations[0].samplers[0].interpolation, GltfInterpolation::Linear);
     }
 }

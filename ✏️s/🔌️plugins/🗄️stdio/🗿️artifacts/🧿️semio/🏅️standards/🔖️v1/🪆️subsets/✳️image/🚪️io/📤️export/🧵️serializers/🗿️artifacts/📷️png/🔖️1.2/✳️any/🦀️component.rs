@@ -42,7 +42,7 @@ impl ArtifactSerializer for SemioImageToPng {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→png: no frames to export".into()))?;
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→png: frame pixel length does not match width*height*4".into()));
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn maps_pixels_and_metadata_to_png() {
         let semio = sample_semio();
-        let png = SemioImageToPng::serialize(&semio).expect("serialize");
+        let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
         assert_eq!(png.width, 2);
         assert_eq!(png.height, 1);
         assert_eq!(png.pixels, semio.frames[0].rgba8);
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn real_byte_round_trip_through_png_codec() {
         let semio = sample_semio();
-        let png = SemioImageToPng::serialize(&semio).expect("serialize");
+        let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
         let bytes = crate::artifacts::png::engine::encode_png(&png).expect("encode real png bytes");
         let decoded = crate::artifacts::png::engine::decode_png(&bytes).expect("decode real png bytes");
         assert_eq!(decoded.pixels, semio.frames[0].rgba8);

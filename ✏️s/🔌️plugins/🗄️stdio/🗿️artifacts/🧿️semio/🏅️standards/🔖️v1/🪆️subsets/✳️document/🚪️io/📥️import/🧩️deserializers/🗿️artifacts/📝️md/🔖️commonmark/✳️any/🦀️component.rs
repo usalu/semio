@@ -102,7 +102,7 @@ impl ArtifactDeserializer for SemioDocumentFromMd {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let images: Vec<DocImage> = Vec::new();
         Ok(SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images, blocks: from.blocks.iter().flat_map(map_block).collect() })
     }
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn maps_headings_lists_code_and_quotes() {
-        let semio = SemioDocumentFromMd::deserialize(&sample_md()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&sample_md())).expect("deserialize");
         assert!(semio.styles.is_empty());
         assert_eq!(semio.blocks.len(), 5);
         assert!(matches!(&semio.blocks[0], DocBlock::Heading { level: 1, runs, .. } if runs[0].text == "Title"));
@@ -145,7 +145,7 @@ mod tests {
             schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "see: ".into() }, MdInline::Image { alt: "a cat".into(), url: "cat.png".into(), title: None }] }],
         };
-        let semio = SemioDocumentFromMd::deserialize(&md).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&md)).expect("deserialize");
         assert_eq!(semio.blocks.len(), 2);
         assert!(matches!(&semio.blocks[1], DocBlock::Image { image_id, alt, .. } if image_id == "cat.png" && alt == "a cat"));
     }

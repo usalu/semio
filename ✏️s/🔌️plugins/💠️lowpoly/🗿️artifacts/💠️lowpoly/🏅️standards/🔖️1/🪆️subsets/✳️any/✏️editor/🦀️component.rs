@@ -330,7 +330,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
     /// not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let mesh_workspace = LOWPOLY_SCRATCH.with(|scratch| scratch.borrow().mesh_workspace_map());
@@ -823,7 +823,7 @@ mod tests {
     #[test]
     fn export_media_mesh_out_produces_mesh_document_payload() {
         let mut a: LowpolyApp = app();
-        let media = a.export_media("mesh:out").expect("export mesh:out");
+        let media = semio_framework_plugin::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
         match media.payload {
             MediaPayload::Structured { schema, .. } => assert_eq!(schema, "mesh.document"),

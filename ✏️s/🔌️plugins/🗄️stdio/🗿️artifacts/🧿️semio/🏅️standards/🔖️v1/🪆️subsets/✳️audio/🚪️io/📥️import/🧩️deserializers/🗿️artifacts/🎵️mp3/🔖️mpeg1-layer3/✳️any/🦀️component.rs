@@ -27,7 +27,7 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let (sample_rate, channel_count) = match from.frames.first() {
             Some(frame) => (mpeg_sample_rate(frame.header.mpeg_version_id, frame.header.sample_rate_index), if frame.header.channel_mode == 3 { 1 } else { 2 }),
             None => (0, 0),
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_empty() {
-        let audio = SemioAudioFromMp3::deserialize(&real_world_mp3()).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert_eq!(audio.sample_rate, 44_100); // MPEG1, index 0
         assert_eq!(audio.channels.len(), 2); // channel_mode 0 = stereo
         for ch in &audio.channels {
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn deserialize_carries_real_id3v2_title_and_id3v1_presence_as_tags() {
-        let audio = SemioAudioFromMp3::deserialize(&real_world_mp3()).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert!(audio.tags.iter().any(|t| t.key == "TIT2" && t.value == "Test Tone"));
         assert!(audio.tags.iter().any(|t| t.key == "id3v1.raw"));
     }
@@ -148,14 +148,14 @@ mod tests {
     fn mono_channel_mode_maps_to_a_single_channel() {
         let mut mp3 = real_world_mp3();
         mp3.frames[0].header.channel_mode = 3;
-        let audio = SemioAudioFromMp3::deserialize(&mp3).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&mp3)).expect("deserialize");
         assert_eq!(audio.channels.len(), 1);
     }
 
     #[test]
     fn no_frames_honestly_yields_zero_sample_rate_and_zero_channels() {
         let mp3 = Mp3Snapshot::default();
-        let audio = SemioAudioFromMp3::deserialize(&mp3).expect("deserialize");
+        let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&mp3)).expect("deserialize");
         assert_eq!(audio.sample_rate, 0);
         assert!(audio.channels.is_empty());
     }

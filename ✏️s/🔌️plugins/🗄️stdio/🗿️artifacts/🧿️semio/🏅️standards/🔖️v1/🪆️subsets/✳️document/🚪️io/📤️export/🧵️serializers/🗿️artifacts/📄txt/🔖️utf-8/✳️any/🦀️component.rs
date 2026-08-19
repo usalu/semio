@@ -51,7 +51,7 @@ impl ArtifactSerializer for SemioDocumentToTxt {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let lines = from.blocks.iter().flat_map(block_to_lines).collect();
         Ok(TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines, trailing_newline: true, line_ending: LineEnding::Lf })
     }
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn extracts_plain_text_lines_and_drops_pagebreak() {
-        let txt = SemioDocumentToTxt::serialize(&sample_semio()).expect("serialize");
+        let txt = semio_framework_plugin::resolve_ready(SemioDocumentToTxt::serialize(&sample_semio())).expect("serialize");
         assert_eq!(txt.lines, vec!["Title".to_string(), "Body text.".to_string(), "item one".to_string()]);
         assert!(txt.trailing_newline);
     }

@@ -28,7 +28,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let streams = from
             .tracks
             .iter()
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn deserialize_maps_real_track_metadata_and_derives_pts_from_duration_plus_cts_offset() {
-        let video = SemioVideoFromMp4::deserialize(&real_world_mp4()).expect("deserialize");
+        let video = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(video.streams.len(), 1);
         let stream = &video.streams[0];
         assert_eq!(stream.kind, SemioVideoStreamKind::Video);
@@ -104,7 +104,7 @@ mod tests {
     fn deserialize_of_track_with_no_samples_falls_back_to_unit_rate_denominator() {
         let mut mp4 = real_world_mp4();
         mp4.tracks[0].samples.clear();
-        let video = SemioVideoFromMp4::deserialize(&mp4).expect("deserialize");
+        let video = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&mp4)).expect("deserialize");
         assert_eq!(video.streams[0].rate, SemioRational { num: 30, den: 1 });
         assert!(video.streams[0].samples.is_empty());
     }

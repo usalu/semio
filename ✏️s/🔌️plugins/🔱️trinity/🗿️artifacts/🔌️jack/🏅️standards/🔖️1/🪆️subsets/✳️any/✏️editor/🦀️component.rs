@@ -309,7 +309,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.
-    fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" | "document:out" => {
                 let bytes = doc.snapshot.encode_pack();
@@ -753,8 +753,8 @@ mod tests {
     fn export_media_graph_out_matches_document_pack() {
         use semio_framework_plugin::PluginApp as _;
         let mut app = new_app();
-        let document_out = app.export_media("document:out").expect("document:out export");
-        let graph_out = app.export_media("graph:out").expect("graph:out export");
+        let document_out = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("document:out export");
+        let graph_out = semio_framework_plugin::resolve_ready(app.export_media("graph:out")).expect("graph:out export");
         assert_eq!(document_out.payload, graph_out.payload);
     }
 

@@ -32,7 +32,7 @@ impl ArtifactSerializer for SemioImageToTiff {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→tiff: no frames to export".into()))?;
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("semio/image→tiff: frame pixel length does not match width*height*4".into()));
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn real_byte_round_trip_through_tiff_codec() {
         let semio = sample_semio();
-        let tiff = SemioImageToTiff::serialize(&semio).expect("serialize");
+        let tiff = semio_framework_plugin::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
         let bytes = crate::artifacts::tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
         let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
         assert_eq!(decoded.width(), Some(2));

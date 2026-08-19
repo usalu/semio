@@ -230,7 +230,7 @@ impl ArtifactEditor for ShootingPlayApp {
     /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "photos:out" => shooting_photo_media(doc.snapshot),
             "document:out" => {

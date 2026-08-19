@@ -146,7 +146,7 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let document = &from.document;
 
         let materials: Vec<SemioMaterial> = document
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn deserialize_maps_geometry_material_and_topology() {
-        let semio = SemioMeshFromGltf::deserialize(&sample_gltf()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&sample_gltf())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         let mesh = &semio.meshes[0];
         assert_eq!(mesh.id, "quad");
@@ -285,7 +285,7 @@ mod tests {
     fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].mode = Some(2);
-        let err = SemioMeshFromGltf::deserialize(&gltf).expect_err("LINE_LOOP must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("LINE_LOOP must error");
         assert!(format!("{err:?}").contains("LINE_LOOP"), "got {err:?}");
     }
 
@@ -293,7 +293,7 @@ mod tests {
     fn missing_position_attribute_is_a_hard_error() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].attributes.retain(|(name, _)| name != "POSITION");
-        let err = SemioMeshFromGltf::deserialize(&gltf).expect_err("missing POSITION must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("missing POSITION must error");
         assert!(format!("{err:?}").contains("POSITION"), "got {err:?}");
     }
 }

@@ -146,7 +146,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 
     /// 🎞️ `geometry:out` plus the inherited `document:out` default, replicated inline (overriding
     /// `export_media` shadows the trait's provided body for every port on this app).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "geometry:out" => {
                 let mesh = export_mesh_from_document(doc.snapshot);

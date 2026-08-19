@@ -25,7 +25,13 @@ semio-framework-async = { workspace = true }
 # actor crate already owns. Pure crate (no tokio, no threads, builds for wasm32-unknown-unknown), so
 # this costs no platform coupling; `🔌️plugin/🖥️host` already depends on it the same way.
 semio-framework-actor = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time"] }
+# 🎫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet R2, terra-http-streaming): `macros` is needed
+# by PRODUCTION code (`TimerWheel::spawn_driver`'s and `ComputePool::run_blocking`'s own
+# pre-existing `tokio::select!`, plus `StorageTicket::await_result`'s new deadline race) — it was
+# previously declared only under `[dev-dependencies]` below, which happened to unify into every
+# `cargo test`/`--all-targets` build (masking that a lib-only build never had it). Enabling an
+# already-used feature on an already-present dependency, not a new external dependency.
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "macros"] }
 
 [dev-dependencies]
 # 🧪️ `testkit` (unions with the plain dependency above for test builds only) brings in

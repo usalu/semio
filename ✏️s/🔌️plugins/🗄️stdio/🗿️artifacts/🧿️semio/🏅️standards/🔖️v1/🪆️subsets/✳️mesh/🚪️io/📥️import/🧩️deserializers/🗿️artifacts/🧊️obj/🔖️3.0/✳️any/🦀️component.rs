@@ -81,7 +81,7 @@ impl ArtifactDeserializer for SemioMeshFromObj {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let build_primitive = |id: String, face_indices: Vec<usize>| -> Result<SemioPrimitive, store::PackError> {
             let mut positions = Vec::new();
             let mut normals = Vec::new();
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn deserialize_fan_triangulates_the_quad_into_two_triangles() {
-        let semio = SemioMeshFromObj::deserialize(&sample_obj()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&sample_obj())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "mesh-0");
         let prim = &semio.meshes[0].primitives[0];
@@ -158,7 +158,7 @@ mod tests {
         let mut obj = sample_obj();
         obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
         obj.objects = vec![crate::artifacts::obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, crate::artifacts::obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
-        let semio = SemioMeshFromObj::deserialize(&obj).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect("deserialize");
         assert_eq!(semio.meshes.len(), 2);
         assert_eq!(semio.meshes[0].id, "quad");
         assert_eq!(semio.meshes[1].id, "tri");
@@ -169,7 +169,7 @@ mod tests {
     fn out_of_range_vertex_reference_is_a_hard_error() {
         let mut obj = sample_obj();
         obj.faces[0].vertices[0].vertex = 999;
-        let err = SemioMeshFromObj::deserialize(&obj).expect_err("out-of-range vertex must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect_err("out-of-range vertex must error");
         assert!(format!("{err:?}").contains("out-of-range"), "got {err:?}");
     }
 }

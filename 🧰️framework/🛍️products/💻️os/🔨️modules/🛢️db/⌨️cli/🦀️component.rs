@@ -138,6 +138,17 @@ fn usage(message: &str) -> i32 {
 }
 //#endregion 🔖️Format
 
+//#region 🔖️AsyncBridge
+/// @emoji 🚀️ `db::storage::FsStorage::open_inline` under this binary's own service name — every
+/// `FsStorage` call site in this file goes through here. The runtime itself is
+/// `db_storage::InlineRuntime`, which lives beside the `FsStorage` that needs it rather than being
+/// re-implemented here: this binary is single-shot and strictly sequential (one subcommand, one
+/// process, exits), which is exactly what that runtime is for.
+fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
+    db::storage::FsStorage::open_inline("db_cli", root)
+}
+//#endregion 🔖️AsyncBridge
+
 //#region 🔖️Health
 fn health_state_label(state: &db::observe::HealthState) -> String {
     match state {
@@ -313,25 +324,25 @@ fn cmd_wal_inspect(rest: &[String]) -> i32 {
         Some(Err(_)) => return usage("db wal-inspect: --limit must be a non-negative integer"),
     };
 
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    let segments = match storage.list_segments(&document) {
+    let segments = match db::actor::block_on(storage.list_segments(&document)) {
         Ok(segments) => segments,
         Err(err) => return fail("list_segments", err),
     };
     println!("== wal segments: {} ==", segments.len());
     for index in &segments {
-        match storage.segment_len(&document, *index) {
+        match db::actor::block_on(storage.segment_len(&document, *index)) {
             Ok(len) => println!("  segment {index}: {len} bytes"),
             Err(err) => println!("  segment {index}: <error reading length: {err}>"),
         }
     }
 
-    match db::wal::replay_document(&storage, &document) {
+    match db::actor::block_on(db::wal::replay_document(&storage, &document)) {
         Ok(records) => {
             println!("== wal records: {} ==", records.len());
             let shown = limit.unwrap_or(records.len()).min(records.len());
@@ -367,13 +378,13 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     let root = &positional[0];
     let id = &positional[1];
 
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    let generations = match storage.list_generations(&document) {
+    let generations = match db::actor::block_on(storage.list_generations(&document)) {
         Ok(generations) => generations,
         Err(err) => return fail("list_generations", err),
     };
@@ -392,7 +403,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     };
 
     let manager = db::snapshot::SnapshotManager::new(&storage);
-    let combined = match manager.materialize_chain(&document, generation) {
+    let combined = match db::actor::block_on(manager.materialize_chain(&document, generation)) {
         Ok(combined) => combined,
         Err(err) => return fail("materialize_chain", err),
     };
@@ -415,7 +426,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     println!("  created_at_ms: {}", descriptor.created_at_ms);
 
     if verify {
-        match manager.verify(&document, generation, pack::os_pack::VerificationLevel::Full) {
+        match db::actor::block_on(manager.verify(&document, generation, pack::os_pack::VerificationLevel::Full)) {
             Ok(()) => println!("== verify: OK =="),
             Err(err) => {
                 println!("== verify: FAIL ==");
@@ -432,11 +443,11 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
 fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
-    let records = db::wal::replay_document(storage, document)?;
+    let records = db::actor::block_on(db::wal::replay_document(storage, document))?;
     let manager = db::snapshot::SnapshotManager::new(storage);
-    match manager.load_latest(document)? {
+    match db::actor::block_on(manager.load_latest(document))? {
         Some((generation, _descriptor)) => {
-            manager.verify(document, generation, pack::os_pack::VerificationLevel::Full)?;
+            db::actor::block_on(manager.verify(document, generation, pack::os_pack::VerificationLevel::Full))?;
             Ok(format!("wal records={} snapshot generation={generation} (verified)", records.len()))
         }
         None => Ok(format!("wal records={} snapshot=none", records.len())),
@@ -475,7 +486,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
         return 0;
     }
 
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
@@ -560,12 +571,12 @@ fn cmd_replay(rest: &[String]) -> i32 {
     }
     let root = &positional[0];
     let id = &positional[1];
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
-    let records = match db::wal::replay_document(&storage, &document) {
+    let records = match db::actor::block_on(db::wal::replay_document(&storage, &document)) {
         Ok(records) => records,
         Err(err) => return fail("replay", err),
     };
@@ -610,12 +621,12 @@ fn cmd_repair(rest: &[String]) -> i32 {
     }
     let root = &positional[0];
     let id = &positional[1];
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
-    match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
+    match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms())) {
         Ok((_wal, report)) => {
             println!("== repair: {id} ==");
             println!("  segments_seen: {}", report.segments_seen);
@@ -761,17 +772,17 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
     let follower_root = &positional[1];
     let id = &positional[2];
 
-    let leader = match db::storage::FsStorage::open(Path::new(leader_root)) {
+    let leader = match open_fs_storage(Path::new(leader_root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open leader", err),
     };
-    let follower = match db::storage::FsStorage::open(Path::new(follower_root)) {
+    let follower = match open_fs_storage(Path::new(follower_root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open follower", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    match db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
+    match db::actor::block_on(db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms())) {
         Ok(db::cluster::ReplicationOutcome::UpToDate { frontier }) => {
             println!("== replica-simulate: up to date ==");
             println!("  head_seq: {}", frontier.head_seq);
@@ -811,20 +822,20 @@ fn cmd_migrate(rest: &[String]) -> i32 {
     let name = &positional[2];
     let payload = flags.get("payload").cloned().unwrap_or_default();
 
-    let storage = match db::storage::FsStorage::open(Path::new(root)) {
+    let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
     let document = db::db_ids::ArtifactId(id.clone());
     let now = now_ms();
-    let (mut wal, _report) = match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now) {
+    let (mut wal, _report) = match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now)) {
         Ok(pair) => pair,
         Err(err) => return fail("open wal", err),
     };
     let bytes = format!("{name}\n{payload}").into_bytes();
-    match wal.submit(&storage, &[db::wal::WalRecord::Migration(bytes)], db::DurabilityClass::Fsync, now) {
+    match db::actor::block_on(wal.submit(&storage, &[db::wal::WalRecord::Migration(bytes)], db::DurabilityClass::Fsync, now)) {
         Ok(receipt) => {
-            if let Err(err) = wal.force_flush(&storage) {
+            if let Err(err) = db::actor::block_on(wal.force_flush(&storage)) {
                 return fail("flush", err);
             }
             println!("== migrate: {id} ==");

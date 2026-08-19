@@ -79,7 +79,7 @@ impl ArtifactDeserializer for SemioFlowFromJson {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let root = as_object(&from.value)?;
         let nodes = as_array(get(root, "nodes")?)?.iter().map(map_node).collect::<Result<Vec<_>, _>>()?;
         let edges = as_array(get(root, "edges")?)?.iter().map(map_edge).collect::<Result<Vec<_>, _>>()?;
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn maps_nodes_and_edges() {
-        let semio = SemioFlowFromJson::deserialize(&sample_json()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&sample_json())).expect("deserialize");
         assert_eq!(semio.nodes.len(), 2);
         assert_eq!(semio.edges.len(), 1);
         assert_eq!(semio.nodes[0].id, "n1");
@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn missing_required_member_is_a_real_error() {
         let bad = JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text("{}").unwrap() };
-        assert!(SemioFlowFromJson::deserialize(&bad).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());
     }
 }
 //#endregion 🔖️Tests

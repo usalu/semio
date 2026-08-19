@@ -742,13 +742,50 @@ pub struct ComposedArtifact {
     pub confidence: Confidence,
 }
 
+/// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`io-async-signatures`): the boxed, pinned future
+/// every erased compose/deserialize/serialize hop now returns — named once so none of the 163
+/// `ComposerEntry` construction sites (nor `composer_entry_of`/`deserializer_entry_of`/
+/// `serializer_entry_of`) has to repeat the raw `Pin<Box<dyn Future<..>>>` spelling. Borrows
+/// `sources` for its own lifetime so a hop that never truly suspends still doesn't have to
+/// allocate an owned copy just to satisfy the signature.
+pub type ComposeFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ComposedArtifact, ComposeError>> + Send + 'a>>;
+
+/// 🌀️ `ComposerEntry.compose`'s function-POINTER type (still a plain, non-capturing `fn` — every
+/// existing `compose: some_fn` construction site keeps working unchanged) whose signature now
+/// returns a future instead of the future's own eventual output.
+pub type AsyncComposeFn = for<'a> fn(&'a [ErasedComposeSource]) -> ComposeFuture<'a>;
+
+/// 🌉️ Resolves a future that is guaranteed Ready on its very first poll. Every artifact-IO codec
+/// body in this tree runs synchronously to completion internally — `io-async-signatures` made the
+/// SIGNATURES uniformly async without adding any real suspension point anywhere in a codec body
+/// (a later packet owns real scheduler-driven awaiting); this bridges the handful of call sites
+/// that must stay synchronous themselves (existing sync tests, the `wire_artifact_compose` ABI
+/// boundary, whose export shape a real wasm async-component-model isn't yet safe to change — see
+/// `📌️important.md` rule 9) back onto that guarantee. Panics rather than silently blocking if the
+/// guarantee is ever violated by a future edit that adds a real await point.
+pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
+    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+    fn noop(_: *const ()) {}
+    fn clone_raw(_: *const ()) -> RawWaker {
+        RawWaker::new(std::ptr::null(), &VTABLE)
+    }
+    static VTABLE: RawWakerVTable = RawWakerVTable::new(clone_raw, noop, noop, noop);
+    let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
+    let mut cx = Context::from_waker(&waker);
+    let mut boxed = Box::pin(fut);
+    match boxed.as_mut().poll(&mut cx) {
+        Poll::Ready(value) => value,
+        Poll::Pending => panic!("resolve_ready: future was not ready on first poll — io-async-signatures requires every artifact-IO body to complete without real suspension"),
+    }
+}
+
 /// 🎹️ Type-erased composer vtable row. Built by a plugin's composer facet from its typed
 /// `ArtifactComposer` impl (SDK trait lives in the plugin crate, this struct only carries the
 /// erased shape so the registry never needs the plugin's concrete snapshot types).
 pub struct ComposerEntry {
     pub writes: Dialect,
     pub reads: &'static [Dialect],
-    pub compose: fn(&[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>,
+    pub compose: AsyncComposeFn,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize)]
@@ -964,8 +1001,11 @@ pub fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDiale
 /// a hook is installed (or in a context with nothing to fall through to, e.g. a bare unit test)
 /// this behaves exactly like `resolve`+`compose` did before -- existing single-crate callers are
 /// unaffected by this seam's mere existence.
-/// 🔌️ A host-owned erased fallback executable for cross-plugin IO dispatch.
-pub type IoFallback = dyn Fn(&IoKey, &[ErasedComposeSource]) -> Option<Result<ComposedArtifact, ComposeError>> + Send + Sync;
+/// 🔌️ A host-owned erased fallback executable for cross-plugin IO dispatch. Async to match
+/// `AsyncComposeFn` (io-async-signatures): `None` means "no opinion, fall through to the
+/// `IoResolveError`"; `Some(future)` is the fallback's own compose future, exactly as if it were
+/// a local `ComposerEntry.compose` call.
+pub type IoFallback = dyn for<'a> Fn(&'a IoKey, &'a [ErasedComposeSource]) -> Option<ComposeFuture<'a>> + Send + Sync;
 
 /// 🪪️ A fallback descriptor plus the exact executable allocation that owns it.
 #[derive(Clone)]
@@ -1004,11 +1044,11 @@ pub fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<()
 /// 🎹️ Resolve `key` locally; on a local miss, ask the installed fallback (if any). Returns the
 /// SAME `IoResolveError`-shaped message as a local-only `resolve` when nothing (local or
 /// fallback) has the key, so existing error-message-matching callers don't need to change.
-pub fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+pub async fn io_dispatch(key: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     match resolve(key) {
-        Ok(entry) => validate_composed_subset((entry.compose)(sources)?),
+        Ok(entry) => validate_composed_subset((entry.compose)(sources).await?),
         Err(local_err) => match IO_FALLBACK.get().and_then(|dispatcher| (dispatcher.dispatch)(key, sources)) {
-            Some(result) => validate_composed_subset(result?),
+            Some(fallback) => validate_composed_subset(fallback.await?),
             None => Err(ComposeError { message: local_err.message, diagnostics: Vec::new() }),
         },
     }
@@ -1034,10 +1074,10 @@ fn validate_composed_subset(mut composed: ComposedArtifact) -> Result<ComposedAr
 /// combinatorially as more dialects register, and neither failure mode is diagnosable from a single
 /// stack frame the way a fixed 2-hop call is. Callers that need a longer chain compose it themselves
 /// as repeated `io_compose_via`/`io_dispatch` calls, each one an explicit, auditable hop.
-pub fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let hub_composed = io_dispatch(hub, sources)?;
+pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    let hub_composed = io_dispatch(hub, sources).await?;
     let hop_source = ErasedComposeSource { dialect: hub_composed.dialect, payload: hub_composed.payload };
-    io_dispatch(target, std::slice::from_ref(&hop_source))
+    io_dispatch(target, std::slice::from_ref(&hop_source)).await
 }
 //#endregion 🔖️Dispatch
 
@@ -1494,7 +1534,7 @@ pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<V
         let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, wire.dialect.to_coordinate())))?;
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
-    match (entry.compose)(&sources) {
+    match resolve_ready((entry.compose)(&sources)) {
         Ok(mut composed) => {
             run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).map_err(IoWireError::Subset)?;
             encode_wire_json("composed-artifact", &WireComposedArtifact::from(composed))
@@ -1876,14 +1916,18 @@ mod tests {
         }
     }
 
-    fn compose_hop1(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let text = hop_text(sources)?;
-        Ok(ComposedArtifact { dialect: HOP1_INTO, payload: IoPayload::Text(format!("hop1({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+    fn compose_hop1(sources: &[ErasedComposeSource]) -> ComposeFuture<'_> {
+        Box::pin(async move {
+            let text = hop_text(sources)?;
+            Ok(ComposedArtifact { dialect: HOP1_INTO, payload: IoPayload::Text(format!("hop1({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+        })
     }
 
-    fn compose_hop2(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let text = hop_text(sources)?;
-        Ok(ComposedArtifact { dialect: HOP2_INTO, payload: IoPayload::Text(format!("hop2({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+    fn compose_hop2(sources: &[ErasedComposeSource]) -> ComposeFuture<'_> {
+        Box::pin(async move {
+            let text = hop_text(sources)?;
+            Ok(ComposedArtifact { dialect: HOP2_INTO, payload: IoPayload::Text(format!("hop2({text})")), diagnostics: Vec::new(), confidence: Confidence::High })
+        })
     }
 
     static HOP1_READS: [Dialect; 1] = [HOP1_FROM];
@@ -1907,7 +1951,7 @@ mod tests {
         let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
 
-        let result = io_compose_via(&hub_key, &target_key, &sources).expect("2-hop compose over real registered entries should succeed");
+        let result = resolve_ready(io_compose_via(&hub_key, &target_key, &sources)).expect("2-hop compose over real registered entries should succeed");
         assert_eq!(result.dialect, HOP2_INTO);
         match result.payload {
             IoPayload::Text(t) => assert_eq!(t, "hop2(hop1(seed))"),
@@ -1922,7 +1966,7 @@ mod tests {
         let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import);
         let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
-        let err = match io_compose_via(&unregistered_hub, &target_key, &sources) {
+        let err = match resolve_ready(io_compose_via(&unregistered_hub, &target_key, &sources)) {
             Err(err) => err,
             Ok(_) => panic!("unregistered hub key must fail hop 1"),
         };

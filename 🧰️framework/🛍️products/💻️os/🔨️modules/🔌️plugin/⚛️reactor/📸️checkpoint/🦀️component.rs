@@ -6,12 +6,15 @@
 //! ⚠️ Scope note (reported honestly): this wave ships the pack ENVELOPE — `instances` (id +
 //! app_id + document/config/draft packs via the SAME `plugin_document_pack`/`plugin_load_document_
 //! pack` round trip `AppCommand::LoadDocument`/`ReadDocument` already use), `timers` (id list from
-//! `⚛️reactor`'s pending `SetTimer` bookkeeping), and `pending_requests` (from `RequestRegistry::
+//! `⚛️reactor`'s pending `SetTimer` bookkeeping), `pending_requests` (from `RequestRegistry::
 //! pending_ids`, per design-abi.md §4: async tasks are never serialised, only marked
-//! re-run-on-restore). `view_state`/`ephemeral` per instance are NOT captured yet — `AppInstance`
-//! doesn't expose a public read for either today, and adding that read is `app` module surface
-//! (design-abi.md §4 says `app` "stays"); flagged as a `lease-request` in the report rather than
-//! reached into silently.
+//! re-run-on-restore), and `task_restarts` (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: one
+//! `{instance, command}` pair per LIVE `AsyncTask` that was built with `.restartable(command)` —
+//! the SAME "never serialise the task itself, only mark it re-run-on-restore" contract, applied to
+//! `Emit.tasks` now that it exists). `view_state`/`ephemeral` per instance are NOT captured yet —
+//! `AppInstance` doesn't expose a public read for either today, and adding that read is `app`
+//! module surface (design-abi.md §4 says `app` "stays"); flagged as a `lease-request` in the
+//! report rather than reached into silently.
 
 use crate::plugin_runtime;
 use semio_framework::Fault;
@@ -24,11 +27,24 @@ struct InstanceCheckpoint {
     document_pack: Vec<u8>,
 }
 
+/// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): one `AsyncTask::restart`
+/// survivor — `command` is the SAME OpBinary-encoded bytes `AsyncTask::restartable(command)` was
+/// built with, re-dispatched against `instance` (via `TaskResolution::Command`'s exact resume
+/// path — Elm's Msg-from-Cmd, re-entering `ArtifactApp::handle` against the JUST-restored state)
+/// the first `poll` after `restore`.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct TaskRestart {
+    pub instance: u32,
+    pub command: Vec<u8>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct CheckpointPack {
     instances: Vec<InstanceCheckpoint>,
     timers: Vec<u64>,
     pending_requests: Vec<u64>,
+    #[serde(default)]
+    task_restarts: Vec<TaskRestart>,
 }
 
 impl CheckpointPack {
@@ -45,20 +61,24 @@ impl CheckpointPack {
     pub fn pending_requests(&self) -> &[u64] {
         &self.pending_requests
     }
+
+    pub fn task_restarts(&self) -> &[TaskRestart] {
+        &self.task_restarts
+    }
 }
 
 /// 📸️ Builds the checkpoint pack for every currently-open instance in this actor. `document_pack`
 /// is `store::encode_document_pack_bytes(files.pack, files.spr)` — the SAME wire codec
 /// `AppCommand::LoadDocument`/`ReadDocument` already use for a whole document as one binary blob;
 /// `files.ops` (a derived text mirror, never authoritative) is not carried.
-pub fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>) -> Result<Vec<u8>, Fault> {
+pub fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
         let files = plugin_runtime::plugin_document_pack(*id).unwrap_or_default();
         let document_pack = store::encode_document_pack_bytes(&files.pack, &files.spr);
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
     }
-    let pack = CheckpointPack { instances, timers, pending_requests };
+    let pack = CheckpointPack { instances, timers, pending_requests, task_restarts };
     serde_json::to_vec(&pack).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.encode"), error.to_string()))
 }
 
@@ -84,10 +104,33 @@ mod tests {
 
     #[test]
     fn checkpoint_of_no_instances_round_trips_through_json() {
-        let bytes = checkpoint(&[], vec![1, 2], vec![7]).expect("an empty instance list must still encode");
+        let bytes = checkpoint(&[], vec![1, 2], vec![7], Vec::new()).expect("an empty instance list must still encode");
         let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
         assert!(pack.instances.is_empty());
         assert_eq!(pack.timers, vec![1, 2]);
         assert_eq!(pack.pending_requests, vec![7]);
+        assert!(pack.task_restarts.is_empty());
+    }
+
+    #[test]
+    fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
+        let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
+        let bytes = checkpoint(&[], Vec::new(), Vec::new(), restarts.clone()).expect("must encode");
+        let pack = restore(&bytes).expect("must decode back");
+        assert_eq!(pack.task_restarts().len(), 2);
+        assert_eq!(pack.task_restarts()[0].instance, 5);
+        assert_eq!(pack.task_restarts()[0].command, vec![1, 2, 3]);
+        assert_eq!(pack.task_restarts()[1].instance, 6);
+    }
+
+    #[test]
+    fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
+        // 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
+        // missing the field entirely) must not fail to restore just because this wave added a
+        // field to the envelope (greenfield repo, no migration script, but a checkpoint taken
+        // moments before an actor upgrade is a real same-process scenario, not legacy support).
+        let legacy_json = r#"{"instances":[],"timers":[],"pending_requests":[]}"#;
+        let pack: CheckpointPack = serde_json::from_str(legacy_json).expect("a pack missing task_restarts must still decode");
+        assert!(pack.task_restarts().is_empty());
     }
 }

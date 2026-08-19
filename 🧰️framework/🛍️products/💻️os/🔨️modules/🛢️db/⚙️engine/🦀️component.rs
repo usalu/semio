@@ -170,7 +170,7 @@ pub struct HistoryView {
 /// mirroring `db_artifact::ArtifactEngine::submit`'s own commit shape (one frontier record per
 /// committed batch, preceded by that batch's command records).
 fn replay_history(storage: &dyn DbStorage, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
-    let records = db_wal::replay_document(storage.wal(), core_document)?;
+    let records = db_actor::block_on(db_wal::replay_document(storage.wal(), core_document))?;
     let mut entries = Vec::new();
     let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
     for record in records {
@@ -698,11 +698,11 @@ impl Database {
         let health = Arc::new(db_observe::HealthRegistry::new());
         health.set("db_engine.storage", if storage_capabilities.durable { db_observe::HealthState::Healthy } else { db_observe::HealthState::Degraded("storage backend is not durable".to_string()) });
 
-        let (epoch, entries) = match storage.catalog().read_root()? {
+        let (epoch, entries) = match db_actor::block_on(storage.catalog().read_root())? {
             Some((bytes, epoch)) => (epoch, decode_catalog(&bytes)?),
             None => {
                 let empty = encode_catalog(&[])?;
-                let epoch = storage.catalog().cas_root(EpochFence::INITIAL, &empty)?;
+                let epoch = db_actor::block_on(storage.catalog().cas_root(EpochFence::INITIAL, &empty))?;
                 (epoch, Vec::new())
             }
         };
@@ -719,9 +719,13 @@ impl Database {
     }
 
     /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
-    /// `profile`.
+    /// `profile`. Synchronous by contract (every existing caller — `db_cli`, `🌎️hub`'s `fs` storage
+    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it takes
+    /// `db_storage`'s own [`db_storage::InlineRuntime`] rather than threading a caller-supplied
+    /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
+    /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
     pub fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database, DbError> {
-        let storage: Arc<dyn DbStorage> = Arc::new(db_storage::FsStorage::open(root)?);
+        let storage: Arc<dyn DbStorage> = Arc::new(db_storage::FsStorage::open_inline("db_engine", root)?);
         Database::open(DbConfig::for_profile(profile), storage)
     }
 
@@ -779,7 +783,7 @@ impl Database {
             let mut entries = catalog.entries.clone();
             entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms() });
             let bytes = encode_catalog(&entries)?;
-            let new_epoch = self.storage.catalog().cas_root(catalog.epoch, &bytes)?;
+            let new_epoch = db_actor::block_on(self.storage.catalog().cas_root(catalog.epoch, &bytes))?;
             catalog.epoch = new_epoch;
             catalog.entries = entries;
         }
@@ -859,7 +863,7 @@ impl Database {
     /// surface, not a full online scheduler).
     pub fn compact_document(&self, document: &protocol::ArtifactId, holder: &str, consolidate_snapshots: bool) -> Result<db_compact::CompactionReport, DbError> {
         let core_document = to_core_document_id(document);
-        db_compact::Compactor::new(self.storage.as_ref()).run_from_latest_snapshot(&core_document, holder, consolidate_snapshots, &db_compact::CompactionBudget::default(), now_ms())
+        db_actor::block_on(db_compact::Compactor::new(self.storage.as_ref()).run_from_latest_snapshot(&core_document, holder, consolidate_snapshots, &db_compact::CompactionBudget::default(), now_ms()))
     }
 
     /// @emoji 👋️ A real `db_sync::handle_hello` call for `document` — the server-side half of the
@@ -868,7 +872,7 @@ impl Database {
     /// rebuilds), out of this crate's scope this wave.
     pub fn hello(&self, document: &protocol::ArtifactId, hello_frontier: Option<&protocol::RuntimeFrontierSummary>, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<db_sync::WelcomeResponse, DbError> {
         let core_document = to_core_document_id(document);
-        db_sync::handle_hello(self.storage.as_ref(), core_document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
+        db_actor::block_on(db_sync::handle_hello(self.storage.as_ref(), core_document, hello_frontier, session_id, origin, snapshot_chunk_bytes))
     }
 
     /// @emoji 🌿️ A real, `vcs`-backed checkpoint over every change `record_change` has recorded for
@@ -1250,8 +1254,8 @@ mod tests {
     fn storage_accessor_reaches_the_same_backend_payload_store() {
         let root = tempdir("storage-accessor");
         let database = Database::open_at(&root, Profile::Test).unwrap();
-        let hash = database.storage().payload().put(b"hello storage accessor").unwrap();
-        assert_eq!(database.storage().payload().get(&hash).unwrap(), b"hello storage accessor");
+        let hash = db_actor::block_on(database.storage().payload().put(b"hello storage accessor")).unwrap();
+        assert_eq!(db_actor::block_on(database.storage().payload().get(&hash)).unwrap(), b"hello storage accessor");
     }
     //#endregion 🔖️Compact + Sync
 

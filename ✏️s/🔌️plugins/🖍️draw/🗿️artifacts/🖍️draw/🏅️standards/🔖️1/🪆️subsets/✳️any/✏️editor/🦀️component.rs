@@ -143,7 +143,7 @@ impl ArtifactEditor for DrawPlayApp {
     /// 🎞️ `vector:out` (see `draw_vector_media`) plus the inherited `document:out` default (the pack
     /// of `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
         match port {
             "vector:out" => draw_vector_media(doc.snapshot),
             "document:out" => {
@@ -781,12 +781,12 @@ mod tests {
         let projection = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let vector = DrawPlayApp::export_media("vector:out", &doc).expect("vector:out");
+        let vector = semio_framework_plugin::resolve_ready(DrawPlayApp::export_media("vector:out", &doc)).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
         assert_eq!(schema, "2d.drawing");
         assert!(json.starts_with("<svg"));
-        assert!(DrawPlayApp::export_media("document:out", &doc).is_ok());
-        assert!(matches!(DrawPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
+        assert!(semio_framework_plugin::resolve_ready(DrawPlayApp::export_media("document:out", &doc)).is_ok());
+        assert!(matches!(semio_framework_plugin::resolve_ready(DrawPlayApp::export_media("unknown:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
     //#region 🔖️GesturePreview

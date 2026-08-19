@@ -32,7 +32,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut drawing = DwgDrawing::default();
         for mesh in &from.meshes {
             let layer = drawing.ensure_layer(&mesh.id);
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_triangle_and_vertex_counts() {
         let original = sample_semio_mesh();
-        let dwg = SemioMeshToDwg::serialize(&original).expect("serialize");
+        let dwg = semio_framework_plugin::resolve_ready(SemioMeshToDwg::serialize(&original)).expect("serialize");
         assert_eq!(dwg.version, DWG_CODEC_VERSION);
         let round_tripped = SemioMeshFromDwg::deserialize(&dwg).expect("deserialize");
         assert_eq!(round_tripped.meshes.len(), 1);
@@ -118,7 +118,7 @@ mod tests {
     fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::TriangleFan;
-        let err = SemioMeshToDwg::serialize(&semio).expect_err("TriangleFan must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToDwg::serialize(&semio)).expect_err("TriangleFan must error");
         assert!(format!("{err:?}").contains("Triangles"), "got {err:?}");
     }
 }

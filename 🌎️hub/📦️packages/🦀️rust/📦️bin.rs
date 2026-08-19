@@ -406,7 +406,7 @@ async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
         return Err(StatusCode::UNAUTHORIZED);
     }
     let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
-    let computed = state.db.storage().payload().put(&body).map_err(|e| db_error_status(&e))?;
+    let computed = state.db.storage().payload().put(&body).await.map_err(|e| db_error_status(&e))?;
     let computed_hex = computed.to_string();
     // The path hash is client-supplied (content-addressed URL); a mismatch against the
     // storage-computed hash means the client sent the wrong bytes for that address — a bad
@@ -422,7 +422,7 @@ async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
         return Err(StatusCode::UNAUTHORIZED);
     }
     let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
-    match state.db.storage().payload().get(&content_hash) {
+    match state.db.storage().payload().get(&content_hash).await {
         Ok(bytes) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
         Err(db::DbError::NotFound(_)) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -434,7 +434,7 @@ async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: Head
         return StatusCode::UNAUTHORIZED;
     }
     let Some(content_hash) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
-    match state.db.storage().payload().contains(&content_hash) {
+    match state.db.storage().payload().contains(&content_hash).await {
         Ok(true) => StatusCode::OK,
         Ok(false) => StatusCode::NOT_FOUND,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -607,7 +607,7 @@ async fn handle_client_frame(
         }
         ClientFrame::FrontierAdvertise { frontier } => {
             let core_document = db_core_document_id(db_id);
-            match db::sync::handle_frontier_advertise(state.db.storage().wal(), core_document, &frontier, actor.clone()) {
+            match db::sync::handle_frontier_advertise(state.db.storage().wal(), core_document, &frontier, actor.clone()).await {
                 Ok(Some(catch_up)) => sender.send(encode(&catch_up)).await.is_ok(),
                 Ok(None) => true,
                 Err(_) => true,
@@ -1526,7 +1526,53 @@ fn router(state: HubState) -> Router {
 /// matching storage feature). Independent of `connect_directory`'s own backend choice (the
 /// contract's "storage swappability" requirement applies to `db`'s substrate and the directory's
 /// substrate separately, even though both now share the same three feature names).
-fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
+/// @emoji 🌉️ Hub's own `db::semio_framework_async::HostAsyncRuntime` — hub is a real concurrent
+/// server under `#[tokio::main]` (unlike `db_cli`'s single-shot, inline-`run_blocking` runtime), so
+/// `run_blocking` genuinely dispatches onto tokio's blocking-thread pool (`spawn_blocking`) rather
+/// than ever running on (and stalling) the calling task's own worker thread. `db`'s own crates name
+/// no `tokio` themselves (see `db_storage`'s module doc) — this is the one place in this binary
+/// that bridges `db_storage::DbFuture`'s async-first boundary onto hub's already-tokio process,
+/// mirroring `🛎️services::TokioHostRuntime`'s shape at a fraction of its scope (hub needs exactly
+/// one capability off this trait: `run_blocking`).
+struct HubDbRuntime;
+
+impl db::semio_framework_async::HostAsyncRuntime for HubDbRuntime {
+    fn open_scope(&self, owner: db::semio_framework_async::ScopeOwner, parent: Option<&db::semio_framework_async::ScopeHandle>) -> db::semio_framework_async::ScopeHandle {
+        let cancel = match parent {
+            Some(parent) => parent.cancel.child(),
+            None => db::semio_framework_async::CancelToken::root(),
+        };
+        db::semio_framework_async::ScopeHandle { id: db::semio_framework_async::ScopeId(0), owner, cancel }
+    }
+
+    fn spawn_scoped(&self, _scope: &db::semio_framework_async::ScopeHandle, _ctx: db::semio_framework_async::OperationContext, fut: db::semio_framework_async::HostFuture<()>) {
+        tokio::spawn(fut);
+    }
+
+    fn run_blocking(&self, _scope: &db::semio_framework_async::ScopeHandle, _ctx: db::semio_framework_async::OperationContext, work: Box<dyn FnOnce() + Send>) {
+        tokio::task::spawn_blocking(work);
+    }
+
+    fn sleep_until(&self, deadline_ms: u64) -> db::semio_framework_async::HostFuture<()> {
+        let now = self.now_ms();
+        let delay = std::time::Duration::from_millis(deadline_ms.saturating_sub(now));
+        Box::pin(tokio::time::sleep(delay))
+    }
+
+    fn cancel_scope(&self, _owner: &db::semio_framework_async::ScopeOwner, _grace_ms: u64) -> db::semio_framework_async::HostFuture<db::semio_framework_async::ScopeDrainReport> {
+        // 🎯️ Hub never opens a cancellable scope of its own on this runtime today (only
+        // `SqliteStorage::open`'s fixed internal scope, which it never cancels) — a real
+        // drain-and-report implementation is `TokioHostRuntime`'s job (packet R2), not this
+        // single-purpose bridge's.
+        Box::pin(std::future::ready(db::semio_framework_async::ScopeDrainReport::default()))
+    }
+
+    fn now_ms(&self) -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
+    }
+}
+
+async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let profile = db::Profile::Prod;
     match backend.as_str() {
@@ -1541,13 +1587,16 @@ fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
             if let Some(parent) = std::path::Path::new(&path).parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            let storage = db::storage_sqlite::SqliteStorage::open(std::path::Path::new(&path))?;
+            use db::semio_framework_async::HostAsyncRuntime as _;
+            let runtime: std::sync::Arc<dyn db::semio_framework_async::HostAsyncRuntime> = std::sync::Arc::new(HubDbRuntime);
+            let scope = runtime.open_scope(db::semio_framework_async::ScopeOwner::Service("hub_db_sqlite"), None);
+            let storage = db::storage_sqlite::SqliteStorage::open(runtime, scope, std::path::Path::new(&path))?;
             Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
         }
         #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
-            let storage = db::storage_postgres::PostgresStorage::connect(&database_url)?;
+            let storage = db::storage_postgres::PostgresStorage::connect(&database_url).await?;
             Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
         }
         #[cfg(feature = "neo4j")]
@@ -1555,7 +1604,7 @@ fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
             let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
             let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
-            let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password)?;
+            let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password).await?;
             Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
         }
         other => Err(HubError::UnknownStorageBackend(other.to_string())),
@@ -1611,7 +1660,7 @@ async fn main() -> Result<(), HubError> {
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
     std::fs::create_dir_all(&data_dir)?;
-    let db = connect_db(&data_dir)?;
+    let db = connect_db(&data_dir).await?;
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
     // got its `disconnected_at` because a previous process was killed mid-connection.
@@ -1945,7 +1994,7 @@ mod tests {
     async fn blob_put_get_head_round_trip() {
         let state = test_state().await;
         let bytes = Bytes::from_static(b"hello hub blob bytes");
-        let expected_hash = state.db.storage().payload().put(&bytes).unwrap().to_string();
+        let expected_hash = state.db.storage().payload().put(&bytes).await.unwrap().to_string();
         // A re-put through the route with the correct address must be idempotent and agree.
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());

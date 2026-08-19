@@ -47,7 +47,7 @@ impl ArtifactDeserializer for SemioImageFromTiff {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let width = from.width().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageWidth tag in ifds[0]".into()))?;
         let height = from.height().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageLength tag in ifds[0]".into()))?;
         if from.pixels.len() != (width as usize) * (height as usize) * 4 {
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn maps_pixels_and_description_tag() {
-        let semio = SemioImageFromTiff::deserialize(&sample_tiff()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioImageFromTiff::deserialize(&sample_tiff())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);
         assert_eq!(semio.colorspace, SemioColorspace::Rgb);

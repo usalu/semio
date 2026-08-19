@@ -266,7 +266,7 @@ impl ArtifactEditor for MathematicalPlayApp {
     /// components/SCC group/BFS distance — the port recipe's `computation.mathematical`-kinded output);
     /// `"document:out"` replicates `ArtifactApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
-    fn export_media(port: &str, doc: &ArtifactView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);

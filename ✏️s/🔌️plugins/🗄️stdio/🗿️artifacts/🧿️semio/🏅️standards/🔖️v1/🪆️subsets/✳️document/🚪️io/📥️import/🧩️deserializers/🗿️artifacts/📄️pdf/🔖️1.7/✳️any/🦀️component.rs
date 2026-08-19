@@ -29,7 +29,7 @@ impl ArtifactDeserializer for SemioDocumentFromPdf {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut blocks = Vec::new();
         for (i, page) in from.pages.iter().enumerate() {
             if i > 0 {
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
-        let semio = SemioDocumentFromPdf::deserialize(&sample_pdf()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&sample_pdf())).expect("deserialize");
         assert_eq!(semio.blocks.len(), 3);
         assert!(matches!(&semio.blocks[0], DocBlock::Paragraph { runs, .. } if runs[0].text == "Page one text."));
         assert!(matches!(&semio.blocks[1], DocBlock::PageBreak));
@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn zero_pages_yields_zero_blocks() {
-        let semio = SemioDocumentFromPdf::deserialize(&PdfSnapshot::default()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&PdfSnapshot::default())).expect("deserialize");
         assert!(semio.blocks.is_empty());
     }
 }

@@ -2899,3 +2899,467 @@ cargo test -p semio-s-plugin-layout --lib descriptor_is_fresh → EXIT 0, 1 pass
 **`imperative`'s is a bug I have already fixed twice today.** Earlier this session I added missing `EditorApp`/`App` imports to `➗️mathematical` and `🖍️draw`'s `#[cfg(test)]` modules — their test code had simply never compiled. This is the third instance of the identical defect in a third plugin, which makes it a **class, not three coincidences**: plugin test modules using `App`/`EditorApp` without importing them, invisible because nobody had run those suites.
 
 Descriptors now **26 committed, 13 ratcheted, zero placeholders** across the whole fleet.
+
+## 2026-08-19 W6 — the waiting model itself
+
+User verdict on W5: *"I still see no async e.g. all the io, etc. Make sure the architecture is async-first as described."* **Correct, and the distinction is exact**: W5 delivered async *infrastructure* (interface crate, services, effect executor, WASI-0.3 schema, parallel kernel, TS sweep) while *execution* stayed synchronous. `GuestRuntime` is a sync trait; `ShardLoop::pump` blocks an OS thread per shard; `HttpPool` wraps blocking ureq; storage wraps `std::fs`; four private tokio runtimes sit beside the sanctioned one; **not one plugin has ever executed on `world actor-async`**. W6 changes the waiting model.
+
+### Three read-only censuses (measured; full table in `📓️luna-sync-surface-audit.md`)
+
+| finding | measurement |
+|---|---|
+| `block_on` on production paths | **50+**: postgres **25**, neo4j **22** (both bridging sync traits → async drivers), mcp 1, services 1 |
+| `GuestRuntime` (~:490-510) | entirely sync; wasmtime `Config` has **`async_support`/`concurrency_support` NOT enabled** |
+| `ShardExecutor` | **5 ms `recv_deadline` poll** per pump iteration, one OS thread per shard |
+| private runtimes | postgres :101, neo4j :360, sync-engine :1465, mcp :239 — **plus a FIFTH minted by the wgpu Shell itself** (`Shell:1323-1332`) |
+| `HttpPool` | budgets charged by **estimate** (`url.len()+body.len()`); refill driver **doc-admittedly inert** |
+| `🎒️pack/⏳️async` (peer's) | async-first — but contains a **`std::thread::sleep(200µs)` inside `Future::poll`** |
+| `db_engine` | spawns **one bridge OS thread per `submit()` call** (:912) |
+| TypeScript | essentially clean after W5 — 9 `Bun.sleep` await-polls in the dev script, 1 legitimate SSE fallback, watchdog/metrics intervals by design |
+
+### The design, in one line
+Guests run `world actor-async` under wasmtime-47 component-model-async with **epoch-`Yield` preemption**; one root task per actor owns its Store; shards become async executors multiplexing many actor futures; a **`GrantedEventProducer` stream-boundary** synthesises today's `TurnResult` so **DRR accounting is untouched**; host services do real async I/O; every private runtime consolidates to one per process. A suspended plugin costs a Store + a parked future — **state, not a thread**.
+
+Three Plan agents produced the slices; every wasmtime claim was checked against the vendored 47.0.3 source (`UpdateDeadline::Yield` store.rs:388-401, `run_concurrent` Send bound concurrent.rs:984, `StreamProducer` futures_and_streams.rs:583-599). **Eight assumptions that could only be verified by RUNNING code are spikes S1–S8 with pre-named fallbacks** — the `wasmtime 34.0.2 exposed the whole async API over 35 todo!() bodies` lesson, applied before committing four packets to it.
+
+### Two deliberate NEGATIVE decisions, argued from evidence
+- **Storage stays bounded-blocking.** `tokio::fs` is internally `spawn_blocking` onto an *unbounded anonymous* pool; our `StorageScheduler` is bounded, lane-prioritised and quota-accounted. Swapping would be a downgrade dressed as async. Compiled-artifact cache explicitly deferred (cold path, once per package, already off-runtime).
+- **No router becomes `async fn`.** Read rather than assumed: `IoRouter` forwards into other plugins' wasm (CPU-bound), inference/mutation routers are in-memory planning, and the coordinator/AppRouter's I/O leaves are *files* — correctly bounded-blocking. The genuinely-async wins are the network paths. This is the don't-boil-the-ocean line, drawn on what the code does.
+
+### Wave A dispatched — 5 packets, parallel editing (rule 23: coordinator owns every build)
+`probe-spikes` (the ONLY packet allowed to build/run — its deliverable IS an executed probe answering S1–S8) · `trait-asyncify` (one boxed-future `GuestRuntime`; poll impls return `ready(…)`; must be observably a runtime no-op) · `http-streaming` (`AsyncHttpTransport`/`HttpBody` seam, budgets charged on REAL bytes, refill task that actually runs, deadline racing) · `db-trait-flip` (**atomic, workspace-wide**: six sub-traits → `DbFuture`, both drivers drop private runtimes, ~55 `block_on` bodies unwrapped, 14 consumer crates propagate `.await`, ONE sanctioned bin-entry park in the cli) · `dev-polls` (TS, free).
+
+Session-start: 206 GiB free, **zero source churn in 30 min**, 1 peer builder.
+
+### ✅ dev-polls accepted — the TS sweep is finished, and the rule is now written down in code
+
+Coordinator-verified: `bun ./📜️script.ts test` → **27 passed, exit 0** (baseline 17 + 10 new, all fake-clock, no real sleeps).
+
+New `//#region 🔖️PollHelpers` carrying **THE RULE** as a docstring — *a deadline-bounded poll of an external resource emitting no observable event is acceptable; a poll of a resource we spawned and whose handle we hold is not* — plus `awaitTcpReady` / `awaitHttpOk` / `awaitChildExit`, each with test-injection points (`probe`/`fetchImpl`/`sleep`/`now`) and returning a `PollOutcome` rather than throwing.
+
+**It settled the API question with evidence rather than assumption**: before choosing `awaitChildExit`'s mechanism it confirmed `SpawnDaemonHandle.child` is a Node `child_process.ChildProcess` — not a Bun `Subprocess` — from the file's existing `.pipe()` usage, then used the real `'exit'` event. Getting that backwards would have compiled and silently never fired.
+
+**And it declined to over-apply its own helper**: 5 of the 7 nominated sites funnel through the helpers with deadlines/intervals preserved exactly; the plugin-build lease flag and the parity mkdir-lock are fs/pid-shaped, not TCP/HTTP-shaped, so it left them as legitimate polls with inline comments citing the rule. Forcing them through a TCP helper would have been worse code that merely scored better on a census.
+
+My own classification of every surviving `Bun.sleep` (7 total): **3 are docstrings**, **2 are the helpers' injectable defaults** (`opts.sleep ?? (ms => Bun.sleep(ms))`), **2 are the documented fs/lock exceptions**. **Zero exit-code poll loops remain** — the pattern the packet existed to remove is gone, verified by pattern-classification rather than by counting occurrences.
+
+Honest gaps it declared: no standalone `tsc --noEmit` (esbuild transform only); did not run collab-e2e/parity end to end (would spawn real processes); and it noticed unrelated Playwright `page.waitForTimeout` DOM waits elsewhere in the file, correctly judged out of this census's scope and left untouched rather than opportunistically widened.
+
+### ✅ trait-asyncify — the execution contract is async-shaped, and provably still a no-op
+
+`GuestRuntime` (`🖥️host/🦀️component.rs:485-523`) now returns `semio_framework_async::HostFuture<…>` from `execute_turn`/`start_job`/`step_job`/`cancel_job`/`checkpoint`/`restore`; `compile`/`instantiate`/`drop_instance` stay sync by design (instantiate will BUILD the async task spec, not run it). One trait, no compatibility layer, dyn-compatible — `async fn` in trait was ruled out because every consumer holds `Arc<dyn GuestRuntime>`.
+
+Both existing impls keep their **exact prior bodies** inside an immediately-invoked closure and return `Box::pin(std::future::ready(result))` — computed eagerly so no `&mut` borrow is captured. New `poll_ready<T>(HostFuture<T>) -> T` (`:525-555`) polls once with `Waker::noop()` and panics loudly if not ready, with a comment explaining why that is sound for a backend that is always-ready by construction.
+
+Coordinator-verified:
+```
+cargo check -p semio-framework-plugin-host --all-targets → exit 0, 0 errors
+cargo test  -p semio-framework-plugin-host --lib -- --skip schema_parity → 115 passed / 0 failed / 1 ignored
+cargo test  -p semio-framework-plugin-host --lib schema_parity           → 4 passed / 0 failed
+```
+**Exactly the baseline** — which IS the acceptance criterion for this packet: a boxed-future indirection that changed no behaviour.
+
+**Two leases applied by me** (both mechanical `poll_ready(...)` wraps it correctly refused to make outside its scope): `🔀️PostTurnRelay`'s `start_job`/`step_job` in the same file, and two `execute_turn` sites in `🌉️mcp/🏠️workspace/🦀️component.rs` — a different product entirely. It had made `poll_ready` `pub` specifically so the mcp lease could reuse it rather than duplicate a waker dance; that is the right instinct and saved a second implementation.
+
+**A third impl it missed, found by my build**: `RecordingRuntime` inside `🧵️shard/🦀️component.rs`'s own test module (`:1057-1085`) — 7 errors, all the same shape. It WAS inside its owned paths, so this is a genuine miss rather than a scope question; converted by me to ready futures. Worth naming because the packet's own single permitted `cargo check -p … --lib` could not see it: `--lib` skips `#[cfg(test)]` code, and the impl only compiles under `--all-targets`. **The narrow check that was permitted to conserve build capacity is precisely the check that could not observe this defect** — the same shape as W5's `--features component-guest` omission (rule 22). Rule 22 is hereby extended: the consumer-exact command includes `--all-targets` wherever a trait has test-only impls.
+
+## 2026-08-19 W6/W7 — the PLUGIN side goes async-first
+
+User critique, and it is correct: *"I still see no async — e.g. all the io inside plugins for all artifacts are still synchronous."* W5 built async **infrastructure**; the guest side never adopted it. Three read-only explorations measured the gap:
+
+- The SDK's **24 `async fn` host methods** (`🌐host/🦀️component.rs:56-330`) have **zero call sites** in the fleet. `RequestRegistry`/`LocalExecutor` are unused scaffolding.
+- **`Emit.tasks` never existed** (`Emit` :8557 — no tasks field), so no command can await anything. design-abi §4 was specified and never implemented.
+- **Artifact IO is sync fn pointers** — `ComposerEntry{compose: fn(..)}` (`🚪️io:748`, dispatch :1007) across **143 io modules**.
+- **Jobs are a closed hard-coded match** (`💼️jobs:62-66`), io-run/io-sniff only, single-step, `JobBudget` accepted and **ignored** — so **plugins cannot author jobs at all**. Hence a 10,930-LOC WFC solver dormant behind a "blocked" comment, and FEM/SfM/tessellation/exports running inside turns.
+- **`Effect::HttpChunk` discards non-final chunks** (`⚛️reactor:143-147`).
+- The **async execution backend was never built** — no `WasmtimeAsyncRuntime`, no `component-guest-async`, no async packaging.
+
+### 📊️ Pre-wave adoption census (the number this wave exists to flip)
+
+`census-async-adoption.py` (python over absolute paths — shell grep under-reports on emoji paths, rule 21), 33 plugins / **10,078 `.rs` files**:
+
+| metric | today |
+|---|---|
+| `host::*` async call sites | **4** (draw 2, space 2) |
+| `.await` | **6** |
+| job registrations | **0** |
+| `AsyncTask`/`Emit.tasks` | **0** |
+| `block_on` | **134** (flow 59, cad 45, process 13, stdio 15, animate 2) |
+| `fn pending_effects` | 3 definitions |
+| `DownloadMediaExport` | 41 |
+| `async fn` | 186 — but **184 are stdio's already-async BrepKernel trait**, which guests then `block_on` |
+
+That last row is the whole story in one line: the codebase already has an async engine and the plugins block on it.
+
+### Scope (user-confirmed)
+1. **Infra slice dropped** — the pending runtime/db refactor owns 🛢️db/🔄️sync/🌉️mcp/HTTP-transport/shell+kernel consolidation/`🎒️pack`. A peer session is live in `🛎️services` right now (its wgpu + services checks were running at wave start). We consume services as-is and never edit those paths.
+2. **Async execution backend IN scope** — plugins cannot run async without it.
+3. **IO doctrine: every artifact io surface goes `async fn` uniformly** (user override — "regardless the effort"), with **jobs layered on top** for preemptibility of heavy codecs/solvers/exports. `handle`/`render` stay pure sync reducers; no detached spawn; bounded outstanding tasks.
+
+### W6-A dispatched (4 packets, file-disjoint)
+`probe-spikes` (owns the one build slot — its product IS build results) · `task-emit-core` (`🦀️component.rs` + `⚛️reactor/` + `📸️checkpoint/`) · `jobs-runtime` (`💼️jobs/` + `🏗️builder/`, leases the two hooks it needs in the sibling's files) · `trait-asyncify` (`🖥️host/` + `🧵️shard/`). Rule 23 applied from the start: executors write code + reasoning and mark acceptance **UNRUN**; the coordinator owns every build. Peers held 2 cargo slots at dispatch.
+
+### ⚙️ Operational finding — ticket-folder target dirs now fail with EPERM
+
+The wave's first acceptance build died on:
+```
+error: couldn't read `<ticket>/🎯️target-trait-asyncify/debug/build/serde_core-*/out/private.rs`:
+       Operation not permitted (os error 1)
+```
+Not a code error. Reproduced in a **fresh** ticket target dir and again in a **warm** one from a prior pass; the file is plainly readable from the shell (`head` prints it, mode `rw-r--r--`, `com.apple.provenance` xattr) but rustc gets EPERM. The identical command with `CARGO_TARGET_DIR` under `/private/tmp/…/scratchpad/target-ta` **finished clean in 17.44s**.
+
+Recorded as rule 24: **build target dirs live in the session scratchpad from now on.** Two benefits beyond unblocking — the ticket folder had accumulated ~20 target dirs (one at **5.1 GB**), and scratch build output never belonged in a ticket directory that `ticket_close` walks.
+
+Worth noting how this presented: it looked exactly like a broken dependency ("could not compile `serde_core`"), and the honest first read — *is our code wrong?* — was answered by testing the same crate in a different target dir rather than by editing anything.
+
+## ✅ S1b — INTER-STORE FAIRNESS IS GO. The async architecture's core premise holds.
+
+The probe first returned **S1 NO-GO**: two CPU-bound guest tasks never interleave, task B getting zero polls until A completes. Read literally that kills the headline claim — *a suspended plugin costs state, not a thread* — for all CPU-bound work.
+
+**It was measuring a shape the design never uses.** S1 tested `Accessor::spawn`-ed tasks **inside ONE `Store`** — wasmtime's own intra-store scheduler. The design's central rule is the opposite: **one root task owns one Store, never concurrent reentrant calls into one instance**; fairness is supposed to come from a level up, where *separate* Stores' `run_concurrent` futures are multiplexed by **our** executor. So I sent it back with the exact shape rather than accepting the blocker — keeping S1 in the record rather than overwriting it, since the two answers mean different things.
+
+**S1b, run exactly as specified — two separate `Store`s, each its own `run_concurrent`, multiplexed by a host-level `join!` on the current thread, no `Accessor::spawn`, no extra OS threads:**
+
+| | run 1 | run 2 |
+|---|---|---|
+| context switches | **149** | **139** |
+| progress entries | 19,532 | 19,532 |
+| exit | 0 | 0 |
+
+Guest B is polled **well before** guest A finishes — the exact inverse of S1's signature. Sub-answers:
+1. **Granularity ~1.25 ms** between switches (deltas 2.06 → 3.32 → 4.57 → 5.83 → 7.09 ms), tracking the 1 ms epoch ticker. The design's ~1 ms slice target is achievable, measured not assumed.
+2. **Epoch `Yield(1)` propagates outward to OUR executor** — `fut_b` can only be polled if `fut_a`'s `run_concurrent` returned `Poll::Pending` to the combinator, and it observably does. This is the mechanism-level confirmation that S1's failure was specific to `Accessor::spawn`, not to epoch-Yield.
+3. **Fuel-only is independently sufficient**: a separate `Engine` with `epoch_interruption` never enabled and `fuel_async_yield_interval(500_000)` gave **3,041 switches, byte-identical across both runs** — deterministic, because fuel consumption is not wall-clock dependent.
+
+That third result is a gift the brief did not ask for: **fuel yields are deterministic, epoch yields are wall-clock.** So the scheduler can use epoch for real fairness in production and fuel intervals for **reproducible** fairness tests — which is exactly what this ticket has repeatedly lacked (budget 5's 30-samples-in-a-0.1 ms-band was a wall-clock artefact nobody could reproduce deterministically).
+
+**Binding consequences, now in the spike register:**
+- ✅ one `Store` per actor + host-level `join!`/`select!`/`FuturesUnordered` — the confirmed pattern.
+- ❌ never `Accessor::spawn` across actors — S1's measured dead end.
+- ⚠️ **S3 footgun promoted to a schema action item**: once a store enables `wasm_component_model_async(true)`, a **plain sync `func` export fails at RUNTIME** ("store configuration requires that *_async functions are used instead") with **no compile-time signal**. The `checkpoint` export must therefore be declared `async func` in the WIT. That would have been discovered the hard way, in the suspend/restore path, at the worst possible moment.
+
+Other verdicts: **S2 GO** (dropping a pending host-import future signals cancellation to the guest — the drop-guard fired), **S3 GO with the caveat above**, **S4 GO** (`run_concurrent` futures are `Send`; no `LocalSet` fallback needed), **S5 GO** (custom `StreamProducer` parks on an empty queue, stores its waker, resumes when the host pushes — the turn-boundary-without-turns mechanism), **S6 GO** (a hand-rolled `Rc<RefCell>` local executor drives a wit-bindgen import future correctly; the SDK reactor needs no special-casing).
+
+**Honest gap it volunteered:** S1b used 2 actors, equal 40 M-iteration workloads, one epoch interval and one fuel interval. The *mechanism* is proven; scheduling **quality** under 3+ actors or unequal workloads is unmeasured and is flagged for whoever builds the real scheduler. Correct scope discipline — proving the mechanism is the spike's job, tuning the policy is not.
+
+### ✅ trait-asyncify accepted — `GuestRuntime` is awaitable, behaviour unchanged
+
+Coordinator-run (scratchpad target per rule 24): `cargo test -p semio-framework-plugin-host --lib -- --skip schema_parity` → **115 passed / 0 failed / 1 ignored, exit 0** — exactly the named baseline.
+
+Verified by direct source reading before building, not taken from the report: `pub trait GuestRuntime` (`🖥️host/🦀️component.rs:506-524`) now returns `semio_framework_async::HostFuture<…>` from `execute_turn`/`start_job`/`step_job`/`cancel_job`/`checkpoint`/`restore`, while `compile`/`instantiate`/`drop_instance` stay plain `Result` — the async backend does its own async instantiation inside the actor task, so those never needed to move. 21 `HostFuture` usages; 10 `poll_ready` call sites in `🧵️shard`.
+
+The consumption path is `poll_ready<T>(HostFuture<T>) -> T` (:544-555): polls once with `Waker::noop()` and **panics loudly** on `Pending`. That is the right shape — the poll-world impls do their work eagerly inside an immediately-invoked closure and return `Box::pin(ready(result))`, so always-ready is true *by construction*, and a future impl that is genuinely pending belongs to the async shard executor rather than to `pump`. A silent fallback here would have hidden exactly that mistake.
+
+No `Send`-bound fight: the returned future owns only a plain `Result`, never the `Store`. Both earlier lease-requests (the `PostTurnRelay` `run_job_to_completion` sites and two `🌉️mcp/🏠️workspace` `execute_turn` sites) had already been applied by their region owners, so the crate compiles as a whole.
+
+Bench re-run in flight to close the second half of the gate — the claim under test is that boxed-future indirection perturbs neither correctness (proven above) nor the measured pipeline.
+
+### 🔧️ trait-asyncify's blast radius reached the wgpu bench — found by building, not by grepping
+
+The executor's whole-repo grep concluded "no unwrapped live `GuestRuntime` call site anywhere". The **bench build disagreed**:
+```
+error[E0599]: no method named `is_ok` found for struct
+              `Pin<Box<dyn Future<Output = Result<TurnResult, TurnFault>> + Send>>`
++ 7 × error[E0308] mismatched types
+--> 🎯️targets/🧊️wgpu/📦️glue.rs:1315,1320,1326,1332  (budget-8's capability-revocation block)
+```
+Four raw `runtime.execute_turn(...)` calls in the scale bench, un-wrapped. `cargo test -p semio-framework-plugin-host` was **115/0 green** the whole time, because the defect lives in a *consumer* crate — precisely why rule 23 puts acceptance on the coordinator and why a packet's own grep is never accepted as proof of completeness (the standing lesson from A3's 132-file rename that missed a live import).
+
+Fixed by me (unowned region, mechanical): all four wrapped in `semio_framework_plugin_host::poll_ready(...)`, then a census over the whole file confirming **0 remaining raw** `execute_turn`/`start_job`/`step_job`/`cancel_job`/`checkpoint`/`restore` sites. `cargo check -p semio-framework-os-renderer-wgpu --lib` → **exit 0, 0 errors**. Bench re-running.
+
+### ✅ jobs-runtime delivered — plugins can author jobs for the first time
+
+`⚛️reactor/💼️jobs/🦀️component.rs` **170 → 704 lines**: the closed hard-coded `match` is gone, replaced by a `kind → JobFn` registry with `register_job_kind`, a `JobCtx` (`tick`/`progress`/`checkpoint`/`budget`, plus `host()` **feature-gated to the async world**), slicing across `step_job` calls on a **dedicated** `LocalExecutor` — deliberately not the reactor's, so job slices never starve UI-turn tasks — a stall guard emitting `job.stalled` after 3 consecutive no-progress slices, and checkpoint/restore. `semio.io-run`/`semio.io-sniff` are preserved **byte-identically** as ordinary registry entries, so behaviour is unchanged where it already worked. 10 tests. `PluginBuilder::job(kind, run)` threaded through the same typestate plumbing `commands` already uses.
+
+It filed **two precise lease-requests** rather than reaching into a sibling's files (the `JobsGuest` impl in `🔌️plugin/🦀️component.rs`, and a `jobs:` field in the checkpoint pack) and grep-verified those are the only real call sites — correctly noting that a lookalike `JobOutcome`/`step_job` in the scale-fixture crate is an independent hand-rolled module. **Its crate does not compile until those leases land**, which it stated plainly; they are sequenced behind `task-emit-core`, which still owns both files.
+
+Honest gaps it declared: cancelling a job frees its own bookkeeping slot but not the underlying `LocalExecutor` slot (that executor has no by-id removal and is outside its ownership — a real follow-up), and the stall guard uses budget-equality as a proxy because there is no fuel metering yet.
+
+## 🤝️ Handover absorbed — the previous coordinator of this ticket lost filesystem access mid-wave
+
+The session that ran W5/W6 until ~09:40 today (author of the async `GuestRuntime`, `poll_ready`, and the 115/0/1 baseline this session is building on) reached me cross-session. It holds **nothing** — both its agents stopped, no edits in flight, no leases — and handed over sole coordination. Its handover (`…/41af9a75-…/scratchpad/W6-HANDOVER.md`) is folded in below because `📓️status.md` was unreachable from that session and the wave is otherwise undocumented from 09:40 onward.
+
+### Landed and coordinator-verified there (before access was lost)
+| packet | evidence |
+|---|---|
+| `dev-polls` | **27 passed, exit 0** (baseline 17 + 10). Zero exit-code poll loops remain; all 7 surviving `Bun.sleep` classified (3 docstrings, 2 injectable helper defaults, 2 documented fs/lock exceptions). New `🔖️PollHelpers` region carries the rule as a docstring |
+| `trait-asyncify` | plugin-host `--all-targets` exit 0; `--lib --skip schema_parity` **115/0/1**; `schema_parity` **4/4** |
+| `http-streaming` | `--all-targets` Finished; **30 passed / 0 failed** (baseline 26). Real-byte budget charging, one body impl feeding both worlds, a refill driver that actually runs (with a test), storage deadline racing, boot `block_on` removed |
+
+### 🔴️ `semio-framework-os-kernel-db` is RED — 84 errors, and it is NOT a peer regression
+An **atomic** `db-trait-flip` was interrupted mid-refactor when scope shifted: 9 db files + `🌎️hub/…/📦️bin.rs` are half-converted to async `DbFuture` traits. Signature errors: `E0425 cannot find function inline_fs_runtime`; many `E0277 ? on non-Try`; many `E0277 [u8] size not known` (borrowed slice params crossing into `Box::pin(async move …)`; the specified fix shape is `DbFuture<'a,T>` with `&'a self` + `&'a [u8]`).
+
+**Deliberately NOT absorbed by this wave.** `🛢️db/**` is explicitly out of scope — the pending runtime/db refactor owns it — and finishing-vs-reverting a half-applied atomic refactor is an owner decision, not something to quietly adopt mid-wave. **Flagged upward to the user.** Recorded here so nobody misattributes it to a peer or to this wave's plugin work.
+
+### Two rules this ticket earned (renumbered — 24 is already the target-dir rule)
+25. **An atomic packet may be redirected BEFORE it starts, or allowed to FINISH — never interrupted.** A scope change does not make a half-applied atomic refactor safe. Cost of learning this: the 84 errors above.
+26. **Neither `--lib` nor `--all-targets` is a sufficient gate alone — run both.** Hit from opposite directions the same day: `--lib` hid a `cfg(test)` trait impl (7 errors), and `--all-targets` hid a missing *production* `tokio` `macros` feature by unifying it from dev-dependencies. This wave immediately confirmed it: my `--lib` wgpu check was green while `--all-targets` surfaced a real remaining error.
+
+### wgpu site count reconciled — 4 fixed here, 9 measured there, 0 outstanding
+The handover listed 9 × E0308 in `🎯️targets/🧊️wgpu/📦️glue.rs` plus one at `Shell/🧊️component.rs:2471`. Measured on the **current** tree: my 4 `poll_ready` wraps cover every raw site in `📦️glue.rs` (whole-file census: 0 remaining raw `execute_turn`/`start_job`/`step_job`/`cancel_job`/`checkpoint`/`restore`), and `Shell/🧊️component.rs` has **zero** `GuestRuntime` call sites at all — line 2471 is presence-heartbeat code today. The 9-vs-4 gap is tree drift between the two measurements, not a missed fix, and **no Shell lease is needed**. `Dock/🧊️component.rs:1256,1259,1634` remains a third session's pre-existing break, unrelated to either of us.
+
+Following rule 26, `cargo check -p semio-framework-os-renderer-wgpu --all-targets` now reports exactly **one** error, and it is not wgpu's: `⚛️reactor/🦀️component.rs:282` calls a private `plugin_runtime::instance_actor` — `task-emit-core`'s own in-flight work (that file was modified seconds before the check). Transient, its own file, left alone.
+
+## ✅️ S1c — the S1/S1b contradiction is RESOLVED: **(A)**, CPU-bound actors CAN be multiplexed
+
+Two sessions reported opposite results on the single question the whole async shard executor rests on. Settled by a third experiment I specified to kill my own hypothesis, not to confirm it.
+
+**My hypothesis was that S1b was an artifact.** S1b's guest `burn` loop periodically called the `progress` **host import**, and every host-import call is an `.await` — a natural yield point. If that were the source of the 149 context switches, the interleaving would be *import-driven*, not `UpdateDeadline::Yield`-driven, and the peer's S1 NO-GO would stand.
+
+**S1c: `burn-pure` — the identical CPU loop with ZERO host-import calls anywhere**, in S1b's exact shape (two separate `Store`s, host-level `futures::join!`, no `Accessor::spawn`), across epoch×{symmetric,asymmetric} and fuel×{symmetric,asymmetric}.
+
+| lever | shape | result |
+|---|---|---|
+| epoch | symmetric 40M/40M | `t_a=229ms, t_b=230ms` — ratio **1.00**, not the 2.00 that sequential execution requires |
+| epoch | asymmetric 300M/5M | tiny call returned at **30ms** while the huge call ran on for another **847ms** |
+| fuel (separate `Engine`, `epoch_interruption` never enabled) | symmetric | ratio **1.00** |
+| fuel | asymmetric | tiny **6ms** vs huge **197ms** |
+
+All four reproduced on a second full run. **Verdict (A): epoch- and fuel-Yield genuinely preempt pure CPU-bound guest code across separate Stores, with no import confound.** S1b's GO stands on its own merits; my challenge was right to make and wrong in its conclusion.
+
+**Both prior reports were also correct, about different shapes.** The peer's S1 NO-GO measured `Accessor::spawn` *inside a single Store* — that really is a NO-GO, and it is now permanently recorded as such. It simply is not the shape the design uses. Nothing narrows: **the async shard executor may multiplex CPU-bound actors**, and the architecture does not retreat to I/O-bound-only.
+
+**A false start is preserved deliberately.** The first S1c attempt showed a "300M-iteration" call returning in 6µs with 0 epoch hits — LLVM had strength-reduced the side-effect-free loop to closed-form arithmetic and deleted it. Fixed with `std::hint::black_box` per iteration. The run log is kept as `terra-s1c-*-BROKEN-optimized-away.txt` so it can never be mistaken for a real measurement, and the pitfall is written into the probe report as a standing warning: **any future CPU-bound guest probe must defeat the optimizer or it measures nothing.**
+
+S1, S1b and S1c are all kept as separate permanent entries in `📓️terra-probe-spikes-report.md`. This closes the last open spike; the EC slice is unblocked on its own terms.
+
+## ✅️ `db-trait-flip` FINISHED TO GREEN — the RED flagged upward has been closed out by the owner
+
+The user, holding the decision this ticket correctly refused to make mid-wave, chose **finish, not
+revert**. Done. Full detail: `📓️db-trait-flip-completion-report.md`; plan: `📓️db-trait-flip-completion-plan.md`.
+
+| gate | before | after |
+|---|---|---|
+| `semio-framework-os-kernel-db --lib` | 83 errors | **exit 0** |
+| `… --all-targets` | 361 errors | **exit 0** |
+| `… --lib` test suite | could not build | **424 passed / 0 failed / 0 ignored** |
+| `semio-hub --all-targets` | 3 errors | **exit 0** |
+| `semio-hub` tests | could not build | **11 + 20 passed / 0 failed** |
+
+**The packet was missing a decision, not code.** The trait family was already `DbFuture`; *no* caller had
+been converted (`grep -c "async fn"` was 0 in every db component). It stopped precisely between its two
+halves, so the sync/async boundary had never been chosen. Chosen now: **pure-logic layers go `async fn`**
+(`db_snapshot`/`wal`/`index`/`compact`/`sync`/`cluster`/`projection`/`query` — they own no threads, and
+`async fn` keeps them `wasm32`-clean without boxing); **thread-owning layers keep their sync signatures
+and bridge once** with `db_actor::block_on` (`db_artifact` on the `ArtifactAuthority` thread, `db_engine`
+on its per-submit bridge threads, `db_cli`, and every `#[cfg(test)]` module); **`🌎️hub` is genuinely async
+and just `.await`s.** The handover's hard constraint held verbatim: **no db-actor thread converted, no
+`db_engine` bridge thread deleted.** Blocking moved outward one level — out of each backend body into the
+thread that already owned the call, which is exactly where it used to live.
+
+**`E0425 inline_fs_runtime` resolved by deduplication rather than by writing it.** `db_cli` already had a
+private `CliRuntime` doing that job. The one implementation now lives beside the `FsStorage` that needs it
+as `db_storage::InlineRuntime` + `FsStorage::open_inline(owner, root)`; `CliRuntime` is deleted. It also
+absorbed two stale 1-arg `FsStorage::open(root)` call sites (`db_cli` at HEAD, `db_testkit`) that the
+interrupted packet had left un-compilable.
+
+**🚨️ One real defect surfaced only by finally being able to RUN the suite.**
+`db_preview::tests::preview_crate_never_references_wal_shaped_symbols` — that crate's single most
+important law, "previews are never durable" — **failed**. W6 had added prose to the crate's `Cargo.toml`
+explaining the sync/async boundary, and that prose names `db_storage`; the guard did a raw
+`manifest.contains(…)`, so a *comment* tripped a *dependency* law. Invisible because the crate had not
+compiled since. Fixed at the guard (comment lines stripped first) so the law tests what it means to test.
+**This is rule 26 one level up: a green `--lib` is not a passing suite either. Compile both, then RUN.**
+
+### `wasm32-unknown-unknown` is red for this crate, and it is NOT a regression from this work
+66 errors, verified pre-existing rather than assumed: `db_artifact` calls `recv_blocking`/`ask_blocking`
+(both `not(wasm32)`-gated in `db_actor`) — `git diff` shows zero working-tree changes from me in that
+file and `git log -S` dates those calls to **2026-08-10**; `db_engine`/`db_cli` name the correctly-gated
+`FsStorage`, and `git show HEAD:…` confirms that reference predates my edit. The thread- and fs-owning
+trio has never been `wasm32`-clean; the module doc's `wasm32` claim is scoped to `db_storage` itself and
+still holds. Every new `block_on` landed **inside those same already-native-only modules** — the
+pure-logic layers went `async fn` specifically so they stay clean. Making the trio `wasm32`-clean belongs
+to the pending runtime/db refactor. Per rule 21 this is stated as measured, not as "pre-existing" by assertion.
+
+### 🔁️ Rule 27 — a compiler-driven refactor still needs a region guard on name-keyed edits
+~450 mechanical edits were driven off `--message-format=json` spans to a fixpoint (four scripts kept in
+this folder), which is the right tool at this size. Two traps, both caught by the compiler and neither
+findable by grep: (a) a non-greedy "wrap the tail expression" regex swallows `assert_eq!(`'s opening
+paren — the paren structure stays valid, so the repair is a *swap* of the two prefixes, not a re-parse;
+(b) **a pass keyed on a variable NAME (`result`) is not scoped to tests and will hit production code with
+the same name** — it did, one site in `db_compact::Compactor::run`, caught by `Result<…> is not a future`.
+Span-keyed edits are safe; name-keyed edits need an explicit line-range guard.
+
+### Re-verified, not assumed: `wgpu-poll-ready` was already closed by the peer
+The handover listed it "not started". On the current tree `semio-framework-os-renderer-wgpu --lib` is
+**exit 0** and `poll_ready` wraps are present at `📦️glue.rs:1315,1320,1326,1332` — matching this ticket's
+own "4 fixed here, 9 measured there, 0 outstanding" reconciliation. Nothing to do. `--all-targets` still
+reports 26 errors, all in `#[cfg(test)]` UI-schema code in `Dock`/`Shell`/`Interpreter`
+(`LocalizedLabel::data`, `UiPresence`, `PresencePeer.presence_pack`) — a third session's live work
+(`Shell` was committed at 09:57 today), with **zero** working-tree changes from me in any of the three.
+Left alone.
+
+## ✅️ W6-A CLOSED — all four packets accepted, with three real defects found only by the acceptance build
+
+Every packet was delivered UNRUN per rule 4, so all of the following was found by me, not by the executors. This is rule 23 doing exactly what it exists to do.
+
+### `async-imports` — accepted after one fix
+`⏳️imports.rs` (807 lines, all 24 `host-async` imports) + a 6-line mount. It had **never been compiled**; the first build failed with a single clean error:
+
+`additional_derives: [Clone]` applies **blanket to every generated type**, and the async world carries `stream<u8>` → `StreamReader<u8>`, a one-shot resource handle deliberately not `Clone`. The poll world has no streams, which is why the sibling `mod actor_bindings` gets away with it. Removed the derive (nothing needed it) and dropped one unused import. Now **`--lib` and `--all-targets` both exit 0**, plugin-host tests **113/0/1 + schema_parity 4/4**. The caveat is written into the module docstring so nobody re-adds it.
+
+### plugin-host baseline moves 115 → **113**, and it is not a loss
+Two tests genuinely disappeared: `an_effects_deadline_is_enforced_and_the_loser_is_cancelled` and `race_deadline_returns_the_primary_result_when_it_finishes_first`. I did not accept the count and did not accept "probably fine" — I diffed the named sets against `HEAD`.
+
+**`git diff` reported the file as unchanged, which was a lie of tooling, not of the tree**: the auto-commit stages everything (`git add -A`), so worktree == index and a bare `git diff` is empty by construction. `git diff HEAD` showed −96/+5. **Standing correction: in this repo, always diff against `HEAD`, never bare `git diff`.**
+
+The deletion is correct: `race_deadline` was a call-site helper compensating for `StorageScheduler` not racing deadlines internally. `StorageTicket::await_result` now races its own deadline and returns `StorageError::DeadlineExceeded`, so the helper became dead code and went out with its tests. Coverage moved down a layer and is real — verified by name in `🛎️services`: `storage_scheduler_races_a_queued_job_against_its_deadline_and_frees_its_reservation_when_lost` and `run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited`.
+
+⚠️ **One genuine behavioural narrowing, recorded not hidden**: the new in-scheduler race only fires for **queued** jobs. `StorageScheduler`'s own doc says an already-dispatched job is not preempted. The deleted call-site race covered *any* storage op, dispatched or not. So a slow already-running storage op no longer times out at the effect layer. Documented as an honest limitation at the source; **belongs to the pending runtime/db refactor**, not absorbed here.
+
+### `task-emit-core` + `jobs-runtime` — accepted after three fixes
+`--lib` was green; **`--all-targets` was red**, rule 26 again, immediately after it was written down. Two broken test lines: an unescaped `{value:42}` read as a format placeholder, and a missing `use crate::store::FaultFrom`.
+
+Then the suite ran **6 failed, then 7 failed on a re-run** — a moving count, which is never "flakiness to retry past" but a signal of shared mutable state. Against the named 5-failure baseline, two were new, and isolation separated them cleanly:
+
+**🔴️ Real defect — a leaked quota slot on every cancellation.** `instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot` failed deterministically. **`RequestFuture` had no `Drop` impl anywhere in the repo.** Dropping a task's future — the *only* cancellation mechanism, used by both `cancel_instance_tasks` and the key-dedupe replacement path — left its `Pending` slot and instance tag in the registry forever. The registry sweep hid it at instance close, but nothing hid it for key-dedupe: a plugin re-keying a task (the `latest-wins` idiom this very wave introduces, e.g. a search-as-you-type task) would leak one `outstanding_requests` unit per keystroke and eventually be refused its own quota **with nothing actually pending**. Fixed at the root with `impl Drop for RequestFuture` releasing slot + tag, making drop-is-cancellation complete and matching the host side's `CancelOnDrop`. The test's expectation was right; the implementation was missing.
+
+**🟡️ Test-isolation defect.** `host_media_conflicts_reject_the_whole_candidate_before_execution` passed alone, failed in-suite: two tests share the process-global `MESH_DWG_EXECUTIONS` counter and **both reset it to 0**, so concurrently each observes the other's increments. Fixed with a shared `MESH_DWG_GUARD` mutex both tests take.
+
+**Result: exactly the 5 known-by-name pre-existing failures, stable across 3 consecutive runs — 263 passed.** The long-documented 5-vs-6 count wobble is **gone**, because the mutex removed the actual race rather than papering over it.
+
+### 🕳️ A gate that was never checking anything
+`jobs-runtime` gated `JobCtx::host()` behind `#[cfg(feature = "component-guest-async")]` — a feature **never declared in `Cargo.toml`**. An undeclared feature makes every such block permanently unreachable, so that code had never been type-checked by any build. Declared it (with the reason in a comment). This is the wasm-gated-code trap in a new costume: **a `cfg` gate you cannot enable is indistinguishable from deleted code, and the compiler only warns.**
+
+### Consumer re-check
+`semio-framework-os-renderer-wgpu`: **`--lib` exit 0**, and the `instance_actor` privacy error is gone now that `task-emit-core` landed. `--all-targets` still fails, **27 errors, none of them ours** — `LocalizedLabel` not imported in element test modules (Dock 11, Shell 13, Interpreter 2). The type is publicly defined at `🖱️ui/…/🦀️label.rs:90`; those test modules simply lack the `use`. Files last touched 08-17/08-19 00:58 — **stale, not live**, so this is a pre-existing break that has grown beyond the Dock-only note in the baseline. Renderer element test modules are outside this wave; recorded, not absorbed.
+
+## ▶️ W6-B dispatched — 3 packets, disjoint ownership
+
+| packet | owns | note |
+|---|---|---|
+| `io-async-signatures` | `🔌️plugin/🦀️component.rs`, `🚪️io/**`, all fleet io modules | **ATOMIC** — briefed under rule 25 in the strongest terms: do not stop halfway, do not ask |
+| `sdk-async` | `🌐host/**`, `⚛️reactor/🦀️component.rs`, `📮️requests/**` | dual `HostBackend{Poll,Direct}`, `BodyReader`, and the discarded-chunk bug |
+| `cold-kinds` | `⚛️reactor/💼️jobs/**`, `🖥️host/🦀️component.rs` | `semio.infer`/`mutation-plan`/`migrate` + host routing |
+
+**The plan's scope figure for the io sweep was wrong and I corrected it before dispatch.** The plan said "143 io modules". Measured: **223 files carrying 226 artifact-io trait impls** (`ArtifactEditor` 147, `ArtifactDeserializer` 39, `ArtifactSerializer` 39, `ArtifactComposer` 1), plus **163 `ComposerEntry{…}` constructions** across 31 files and reference sites at `composer_entry_of` 227/91 files, `serializer_entry_of` 126/16, `deserializer_entry_of` 64/15. `🗄️stdio` alone holds 164 of the impls. Compose is a **fn pointer**, not a trait method, so it needs a named future-returning type alias rather than 163 hand-spelled `Pin<Box<dyn Future…>>`.
+
+An earlier, cruder census of mine said 894 files / 946 functions — that counted every `fn serialize(`, which sweeps up serde's own `Serializer` impls. **Recorded as a caution: `fn serialize(`/`fn deserialize(` are serde-shaped names and are useless as an artifact-io census; count trait impls instead.**
+
+**`semio.compose` was deliberately withheld from `cold-kinds`.** Its body needs the `ComposeStepper`/`ComposeState` types that `io-async-signatures` is defining right now; letting two packets define them would be exactly the interleave rule 25 exists to prevent. `compose-await` (W6-C) picks it up once the types are real.
+
+### 📊️ Adoption census after W6-A — deliberately still zero, and that is the correct reading
+
+`census-async-adoption.py` re-run against the fleet (`✏️s/🔌️plugins/**`, 10,078 `.rs` files) is **unchanged from the pre-wave baseline**: host_calls **4**, async_fn **186** (184 of them the stdio BrepKernel), await **6**, `block_on` **134**, `pending_effects` **3**, `register_job_kind` **0**, `AsyncTask` **0**, DownloadMediaExport **41**.
+
+This is not a disappointing result, it is the expected one, and it is worth stating plainly so nobody reads W6-A as progress against the user's actual complaint. W6-A built **mechanisms inside the framework** — `AsyncTask`/`Emit.tasks`, the open jobs registry, the async `GuestRuntime`, the 24 `host-async` imports. The census deliberately measures **the plugin fleet**, which is where the user looked when they said "I still see no async". Nothing there has moved yet, and nothing was supposed to.
+
+The number that must move is `async_fn`, and W6-B's io sweep is what moves it — 226 impls across 223 files. `block_on` → 0 and `pending_effects` → 0 belong to W6-C; `register_job_kind`/`AsyncTask` climb through W7. **This census is the wave's headline metric and gets re-run at every gate.**
+
+## 🔍️ S7 opened — the async world may not be able to run jobs at all
+
+Checking the S3 caveat myself (rather than delegating it) turned up something larger than the caveat.
+
+Measured in `🔌️plugin/🧬️schema/📜️component.wit`:
+
+| interface | funcs | exported by |
+|---|---|---|
+| `runner` | `run: **async func**(events: stream<event>)` | `actor-async` only |
+| `host-async` | all 24 imports **`async func`** | `actor-async` only |
+| **`jobs`** | `start-job`, `step-job`, `cancel-job` — **all plain sync `func`** | **both worlds** |
+| **`checkpoint`** | `checkpoint`, `restore` — **both plain sync `func`** | **both worlds** |
+
+The jobs runtime gates `JobCtx::host()` behind `component-guest-async` — a job body that **awaits a host import**. S2 already ruled that out for the poll world (`run_job_to_completion` never pumps `poll`, so a host-await deadlocks). If a sync-lifted `step-job` also cannot await an async import, then **`JobCtx::host()` is unimplementable in both worlds** and we have shipped a gate that can never be switched on — a sibling of the undeclared-feature trap found earlier today, one layer down.
+
+**I am not deciding this from the spec.** It reads both ways: CM-async may forbid it outright, or wasmtime may permit it by blocking that instance while other stores keep running — which, for our one-store-per-actor shape, could be entirely acceptable since jobs are budget-stepped anyway. The failure mode that actually matters is narrower and testable: **`runner.run` is driving the event stream in the same instance while `step-job` blocks on an import — is that a deadlock?**
+
+S7 dispatched to the probe agent (it owns the only working async harness) to answer by experiment, with a copy of the WIT — **not the live file**, since four packets are mid-flight and the schema is shared. Verdict (A) leaves the schema untouched; verdict (B) requires splitting into `jobs-async`/`checkpoint-async`, hoisting `job-budget`/`job-step` into a shared types interface for both to `use` (rule 20: `use`d types are aliases), and **consciously re-specifying** plugin-host's `both_worlds_share_the_same_export_surface_and_actor_is_untouched` parity test — that test encodes an invariant the split would deliberately break, so it must be changed with intent, never "fixed" to go green.
+
+I also **withdrew the schema-fix instruction from `async-runtime`** mid-flight: it was told to fix `checkpoint` if it wasn't async, which would have had it editing the shared WIT against a live probe. It is now building against the schema exactly as it stands and recording any async-dependency as an explicit blocked seam instead of quietly working around it.
+
+## ⚠️ Seam recorded: `poll_ready` becomes a live panic the moment an async runtime exists
+
+`poll_ready` polls a `HostFuture` **once** with a no-op waker and **panics** on `Pending`. That is correct and harmless today, because the only real `GuestRuntime` impl is the poll-world `WasmtimeRuntime`, whose futures are always eagerly ready. It stops being harmless the moment `async-runtime` lands a genuinely-async impl behind the **same `Arc<dyn GuestRuntime>` trait object** — nothing in the type system stops an async runtime from reaching a `poll_ready` call site, and the failure mode is a panic deep inside a turn rather than an error at wiring time.
+
+Production (non-test) call sites, audited:
+
+| site | owner | risk |
+|---|---|---|
+| `🧵️shard/🦀️component.rs` ×8 | `ShardLoop` | **By design** — `ShardLoop` is explicitly the poll backend; `async-shard` (W6-D) is its async counterpart |
+| `🖥️host/🦀️component.rs:1444,1446` | `run_job_to_completion` | **Live risk** — takes whatever runtime it is handed, and `cold-kinds` is routing compose through it right now |
+| `🌉️mcp/🏠️workspace/🦀️component.rs:327,399` | MCP workspace gateway | **Live risk, and OUT OF SCOPE** — `🌉️mcp` belongs to the pending runtime/db refactor |
+
+The wgpu `📦️glue.rs` sites are bench/test and carry no production risk.
+
+**Required end state:** a doc comment is not a guard. Backend selection must make this impossible by construction — an async runtime must be rejected at wiring time with a typed error, not discovered by a panic mid-turn. Concrete shape: a provided method on `GuestRuntime` (e.g. `supports_synchronous_polling()`, defaulting true, overridden false by the async impl) asserted at `ShardLoop`/`run_job_to_completion` **construction**.
+
+**Not doing it now, deliberately.** The trait lives in `🖥️host/🦀️component.rs`, which `cold-kinds` owns this minute; editing a file another packet is mid-flight in is precisely what rule 25 exists to prevent. Folded into the W6-D backend-selection brief instead, and `🌉️mcp` will be handed to the pending refactor as a named seam rather than silently left as a latent panic.
+
+## 🔴️ S7 verdict: **(B)** — and the finding is categorical, not conditional
+
+The probe built a deterministic test (no wall-clock timing, no background threads): a host import requiring exactly 5 real polls before resolving, against three guest exports — a trivial no-import sync `func`, a sync `func` that spin-polls the import, and an `async func` control.
+
+**A plain sync `func` export is UNCALLABLE on any `Store` configured with `wasm_component_model_async(true)`.** Not "deadlocks", not "blocks the instance" — every call fails immediately with `"store configuration requires that *_async functions are used instead"`. It fails identically whether called reentrantly inside `run_concurrent` via `Accessor::with` **or** with a classic `&mut Store` call on a completely idle store that never opened a concurrent session, and it fails **even when the export touches no import at all**. The `async func` control twin worked normally, proving the harness sound. Reproduced twice, exit 0.
+
+This is stronger than the question I asked. I framed it as "trap, block, or work"; the real answer is that the export cannot be reached in the first place. **Good news for diagnosability** — it is a loud, catchable `Err`, never a hang — and unambiguous for the schema: `world actor-async`'s sync `jobs` and `checkpoint` exports are dead code that would fail on first call.
+
+The probe's WIT diff (`terra-s7-component-wit-diff.md`, **not applied to the live tree**) hoists `job-budget`/`job-step` into `interface types` so both interfaces `use` the identical type (rule 20), adds `jobs-async` + `checkpoint-async` with `async func`, and repoints `world actor-async`. **`world actor` is byte-identical — zero lines changed.**
+
+### 🕳️ The diff is incomplete, and I found the hole by checking the consumer
+`world actor-async` also carries **`export describe;`**, and `interface describe` is likewise a plain sync `func`. By S7's own categorical rule it is equally uncallable there.
+
+Checking the actual consumer rather than reasoning about it: `📇️describe/…/📦️glue.rs:122` builds its **own** `wasmtime::Config` with only `consume_fuel(true)` — **no async** — links `pure` + wasi-p2, and instantiates `actor_bindings::Actor`, i.e. the **poll** world on a sync store. So today the descriptor pipeline cannot describe an async-world component at all: its `host-async` imports are unlinkable there, and async imports cannot be lowered on a non-async store.
+
+Two coherent resolutions:
+- **(A)** Every plugin ships dual artifacts, the descriptor is always generated from the **poll** artifact, and the async world's `describe` is simply never called. Cheap, consistent with the planned `hashes.async_wasm_sha256`, but it leaves an exported function that would fail if anyone ever called it — and *"it is never called"* is exactly the assumption that produced today's other two traps (the undeclared `component-guest-async` feature, and a `cfg` gate nothing could enable).
+- **(B)** Add `describe-async` so an async component is describable on its own terms.
+
+**Taking (B).** The cost is one WIT interface plus a macro export; the alternative preserves a latent trap of a kind that has already bitten this ticket twice today. `abi-descriptor` (W6-D) will be briefed to run describe on an async-configured store with stub `host-async` imports for async artifacts.
+
+### ⏸️ Deliberately NOT applying the schema change yet
+It touches the shared schema, the guest SDK's `plugin_exports!` macro (in `🔌️plugin/🦀️component.rs`), the host bindgen, and plugin-host's parity test. **`io-async-signatures` owns `🔌️plugin/🦀️component.rs` right now and is mid-atomic-sweep.** Applying this on top would be precisely the interrupted-atomic-packet failure rule 25 exists to prevent — the one that cost 84 errors in the db crate. It lands as its own atomic packet once the io sweep reports.
+
+### 🏷️ Numbering collision, recorded so it never confuses anyone
+"S7" was **already** assigned to the earlier sqlx/neo4rs `Send` check from the W6 sweep. The probe renumbered this spike **S9** in the report prose, but its code and run logs literally print "S7" because that is what was executed. Both names refer to this one experiment. The verdict table and section header in `📓️terra-probe-spikes-report.md` flag it.
+
+**Also relayed immediately to the live `async-runtime` packet** (it is wiring epoch/fuel budgets this minute): `set_epoch_deadline` takes a **delta, not an absolute epoch** — it computes `current_epoch + delta`, so the natural "no deadline" sentinel `u64::MAX` **wraps and traps the whole process**. The probe hit exactly that on its first run. That packet was also told the sync-export shape is dead rather than merely awkward, so it builds against async `jobs`/`checkpoint` directly instead of recording a seam.
+
+## 🚩️ F-wave announced — the fleet turn (all 33 plugins, every surface) begins as a SECOND coordinator
+
+A second coordinator (Opus 5, separate session) is starting the **fleet program**: turning every surface of
+all 33 plugins — `🚪️io`, `🧬️mutations`/`🦠️mutation`, `🪛️utilities`, `🎮️commands`, `💡️inferences`,
+editors/viewers — onto the async/actor model, to an exit bar of **G3 + the 8 bench budgets on all three
+renderers**. Plan of record: `/Users/ueli/.claude/plans/you-must-turn-all-nested-papert.md`.
+
+This is the `M0…M8` / W3 work finished properly, plus the jobs half that W3 correctly declared out of reach.
+Packet slugs (ruling 5) audited against this log and the ticket folder before reserving — **zero collisions**:
+`fleet-stdio` `fleet-small` `fleet-cad` `fleet-flow` `fleet-imperative` `fleet-heavy-a` `fleet-heavy-b`
+`fleet-long-tail` `fleet-demonstrator` `fleet-census-zero` · `claim-helper` `dialect-arbitration` ·
+luna audits `claims-audit` `dialect-audit` `census-baseline` `brep-await-spec`.
+
+**Path contract, so the two coordinators cannot collide:** fleet packets own `✏️s/🔌️plugins/<p>/**` only.
+Root `Cargo.toml`, `📇️registry`, `launch.json`, `🎠️kernel`, `🛂️manifest` and every `🔌️plugin/**` framework
+file stay registrar-only, by lease-request. W6-B/W6-C landing notices in this log are treated as gate triggers.
+
+### ⚠️ Measured before dispatching: `io-async-signatures` is sweeping WIDER than its declared scope
+
+Its registry row reads `🔌️plugin/🦀️component.rs`, `🚪️io/**`, "all fleet io modules". Measured just now by
+mtime under `✏️s/🔌️plugins` (python over absolute paths, rule 21 — shell globbing under-reports here):
+
+| touched < 60 min | area |
+|---|---|
+| 104 | `🚪️io/**` — its declared scope |
+| **39** | **`✏️editor/🦀️component.rs`** — NOT in its declared scope |
+| 1 | `🗄️stdio/🗿️artifacts/🖊️dwg/🦀️component.rs` |
+
+The 39 editor files are almost certainly legitimate cascade (`ArtifactEditor` is one of the traits being
+asyncified), so this is a **scope-statement** gap, not misbehaviour — but it matters to anyone planning around
+that row, because `✏️editor/🦀️component.rs` is exactly where the three `pending_effects` sites live
+(`🌊️flow:324`, `🌀️procedural2d:257`, procedural3d). **The fleet wave is therefore holding its entire
+plugin-editing tranche until the io sweep reports**, rather than discovering the overlap by breaking an
+in-flight atomic packet. Rule 25, applied to somebody else's packet.
+
+Suggested for the next registry row: state cascade paths in the scope, or say "scope = declared paths + their
+compile cascade" explicitly. A reader cannot infer 39 editor files from `🚪️io/**`.
+
+### ✅️ Correction: the `describe` per-crate wiring is ALREADY DONE, fleet-wide
+
+`📓️design-abi.md` §3 lists "each plugin crate: `describe`" as outstanding, and an exploration pass this
+session reported it unwired. Both are stale. Measured: **33 of 33** plugin crates carry a `describe` target in
+`📦️packages/🦀️rust/📋️project.json` and a `DescribeScript` calling `describePluginComponent(...)` in their
+`📜️script.ts`. Verified by reading `🖍️draw`'s pair and by a python scan of all 33.
+
+So descriptor emission tooling is **not** a blocker for any plugin. The 23 unemitted descriptors are blocked
+only by the five already-classified data/mechanism causes (claim-rule ×7, weak-linkage ×2, dialect collision
+×2, kit.catalog ×1, crate-type ×1). The planned `describe-scripts` packet is dropped as a no-op before anyone
+spent a wave on it.

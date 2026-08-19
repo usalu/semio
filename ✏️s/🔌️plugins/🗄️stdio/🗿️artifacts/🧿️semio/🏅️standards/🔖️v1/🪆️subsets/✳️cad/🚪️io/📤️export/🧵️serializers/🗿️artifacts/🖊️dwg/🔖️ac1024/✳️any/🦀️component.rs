@@ -18,7 +18,7 @@ impl ArtifactSerializer for SemioCadToDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(_from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(_from: &Self::From) -> Result<Self::Into, store::PackError> {
         Err(store::PackError::Schema("semio/cad→dwg: unsupported until every CAD topology value has a defined logical DWG entity mapping".into()))
     }
 }
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn documents_unsupported_direction_as_a_real_error_not_fabricated_bytes() {
-        let err = SemioCadToDwg::serialize(&SemioCadSnapshot::default()).unwrap_err();
+        let err = semio_framework_plugin::resolve_ready(SemioCadToDwg::serialize(&SemioCadSnapshot::default())).unwrap_err();
         match err {
             store::PackError::Schema(msg) => assert!(msg.contains("unsupported")),
             other => panic!("expected PackError::Schema, got {other:?}"),

@@ -27,7 +27,7 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.pages.is_empty() {
             return Err(store::PackError::Schema("pdf→semio/drawing: no pages".into()));
         }
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn maps_page_text_and_media_box() {
         let pdf = PdfSnapshot { pages: vec![PdfPage { media_box: [0.0, 0.0, 200.0, 100.0], text: "hello semio".into(), ..PdfPage::default() }], ..PdfSnapshot::default() };
-        let drawing = SemioDrawingFromPdf::deserialize(&pdf).expect("deserialize");
+        let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromPdf::deserialize(&pdf)).expect("deserialize");
         assert_eq!(drawing.canvas.width, 200.0);
         assert_eq!(drawing.canvas.height, 100.0);
         assert_eq!(drawing.layers.len(), 1);
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn rejects_no_pages() {
-        assert!(SemioDrawingFromPdf::deserialize(&PdfSnapshot::default()).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioDrawingFromPdf::deserialize(&PdfSnapshot::default())).is_err());
     }
 }
 //#endregion 🔖️Tests

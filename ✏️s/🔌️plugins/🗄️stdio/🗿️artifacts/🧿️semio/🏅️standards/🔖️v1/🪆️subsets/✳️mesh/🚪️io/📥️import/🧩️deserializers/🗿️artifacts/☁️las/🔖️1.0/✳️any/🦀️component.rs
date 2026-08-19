@@ -37,7 +37,7 @@ impl ArtifactDeserializer for SemioMeshFromLas {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let positions: Vec<SemioPoint3> = from.points.iter().map(|p| SemioPoint3 { x: p.x, y: p.y, z: p.z }).collect();
 
         let colors: Vec<SemioRgba> = if !from.points.is_empty() && from.points.iter().all(|p| p.rgb.is_some()) {
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn deserialize_maps_positions_and_uniform_rgb_as_points() {
-        let semio = SemioMeshFromLas::deserialize(&sample_las()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromLas::deserialize(&sample_las())).expect("deserialize");
         let prim = &semio.meshes[0].primitives[0];
         assert_eq!(prim.topology, SemioTopology::Points);
         assert_eq!(prim.positions.len(), 2);
@@ -121,7 +121,7 @@ mod tests {
     fn non_uniform_rgb_presence_drops_colors_rather_than_fabricating() {
         let mut las = sample_las();
         las.points[1].rgb = None;
-        let semio = SemioMeshFromLas::deserialize(&las).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromLas::deserialize(&las)).expect("deserialize");
         assert!(semio.meshes[0].primitives[0].colors.is_empty());
     }
 }

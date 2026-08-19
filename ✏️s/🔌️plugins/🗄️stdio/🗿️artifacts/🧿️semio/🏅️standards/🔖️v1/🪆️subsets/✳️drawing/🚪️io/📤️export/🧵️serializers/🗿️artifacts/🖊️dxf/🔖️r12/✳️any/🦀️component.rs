@@ -174,7 +174,7 @@ impl ArtifactSerializer for SemioDrawingToDxf {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut entities = Vec::new();
         let mut layer_defs = Vec::new();
         for layer in &from.layers {
@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn real_text_round_trip_through_dxf_codec() {
         let drawing = sample_drawing();
-        let dxf = SemioDrawingToDxf::serialize(&drawing).expect("serialize");
+        let dxf = semio_framework_plugin::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");
         assert_eq!(dxf.entities.len(), 3);
         assert!(matches!(dxf.entities[0], DxfEntity::Circle { .. }));
         assert!(matches!(dxf.entities[1], DxfEntity::Polyline { .. }));

@@ -341,7 +341,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let root_node = from.doc.root.as_ref().ok_or_else(|| store::PackError::Schema("svg→semio/drawing: document has no root element".into()))?;
         let root = svg_element_from_xml_node(root_node).map_err(store::PackError::Schema)?;
         let (canvas, children) = match &root {
@@ -390,7 +390,7 @@ mod tests {
 
     #[test]
     fn maps_canvas_shapes_group_transform_and_text() {
-        let drawing = SemioDrawingFromSvg::deserialize(&sample_svg()).expect("deserialize");
+        let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromSvg::deserialize(&sample_svg())).expect("deserialize");
         assert_eq!(drawing.canvas.width, 100.0);
         assert_eq!(drawing.canvas.height, 50.0);
         assert_eq!(drawing.layers.len(), 1);

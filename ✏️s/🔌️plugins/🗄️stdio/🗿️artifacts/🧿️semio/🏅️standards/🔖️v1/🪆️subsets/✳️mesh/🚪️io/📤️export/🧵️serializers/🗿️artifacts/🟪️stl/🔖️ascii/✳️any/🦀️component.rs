@@ -53,7 +53,7 @@ impl ArtifactSerializer for SemioMeshToStl {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let solid_name = from.meshes.first().map(|m| m.id.clone()).unwrap_or_default();
         let mut triangles = Vec::new();
 
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
-        let stl = SemioMeshToStl::serialize(&original).expect("serialize");
+        let stl = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&original)).expect("serialize");
         assert_eq!(stl.solid_name, "pyramid");
         assert_eq!(stl.triangles.len(), 2);
         assert_eq!(stl.triangles[0].normal, [0.0, 0.0, 1.0]);
@@ -155,7 +155,7 @@ mod tests {
     fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::Lines;
-        let err = SemioMeshToStl::serialize(&semio).expect_err("Lines topology must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&semio)).expect_err("Lines topology must error");
         assert!(format!("{err:?}").contains("Triangles"), "got {err:?}");
     }
 
@@ -165,7 +165,7 @@ mod tests {
         semio.meshes[0].primitives[0].positions = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }];
         semio.meshes[0].primitives[0].normals = vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3];
         semio.meshes[0].primitives[0].indices = vec![0, 1, 2];
-        let stl = SemioMeshToStl::serialize(&semio).expect("serialize");
+        let stl = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&semio)).expect("serialize");
         assert_eq!(stl.triangles.len(), 1);
         assert_eq!(stl.triangles[0].vertices, [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]);
     }

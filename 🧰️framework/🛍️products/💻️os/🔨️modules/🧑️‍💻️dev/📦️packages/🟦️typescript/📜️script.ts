@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { createWriteStream, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { EventEmitter } from "node:events";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1493,6 +1494,116 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
  * used by every other os-dev variant/launch.json entry. */
 const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
+//#region 🔖️PollHelpers
+/** @emoji 🏛️ THE RULE (poll census, W6): a deadline-bounded poll is legitimate here if and only if
+ * the thing it waits on is EXTERNAL — a TCP port or HTTP endpoint belonging to a process we did not
+ * instrument, a lease file another `dev` invocation owns, a filesystem lock — and therefore emits no
+ * observable event we could await instead. The moment we hold the resource's own handle (a spawned
+ * child's `exit` event, a stream, a promise it already exposes), polling it on a timer is NOT
+ * legitimate; await the handle instead ([[awaitChildExit]] below replaced two such polls).
+ * [[awaitTcpReady]] / [[awaitHttpOk]] exist for the legitimate case only — real external readiness
+ * checks this process has no better signal for. A future poll census should find every `Bun.sleep`
+ * loop either inside one of these three helpers, or commented at its call site explaining which
+ * external resource it legitimately waits on (see `waitForPluginBuildLeaseReady`'s lease-file poll
+ * and `prebuildParityPlugin`'s mkdir-lock poll — both fs-based waits on a PID/lock this process holds
+ * no handle for, so neither fits a TCP/HTTP shape). */
+
+type PollOutcome = "ready" | "dead" | "timeout";
+
+/** @emoji ⏳️ Deadline-bounded poll for a TCP `port` on `host` to reach the wanted state — open
+ * (`mode: "open"`, the default: something is now listening) or closed (`mode: "closed"`: nothing is
+ * listening anymore). Checks every `intervalMs`, capped at `deadlineMs` total from the call, and can
+ * race an optional `isDead()` predicate (e.g. `child.exitCode !== null`) so a spawn that already died
+ * does not have to wait out the full deadline before its caller finds out. `probe`/`sleep`/`now` are
+ * test-only injection points — production callers rely on the defaults ([[isDevPortInUse]]/
+ * `Bun.sleep`/`Date.now`). Never throws; callers turn the [[PollOutcome]] into whatever error
+ * message fits their own call site. */
+async function awaitTcpReady(
+  host: string,
+  port: number,
+  opts: {
+    readonly deadlineMs: number;
+    readonly intervalMs: number;
+    readonly mode?: "open" | "closed";
+    readonly isDead?: () => boolean;
+    readonly probe?: (host: string, port: number) => boolean;
+    readonly sleep?: (ms: number) => Promise<void>;
+    readonly now?: () => number;
+  },
+): Promise<PollOutcome> {
+  const mode = opts.mode ?? "open";
+  const probe = opts.probe ?? isDevPortInUse;
+  const sleep = opts.sleep ?? ((ms: number) => Bun.sleep(ms));
+  const now = opts.now ?? Date.now;
+  const deadline = now() + opts.deadlineMs;
+  while (now() < deadline) {
+    const inUse = probe(host, port);
+    if (mode === "open" ? inUse : !inUse) return "ready";
+    if (opts.isDead?.()) return "dead";
+    await sleep(opts.intervalMs);
+  }
+  return "timeout";
+}
+
+/** @emoji 🌐️ Deadline-bounded poll for `url` to answer any HTTP response at all — per THE RULE
+ * above, a `fetch` that throws (connection refused, DNS not up yet) just means the server isn't
+ * listening yet, not a real failure. Does not inspect `response.ok`; callers that need a specific
+ * status/body check the fetched response themselves once they have their own handle to it — this
+ * helper only proves *something* is answering on `url`. Shares [[awaitTcpReady]]'s deadline/isDead/
+ * injection shape and [[PollOutcome]]. */
+async function awaitHttpOk(
+  url: string,
+  opts: {
+    readonly deadlineMs: number;
+    readonly intervalMs: number;
+    readonly init?: RequestInit;
+    readonly isDead?: () => boolean;
+    readonly fetchImpl?: typeof fetch;
+    readonly sleep?: (ms: number) => Promise<void>;
+    readonly now?: () => number;
+  },
+): Promise<PollOutcome> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const sleep = opts.sleep ?? ((ms: number) => Bun.sleep(ms));
+  const now = opts.now ?? Date.now;
+  const deadline = now() + opts.deadlineMs;
+  while (now() < deadline) {
+    if (opts.isDead?.()) return "dead";
+    try {
+      await fetchImpl(url, opts.init);
+      return "ready";
+    } catch {
+      await sleep(opts.intervalMs);
+    }
+  }
+  return "timeout";
+}
+
+/** @emoji 🧵️ Resolves once `child` exits — Node's own `'exit'` event, not a poll — or with
+ * `"timeout"` after `deadlineMs`, whichever comes first. This is what THE RULE above means by
+ * "await the handle instead": a `ChildProcess` we spawned already tells us when it exits, so
+ * re-checking `child.exitCode` on a `Bun.sleep` timer is exactly the "wired but inert" shape this
+ * ticket exists to remove. Handles the case where `child` already exited before this was called (its
+ * `exitCode` is set synchronously before `'exit'` fires, so a late listener would otherwise hang
+ * forever). `timeoutAfter` is a test-only injection point for the deadline race; production callers
+ * keep the real `setTimeout`. */
+async function awaitChildExit(
+  child: SpawnDaemonHandle["child"],
+  deadlineMs: number,
+  opts: { readonly timeoutAfter?: (ms: number) => Promise<"timeout"> } = {},
+): Promise<"exited" | "timeout"> {
+  const timeoutAfter = opts.timeoutAfter ?? ((ms: number) => new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), ms)));
+  const exited = new Promise<"exited">((resolve) => {
+    if (child.exitCode !== null) {
+      resolve("exited");
+      return;
+    }
+    child.once("exit", () => resolve("exited"));
+  });
+  return Promise.race([exited, timeoutAfter(deadlineMs)]);
+}
+//#endregion 🔖️PollHelpers
+
 //#region 🔖️PluginBuildLease
 /** @emoji 🔐️ One `target/semio-dev-leases/plugin-build-<variant>.json` lease file: the single `dev`
  * process (identified by `pid`) currently doing the ~30-crate `ensurePluginRegistry` +
@@ -1583,6 +1694,10 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
   while (Date.now() < deadline) {
     const lease = readPluginBuildLease(path);
     if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return true;
+    // 🏛️ THE RULE (see 🔖️PollHelpers above): legitimate poll, not routed through a helper — the lease
+    // holder is another `dev` process entirely, identified only by a `pid` in this on-disk lease file.
+    // We hold no handle to it (no child object, no stream, no promise), only its pid, so there is no
+    // event to await; a lease file + `isPidAlive` liveness check is the only signal available.
     await Bun.sleep(500);
   }
   return false;
@@ -1726,9 +1841,12 @@ class DevScript extends BundleScript {
         if (occupant?.startsWith("trunk")) {
           console.log(`[dev] Restarting stale trunk on port ${port} (${occupant})`);
           stopTrunkDevPort(port);
-          for (let attempt = 0; attempt < 40 && isDevPortInUse(host, port); attempt++) {
-            await Bun.sleep(250);
-          }
+          // ⏳️ `stopTrunkDevPort` kills a process this function did not spawn (found via port
+          // occupancy, not a held child handle) — no exit event available, so a TCP-freed poll via
+          // 🔖️PollHelpers's `awaitTcpReady` is the legitimate signal per THE RULE. Same 40×250ms=10s
+          // budget as before; outcome intentionally unchecked — the caller proceeds either way, same
+          // as the original attempt-bounded loop did.
+          await awaitTcpReady(host, port, { deadlineMs: 10_000, intervalMs: 250, mode: "closed" });
         } else if (entry) {
           console.log(`[dev] Port ${port} already serving legacy wgpu trunk at ${wgpuDevPlayUrl(host, port, plugin, entry.entryPath)}`);
           return;
@@ -2541,16 +2659,14 @@ async function collabStartHub(port: number, dataDir: string, logPath: string): P
   daemon.child.stdout?.pipe(logStream);
   daemon.child.stderr?.pipe(logStream);
   const baseUrl = `http://127.0.0.1:${port}`;
-  const deadline = Date.now() + COLLAB_E2E_HUB_BOOT_BUDGET_MS;
-  while (Date.now() < deadline) {
-    if (daemon.child.exitCode !== null) throw new Error(`hub exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
-    try {
-      await fetch(`${baseUrl}/admin/api/overview`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
-      return daemon;
-    } catch {
-      await Bun.sleep(500);
-    }
-  }
+  const outcome = await awaitHttpOk(`${baseUrl}/admin/api/overview`, {
+    deadlineMs: COLLAB_E2E_HUB_BOOT_BUDGET_MS,
+    intervalMs: 500,
+    init: { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } },
+    isDead: () => daemon.child.exitCode !== null,
+  });
+  if (outcome === "ready") return daemon;
+  if (outcome === "dead") throw new Error(`hub exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
   daemon.kill();
   logStream.end();
   throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
@@ -2672,12 +2788,13 @@ async function collabStartUserDevServer(opts: { readonly port: number; readonly 
   });
   daemon.child.stdout?.pipe(logStream);
   daemon.child.stderr?.pipe(logStream);
-  const deadline = Date.now() + COLLAB_E2E_DEV_BOOT_BUDGET_MS;
-  while (Date.now() < deadline) {
-    if (isDevPortInUse("127.0.0.1", opts.port)) return daemon;
-    if (daemon.child.exitCode !== null) throw new Error(`dev server for ${opts.user} exited early (code ${daemon.child.exitCode}) — see ${opts.logPath}`);
-    await Bun.sleep(500);
-  }
+  const outcome = await awaitTcpReady("127.0.0.1", opts.port, {
+    deadlineMs: COLLAB_E2E_DEV_BOOT_BUDGET_MS,
+    intervalMs: 500,
+    isDead: () => daemon.child.exitCode !== null,
+  });
+  if (outcome === "ready") return daemon;
+  if (outcome === "dead") throw new Error(`dev server for ${opts.user} exited early (code ${daemon.child.exitCode}) — see ${opts.logPath}`);
   daemon.kill();
   logStream.end();
   throw new Error(`dev server for ${opts.user} did not open port ${opts.port} within ${COLLAB_E2E_DEV_BOOT_BUDGET_MS}ms — see ${opts.logPath}`);
@@ -2970,12 +3087,12 @@ async function collabRunRestartStep(opts: {
   }
   try {
     opts.hubDaemon.kill();
-    const exitDeadline = Date.now() + 30_000;
-    while (Date.now() < exitDeadline && opts.hubDaemon.child.exitCode === null) await Bun.sleep(250);
-    spaceE2eAssert(opts.hubDaemon.child.exitCode !== null, "hub process did not exit within 30s of being killed");
-    const portFreeDeadline = Date.now() + 30_000;
-    while (Date.now() < portFreeDeadline && isDevPortInUse("127.0.0.1", opts.hubPort)) await Bun.sleep(250);
-    spaceE2eAssert(!isDevPortInUse("127.0.0.1", opts.hubPort), `port ${opts.hubPort} never freed up after the hub exited`);
+    // 🧵️ We hold the hub's own `child` handle — await its `exit` event via 🔖️PollHelpers's
+    // `awaitChildExit` instead of polling `exitCode` (THE RULE above). Same 30s budget as before.
+    const exited = await awaitChildExit(opts.hubDaemon.child, 30_000);
+    spaceE2eAssert(exited === "exited", "hub process did not exit within 30s of being killed");
+    const portFreed = await awaitTcpReady("127.0.0.1", opts.hubPort, { deadlineMs: 30_000, intervalMs: 250, mode: "closed" });
+    spaceE2eAssert(portFreed === "ready", `port ${opts.hubPort} never freed up after the hub exited`);
     const newHubDaemon = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
     await opts.user2.reload({ waitUntil: "domcontentloaded" });
     await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
@@ -3838,6 +3955,10 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       if (Date.now() >= lockDeadline) throw new Error(`plugin prebuild lock for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (${lockPath})`);
+      // 🏛️ THE RULE (see 🔖️PollHelpers above): legitimate poll, not routed through a helper — this is
+      // a cross-process `mkdir`-as-mutex over a shared target dir; the lock's holder may be a wholly
+      // separate `parity` invocation this process never spawned and has no pid/handle/event for. A
+      // TCP/HTTP helper would not fit this shape (no port, no HTTP endpoint) even if we wanted one.
       await Bun.sleep(500);
     }
   }
@@ -3855,9 +3976,10 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
     });
     daemon.child.stdout?.pipe(logStream);
     daemon.child.stderr?.pipe(logStream);
-    const deadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
-    while (daemon.child.exitCode === null && Date.now() < deadline) await Bun.sleep(500);
-    if (daemon.child.exitCode === null) {
+    // 🧵️ We hold `daemon.child` — await its `exit` event via `awaitChildExit` (THE RULE above)
+    // instead of polling `exitCode`. Same budget as before.
+    const exited = await awaitChildExit(daemon.child, PARITY_DEV_SERVER_BOOT_BUDGET_MS);
+    if (exited === "timeout") {
       daemon.kill();
       logStream.end();
       throw new Error(`plugin prebuild for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (see ${logPath})`);
@@ -3889,12 +4011,13 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
   });
   daemon.child.stdout?.pipe(logStream);
   daemon.child.stderr?.pipe(logStream);
-  const deadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
-  while (Date.now() < deadline) {
-    if (isDevPortInUse("127.0.0.1", port)) return { daemon, port };
-    if (daemon.child.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
-    await Bun.sleep(500);
-  }
+  const outcome = await awaitTcpReady("127.0.0.1", port, {
+    deadlineMs: PARITY_DEV_SERVER_BOOT_BUDGET_MS,
+    intervalMs: 500,
+    isDead: () => daemon.child.exitCode !== null,
+  });
+  if (outcome === "ready") return { daemon, port };
+  if (outcome === "dead") throw new Error(`${renderer} dev server for ${variant} exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
   daemon.kill();
   throw new Error(`${renderer} dev server for ${variant} did not open port ${port} within ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms — see ${logPath}`);
 }
@@ -4845,4 +4968,159 @@ if (import.meta.vitest) {
     });
   });
   //#endregion 🔖️T-P8-extension-sweep-tests
+
+  //#region 🔖️PollHelpers-tests
+  describe("awaitTcpReady (W6 poll-census helper)", () => {
+    it("honours its deadline and reports timeout — no real sleeps: fake clock + fake probe", async () => {
+      let fakeNow = 0;
+      const now = () => fakeNow;
+      const sleep = async (ms: number) => {
+        fakeNow += ms;
+      };
+      const outcome = await awaitTcpReady("127.0.0.1", 9999, {
+        deadlineMs: 1000,
+        intervalMs: 250,
+        probe: () => false,
+        now,
+        sleep,
+      });
+      expect(outcome).toBe("timeout");
+      expect(fakeNow).toBeGreaterThanOrEqual(1000);
+    });
+
+    it("resolves ready as soon as the injected probe reports the port open", async () => {
+      let calls = 0;
+      const outcome = await awaitTcpReady("127.0.0.1", 9999, {
+        deadlineMs: 10_000,
+        intervalMs: 250,
+        probe: () => {
+          calls++;
+          return calls >= 3;
+        },
+        now: () => 0,
+        sleep: async () => {},
+      });
+      expect(outcome).toBe("ready");
+      expect(calls).toBe(3);
+    });
+
+    it("resolves closed-mode ready once the injected probe reports the port free", async () => {
+      let calls = 0;
+      const outcome = await awaitTcpReady("127.0.0.1", 9999, {
+        deadlineMs: 10_000,
+        intervalMs: 250,
+        mode: "closed",
+        probe: () => {
+          calls++;
+          return calls < 2; // "in use" for the first call, "free" from the second on
+        },
+        now: () => 0,
+        sleep: async () => {},
+      });
+      expect(outcome).toBe("ready");
+      expect(calls).toBe(2);
+    });
+
+    it("resolves dead as soon as isDead() reports true, before the deadline", async () => {
+      let fakeNow = 0;
+      const outcome = await awaitTcpReady("127.0.0.1", 9999, {
+        deadlineMs: 10_000,
+        intervalMs: 250,
+        probe: () => false,
+        isDead: () => true,
+        now: () => fakeNow,
+        sleep: async (ms) => {
+          fakeNow += ms;
+        },
+      });
+      expect(outcome).toBe("dead");
+      expect(fakeNow).toBe(0); // died on the very first check, before any sleep
+    });
+  });
+
+  describe("awaitHttpOk (W6 poll-census helper)", () => {
+    it("honours its deadline and reports timeout — no real sleeps: fake clock + always-throwing fetch", async () => {
+      let fakeNow = 0;
+      const outcome = await awaitHttpOk("http://127.0.0.1:9999/admin/api/overview", {
+        deadlineMs: 1000,
+        intervalMs: 500,
+        fetchImpl: (async () => {
+          throw new Error("ECONNREFUSED");
+        }) as unknown as typeof fetch,
+        now: () => fakeNow,
+        sleep: async (ms) => {
+          fakeNow += ms;
+        },
+      });
+      expect(outcome).toBe("timeout");
+    });
+
+    it("resolves ready once the injected fetch stops throwing", async () => {
+      let calls = 0;
+      const outcome = await awaitHttpOk("http://127.0.0.1:9999/admin/api/overview", {
+        deadlineMs: 10_000,
+        intervalMs: 500,
+        fetchImpl: (async () => {
+          calls++;
+          if (calls < 2) throw new Error("ECONNREFUSED");
+          return {} as unknown as Response; // value is irrelevant — awaitHttpOk only cares that fetch resolved
+        }) as unknown as typeof fetch,
+        now: () => 0,
+        sleep: async () => {},
+      });
+      expect(outcome).toBe("ready");
+      expect(calls).toBe(2);
+    });
+
+    it("resolves dead as soon as isDead() reports true, before attempting to fetch", async () => {
+      let fetchCalled = false;
+      const outcome = await awaitHttpOk("http://127.0.0.1:9999/admin/api/overview", {
+        deadlineMs: 10_000,
+        intervalMs: 500,
+        isDead: () => true,
+        fetchImpl: (async () => {
+          fetchCalled = true;
+          return {} as unknown as Response; // value is irrelevant — awaitHttpOk only cares that fetch resolved
+        }) as unknown as typeof fetch,
+        now: () => 0,
+        sleep: async () => {},
+      });
+      expect(outcome).toBe("dead");
+      expect(fetchCalled).toBe(false);
+    });
+  });
+
+  describe("awaitChildExit (W6 event-driven fix — replaces polling child.exitCode)", () => {
+    it("resolves as soon as the child's own 'exit' event fires, without polling", async () => {
+      const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
+      Object.assign(fakeChild, { exitCode: null });
+      // 🧵️ `timeoutAfter` deliberately never resolves — if `awaitChildExit` secretly depended on a
+      // timer/poll to notice the exit (instead of the 'exit' event alone), this promise would never
+      // settle and the `await` below would hang until vitest's own test timeout fails the case.
+      const resultPromise = awaitChildExit(fakeChild, 30_000, { timeoutAfter: () => new Promise<"timeout">(() => {}) });
+      // 🧵️ Simulate Node setting exitCode then emitting 'exit', exactly as a real ChildProcess does.
+      (fakeChild as unknown as { exitCode: number | null }).exitCode = 0;
+      (fakeChild as unknown as EventEmitter).emit("exit", 0, null);
+      const result = await resultPromise;
+      expect(result).toBe("exited");
+    });
+
+    it("resolves immediately for a child that had already exited before the call", async () => {
+      const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
+      Object.assign(fakeChild, { exitCode: 0 });
+      // Same never-resolving `timeoutAfter` as above: only the already-set `exitCode` can win this race.
+      const result = await awaitChildExit(fakeChild, 30_000, { timeoutAfter: () => new Promise<"timeout">(() => {}) });
+      expect(result).toBe("exited");
+    });
+
+    it("still times out for a hung child that never emits 'exit' — fake deadline, no real sleep", async () => {
+      const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
+      Object.assign(fakeChild, { exitCode: null });
+      const result = await awaitChildExit(fakeChild, 30_000, {
+        timeoutAfter: async () => "timeout" as const, // resolves instantly, standing in for "deadline reached"
+      });
+      expect(result).toBe("timeout");
+    });
+  });
+  //#endregion 🔖️PollHelpers-tests
 }

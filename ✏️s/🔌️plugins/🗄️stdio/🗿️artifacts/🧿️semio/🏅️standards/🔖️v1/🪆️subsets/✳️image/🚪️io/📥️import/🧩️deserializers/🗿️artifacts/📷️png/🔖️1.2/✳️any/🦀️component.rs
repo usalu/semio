@@ -47,7 +47,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.pixels.len() != (from.width as usize) * (from.height as usize) * 4 {
             return Err(store::PackError::Schema("png→semio/image: pixels length does not match width*height*4".into()));
         }
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn maps_pixels_and_metadata() {
-        let semio = SemioImageFromPng::deserialize(&sample_png()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioImageFromPng::deserialize(&sample_png())).expect("deserialize");
         assert_eq!(semio.width, 2);
         assert_eq!(semio.height, 1);
         assert_eq!(semio.colorspace, SemioColorspace::Rgba);
@@ -104,7 +104,7 @@ mod tests {
     fn rejects_pixel_length_mismatch() {
         let mut bad = sample_png();
         bad.pixels.pop();
-        assert!(SemioImageFromPng::deserialize(&bad).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioImageFromPng::deserialize(&bad)).is_err());
     }
 }
 //#endregion 🔖️Tests

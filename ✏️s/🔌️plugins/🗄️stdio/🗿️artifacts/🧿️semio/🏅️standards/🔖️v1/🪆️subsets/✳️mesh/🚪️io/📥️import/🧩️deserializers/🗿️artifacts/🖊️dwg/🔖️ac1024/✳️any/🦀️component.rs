@@ -77,7 +77,7 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let drawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
         Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: semio_meshes_from_drawing(&drawing), materials: Vec::new(), textures: Vec::new() })
     }
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn groups_polyface_mesh_by_layer_name() {
-        let semio = SemioMeshFromDwg::deserialize(&sample_dwg()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
         assert_eq!(semio.meshes[0].id, "walls");
         let prim = &semio.meshes[0].primitives[0];
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn rejects_malformed_payload() {
         let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
-        assert!(SemioMeshFromDwg::deserialize(&bad).is_err());
+        assert!(semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&bad)).is_err());
     }
 }
 //#endregion 🔖️Tests

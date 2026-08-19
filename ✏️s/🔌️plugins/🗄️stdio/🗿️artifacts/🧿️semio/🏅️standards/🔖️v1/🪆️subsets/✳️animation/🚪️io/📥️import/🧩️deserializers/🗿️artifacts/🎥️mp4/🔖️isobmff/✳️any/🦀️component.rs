@@ -26,7 +26,7 @@ impl ArtifactDeserializer for SemioAnimationFromMp4 {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let timelines = from
             .tracks
             .iter()
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn deserialize_exposes_real_sample_timing_as_a_step_scalar_channel() {
-        let anim = SemioAnimationFromMp4::deserialize(&real_world_mp4()).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         assert_eq!(anim.timelines[0].name.as_deref(), Some("track-1"));
         let ch = &anim.timelines[0].channels[0];

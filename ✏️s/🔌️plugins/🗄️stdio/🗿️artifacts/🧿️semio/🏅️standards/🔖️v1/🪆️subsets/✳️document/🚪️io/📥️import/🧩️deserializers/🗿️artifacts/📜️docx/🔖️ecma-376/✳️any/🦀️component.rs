@@ -55,7 +55,7 @@ impl ArtifactDeserializer for SemioDocumentFromDocx {
     const FROM: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-    fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         Ok(SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: from.document.styles.iter().map(|s| DocStyle { id: s.id.clone(), name: s.name.clone(), based_on: s.based_on.clone() }).collect(),
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn maps_styles_paragraphs_and_tables() {
-        let semio = SemioDocumentFromDocx::deserialize(&sample_docx()).expect("deserialize");
+        let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&sample_docx())).expect("deserialize");
         assert_eq!(semio.styles.len(), 2);
         assert_eq!(semio.styles[1].based_on.as_deref(), Some("Heading1"));
         assert_eq!(semio.blocks.len(), 3);

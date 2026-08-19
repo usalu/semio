@@ -483,13 +483,13 @@ impl<'storage> SnapshotManager<'storage> {
     /// @emoji ✍️ Builds and durably writes the next generation. `origin == Incremental` chains to
     /// the document's current `latest_generation` (`DbError::InvalidArgument` if there is none
     /// yet); `origin == FullBaseline` starts (or restarts) a self-sufficient lineage.
-    pub fn publish(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Page], body: SnapshotBody) -> Result<u64, DbError> {
-        let latest = self.storage.latest_generation(document)?;
+    pub async fn publish(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Page], body: SnapshotBody) -> Result<u64, DbError> {
+        let latest = self.storage.latest_generation(document).await?;
         let (generation, parent_generation, parent_footer_position) = match origin {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),
             SnapshotOrigin::Incremental => {
                 let parent_generation = latest.ok_or_else(|| DbError::InvalidArgument("cannot publish an incremental snapshot with no prior generation".to_string()))?;
-                let combined = self.materialize_chain(document, parent_generation)?;
+                let combined = self.materialize_chain(document, parent_generation).await?;
                 let parent_footer_position = combined.len() as u64 - pack::FOOTER_SIZE as u64;
                 (parent_generation + 1, Some(parent_generation), Some(parent_footer_position))
             }
@@ -511,7 +511,7 @@ impl<'storage> SnapshotManager<'storage> {
             created_at_ms: body.created_at_ms,
         };
         let bytes = build_generation(&descriptor, new_pages, parent_footer_position)?;
-        self.storage.write_generation(document, generation, &bytes)?;
+        self.storage.write_generation(document, generation, &bytes).await?;
         Ok(generation)
     }
 
@@ -520,11 +520,11 @@ impl<'storage> SnapshotManager<'storage> {
     /// one buffer — the "virtual combined space" `Footer.prev_footer_offset` addresses (see module
     /// doc). Used internally by `publish` and exposed for callers (`db_cli`, `db_compact`) that
     /// need the full lineage as one archive.
-    pub fn materialize_chain(&self, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
+    pub async fn materialize_chain(&self, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
         let mut chain: Vec<Vec<u8>> = Vec::new();
         let mut current = Some(through_generation);
         while let Some(generation) = current {
-            let bytes = self.storage.read_generation(document, generation)?;
+            let bytes = self.storage.read_generation(document, generation).await?;
             let handle = open_latest(&bytes)?;
             current = handle.descriptor.parent_generation;
             chain.push(bytes);
@@ -540,11 +540,11 @@ impl<'storage> SnapshotManager<'storage> {
 
     /// @emoji 🥇️ The document's latest generation number and descriptor, or `None` if it has no
     /// snapshot yet.
-    pub fn load_latest(&self, document: &ArtifactId) -> Result<Option<(u64, SnapshotDescriptor)>, DbError> {
-        match self.storage.latest_generation(document)? {
+    pub async fn load_latest(&self, document: &ArtifactId) -> Result<Option<(u64, SnapshotDescriptor)>, DbError> {
+        match self.storage.latest_generation(document).await? {
             None => Ok(None),
             Some(generation) => {
-                let bytes = self.storage.read_generation(document, generation)?;
+                let bytes = self.storage.read_generation(document, generation).await?;
                 let handle = open_latest(&bytes)?;
                 Ok(Some((generation, handle.descriptor)))
             }
@@ -554,10 +554,10 @@ impl<'storage> SnapshotManager<'storage> {
     /// @emoji 🎯️ Selection: the highest-numbered generation whose `head_seq` does not exceed
     /// `at_most_head_seq`, or `None` if no generation qualifies — the snapshot a materializer
     /// should start replaying the WAL suffix from for a point-in-time read.
-    pub fn select_generation(&self, document: &ArtifactId, at_most_head_seq: u64) -> Result<Option<u64>, DbError> {
+    pub async fn select_generation(&self, document: &ArtifactId, at_most_head_seq: u64) -> Result<Option<u64>, DbError> {
         let mut best: Option<(u64, u64)> = None;
-        for generation in self.storage.list_generations(document)? {
-            let bytes = self.storage.read_generation(document, generation)?;
+        for generation in self.storage.list_generations(document).await? {
+            let bytes = self.storage.read_generation(document, generation).await?;
             let handle = open_latest(&bytes)?;
             if handle.descriptor.head_seq <= at_most_head_seq {
                 let better = best.is_none_or(|(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
@@ -572,15 +572,15 @@ impl<'storage> SnapshotManager<'storage> {
     /// @emoji 🗑️ Deletes every generation strictly below `floor_generation`. `floor_generation`
     /// must itself be a full baseline (`parent_generation.is_none()`) — see module doc's scope
     /// boundary on why an incremental floor is rejected rather than silently breaking its chain.
-    pub fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
-        let floor_bytes = self.storage.read_generation(document, floor_generation)?;
+    pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
+        let floor_bytes = self.storage.read_generation(document, floor_generation).await?;
         let floor_handle = open_latest(&floor_bytes)?;
         if floor_handle.descriptor.parent_generation.is_some() {
             return Err(DbError::InvalidArgument("retention floor must be a full-baseline generation (no parent)".to_string()));
         }
-        for generation in self.storage.list_generations(document)? {
+        for generation in self.storage.list_generations(document).await? {
             if generation < floor_generation {
-                self.storage.delete_generation(document, generation)?;
+                self.storage.delete_generation(document, generation).await?;
             }
         }
         Ok(())
@@ -592,8 +592,8 @@ impl<'storage> SnapshotManager<'storage> {
     /// each chunk's content hash too, since `pack::PackFile::read_chunk` already validates it
     /// against the chunk table `pack::PackWriter::write_chunk` built from these same page bytes;
     /// no separate hash recomputation needed here.
-    pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
-        let bytes = self.storage.read_generation(document, generation)?;
+    pub async fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
+        let bytes = self.storage.read_generation(document, generation).await?;
         let handle = open_latest(&bytes)?;
         let sub = SubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level)?;
@@ -622,26 +622,26 @@ impl SnapshotLease {
     }
 
     /// @emoji 🤝️ Acquires (or idempotently re-acquires) the snapshot-builder lease for `document`.
-    pub fn acquire(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-        storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms)
+    pub async fn acquire(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+        storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
     /// @emoji ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
     /// `materialize_chain` + `publish` sequence for a deep incremental chain.
-    pub fn renew(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-        storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms)
+    pub async fn renew(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
     /// @emoji 🕊️ Releases `holder`'s lease for `document` once its `publish`/`retain_from` call
     /// has completed.
-    pub fn release(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-        storage.release(&Self::resource(document), holder, fence)
+    pub async fn release(storage: &dyn LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+        storage.release(&Self::resource(document), holder, fence).await
     }
 
     /// @emoji 👀️ The lease's current holder/fence for `document`, or `None` if unheld — lets a
     /// caller check whether it's safe to `retain_from` without blindly racing another builder.
-    pub fn current(storage: &dyn LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-        storage.current(&Self::resource(document), now_ms)
+    pub async fn current(storage: &dyn LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+        storage.current(&Self::resource(document), now_ms).await
     }
 }
 //#endregion 🔖️Lease
@@ -832,10 +832,10 @@ mod tests {
         let document: ArtifactId = "doc-a".into();
         let pages = vec![page(b"p0")];
 
-        let generation = manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(10)).unwrap();
+        let generation = db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(10))).unwrap();
         assert_eq!(generation, 0);
 
-        let (loaded_generation, descriptor) = manager.load_latest(&document).unwrap().unwrap();
+        let (loaded_generation, descriptor) = db_actor::block_on(manager.load_latest(&document)).unwrap().unwrap();
         assert_eq!(loaded_generation, 0);
         assert_eq!(descriptor.parent_generation, None);
         assert_eq!(descriptor.head_seq, 10);
@@ -846,7 +846,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let manager = SnapshotManager::new(&storage);
         let document: ArtifactId = "doc-b".into();
-        let result = manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0));
+        let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0)));
         assert!(matches!(result, Err(DbError::InvalidArgument(_))));
     }
 
@@ -857,17 +857,17 @@ mod tests {
         let document: ArtifactId = "doc-c".into();
 
         let gen0_pages = vec![page(b"base-a"), page(b"base-b")];
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &gen0_pages, body(0)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &gen0_pages, body(0))).unwrap();
 
         let gen1_pages = vec![page(b"delta-a")];
-        let gen1 = manager.publish(&document, SnapshotOrigin::Incremental, &gen1_pages, body(5)).unwrap();
+        let gen1 = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &gen1_pages, body(5))).unwrap();
         assert_eq!(gen1, 1);
 
-        let (latest_generation, descriptor) = manager.load_latest(&document).unwrap().unwrap();
+        let (latest_generation, descriptor) = db_actor::block_on(manager.load_latest(&document)).unwrap().unwrap();
         assert_eq!(latest_generation, 1);
         assert_eq!(descriptor.parent_generation, Some(0));
 
-        let combined = manager.materialize_chain(&document, 1).unwrap();
+        let combined = db_actor::block_on(manager.materialize_chain(&document, 1)).unwrap();
         let handle = open_latest(&combined).unwrap();
         let inherited = read_page(&combined, &handle, gen0_pages[1].hash).unwrap();
         assert_eq!(inherited, b"base-b");
@@ -880,10 +880,10 @@ mod tests {
         let storage = MemoryStorage::new();
         let manager = SnapshotManager::new(&storage);
         let document: ArtifactId = "doc-d".into();
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0)).unwrap();
-        manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1))).unwrap();
 
-        assert!(matches!(manager.retain_from(&document, 1), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(manager.retain_from(&document, 1)), Err(DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -891,12 +891,12 @@ mod tests {
         let storage = MemoryStorage::new();
         let manager = SnapshotManager::new(&storage);
         let document: ArtifactId = "doc-e".into();
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0)).unwrap();
-        manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1)).unwrap();
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(2)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(2))).unwrap();
 
-        manager.retain_from(&document, 2).unwrap();
-        assert_eq!(storage.list_generations(&document).unwrap(), vec![2]);
+        db_actor::block_on(manager.retain_from(&document, 2)).unwrap();
+        assert_eq!(db_actor::block_on(storage.list_generations(&document)).unwrap(), vec![2]);
     }
 
     #[test]
@@ -904,16 +904,16 @@ mod tests {
         let storage = MemoryStorage::new();
         let manager = SnapshotManager::new(&storage);
         let document: ArtifactId = "doc-f".into();
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0)).unwrap();
-        manager.publish(&document, SnapshotOrigin::Incremental, &[], body(10)).unwrap();
-        manager.publish(&document, SnapshotOrigin::Incremental, &[], body(20)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(10))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(20))).unwrap();
 
-        assert_eq!(manager.select_generation(&document, 15).unwrap(), Some(1));
-        assert_eq!(manager.select_generation(&document, 25).unwrap(), Some(2));
-        assert_eq!(manager.select_generation(&document, 5).unwrap(), Some(0));
+        assert_eq!(db_actor::block_on(manager.select_generation(&document, 15)).unwrap(), Some(1));
+        assert_eq!(db_actor::block_on(manager.select_generation(&document, 25)).unwrap(), Some(2));
+        assert_eq!(db_actor::block_on(manager.select_generation(&document, 5)).unwrap(), Some(0));
 
         let empty_document: ArtifactId = "doc-empty".into();
-        assert_eq!(manager.select_generation(&empty_document, 100).unwrap(), None);
+        assert_eq!(db_actor::block_on(manager.select_generation(&empty_document, 100)).unwrap(), None);
     }
 
     #[test]
@@ -922,15 +922,15 @@ mod tests {
         let manager = SnapshotManager::new(&storage);
         let document: ArtifactId = "doc-g".into();
         let pages = vec![page(b"verify-me")];
-        manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0))).unwrap();
 
-        manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full).unwrap();
+        db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full)).unwrap();
 
-        let mut corrupted = storage.read_generation(&document, 0).unwrap();
+        let mut corrupted = db_actor::block_on(storage.read_generation(&document, 0)).unwrap();
         let last = corrupted.len() - 1;
         corrupted[last] ^= 0xFF;
-        storage.write_generation(&document, 0, &corrupted).unwrap();
-        assert!(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Standard).is_err());
+        db_actor::block_on(storage.write_generation(&document, 0, &corrupted)).unwrap();
+        assert!(db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Standard)).is_err());
     }
     //#endregion 🔖️Manager
 
@@ -951,26 +951,26 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: ArtifactId = "doc-1".into();
 
-        let fence = SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0).unwrap();
+        let fence = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0)).unwrap();
         assert_eq!(fence, EpochFence::INITIAL);
-        assert!(SnapshotLease::current(&storage, &document, 0).unwrap().is_some());
+        assert!(db_actor::block_on(SnapshotLease::current(&storage, &document, 0)).unwrap().is_some());
 
-        SnapshotLease::renew(&storage, &document, "actor-a", fence, 1_000, 500).unwrap();
+        db_actor::block_on(SnapshotLease::renew(&storage, &document, "actor-a", fence, 1_000, 500)).unwrap();
 
         // ❌️ A second holder can't acquire while actor-a's lease is still unexpired.
-        assert!(matches!(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500), Err(DbError::Conflict(_))));
+        assert!(matches!(db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500)), Err(DbError::Conflict(_))));
 
-        SnapshotLease::release(&storage, &document, "actor-a", fence).unwrap();
-        assert!(SnapshotLease::current(&storage, &document, 500).unwrap().is_none());
+        db_actor::block_on(SnapshotLease::release(&storage, &document, "actor-a", fence)).unwrap();
+        assert!(db_actor::block_on(SnapshotLease::current(&storage, &document, 500)).unwrap().is_none());
 
         // ✅️ Now free, actor-b can acquire fresh (an explicit release clears the record entirely,
         // per `LeaseStorage::acquire`'s own doc — only a hand-off from an EXPIRED-but-still-present
         // lease bumps the epoch fence, exercised next).
-        let after_release = SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500).unwrap();
+        let after_release = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500)).unwrap();
         assert_eq!(after_release, EpochFence::INITIAL);
 
         // ✅️ A hand-off from an unreleased but time-expired lease DOES bump the fence.
-        let expired_handoff = SnapshotLease::acquire(&storage, &document, "actor-c", 1_000, 1_600).unwrap();
+        let expired_handoff = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-c", 1_000, 1_600)).unwrap();
         assert_eq!(expired_handoff, after_release.next());
     }
 

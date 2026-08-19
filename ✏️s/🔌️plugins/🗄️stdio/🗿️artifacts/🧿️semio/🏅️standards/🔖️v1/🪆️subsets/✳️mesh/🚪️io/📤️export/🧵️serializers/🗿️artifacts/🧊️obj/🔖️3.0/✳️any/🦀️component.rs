@@ -29,7 +29,7 @@ impl ArtifactSerializer for SemioMeshToObj {
     const FROM: Dialect = FROM_DIALECT;
     const INTO: Dialect = INTO_DIALECT;
 
-    fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let mut vertices: Vec<ObjVertex> = Vec::new();
         let mut texcoords: Vec<ObjTexCoord> = Vec::new();
         let mut normals: Vec<ObjNormal> = Vec::new();
@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
-        let obj = SemioMeshToObj::serialize(&original).expect("serialize");
+        let obj = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&original)).expect("serialize");
         assert_eq!(obj.vertices.len(), 3);
         assert_eq!(obj.faces.len(), 1);
         assert_eq!(obj.objects.len(), 1);
@@ -136,7 +136,7 @@ mod tests {
     fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::TriangleFan;
-        let err = SemioMeshToObj::serialize(&semio).expect_err("TriangleFan must error");
+        let err = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&semio)).expect_err("TriangleFan must error");
         assert!(format!("{err:?}").contains("Triangles"), "got {err:?}");
     }
 }
