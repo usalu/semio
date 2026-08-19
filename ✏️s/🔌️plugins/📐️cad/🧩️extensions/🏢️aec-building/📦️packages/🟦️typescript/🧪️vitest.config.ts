@@ -13,7 +13,7 @@ export default defineConfig({
     name: "@semio-tech/cad-js-module-aec-building",
     mode: "test",
     environment: "node",
-    include: ["🟦️component.ts"],
+    include: [],
     coverage: { include: ["🟦️component.ts"] },
     includeSource: ["🟦️component.ts"],
   },

@@ -318,7 +318,11 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     })
     .map_err(|error| error.to_string())?;
 
-    let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink);
+    // 🌀️ `SpaceRunner::run` is `async fn` since the async-first rewrite (ticket
+    // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — this CLI awaits the one top-level future
+    // to completion with a plain single-poll executor rather than spinning up a tokio runtime here;
+    // tokio stays confined to `semio-framework-os-services` (see that crate's own module doc).
+    let run_result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink));
     // 📊️ Dev-boot smoke line (W7): real `io_router_stats()` numbers, not hardcoded — a zero-plugin or
     // zero-key router (the shared cross-plugin `IoRouter` silently doing nothing) is visible right
     // here, regardless of whether the run itself succeeded or failed partway through.

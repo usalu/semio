@@ -61,7 +61,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
-use mesh_io::{export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer, StlFormat};
+use mesh_io::{export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 use semio_framework_3d::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
 use step::{read_step, write_step};
 
@@ -1068,7 +1068,7 @@ impl Brep {
     }
     pub fn export_stl_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_stl(&self.body, solid, deflection, StlFormat::Binary).map_err(map_err)
+        export_solid_stl(&self.body, solid, deflection).map_err(map_err)
     }
     pub fn export_obj_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<String, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;

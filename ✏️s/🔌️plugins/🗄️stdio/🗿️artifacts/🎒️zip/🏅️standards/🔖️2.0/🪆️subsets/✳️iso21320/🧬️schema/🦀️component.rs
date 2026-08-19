@@ -135,26 +135,70 @@ pub mod derived_analysis {
     pub const CODE_DATA_DESCRIPTOR: &str = "stdio.zip.iso21320.data-descriptor-present";
     pub const CODE_VERSION_NEEDED: &str = "stdio.zip.iso21320.version-needed-high";
 
-    // 🕳️ `hard`/`soft` are unused: `check_iso21320_conformance` below is a stub (`Vec::new()`) that
-    // never actually calls them against the `CODE_*`/`FLAG_*`/`VERSION_NEEDED_SOFT_CEILING`
-    // constants above — the real per-entry checks (encrypted, strong-encryption-or-masked-headers,
-    // data-descriptor-present, version-needed-high) were never implemented. Found while chasing a
-    // Z1 zero-warnings `dead_code` warning; flagged for follow-up rather than implemented here,
-    // since finishing the conformance logic is real feature work, not a warnings fix.
-    #[allow(dead_code, reason = "conformance checker is a stub — see comment above, follow-up needed")]
     fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    #[allow(dead_code, reason = "conformance checker is a stub — see comment above, follow-up needed")]
     fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    /// 🛡️ Checks logical ISO/IEC 21320-1 constraints. Native compression/header constraints are
-    /// rejected while deserializing and emitted by fixed serializer policy, never persisted here.
-    pub fn check_iso21320_conformance(_snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
-        Vec::new()
+    fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
+        let mut out = Vec::new();
+        for (index, entry) in entries.iter().enumerate() {
+            if entry.flags & FLAG_ENCRYPTED != 0 {
+                out.push(hard(
+                    CODE_ENCRYPTED,
+                    format!("entry {index} ({:?}) has general-purpose bit 0 (encryption) set -- ISO/IEC 21320-1 §4.1 forbids encrypted entries", entry.name),
+                ));
+            }
+            if entry.flags & (FLAG_STRONG_ENCRYPTION | FLAG_MASKED_LOCAL_HEADERS) != 0 {
+                out.push(hard(
+                    CODE_STRONG_ENCRYPTION,
+                    format!(
+                        "entry {index} ({:?}) has general-purpose bit 6 and/or bit 13 (Strong Encryption / masked local header values) set -- ISO/IEC 21320-1 forbids the Strong Encryption extension entirely",
+                        entry.name
+                    ),
+                ));
+            }
+            if entry.flags & FLAG_DATA_DESCRIPTOR != 0 {
+                out.push(soft(
+                    CODE_DATA_DESCRIPTOR,
+                    format!(
+                        "entry {index} ({:?}) has general-purpose bit 3 (trailing data descriptor) set -- interoperability warning: not every ISO/IEC 21320-1 reader trusts streamed sizes",
+                        entry.name
+                    ),
+                ));
+            }
+            if entry.version_needed > VERSION_NEEDED_SOFT_CEILING {
+                out.push(soft(
+                    CODE_VERSION_NEEDED,
+                    format!(
+                        "entry {index} ({:?}) declares version-needed-to-extract {} > {VERSION_NEEDED_SOFT_CEILING} -- signals a feature ISO/IEC 21320-1's restricted Stored/Deflate profile shouldn't require",
+                        entry.name, entry.version_needed
+                    ),
+                ));
+            }
+        }
+        out
+    }
+
+    /// 🛡️ Checks ISO/IEC 21320-1 header policy against raw ZIP container bytes.
+    pub fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data) {
+            Ok(headers) => check_iso21320_entry_headers(&headers),
+            Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}"))],
+        }
+    }
+
+    /// 🛡️ Checks ISO/IEC 21320-1 constraints for a logical `ZipSnapshot` by materializing its
+    /// canonical wire form and inspecting central-directory headers. Logical snapshots never carry
+    /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
+    pub fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot) {
+            Ok(bytes) => check_iso21320_wire_conformance(&bytes),
+            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
+        }
     }
     //#endregion 🔖️Conformance
 
@@ -178,17 +222,87 @@ pub mod derived_analysis {
             let inner = ZipAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
-            if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_iso21320_conformance(snapshot);
-                if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+            let mut wire_checked = false;
+            for source in sources {
+                if let AnalyzeSource::Binary(bytes) = source {
+                    let checks = check_iso21320_wire_conformance(bytes);
+                    if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
+                        confidence = IoConfidence::Low;
+                    }
+                    diagnostics.extend(checks);
+                    wire_checked = true;
                 }
-                diagnostics.extend(checks);
+            }
+            if !wire_checked {
+                if let Some(snapshot) = &inner.parts.snapshot {
+                    let checks = check_iso21320_conformance(snapshot);
+                    if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
+                        confidence = IoConfidence::Low;
+                    }
+                    diagnostics.extend(checks);
+                }
             }
             Analysis { parts: inner.parts, dialect: DIALECT, confidence, diagnostics }
         }
     }
     //#endregion 🔖️Analyzer
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader;
+        use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
+
+        fn entry(name: &str) -> ZipEntry {
+            ZipEntry { name: name.into(), data: b"payload".to_vec() }
+        }
+
+        fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
+            ZipCentralEntryHeader { name: name.into(), flags, version_needed }
+        }
+
+        #[test]
+        fn conforming_snapshot_has_no_diagnostics() {
+            let snapshot = ZipSnapshot { entries: vec![entry("a.txt")], ..ZipSnapshot::default() };
+            let diagnostics = check_iso21320_conformance(&snapshot);
+            assert!(diagnostics.is_empty(), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn encrypted_entry_is_hard() {
+            let diagnostics = check_iso21320_entry_headers(&[header("secret.bin", FLAG_ENCRYPTED, 20)]);
+            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn strong_encryption_bit_is_hard() {
+            let diagnostics = check_iso21320_entry_headers(&[header("strong.bin", FLAG_STRONG_ENCRYPTION, 20)]);
+            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn masked_local_header_bit_is_hard() {
+            let diagnostics = check_iso21320_entry_headers(&[header("masked.bin", FLAG_MASKED_LOCAL_HEADERS, 20)]);
+            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn data_descriptor_bit_is_soft() {
+            let diagnostics = check_iso21320_entry_headers(&[header("streamed.bin", FLAG_DATA_DESCRIPTOR, 20)]);
+            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DATA_DESCRIPTOR && d.severity == Severity::Warning), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn high_version_needed_is_soft() {
+            let diagnostics = check_iso21320_entry_headers(&[header("zip64.bin", 0, 63)]);
+            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VERSION_NEEDED && d.severity == Severity::Warning), "got {diagnostics:?}");
+        }
+
+        #[test]
+        fn version_needed_at_ceiling_is_clean() {
+            assert!(check_iso21320_entry_headers(&[header("boundary.bin", 0, VERSION_NEEDED_SOFT_CEILING)]).is_empty());
+        }
+    }
 }
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis

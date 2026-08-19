@@ -295,6 +295,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.imperative.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.imperative.schema.artifact", "schema", "s.imperative.imperative", &[("schema", "s.imperative.imperative")], None),
         ("s.imperative.inference.artifact", "inference", "s.imperative.imperative.inference", &[("schema", "s.imperative.imperative.inference")], None),
+        ("s.imperative.composer.native", "composer", "s.imperative@1/*", &[("dialect", "s.imperative@1/*")], None),
         ("s.imperative.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
         ("s.imperative.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
         ("s.imperative.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),

@@ -1,4 +1,5 @@
 // #region 🔌️Adapters
+import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -15,12 +16,23 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-const DOMAIN_FILES = ["🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx", "🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts"];
+const ARTIFACT_EDITOR_ENGINE = "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine";
+const DOMAIN_FILES = [
+  `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/🟦️component.tsx`,
+  `${ARTIFACT_EDITOR_ENGINE}/🎰️stately/🟦️component.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🟦️component.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/🎬️actions/🟦️component.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/📄️artifact/🟦️component.ts`,
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts",
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
+  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts",
+  "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts",
+];
 
-/** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 9 domain files now that the artifact `⚙️engine` has dissolved (and the barrel with it) into the app `⚙️engine` (stately/runtime/actions/artifact), the `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial), the renderer, and the `💡️inferences` schema leaf (former `🔍️query`); renderer alone needs jsdom, the rest run in `node`. */
+/** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 9 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial), and `💡️inferences` schema leaf; renderer alone needs jsdom, the rest run in `node`. In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */
 export default defineConfig({
   root,
-  plugins: [],
+  plugins: [react()],
   assetsInclude: ["**/*.wasm"],
   server: workspaceResolve.server,
   resolve: {
@@ -29,11 +41,11 @@ export default defineConfig({
   test: {
     name: "@semio-tech/cad-js",
     mode: "test",
-    include: DOMAIN_FILES,
+    include: [],
     includeSource: DOMAIN_FILES,
     coverage: { include: DOMAIN_FILES },
     environment: "node",
-    environmentMatchGlobs: [["🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx", "jsdom"]],
+    environmentMatchGlobs: [[`${ARTIFACT_EDITOR_ENGINE}/📺️renderer/🟦️component.tsx`, "jsdom"]],
     passWithNoTests: false,
     server: {
       deps: {

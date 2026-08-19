@@ -1530,6 +1530,50 @@
       }
     },
     {
+      "name": "⚖️gate🦀️zero-warnings🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify rust-warnings --target native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.4
+      }
+    },
+    {
+      "name": "⚖️gate🦀️zero-warnings🌐️wasip2",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify rust-warnings --target wasm32-wasip2",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.41
+      }
+    },
+    {
+      "name": "⚖️gate🦀️zero-warnings🎭️actor-wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify rust-warnings --target wasm32-unknown-unknown",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.42
+      }
+    },
+    {
+      "name": "⚖️gate🧵️plugin-runtime🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts bench plugins --renderer native --count 50 --extensions 50",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.0
+      }
+    },
+    {
       "name": "🛠️dev🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",

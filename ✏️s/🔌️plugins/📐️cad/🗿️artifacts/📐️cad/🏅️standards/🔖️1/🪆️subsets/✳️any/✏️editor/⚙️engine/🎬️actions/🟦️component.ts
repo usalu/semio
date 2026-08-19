@@ -1,14 +1,14 @@
 // #region 🧲️Header
 /** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
-import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/kernel-3d-js";
-import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/kernel-3d-js";
+import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
+import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
 // #endregion 🧲️Header
 
 
-import { EdgeRef, EffectSpec, Expr, ExprEnv, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { EdgeRef, EffectSpec, Expr, ExprEnv, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
 import { capabilityActionSpecJson, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️component.ts";
-import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
+import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
 
 
 
@@ -1844,7 +1844,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 import { buildBoxInteractionSpec } from "../📄️artifact/🟦️component.ts";
 
 const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
-const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
+const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {
   __actionsTestRuntime!.bootstrapCadModules();

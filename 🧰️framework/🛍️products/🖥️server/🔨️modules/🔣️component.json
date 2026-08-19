@@ -3,6 +3,42 @@
     "kind": "collection",
     "members": [
       {
+        "directory": "📡️gateway",
+        "id": "framework.product.server.module.gateway",
+        "kind": "module",
+        "responsibility": "Owns the transport layer: the module and document-authority ports, the shared server state, lane fan-out, presence and colour leases, CORS, credential extraction, blob and static-app hosting, the replay-then-live event bridge and the command/query endpoints the server builder wires together.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "hub"]
+        }
+      },
+      {
+        "directory": "🎭️authority",
+        "id": "framework.product.server.module.authority",
+        "kind": "module",
+        "responsibility": "Runs the actor turn protocol: fenced activation, the admit/dedupe/authorize/decide/commit pipeline, deterministic deciders shared with the optimistic replica, and the saga seam for cross-actor workflows.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "hub"]
+        }
+      },
+      {
+        "directory": "🗄️storage",
+        "id": "framework.product.server.module.storage",
+        "kind": "module",
+        "responsibility": "Defines the four durability roles an authority needs as separate contracts — authority store, rebuildable projections, content-addressed blobs, sessions — with in-memory reference implementations.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "hub"]
+        }
+      },
+      {
+        "directory": "🛡️policy",
+        "id": "framework.product.server.module.policy",
+        "kind": "module",
+        "responsibility": "Evaluates authorization at every decision point from policy templates held as data, resolves principals through an instance-supplied credential ladder, and gates administration.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "hub"]
+        }
+      },
+      {
         "directory": "🧬️contract",
         "id": "framework.product.server.module.contract",
         "kind": "module",

@@ -2,7 +2,7 @@
   "name": "@semio-tech/cad-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚙️engine/**/*.ts", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚙️engine/📺️renderer/**/*.tsx", "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/**/*.ts", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/**/*.ts", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/**/*.tsx", "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/**/*.ts", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {

@@ -69,6 +69,12 @@ blake3 = "1"
 # explicitly here too so this crate's own directory-stream background thread doesn't rely on that
 # unification being implicit.
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+# 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `TokioHostRuntime`/
+# `ComputePool` — `Shell/🧊️component.rs`'s directory-stream background thread used to build its OWN
+# private `tokio::runtime::Builder::new_current_thread()` reactor; that is retired in favour of ONE
+# shared runtime managed from here, matching the confinement `semio-framework-os-services`'s own
+# module doc describes ("the ONE crate allowed to name tokio").
+semio-framework-os-services = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
 ureq = "2.12.1"
 rfd = "0.15.4"

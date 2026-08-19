@@ -34,6 +34,7 @@ use dsl::{from_dsl_value, to_dsl_value};
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PackageDescriptor, PluginManifest, PortMultiplicity};
 use semio_framework_actor::ActorId as RuntimeActorId;
+use semio_framework_async::{CancelToken, OperationContext, TraceId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -69,6 +70,12 @@ pub enum RunError {
     Serde(#[from] serde_json::Error),
     #[error("run document rejected an operation: {0}")]
     Sealed(String),
+    /// 🛑️ `SpaceRunner`'s `OperationContext.cancel` was cancelled — checked at the top of
+    /// `compute_node`, before that node's `open`/`exchange`, so a cancelled run stops before its
+    /// NEXT node rather than mid-exchange (an in-flight `exchange` future is not itself
+    /// preemptible — same honest limitation `semio-framework-os-services::ComputePool` documents).
+    #[error("run cancelled")]
+    Cancelled,
 }
 
 //#endregion 🔖️Types
@@ -78,14 +85,29 @@ pub enum RunError {
 /// browser worker, or an in-process fake for tests) implements this the same way, driving a node
 /// through exactly the binary `AppCommand`/`AppFrame` channel a live UI speaks (see
 /// `protocol_channel`) — a headless run is never a separate UI-mock API. `open` mints an opaque
-/// handle the runner threads back on every later `exchange` call; `exchange` is a single batched,
-/// synchronous duplex round trip (`WasmPluginRuntime::exchange`'s native counterpart).
+/// handle the runner threads back on every later `exchange` call; `exchange` is a single batched
+/// duplex round trip (`WasmPluginRuntime::exchange`'s native counterpart) that the caller now
+/// `.await`s instead of blocking on (async-first rewrite, ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet terra-directory-and-run) — the guest
+/// contract is still exactly one turn at a time per instance, so `SpaceRunner` never issues a second
+/// `exchange` for the same `node` handle before the first one's future resolves (see `run`'s
+/// strictly sequential per-node loop and `compute_node`'s single `.await` point); a caller that
+/// wants concurrency must open distinct instances, never overlap two turns on one. `ctx` carries
+/// `SpaceRunner`'s own `OperationContext` (`actor` set to `node`) so a real implementation can
+/// honor cancellation/deadline/trace INSIDE one exchange too, not just between them — `compute_node`
+/// itself only checks `ctx.cancel` between exchanges (see `RunError::Cancelled`'s own doc).
+// 🔇️ `async fn` in a trait normally warns because it hides a `Send` bound a `dyn` caller might
+// need — irrelevant here: `AppChannelHost` is used only as a generic bound (`SpaceRunner<H:
+// AppChannelHost>`), never as `dyn AppChannelHost` (verified: `grep -rn "dyn AppChannelHost"`
+// across the repo has zero hits), and every await point in this crate runs on one thread via
+// `futures_lite::future::block_on`, never crossing an executor that needs the future to be `Send`.
+#[allow(async_fn_in_trait)]
 pub trait AppChannelHost {
     /// 🗺️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `artifact_ref`
     /// (the node's own `WorkflowNode.artifact_ref`) is threaded through so a real host can populate
     /// its `InstanceDirectory` at instantiate-app time — a fake/test host is free to ignore it.
     fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError>;
-    fn exchange(&mut self, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError>;
+    async fn exchange(&mut self, ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError>;
 }
 //#endregion 🔖️AppChannelHost
 
@@ -908,15 +930,47 @@ pub struct SpaceRunner<H: AppChannelHost> {
     /// `AppCommand::SetMergePolicy` right after every node's `Hello`, in the same batched exchange
     /// (see `compute_node`'s doc). `--policy`/config default: `Normal`.
     merge_policy: protocol::MergePolicy,
+    /// 🛑️ This run's own cancellation root — `CancelToken::root()` by default (never cancelled
+    /// unless a caller holds a clone via `cancel_token()` and calls `.cancel()` on it), a child of
+    /// which becomes every `compute_node` call's `OperationContext.cancel`. One token for the whole
+    /// run, not one per node: cancelling it stops the run before its NEXT node (see
+    /// `RunError::Cancelled`'s doc) without needing a separate per-node cancel wire.
+    cancel: CancelToken,
+    /// ⏰️ Optional wall-clock deadline (epoch ms) applied to every `OperationContext` this run
+    /// builds — `None` (the default) means no deadline, matching every pre-async-rewrite caller's
+    /// behavior exactly.
+    deadline_ms: Option<u64>,
 }
 
 impl<H: AppChannelHost> SpaceRunner<H> {
     pub fn new(host: H, blob_store: Arc<dyn BlobStore>, merge_policy: protocol::MergePolicy) -> Self {
-        Self { host, blob_store, merge_policy }
+        Self { host, blob_store, merge_policy, cancel: CancelToken::root(), deadline_ms: None }
     }
 
     pub fn into_host(self) -> H {
         self.host
+    }
+
+    /// 🛑️ A clone of this run's cancellation root — call `.cancel()` on it from another thread (or
+    /// a UI cancel button's handler) to stop the run before its next node. `SpaceRunner` itself
+    /// never cancels this token.
+    pub fn cancel_token(&self) -> CancelToken {
+        self.cancel.clone()
+    }
+
+    /// ⏰️ Applies a wall-clock deadline (epoch ms) to every `OperationContext` this run builds from
+    /// here on. Builder-style: `SpaceRunner::new(..).with_deadline_ms(..)`.
+    pub fn with_deadline_ms(mut self, deadline_ms: Option<u64>) -> Self {
+        self.deadline_ms = deadline_ms;
+        self
+    }
+
+    /// 🪪️ Builds one node's `OperationContext`: `actor` is the node's own `AppChannelHost` handle
+    /// (so a real host can tell which instance an operation belongs to), `cancel` a child of this
+    /// run's root (see the `cancel` field's own doc — cancelling the run cancels every node's
+    /// context transitively via `CancelToken::child`'s max-severity fold).
+    fn node_ctx(&self, node_handle: u32) -> OperationContext {
+        OperationContext { actor: node_handle as u64, generation: 0, trace: TraceId(node_handle as u64), lane: 0, deadline_ms: self.deadline_ms, cancel: self.cancel.child(), capability: None }
     }
 
     /// 🔌️ Returns `node`'s already-open handle, opening it (`host.open(node.plugin_id, node.app_id)`)
@@ -942,7 +996,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
     /// header doc: "importing media is emitting operations") — as a single batched `host.exchange`
     /// call. Returns the node's mutated document bytes, its mutated config bytes, and per output port
     /// the exported `Media` plus its wire fingerprint string.
-    fn compute_node(
+    async fn compute_node(
         &mut self,
         live: &mut HashMap<String, u32>,
         node: &WorkflowNode,
@@ -950,7 +1004,13 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         config: &(Vec<u8>, Vec<u8>),
         input_media: &BTreeMap<String, Media>,
     ) -> Result<((Vec<u8>, Vec<u8>), (Vec<u8>, Vec<u8>), BTreeMap<String, (Media, String)>), RunError> {
+        // 🛑️ Checked BEFORE `open`/`exchange` — a cancelled run stops before its NEXT node rather
+        // than mid-exchange (see `RunError::Cancelled`'s own doc).
+        if self.cancel.is_cancelled() {
+            return Err(RunError::Cancelled);
+        }
         let handle = self.open_node(live, node)?;
+        let ctx = self.node_ctx(handle);
 
         let mut seq: u64 = 0;
         let mut next_seq = move || {
@@ -992,7 +1052,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         let read_config_seq = next_seq();
         commands.push(AppCommand::ReadConfig { seq: read_config_seq });
 
-        let frames = self.host.exchange(handle, commands)?;
+        let frames = self.host.exchange(&ctx, handle, commands).await?;
 
         if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
             return Err(RunError::Host(dispatch_error_message(&node.app_id, "sent an unsolicited rejection", fault, report)));
@@ -1050,7 +1110,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
     /// id), never back into these two source maps (see this crate's module doc, "non-destructive
     /// rework"). `sink.record` is called for every `NodeStarted`/`NodeFinished`; the caller owns
     /// emitting `Start` before and `Seal` after this call.
-    pub fn run(
+    pub async fn run(
         &mut self,
         graph: &Workflow,
         documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
@@ -1132,7 +1192,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                         let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
                         let source_document = documents.get(&source_node.artifact_ref).cloned().unwrap_or_default();
                         let source_config = configs.get(&source_node.config_ref).cloned().unwrap_or_default();
-                        let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new())?;
+                        let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new()).await?;
                         let (media, _fresh_fingerprint) = source_outputs.get(&edge.source_port_id).cloned().ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
                         cache.put(&fingerprint, &media);
                         media
@@ -1143,7 +1203,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             }
 
             let started_at = std::time::Instant::now();
-            let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media)?;
+            let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media).await?;
             let duration_ms = started_at.elapsed().as_secs_f64() * 1000.0;
 
             // 🔒️ THE non-destructive rework's write side: mutated document/config bytes go into `sink`'s
@@ -1674,7 +1734,7 @@ impl AppChannelHost for WasmtimeNodeHost {
     /// original position — fine while a real caller sends either an opening batch or a document batch,
     /// never both mixed in one call (today's only caller, the SDK's `OpeningCommandRelay`, never mixes
     /// them).
-    fn exchange(&mut self, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
+    async fn exchange(&mut self, _ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
         let mut frames = Vec::new();
         let mut passthrough = Vec::new();
         for command in commands {
@@ -1778,7 +1838,7 @@ mod tests {
             Ok(self.next)
         }
 
-        fn exchange(&mut self, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
+        async fn exchange(&mut self, _ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
             let app_id = self.handle_app.get(&node).cloned().unwrap_or_default();
             let mut frames = Vec::new();
             for command in commands {
@@ -1928,7 +1988,7 @@ mod tests {
         let configs = empty_configs(&graph);
 
         let mut sink_1 = fresh_sink();
-        let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        let report_1 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(report_1.clean.is_empty());
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
@@ -1940,7 +2000,7 @@ mod tests {
 
         let prior = prior_node_records_from(&sink_1.document);
         let mut sink_2 = fresh_sink();
-        let report_2 = runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run");
+        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
         assert!(report_2.recomputed.is_empty(), "unchanged documents must not re-trigger recompute: {:?}", report_2.recomputed);
         assert_eq!(report_2.clean, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(sink_2.document.node_records.iter().all(|record| record.status == RunNodeStatus::CacheHit), "every node on the second run must be a CacheHit: {:?}", sink_2.document.node_records);
@@ -1956,7 +2016,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
-        runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
         let mut documents_2 = documents.clone();
@@ -1967,7 +2027,7 @@ mod tests {
         documents_2.insert("artifacts/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
         let prior = prior_node_records_from(&sink_1.document);
         let mut sink_2 = fresh_sink();
-        let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run");
+        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's own document changed, so node-a must recompute");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed, so its output fingerprint is unchanged — node-b must stay clean (the early-cutoff this whole design exists for)");
     }
@@ -1986,7 +2046,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs_1 = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
-        runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        futures_lite::future::block_on(runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
@@ -1999,7 +2059,7 @@ mod tests {
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "only node-a's own config changed, so only node-a should be recomputed by the plan");
 
         let mut sink_2 = fresh_sink();
-        let report_2 = runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run with changed config");
+        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run with changed config");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's config changed, so node-a must recompute even though its document and inputs did not");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed regardless of config, so node-b must stay clean");
     }
@@ -2020,7 +2080,7 @@ mod tests {
         let bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "node-a".into(), field_path: "/threshold".into() }];
 
         let mut sink_1 = fresh_sink();
-        runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
@@ -2032,10 +2092,145 @@ mod tests {
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "the bound node's fingerprint must change purely from the parameter overlay: {:?}", plan_changed);
 
         let mut sink_2 = fresh_sink();
-        let report_2 = runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2).expect("second run with a param override");
+        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2)).expect("second run with a param override");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()]);
         assert_eq!(sink_2.node_configs.get("node-a"), Some(&configs["config/node-a"]), "raw config bytes sent to the app are untouched by the overlay — only the fingerprint changes");
     }
+
+    //#region 🔖️ExchangeOrderingTests
+    /// 🧪️ `AppChannelHost::exchange`'s own doc promises no second `exchange` for the same `node`
+    /// handle overlaps the first. `SpaceRunner` enforces that structurally today (it owns `H` and
+    /// calls through `&mut self`, so two `exchange` futures against the SAME owned host could never
+    /// even be POLLED concurrently — the borrow checker forbids it). `RecorderHost` proves the
+    /// DETECTOR below actually catches overlap when nothing prevents it, so
+    /// `space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_run`'s "never overlaps"
+    /// isn't a vacuous pass: it shares its bookkeeping through an `Rc<RefCell<_>>`, so cloning it
+    /// (unlike sharing one owned `H`) genuinely CAN be driven concurrently, and `exchange` yields
+    /// once mid-call (`futures_lite::future::yield_now`) so an interleaving executor has a real
+    /// chance to expose overlap.
+    #[derive(Default)]
+    struct RecorderState {
+        next_handle: u32,
+        in_flight: std::collections::HashSet<u32>,
+        overlap_detected: bool,
+        completed_in_order: Vec<u32>,
+    }
+
+    #[derive(Clone, Default)]
+    struct RecorderHost(std::rc::Rc<std::cell::RefCell<RecorderState>>);
+
+    /// 🧪️ Every `AppCommand` variant `RecorderHost`'s own test graphs ever send (no media ports —
+    /// see `two_independent_solo_nodes`) mapped to the SPECIFIC `AppFrame` reply `compute_node`
+    /// expects for it — `ReadDocument`/`ReadConfig` each demand their own typed frame
+    /// (`AppFrame::Document`/`AppFrame::Config`), not a generic `Done` (see `compute_node`'s own
+    /// `reply_to`/pattern-match).
+    fn reply_for(command: &AppCommand) -> AppFrame {
+        match command {
+            AppCommand::SetMergePolicy { seq, .. } => AppFrame::Done { in_reply_to: *seq },
+            AppCommand::LoadConfig { seq, .. } => AppFrame::Done { in_reply_to: *seq },
+            AppCommand::LoadDocument { seq, .. } => AppFrame::Done { in_reply_to: *seq },
+            AppCommand::ReadDocument { seq } => AppFrame::Document { in_reply_to: *seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() },
+            AppCommand::ReadConfig { seq } => AppFrame::Config { in_reply_to: *seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() },
+            other => panic!("RecorderHost's test graphs never send {other:?}"),
+        }
+    }
+
+    impl AppChannelHost for RecorderHost {
+        fn open(&mut self, _plugin_id: &str, _app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
+            let mut state = self.0.borrow_mut();
+            state.next_handle += 1;
+            Ok(state.next_handle)
+        }
+
+        async fn exchange(&mut self, _ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
+            {
+                let mut state = self.0.borrow_mut();
+                if !state.in_flight.insert(node) {
+                    state.overlap_detected = true;
+                }
+            }
+            futures_lite::future::yield_now().await;
+            let frames = commands.iter().map(reply_for).collect();
+            {
+                let mut state = self.0.borrow_mut();
+                state.in_flight.remove(&node);
+                state.completed_in_order.push(node);
+            }
+            Ok(frames)
+        }
+    }
+
+    fn two_independent_solo_nodes() -> Workflow {
+        Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![workflow_node("node-a", Vec::new(), Vec::new()), workflow_node("node-b", Vec::new(), Vec::new())], edges: Vec::new() }
+    }
+
+    fn root_ctx() -> OperationContext {
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
+    }
+
+    /// 🧪️ Sanity check for `RecorderHost` itself: two callers racing the SAME node id, with nothing
+    /// serializing them (unlike `SpaceRunner`, which owns its host exclusively), DO overlap once
+    /// interleaved — proves the detector the next test relies on would actually catch a real
+    /// regression rather than passing no matter what.
+    #[test]
+    fn recorder_host_detects_genuine_overlap_when_nothing_prevents_it() {
+        let recorder = RecorderHost::default();
+        let mut a = recorder.clone();
+        let mut b = recorder.clone();
+        let ctx = root_ctx();
+        let fut_a = a.exchange(&ctx, 7, vec![AppCommand::ReadDocument { seq: 1 }]);
+        let fut_b = b.exchange(&ctx, 7, vec![AppCommand::ReadDocument { seq: 2 }]);
+        let (_a, _b) = futures_lite::future::block_on(futures_lite::future::zip(fut_a, fut_b));
+        assert!(recorder.0.borrow().overlap_detected, "two callers racing the same node id with no ownership guard must overlap");
+    }
+
+    /// 🧪️ The actual ordering property this ticket asks for: `SpaceRunner::run`'s own call pattern
+    /// (strictly sequential, one node at a time, in topological order) never overlaps two `exchange`
+    /// calls for the same node — even against `RecorderHost`'s yield point, which would expose an
+    /// accidental `join`/`spawn` introduced by a later refactor as `overlap_detected`.
+    #[test]
+    fn space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_run() {
+        let graph = two_independent_solo_nodes();
+        let host = RecorderHost::default();
+        let recorder = host.clone();
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+        let mut cache = TestMediaCache::default();
+        let documents = empty_documents(&graph);
+        let configs = empty_configs(&graph);
+        let mut sink = fresh_sink();
+
+        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink)).expect("both solo nodes compute cleanly against RecorderHost");
+
+        let state = recorder.0.borrow();
+        assert!(!state.overlap_detected, "SpaceRunner must never issue two exchange calls for the same node concurrently");
+        assert_eq!(state.completed_in_order, vec![1, 2], "node-a (handle 1) completes strictly before node-b (handle 2) — sequential topological order preserved");
+    }
+
+    /// 🧪️ `compute_node` checks `self.cancel` BEFORE `open`/`exchange` (see `RunError::Cancelled`'s
+    /// doc) — cancelling `SpaceRunner`'s own token stops the run before its NEXT node. Node-a's own
+    /// `exchange` still completes (cancellation is checked between nodes, not preemptible mid-call —
+    /// the same honest limitation `semio-framework-os-services::ComputePool` documents), so this
+    /// asserts node-b specifically never runs.
+    #[test]
+    fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
+        let graph = two_independent_solo_nodes();
+        let host = RecorderHost::default();
+        let recorder = host.clone();
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+        let cancel = runner.cancel_token();
+        let mut cache = TestMediaCache::default();
+        let documents = empty_documents(&graph);
+        let configs = empty_configs(&graph);
+        let mut sink = fresh_sink();
+
+        // 🛑️ Cancel BEFORE the run even starts — deterministic, no real sleep/race needed: the very
+        // first `compute_node` call (node-a) must already observe `Cancelled`.
+        cancel.cancel();
+        let result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
+        assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled before its first node must fail with RunError::Cancelled, got {result:?}");
+        assert!(recorder.0.borrow().completed_in_order.is_empty(), "no node's exchange should run once the token is cancelled before the run starts");
+    }
+    //#endregion 🔖️ExchangeOrderingTests
 
     #[test]
     fn rejects_incompatible_edge_media_types() {
@@ -2047,7 +2242,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink = fresh_sink();
-        let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink);
+        let result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
         assert!(matches!(result, Err(RunError::Incompatible { .. })));
     }
 

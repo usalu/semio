@@ -34,12 +34,12 @@ const server: LanguageServer = {
   handle(message) {
     if (!session.current) return [];
     if (isJsonRpcRequest(message) && message.method === "jack/loadFixture" && message.params) {
-      const params = message.params as { json?: string; graphDomain.current?: string };
+      const params = message.params as { json?: string; graphDomain?: string };
       if (params.json) {
         fixtureJson.current = params.json;
       }
-      if (params.graphDomain.current) {
-        graphDomain.current = params.graphDomain.current;
+      if (params.graphDomain) {
+        graphDomain.current = params.graphDomain;
       }
       applyFixtureToSession();
       return message.id == null ? [] : [{ jsonrpc: "2.0", id: message.id, result: null }];
@@ -48,12 +48,12 @@ const server: LanguageServer = {
   },
 };
 
-self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?: string; fixtureJson.current?: string }>) => {
+self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?: string; fixtureJson?: string }>) => {
   const data = event.data;
   if (!data || typeof data !== "object") return;
   if ("operation" in data) {
     if (data.operation !== "init") return;
-    if (data.fixtureJson.current) fixtureJson.current = data.fixtureJson.current;
+    if (data.fixtureJson) fixtureJson.current = data.fixtureJson;
     void ensureSession().then(() => {
       self.postMessage({ operator: "ready" });
     });

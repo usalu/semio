@@ -291,7 +291,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.model.grammar.3", "grammar", "energy.model.diff", &[("grammar", "energy.model.diff")], None),
         ("s.model.grammar.4", "grammar", "energy.model.pack", &[("grammar", "energy.model.pack")], None),
         ("s.model.grammar.5", "grammar", "energy.model.spr", &[("grammar", "energy.model.spr")], None),
-        ("s.model.codec.document-1", "codec", "energy.model:model", &[("codec", "energy.model"), ("extension", "model")], None),
+        ("s.model.codec.document-1", "codec", "energy.model:energy", &[("codec", "energy.model"), ("extension", "energy")], None),
         ("s.model.localization.en", "localization", "Energy Model", &[], Some(("en", "Energy Model"))),
         ("s.model.localization.de", "localization", "Energiemodell", &[], Some(("de", "Energiemodell"))),
     ];

@@ -23,7 +23,7 @@ export interface CadInference {
 // #region 🔌️Adapters
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstNode, IToken } from "chevrotain";
-import { kernelGeometry, solidRef, type Vec3 } from "@semio-tech/kernel-3d-js";
+import { kernelGeometry, solidRef, type Vec3 } from "@semio-tech/s-3d-js";
 import {
   Model,
   buildTypologyToEntityKindMapForModelDefinition,
@@ -53,7 +53,7 @@ import {
   type ConstructQueryResult,
   type ConstructQueryRow,
   type ConstructRunner,
-} from "../../../../../../../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts";
+} from "../../✏️editor/⚙️engine/🎬️actions/🟦️component.ts";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
@@ -1417,7 +1417,7 @@ export class ConstructEngine {
 // #endregion Api
 
 // #region 🧪️Tests
-const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../../../../../../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts") : null;
+const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../✏️editor/⚙️engine/🏃️runtime/🟦️component.ts") : null;
 const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {

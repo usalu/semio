@@ -6838,8 +6838,11 @@ dependencies = [
  "miniz_oxide",
  "notify",
  "rusqlite",
+ "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-hash",
  "semio-framework-os-kernel-dsl-derive",
+ "semio-framework-os-services",
  "semio-framework-pack",
  "semio-framework-replication",
  "serde",
@@ -6937,6 +6940,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-os-services",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-surface",
@@ -6960,9 +6964,11 @@ dependencies = [
 name = "semio-framework-os-run"
 version = "0.1.0"
 dependencies = [
+ "futures-lite",
  "pretty_assertions",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -7111,10 +7117,14 @@ dependencies = [
 name = "semio-framework-server"
 version = "0.1.0"
 dependencies = [
+ "axum 0.8.9",
+ "dashmap",
+ "futures",
  "semio-framework-replication",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "tokio",
 ]
 
 [[package]]

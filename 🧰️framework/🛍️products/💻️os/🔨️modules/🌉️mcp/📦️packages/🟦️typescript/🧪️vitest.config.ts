@@ -20,7 +20,7 @@ export default defineConfig({
     name: "@semio-tech/framework-os-mcp",
     mode: "test",
     environment: "node",
-    include: ["../../🟦️component.ts", "🧪️legacy-conformance.test.ts", "🧪️modern-era.test.ts", "🧪️hygiene.test.ts"],
+    include: ["🧪️legacy-conformance.test.ts", "🧪️modern-era.test.ts", "🧪️hygiene.test.ts"],
     coverage: { include: ["../../🟦️component.ts"] },
     includeSource: ["../../🟦️component.ts"],
     testTimeout: 30_000,

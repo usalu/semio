@@ -52,8 +52,19 @@ kernel and pack wasm `--lib` clean · replication TS fixture parity 1 · os TS 1
 
 ## Next
 
-Resolve B3 (`📋️waveB-db-decoupling-plan.md`), then B4/B5, then the server core
-(`🎭️authority`, `🗄️storage`, `🛡️policy`, `📡️gateway` + testkit instance), then hub onto `Server::builder`.
+The **server core is complete** (see `📋️wave2-server-core.md`): contract, storage, policy,
+authority and gateway all land with 73 passing tests, and the product references os nowhere.
+
+Two items remain, in this order:
+
+1. **db relocation** — B3 is a genuine fork (`📋️waveB-db-decoupling-plan.md`): db's last os edge is
+   `store::pack_rt::encode_wire_value`, whose byte format is shared with the TypeScript twin. Either
+   promote the DSL schema+lexer stack (large) or change the format in both languages (needs its own
+   parity fixtures). Not forced through at the end of a session.
+2. **Wave 3, hub as instance #1** — now unblocked in design even before db moves, because the
+   gateway expresses the document engine as the `DocumentAuthority` port: hub already depends on
+   both server and db, so it implements that port over `db::ArtifactHandle` and registers its
+   directory/auth/sharing/extensions modules. bin.rs then shrinks to a `Server::builder` call.
 
 ## Post-hoc wiring verification (gap found and closed)
 

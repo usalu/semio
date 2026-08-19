@@ -454,6 +454,41 @@
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust": {
       "name": "@semio-tech/trinity-jack-lsp",
     },
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react": {
+      "name": "@semio-tech/puzzle-5d-react",
+      "version": "0.1.0",
+    },
+    "🌎️hub/📦️packages/🟦️typescript": {
+      "name": "os-hub-ts",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-os": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
+    "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript": {
+      "name": "os-hub-admin",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-os": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "@testing-library/react": "^16.3.0",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
     "🧰️framework/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework",
       "version": "0.1.0",
@@ -465,6 +500,14 @@
     "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-editor-rs",
       "version": "0.1.0",
+    },
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-replication",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
     },
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript": {
       "name": "@semio-tech/ui-styling",
@@ -587,6 +630,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-replication": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -633,12 +677,20 @@
         "vite": "^7.3.1",
       },
     },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-os-mcp",
+      "version": "0.1.0",
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.30.0",
+        "ajv": "^8.20.0",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg": {
       "name": "@semio-tech/flow-core",
-      "version": "0.1.0",
-    },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️puzzle-5d-react": {
-      "name": "@semio-tech/puzzle-5d-react",
       "version": "0.1.0",
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
@@ -694,6 +746,14 @@
       "name": "@semio-tech/plugin-registry",
       "version": "0.1.0",
     },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-os-shell",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-dev",
       "version": "0.1.0",
@@ -730,6 +790,14 @@
         "@napi-rs/canvas": "^1.0.2",
         "pdfjs-dist": "^6.1.200",
         "sharp": "^0.34.5",
+      },
+    },
+    "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-server",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
       },
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript": {
@@ -786,9 +854,6 @@
         "typescript": "^5.8.3",
       },
     },
-  },
-  "patchedDependencies": {
-    "@electron-forge/core-utils@7.11.2": "patches/@electron-forge%2Fcore-utils@7.11.2.patch",
   },
   "overrides": {
     "@radix-ui/react-slider": "^1.4.5",
@@ -1903,11 +1968,19 @@
 
     "@semio-tech/framework-os-dev": ["@semio-tech/framework-os-dev@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"],
 
+    "@semio-tech/framework-os-mcp": ["@semio-tech/framework-os-mcp@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript"],
+
+    "@semio-tech/framework-os-shell": ["@semio-tech/framework-os-shell@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript"],
+
     "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"],
 
     "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"],
 
+    "@semio-tech/framework-replication": ["@semio-tech/framework-replication@workspace:🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"],
+
     "@semio-tech/framework-schema": ["@semio-tech/framework-schema@workspace:🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"],
+
+    "@semio-tech/framework-server": ["@semio-tech/framework-server@workspace:🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-surface-rs": ["@semio-tech/framework-surface-rs@workspace:🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"],
 
@@ -1927,7 +2000,7 @@
 
     "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
 
-    "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️puzzle-5d-react"],
+    "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react"],
 
     "@semio-tech/repo-client": ["@semio-tech/repo-client@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript"],
 
@@ -3606,6 +3679,10 @@
     "optionator": ["optionator@0.9.4", "", { "dependencies": { "deep-is": "^0.1.3", "fast-levenshtein": "^2.0.6", "levn": "^0.4.1", "prelude-ls": "^1.2.1", "type-check": "^0.4.0", "word-wrap": "^1.2.5" } }, "sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g=="],
 
     "ora": ["ora@5.3.0", "", { "dependencies": { "bl": "^4.0.3", "chalk": "^4.1.0", "cli-cursor": "^3.1.0", "cli-spinners": "^2.5.0", "is-interactive": "^1.0.0", "log-symbols": "^4.0.0", "strip-ansi": "^6.0.0", "wcwidth": "^1.0.1" } }, "sha512-zAKMgGXUim0Jyd6CXK9lraBnD3H5yPGBPPOkC23a2BG6hsm4Zu6OQSjQuEtV0BHDf4aKHcUFvJiGRrFuW3MG8g=="],
+
+    "os-hub-admin": ["os-hub-admin@workspace:🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript"],
+
+    "os-hub-ts": ["os-hub-ts@workspace:🌎️hub/📦️packages/🟦️typescript"],
 
     "oxc-minify": ["oxc-minify@0.136.0", "", { "optionalDependencies": { "@oxc-minify/binding-android-arm-eabi": "0.136.0", "@oxc-minify/binding-android-arm64": "0.136.0", "@oxc-minify/binding-darwin-arm64": "0.136.0", "@oxc-minify/binding-darwin-x64": "0.136.0", "@oxc-minify/binding-freebsd-x64": "0.136.0", "@oxc-minify/binding-linux-arm-gnueabihf": "0.136.0", "@oxc-minify/binding-linux-arm-musleabihf": "0.136.0", "@oxc-minify/binding-linux-arm64-gnu": "0.136.0", "@oxc-minify/binding-linux-arm64-musl": "0.136.0", "@oxc-minify/binding-linux-ppc64-gnu": "0.136.0", "@oxc-minify/binding-linux-riscv64-gnu": "0.136.0", "@oxc-minify/binding-linux-riscv64-musl": "0.136.0", "@oxc-minify/binding-linux-s390x-gnu": "0.136.0", "@oxc-minify/binding-linux-x64-gnu": "0.136.0", "@oxc-minify/binding-linux-x64-musl": "0.136.0", "@oxc-minify/binding-openharmony-arm64": "0.136.0", "@oxc-minify/binding-wasm32-wasi": "0.136.0", "@oxc-minify/binding-win32-arm64-msvc": "0.136.0", "@oxc-minify/binding-win32-ia32-msvc": "0.136.0", "@oxc-minify/binding-win32-x64-msvc": "0.136.0" } }, "sha512-u9UvPFTYVwQ/i1kpp/c20S/SbvLaLV0Ngzyhgi0YV4B1SlxM7RgnnePl4vY9N3Z9sTRcozL1MRStI3PlUN9RFA=="],
 

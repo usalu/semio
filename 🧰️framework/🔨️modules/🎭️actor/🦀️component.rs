@@ -14,7 +14,7 @@
 //!
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-runtime.md` §1.
 
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -1397,6 +1397,18 @@ impl ShardTable {
         if let Some(existing) = self.assignment.get(&actor) {
             return *existing;
         }
+        let shard = self.least_loaded(&BTreeSet::new());
+        self.assignment.insert(actor, shard);
+        shard
+    }
+
+    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): same least-loaded
+    /// placement as [`Self::pin`], factored so [`Self::pin_avoiding`] can reuse the identical
+    /// count/tie-break arithmetic with a subset of shards excluded — this is why `pin`'s own budget-3
+    /// balance guarantee (`pin_spreads_actors_of_one_plugin_across_the_pool`) is untouched by this
+    /// packet: called with an empty `avoid` set, `pin`'s behaviour is byte-for-byte what it was before
+    /// this method existed.
+    fn least_loaded(&self, avoid: &BTreeSet<ShardId>) -> ShardId {
         let pool = self.shard_count.saturating_sub(self.exclusive_reserve).max(1);
         let mut load = vec![0usize; pool as usize];
         for shard in self.assignment.values() {
@@ -1404,8 +1416,30 @@ impl ShardTable {
                 load[shard.0 as usize] += 1;
             }
         }
-        let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map_or(0, |(index, _)| index);
-        let shard = ShardId(chosen as u16);
+        let chosen = load
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| !avoid.contains(&ShardId(*index as u16)))
+            .min_by_key(|(index, count)| (**count, *index))
+            .or_else(|| load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)))
+            .map_or(0, |(index, _)| index);
+        ShardId(chosen as u16)
+    }
+
+    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): [`Self::pin`],
+    /// restricted to shards NOT in `avoid` — "reserve headroom so an interactive actor is never
+    /// co-resident with N CPU-bound ones," concretely: `Kernel::activate` calls this instead of
+    /// `pin` for `Lane::Interactive` actors, passing every shard `Kernel::saturated_shards` currently
+    /// judges CPU-saturating (observed `ActorMetrics::is_saturating`, never a fixture/profile name).
+    /// Falls back to the ordinary unrestricted least-loaded shard when EVERY general-pool shard is in
+    /// `avoid` — a fully-saturated pool must still admit the actor; `Backpressure::Rejected` (mailbox
+    /// capacity) already owns "no room" semantics elsewhere, this method is never the place a
+    /// placement request goes unanswered. Idempotent for an already-pinned actor, exactly like `pin`.
+    pub fn pin_avoiding(&mut self, actor: ActorId, avoid: &BTreeSet<ShardId>) -> ShardId {
+        if let Some(existing) = self.assignment.get(&actor) {
+            return *existing;
+        }
+        let shard = self.least_loaded(avoid);
         self.assignment.insert(actor, shard);
         shard
     }
@@ -1597,7 +1631,7 @@ impl Scheduler {
     /// timers); all other state is internal and persists across calls.
     pub fn tick(&mut self, now_ms: u64) -> Decision {
         let mut run = Vec::new();
-        let mut granted_this_tick: std::collections::BTreeSet<ActorId> = std::collections::BTreeSet::new();
+        let mut granted_this_tick: BTreeSet<ActorId> = BTreeSet::new();
         let mut budget_left = self.grants_per_tick;
 
         //#region 🔖️DeadlinePreemption
@@ -1797,6 +1831,16 @@ impl SceneStore {
 /// (not a const generic array) because serde's built-in array support tops out at 32 elements.
 const WALL_US_RING_CAPACITY: usize = 64;
 
+/// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): minimum recorded turns
+/// before [`ActorMetrics::is_saturating`] will answer `true` — one slow turn (a cold cache, a GC
+/// pause) must never flip an actor "hot"; only a SUSTAINED pattern does.
+const SATURATION_MIN_TURNS: u64 = 2;
+
+/// 🔥️ [`ActorMetrics::is_saturating`] fires once [`ActorMetrics::wall_us_p95`] reaches this percent
+/// of the actor's OWN declared [`Budget::wall_ms`] — a p95, not the latest sample, so one fast turn
+/// cannot mask a sustained pattern of near-budget turns.
+const SATURATION_THRESHOLD_PERCENT: u64 = 70;
+
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ActorMetrics {
@@ -1854,6 +1898,23 @@ impl ActorMetrics {
         samples.sort_unstable();
         let idx = ((samples.len() as f32) * 0.95).floor() as usize;
         samples[idx.min(samples.len() - 1)]
+    }
+
+    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): observed-behaviour
+    /// CPU-saturation signal — purely `record_turn`'s own tracked `wall_us_p95` against `budget`'s
+    /// OWN declared `wall_ms` ceiling, never a fixture/profile name (this crate has no such concept
+    /// and must not gain one — see the module doc's purity rule). Used by
+    /// `Kernel::saturated_shards`/`ShardTable::pin_avoiding` to keep freshly-activated interactive
+    /// actors off a shard a background actor is already monopolizing.
+    pub fn is_saturating(&self, budget: &Budget) -> bool {
+        if self.turns < SATURATION_MIN_TURNS {
+            return false;
+        }
+        let budget_us = (budget.wall_ms as u64) * 1000;
+        if budget_us == 0 {
+            return false;
+        }
+        (self.wall_us_p95() as u64) * 100 >= budget_us * SATURATION_THRESHOLD_PERCENT
     }
 
     pub fn pack_encode(&self, out: &mut Vec<u8>) {
@@ -2187,15 +2248,36 @@ impl Kernel {
 
     /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and
     /// returns its freshly minted [`ActorId`] (generation 0).
+    ///
+    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): `Lane::Interactive`
+    /// alone pays [`Self::saturated_shards`]'s avoidance cost, via [`ShardTable::pin_avoiding`] rather
+    /// than [`ShardTable::pin`] — every other lane pins exactly as before this packet (see
+    /// `pin_avoiding`'s own doc for why: a wholesale avoid-saturated-shards policy for EVERY lane
+    /// would just relocate the count imbalance `pin`'s own budget-3 guarantee depends on, not fix
+    /// interactive latency).
     pub fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag(), *ordinal, 0);
         *ordinal += 1;
         let budget = lane_defaults::budget_for(lane);
-        let shard = self.shards.pin(id);
+        let shard = if lane == Lane::Interactive {
+            let avoid = self.saturated_shards();
+            self.shards.pin_avoiding(id, &avoid)
+        } else {
+            self.shards.pin(id)
+        };
         self.scheduler.register_actor(id, package.clone(), lane, budget, shard);
         self.actors.insert(id, ActorMeta { kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
         id
+    }
+
+    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): every shard
+    /// currently hosting at least one actor [`ActorMetrics::is_saturating`] judges CPU-saturating —
+    /// purely from this kernel's own tracked state (turns already completed via [`Self::complete`]),
+    /// never a fixture/profile name. `activate`'s own doc explains why only `Lane::Interactive`
+    /// consults this.
+    fn saturated_shards(&self) -> BTreeSet<ShardId> {
+        self.actors.iter().filter(|(_, meta)| meta.metrics.is_saturating(&meta.budget)).filter_map(|(id, _)| self.shards.shard_of(*id)).collect()
     }
 
     pub fn submit(&mut self, envelope: &Envelope) -> Backpressure {
@@ -2322,7 +2404,7 @@ impl Kernel {
     }
 
     pub fn metrics(&self) -> KernelMetrics {
-        let packages: std::collections::BTreeSet<&PackageId> = self.actors.values().map(|m| &m.package).collect();
+        let packages: BTreeSet<&PackageId> = self.actors.values().map(|m| &m.package).collect();
         KernelMetrics { actors: self.actors.len() as u32, shards: self.shards.shard_count() as u32, packages: packages.len() as u32 }
     }
 
@@ -2515,6 +2597,46 @@ mod tests {
             let freed = table.shard_of(actors[2]).unwrap();
             table.unpin(actors[2]);
             assert_eq!(table.pin(ActorId::new(1, 0, 99, 0)), freed);
+        }
+
+        /// 🔥️ PROPERTY (terra-interactive-isolation): the mechanism this packet's mission asked for —
+        /// N CPU-saturating actors sharing a shard must not receive a freshly-activated interactive
+        /// actor as a co-resident. Pure/deterministic: injected `Usage`s stand in for real wall-clock
+        /// turns (`ActorMetrics::is_saturating`'s whole point is never needing a clock/bench of its
+        /// own), no thread/bench needed.
+        #[test]
+        fn interactive_actor_avoids_a_shard_saturated_by_cpu_bound_actors() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 3, 0, 64);
+            let background_package = PackageId("cpu-hog".into());
+            // 🔢️ 6 Background actors round-robin 2-per-shard across 3 shards under plain least-loaded
+            // `pin` (proven deterministic by `pin_spreads_actors_of_one_plugin_across_the_pool`'s own
+            // reasoning) — read each one's ACTUAL shard back via `actor_record` rather than assuming
+            // the exact order, so this test stays correct even if that internal tie-break ever changes.
+            let mut by_shard: std::collections::BTreeMap<u16, Vec<ActorId>> = std::collections::BTreeMap::new();
+            for ordinal in 0..6u32 {
+                let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual);
+                let shard = kernel.actor_record(id).unwrap().shard;
+                by_shard.entry(shard.0).or_default().push(id);
+            }
+            assert_eq!(by_shard.len(), 3, "expected all 3 shards to receive background actors: {by_shard:?}");
+
+            // 🔥️ Drive every actor on shards OTHER than the last one over its own Background budget's
+            // wall_ms ceiling for 2 turns (SATURATION_MIN_TURNS) — crossing `is_saturating`'s
+            // threshold. The last shard's actors are left untouched (default `ActorMetrics`, zero
+            // turns), making it the one and only "clean" shard.
+            let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
+            let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
+            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
+            for shard in hot_shards {
+                for actor in &by_shard[shard] {
+                    kernel.complete(*actor, &hot_turn, 0).unwrap();
+                    kernel.complete(*actor, &hot_turn, 0).unwrap();
+                }
+            }
+
+            let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
+            let interactive_shard = kernel.actor_record(interactive_id).unwrap().shard;
+            assert_eq!(interactive_shard.0, *safe_shard, "interactive actor must land on the one shard with no CPU-saturating co-resident, got {interactive_shard:?} (hot shards: {hot_shards:?})");
         }
 
         #[test]

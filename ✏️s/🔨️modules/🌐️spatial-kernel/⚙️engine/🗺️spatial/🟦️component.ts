@@ -1,8 +1,8 @@
 // #region 🧲️Header
 /** @emoji 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
-import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/kernel-3d-js";
-import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/kernel-3d-js";
+import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
+import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
 // #endregion 🧲️Header
 
 
@@ -256,7 +256,7 @@ export interface KernelQueryContext {
 // #region 🧪️Tests
 import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../📐️geometry/🟦️component.ts";
 
-const __spatialCoreTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts") : null;
+const __spatialCoreTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts") : null;
 const __spatialCoreTestKernel = import.meta.vitest ? await import("../🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {

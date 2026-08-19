@@ -4158,7 +4158,7 @@ type ScaleFixtureRecord = {
   kind: "plugin" | "extension";
   parentId: string | null;
   activationEvents: ScaleFixtureActivationEvent[];
-  quotas: { fuel: number; deadlineMs: number; maxEffects: number; maxPatchBytes: number; maxFrames: number };
+  quotas: { deadlineMs: number; maxEffects: number; maxPatchBytes: number; maxFrames: number };
   capabilities: string[];
   scaleFixture: ScaleFixtureConfig;
 };
@@ -4233,7 +4233,6 @@ function scaleFixtureRecord(rng: () => number, id: string, kind: "plugin" | "ext
     parentId,
     activationEvents: [scaleFixtureActivationEvent(rng, index)],
     quotas: {
-      fuel: 100_000 + Math.floor(rng() * 900_000),
       deadlineMs: 8 + Math.floor(rng() * 24),
       maxEffects: 4 + Math.floor(rng() * 12),
       maxPatchBytes: 1024 + Math.floor(rng() * 7168),

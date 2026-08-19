@@ -16,6 +16,7 @@
 //! 1-C's own report.
 
 use super::client::{DirectoryClient, DirectoryClientError, DirectoryTransport};
+use semio_framework_async::OperationContext;
 
 //#region 🔖️Identity
 /// 🪪️ One restored-or-minted session, matching contract §C3's `Identity` field-for-field.
@@ -140,13 +141,18 @@ fn persist(env: &IdentityEnv, identity: &Identity) {
 /// `GET /auth/sessions/me`; a clean 401 falls through to `POST /auth/sessions {email}`; any
 /// OTHER transport failure degrades to the last cached identity marked `Offline` rather than
 /// blocking or panicking. With no cache at all, a mint failure has nothing to degrade to and
-/// surfaces `IdentityError::Unavailable`.
-pub async fn mint_or_restore<T: DirectoryTransport>(client: &DirectoryClient<T>, env: &IdentityEnv) -> Result<IdentityOutcome, IdentityError> {
+/// surfaces `IdentityError::Unavailable`. `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
+/// RUNTIME) is threaded into BOTH hub calls unchanged — cancelling it (e.g. on process shutdown,
+/// mid-boot) stops identity bootstrap the same way it stops any other directory request, rather
+/// than this path inventing its own bolted-on cancellation. The caller owns `ctx`'s lifetime
+/// (typically one scoped to "this boot attempt" or "this process"), same as every other
+/// `DirectoryClient` call site.
+pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, client: &DirectoryClient<T>, env: &IdentityEnv) -> Result<IdentityOutcome, IdentityError> {
     let cached = env.data_dir.as_deref().and_then(cache::load);
 
     if let Some(cached_identity) = &cached {
         client.set_token(Some(cached_identity.session_token.clone()));
-        match client.me().await {
+        match client.me(ctx).await {
             Ok(session) => {
                 let identity = Identity {
                     user_id: session.user_id,
@@ -164,7 +170,7 @@ pub async fn mint_or_restore<T: DirectoryTransport>(client: &DirectoryClient<T>,
         }
     }
 
-    match client.mint_session(&env.user_email).await {
+    match client.mint_session(ctx, &env.user_email).await {
         Ok(minted) => {
             let identity = Identity {
                 user_id: minted.user_id,
@@ -189,9 +195,14 @@ mod tests {
     use super::super::client::test_support::FakeTransport;
     use super::super::client::HttpResponse;
     use super::*;
+    use semio_framework_async::{CancelToken, TraceId};
 
     fn env(data_dir: &std::path::Path) -> IdentityEnv {
         IdentityEnv { hub_url: "http://hub.local".to_string(), user_email: "amara@semio.dev".to_string(), data_dir: Some(data_dir.to_path_buf()) }
+    }
+
+    fn root_ctx() -> OperationContext {
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
     }
 
     #[test]
@@ -207,7 +218,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })));
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = futures_lite::future::block_on(mint_or_restore(&client, &env(dir.path()))).expect("mints");
+        let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("mints");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-new");
         assert_eq!(transport.requests.lock().unwrap().len(), 1, "restore is skipped entirely with no cache");
@@ -223,7 +234,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "userId": "u-1", "email": "amara@semio.dev", "displayName": "Amara", "expiresAt": 999 })));
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = futures_lite::future::block_on(mint_or_restore(&client, &env(dir.path()))).expect("restores");
+        let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("restores");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-old", "restore keeps the cached token, /me only confirms it");
         let requests = transport.requests.lock().unwrap();
@@ -241,7 +252,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-fresh", "user_id": "u-1" })));
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = futures_lite::future::block_on(mint_or_restore(&client, &env(dir.path()))).expect("mints after 401");
+        let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("mints after 401");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-fresh");
         let requests = transport.requests.lock().unwrap();
@@ -258,7 +269,7 @@ mod tests {
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string())));
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let outcome = futures_lite::future::block_on(mint_or_restore(&client, &env(dir.path()))).expect("degrades, never errors, while a cache exists");
+        let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("degrades, never errors, while a cache exists");
         assert_eq!(outcome.status, IdentityStatus::Offline);
         assert_eq!(outcome.identity, cached, "the stale identity is returned as-is, never mutated");
     }
@@ -270,7 +281,7 @@ mod tests {
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string())));
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let error = futures_lite::future::block_on(mint_or_restore(&client, &env(dir.path()))).expect_err("no cache and no hub leaves nothing to restore");
+        let error = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect_err("no cache and no hub leaves nothing to restore");
         assert!(matches!(error, IdentityError::Unavailable(email) if email == "amara@semio.dev"));
     }
 }

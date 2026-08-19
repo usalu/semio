@@ -2836,7 +2836,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider.current?: FilterTreeDataProvider) {}
+  constructor(public filterProvider?: FilterTreeDataProvider) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2852,7 +2852,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 
   async getChildren(element?: MonorepoTreeItem): Promise<MonorepoTreeItem[]> {
     if (!element) {
-      const args = buildCliTreeArgs(this.filterProvider.current);
+      const args = buildCliTreeArgs(this.filterProvider);
       const tree = await fetchTreeWithArgs(args);
       if (!tree?.Children) return [];
       return tree.Children.map(treeNodeToItem);

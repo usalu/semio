@@ -1,0 +1,8 @@
+{
+  "title": "Repo-Wide TSC Syntax Hygiene",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Repair 19 stale parse-level tsc errors from half-landed ephemeralBox `.current` edits in trinity jack LSP, stdio ifc/step schema stubs, and repo vscode extension.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": []
+}

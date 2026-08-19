@@ -1,14 +1,19 @@
-/** cad facet WASM facades */
-export * as cad_schema from "../../🗿️artifacts/📐️cad/🧬️schema/🟦️component.ts";
-export * as cad_snapshot_schema from "../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/🟦️component.ts";
-export * as cad_snapshot_text from "../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
-export * as cad_snapshot_binary from "../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
-export * as cad_diff from "../../🗿️artifacts/📐️cad/🧬️schema/🔺️diff/📝️text/🟦️component.ts";
-export * as cad_diff_schema from "../../🗿️artifacts/📐️cad/🧬️schema/🔺️diff/🟦️component.ts";
-export * as cad_dsl from "../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
-export * as cad_pack from "../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
-export * as cad_op from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
-export * as cad_mutations from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/🟦️component.ts";
-export * as cad_spr from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
-export * as cad_decomposer from "../../🗿️artifacts/📐️cad/🪓️decomposer/🟦️component.ts";
-export * as cad_io from "../../🗿️artifacts/📐️cad/🚪️io/🟦️component.ts";
+/** cad facet WASM facades and merged `core` namespace for extension modules */
+import * as geometry from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import * as registry from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts";
+import * as spatial from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
+
+export const core = { ...geometry, ...spatial, ...registry };
+
+export * as cad_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
+export * as cad_snapshot_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts";
+export * as cad_snapshot_text from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
+export * as cad_snapshot_binary from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
+export * as cad_diff from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🟦️component.ts";
+export * as cad_diff_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️component.ts";
+export * as cad_dsl from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
+export * as cad_pack from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
+export * as cad_op from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
+export * as cad_mutations from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️component.ts";
+export * as cad_spr from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
+export * as cad_io from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️component.ts";

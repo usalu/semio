@@ -21,7 +21,13 @@ path = "📦️glue.rs"
 default = ["deflate"]
 deflate = ["dep:miniz_oxide", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 dsl-fixture-sweep-full = []
-ureq = ["dep:ureq"]
+# 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
+# `📇️directory/🔌️client`'s `NativeDirectoryTransport` routes its HTTP calls through
+# `semio-framework-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware) —
+# `ureq` and `os-services` are pulled in TOGETHER because the native transport module is gated on
+# both this feature and `sync` already (`native`'s own `#[cfg]`); a build that never turns on `ureq`
+# never links tokio's `rt-multi-thread` either.
+ureq = ["dep:ureq", "dep:semio-framework-os-services", "dep:semio-framework-actor"]
 # 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is a target-independent
 # `[dependencies]` entry, so a feature-flag `tokio/net` would unify onto EVERY target including
 # wasm32, and tokio's own build script hard-errors on `net` for `wasm32` (unlike `rt`/`time`, which
@@ -41,6 +47,11 @@ typegen = ["dep:ts-rs"]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-pack = { workspace = true }
 semio-framework-replication = { workspace = true }
+# 🪪️ `OperationContext`/`CancelToken`/`ScopeHandle` vocabulary (ticket
+# 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — pure, zero-tokio, wasm32-safe, so this is an
+# unconditional (not target-gated) dependency: `📇️directory/🔌️client`'s `DirectoryTransport` trait
+# carries an `OperationContext` on every implementation, native AND browser alike.
+semio-framework-async = { workspace = true }
 async-trait = "0.1"
 base64 = "0.22.1"
 blake3 = "1"
@@ -78,6 +89,15 @@ rusqlite = { version = "0.38.0", optional = true, features = ["bundled"] }
 # never spins up a listener) and the only way to keep `net` off wasm32 unconditionally, which is the
 # actual requirement: WASI-P2 guest plugins must never link tokio's networking.
 tokio = { version = "1", default-features = false, features = ["net"] }
+# 🌀️ `HttpPool`/`ComputePool` — see the `ureq` feature's own doc above for why this is optional and
+# paired with it rather than unconditional (tokio is confined to `semio-framework-os-services`
+# itself; this crate never names a tokio type, only `semio-framework-os-services`'s own types).
+semio-framework-os-services = { workspace = true, optional = true }
+# 🪪️ `PackageId`/`ActorId` — `HttpPool::request`'s own per-package/per-actor quota identity
+# (`semio-framework-os-services`'s doc: "consumed from here rather than reinvented locally"). Pure,
+# no tokio, but only the native `HttpPool`-backed transport constructs one, so it rides the same
+# `ureq` feature as `semio-framework-os-services` above.
+semio-framework-actor = { workspace = true, optional = true }
 
 # 🧪️ `🏪️store/🔄️sync`'s actor tests use `tempfile::tempdir()`; they are gated
 # `#[cfg(not(target_arch = "wasm32"))]`, so the dev-dep is target-gated to match.

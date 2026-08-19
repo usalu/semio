@@ -37,6 +37,19 @@ use semio_framework_os_kernel::os_directory::{
     identity::{actor_id, mint_or_restore, Identity, IdentityEnv, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
 };
+// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
+// methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
+// routes through `semio-framework-os-services`'s `HttpPool`/`ComputePool` over ONE shared
+// `TokioHostRuntime` — `NativeDirectoryTransport::new()` (zero-arg) is gone, replaced by
+// `with_new_http_pool` fed this shell's own `directory_runtime`/`directory_scope`/`directory_compute`
+// (see the new `ShellState` fields below). This is what retires the private
+// `tokio::runtime::Builder::new_current_thread()` `open_directory_stream` used to build itself.
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_async::{thread_plan, CancelToken, HostAsyncRuntime, OperationContext, ScopeHandle, ScopeOwner, ThreadBudget, TraceId};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps, WindowStackCorner,
@@ -1030,10 +1043,43 @@ pub struct ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub directory_client: Option<DirectoryClient<NativeDirectoryTransport>>,
     /// 📡️ `/directory/ws` stream messages, drained once per frame by `pump_directory_events` — owned
-    /// by a dedicated background thread (its own current-thread tokio runtime, see
+    /// by a dedicated background thread that drives itself via `directory_runtime.block_on` (see
     /// `open_directory_stream`) so the auto-reconnect backoff never blocks the render loop either.
     #[cfg(not(target_arch = "wasm32"))]
     pub directory_events_rx: Option<std::sync::mpsc::Receiver<DirectoryStreamMessage>>,
+    /// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): the ONE tokio-backed
+    /// `TokioHostRuntime` every directory-client `OperationContext`/`NativeDirectoryTransport` this
+    /// shell mints shares — minted once in `ShellState::new`, never per-call. Kept as the CONCRETE
+    /// type (not `Arc<dyn HostAsyncRuntime>`) specifically so `open_directory_stream` can call its
+    /// inherent `block_on` — `DirectoryStream`/`DirectoryWsConnection` are deliberately `?Send` (see
+    /// their own doc: the browser impl closes over non-`Send` `wasm_bindgen::JsValue` handles), so
+    /// the stream loop can never be `spawn_scoped` (which requires `Send`); `block_on`, run from a
+    /// dedicated background thread, drives it on THIS shared runtime's reactor instead of a private
+    /// one-off `tokio::runtime::Builder`, without needing the future to be `Send`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_runtime: std::sync::Arc<TokioHostRuntime>,
+    /// 🌳️ This shell's one root `Scope` for directory-client work, opened once against
+    /// `directory_runtime` — passed to `HttpPool::request` (via `NativeDirectoryTransport`) for its
+    /// scope-accounted blocking-compute admission; not used for `spawn_scoped` today (see
+    /// `open_directory_stream`'s doc on why it uses `block_on` instead).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_scope: ScopeHandle,
+    /// 🧮️ Bounds every blocking `ureq` call `NativeDirectoryTransport` makes — shared by every
+    /// `DirectoryClient` this shell constructs (see `directory_transport`'s own doc).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_compute: std::sync::Arc<ComputePool>,
+    /// 🔌️ ONE `NativeDirectoryTransport` (cheap to `.clone()` — see its own doc), shared by every
+    /// `DirectoryClient` this shell constructs so they all draw on the SAME `HttpPool` byte budget/
+    /// outstanding-request accounting rather than each minting a disjoint pool.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_transport: NativeDirectoryTransport,
+    /// 🛑️ This shell's own directory-request cancellation root — `CancelToken::root()`, never
+    /// cancelled by this packet (no shutdown hook wired to it yet — see the packet report's honest
+    /// gaps), but every directory `OperationContext` this shell builds is a `.child()` of this ONE
+    /// token, so a future shutdown hook has exactly one place to call `.cancel()` to stop every
+    /// in-flight directory request/stream at once.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_cancel: CancelToken,
     /// 🎮️ Bounded offline queue for `os.directory.*` commands issued while the hub is unreachable —
     /// flushed opportunistically every frame once `directory_client` exists (contract §C6: "commands
     /// queue in the shell (bounded, in-memory) and flush on reconnect").
@@ -1265,6 +1311,25 @@ impl ShellState {
 
     pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String) -> Self {
         let space_mode = is_space_mode(&plugin_filter);
+        // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run, sol-extended lease):
+        // the ONE `TokioHostRuntime`/`ComputePool`/`NativeDirectoryTransport` this shell's directory
+        // client and directory-stream task share — minted ONCE here, never per-call, replacing the
+        // private `tokio::runtime::Builder::new_current_thread()` `open_directory_stream` used to
+        // build itself. Sized from its own small `thread_plan` rather than reusing
+        // `kernel_runtime::native_shard_count`'s plan (that one sizes the WASM-guest kernel's shard
+        // pool — a different, unrelated concern from this HTTP client's blocking-call budget; see
+        // this packet's own lease-request note on why a second, small plan is used here).
+        #[cfg(not(target_arch = "wasm32"))]
+        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport, CancelToken) = {
+            let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+            let plan = thread_plan(cores);
+            let budget = ThreadBudget::from_plan(plan);
+            let runtime = std::sync::Arc::new(TokioHostRuntime::new(plan, &budget).expect("directory TokioHostRuntime builds"));
+            let scope = runtime.open_scope(ScopeOwner::Service("directory_client"), None);
+            let compute = std::sync::Arc::new(ComputePool::new(plan.compute));
+            let transport = NativeDirectoryTransport::with_new_http_pool(runtime.clone(), scope.clone(), compute.clone(), 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
+            (runtime, scope, compute, transport, CancelToken::root())
+        };
         let mut state = Self {
             plugins,
             plugin_filter,
@@ -1375,6 +1440,16 @@ impl ShellState {
             directory_client: None,
             #[cfg(not(target_arch = "wasm32"))]
             directory_events_rx: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_runtime,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_scope,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_compute,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_transport,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_cancel,
             #[cfg(not(target_arch = "wasm32"))]
             pending_directory_commands: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -1696,15 +1771,23 @@ impl ShellState {
                 }
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
-                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                            // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async;
-                            // `queue_host_effects` itself is a plain `fn`, not worth making async for
-                            // this one call site, so this blocks the calling thread on the kernel
-                            // thread's response the same way every other non-async plugin call in
-                            // this file already does (`pollster::block_on`).
-                            if let Err(error) = pollster::block_on(plugin.load_app_document_pack(session.instance_id, &pack, &spr)) {
-                                eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
-                            }
+                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
+                            // 🎠️ terra-shell-unpark — this used to `pollster::block_on` the kernel
+                            // round trip right here. Unlike the two `glue.rs` call sites, `ShellState`
+                            // has no `Weak<RefCell<AppRuntime>>` to re-borrow after the `.await` (only
+                            // `AppRuntime` carries `self_weak`), which is exactly why an earlier packet
+                            // left this one alone rather than force a borrow that doesn't exist. It
+                            // doesn't need one: nothing here mutates shell state after firing, only logs
+                            // on failure, so `plugin` (`ProgramBridgeEntry` is `Clone`) and the already-
+                            // owned `pack`/`spr` from the matched `Effect` are enough to detach this into
+                            // a fully self-contained `spawn_app_task` future — `queue_host_effects`
+                            // itself stays a plain, non-async `fn`.
+                            let instance_id = session.instance_id;
+                            crate::spawn_app_task(async move {
+                                if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await {
+                                    eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
+                                }
+                            });
                         }
                     }
                 }
@@ -3121,6 +3204,16 @@ impl ShellState {
         }
     }
 
+    /// 🪪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): builds this shell's
+    /// `OperationContext` for one directory request — `cancel` is a `.child()` of `directory_cancel`
+    /// (this shell's ONE root, see that field's own doc), so cancelling `directory_cancel` once
+    /// transitively cancels every in-flight directory request/stream at once. No deadline yet (see
+    /// the packet report's honest gaps).
+    #[cfg(not(target_arch = "wasm32"))]
+    fn directory_ctx(&self) -> OperationContext {
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: self.directory_cancel.child(), capability: None }
+    }
+
     /// 📇️ ticket §4/§C6 — issues one `os.directory.*` command against the hub, dropping (with a
     /// warning) when no identity is signed in at all, else queueing on any transport/HTTP failure
     /// (the "same offline queueing behaviour as the React side" the brief asks for — React's worker
@@ -3137,7 +3230,7 @@ impl ShellState {
             self.queue_pending_directory_command(command);
             return;
         };
-        if let Err(error) = client.command(&command).await {
+        if let Err(error) = client.command(&self.directory_ctx(), &command).await {
             eprintln!("[DEBUG] wgpu shell directory command failed, queueing: {error}");
             self.queue_pending_directory_command(command);
         }
@@ -3160,9 +3253,10 @@ impl ShellState {
         if self.pending_directory_commands.is_empty() {
             return;
         }
+        let ctx = self.directory_ctx();
         let pending = std::mem::take(&mut self.pending_directory_commands);
         for command in pending {
-            if let Err(error) = client.command(&command).await {
+            if let Err(error) = client.command(&ctx, &command).await {
                 eprintln!("[DEBUG] wgpu shell directory command flush failed, re-queueing: {error}");
                 self.pending_directory_commands.push(command);
             }
@@ -3185,17 +3279,24 @@ impl ShellState {
     /// 🪪️ ticket §1 — spawns a background OS thread that calls `mint_or_restore` and reports back
     /// through `identity_bootstrap_rx`, polled every frame by `pump_directory_events`. Deliberately
     /// NOT `.await`ed inline in `boot()`: `mint_or_restore`'s native HTTP calls (`ureq`, blocking-
-    /// thread-per-call) can hang on an unresponsive (not just refused) hub, and this method's whole
-    /// point is that such a hang must never delay the first rendered frame (contract §C3: "never
-    /// blocks the UI thread"). No hub env ⇒ no-op, unchanged local-only behaviour.
+    /// thread-per-call, retired — see `directory_transport`'s own doc) can hang on an unresponsive
+    /// (not just refused) hub, and this method's whole point is that such a hang must never delay
+    /// the first rendered frame (contract §C3: "never blocks the UI thread"). No hub env ⇒ no-op,
+    /// unchanged local-only behaviour. The spawned thread has no ambient tokio context (bare
+    /// `std::thread` + `pollster::block_on`) — safe here because `directory_ctx()` never sets a
+    /// deadline on this path (see `NativeDirectoryTransport::http`'s doc on `ctx.deadline_ms`
+    /// requiring the shared `directory_runtime`'s own reactor); a future deadline on identity
+    /// bootstrap would need this to move onto `directory_runtime.spawn_scoped` instead.
     #[cfg(not(target_arch = "wasm32"))]
     fn bootstrap_identity(&mut self) {
         let Some(env) = resolve_identity_env() else { return };
         self.identity_env = Some(env.clone());
         let (tx, rx) = std::sync::mpsc::channel::<Result<IdentityOutcome, String>>();
+        let transport = self.directory_transport.clone();
+        let ctx = self.directory_ctx();
         std::thread::spawn(move || {
-            let client = DirectoryClient::new(NativeDirectoryTransport::new(), env.hub_url.clone());
-            let outcome = pollster::block_on(mint_or_restore(&client, &env)).map_err(|error| error.to_string());
+            let client = DirectoryClient::new(transport, env.hub_url.clone());
+            let outcome = pollster::block_on(mint_or_restore(&ctx, &client, &env)).map_err(|error| error.to_string());
             let _ = tx.send(outcome);
         });
         self.identity_bootstrap_rx = Some(rx);
@@ -3210,7 +3311,7 @@ impl ShellState {
             Ok(Ok(outcome)) => {
                 self.identity_offline = outcome.status == IdentityStatus::Offline;
                 self.identity = Some(outcome.identity.clone());
-                let client = DirectoryClient::new(NativeDirectoryTransport::new(), outcome.identity.hub_base_url.clone());
+                let client = DirectoryClient::new(self.directory_transport.clone(), outcome.identity.hub_base_url.clone());
                 client.set_token(Some(outcome.identity.session_token.clone()));
                 self.directory_client = Some(client);
                 if !self.identity_offline {
@@ -3230,12 +3331,16 @@ impl ShellState {
     }
 
     /// 📡️ ticket §3 — opens `/directory/ws` once per shell (guarded by `directory_events_rx` already
-    /// being set) on a dedicated background thread with its own current-thread tokio runtime
-    /// (`tokio-tungstenite`'s WS transport needs a real reactor — `pollster::block_on` alone does
-    /// not provide one; mirrors `🏪️store/🔄️sync`'s own native actor precedent per `📓️w1-d-report.md`).
-    /// Reconnect backoff is handled entirely inside `DirectoryStream` — this loop just sleeps
-    /// `after_ms` between dials, exactly the division of labor `DirectoryStream::recv`'s own doc asks
-    /// callers to honor.
+    /// being set) on a dedicated background thread. MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+    /// (terra-directory-and-run, sol-extended lease): that thread no longer builds its OWN private
+    /// `tokio::runtime::Builder::new_current_thread()` reactor — it calls `directory_runtime`'s
+    /// (this shell's ONE shared `TokioHostRuntime`) inherent `block_on` instead, still off the
+    /// render thread, still with a real reactor for `tokio-tungstenite`, but no second runtime in
+    /// the process. `block_on` (not `spawn_scoped`) specifically because `DirectoryStream`/
+    /// `DirectoryWsConnection` are deliberately `?Send` (see their own doc) — `block_on` drives a
+    /// future locally without requiring `Send`, unlike `spawn_scoped`. Reconnect backoff is handled
+    /// entirely inside `DirectoryStream` — this loop just sleeps `after_ms` between dials, exactly
+    /// the division of labor `DirectoryStream::recv`'s own doc asks callers to honor.
     #[cfg(not(target_arch = "wasm32"))]
     fn open_directory_stream(&mut self, identity: &Identity) {
         if self.directory_events_rx.is_some() {
@@ -3244,20 +3349,16 @@ impl ShellState {
         let (tx, rx) = std::sync::mpsc::channel::<DirectoryStreamMessage>();
         let base_url = identity.hub_base_url.clone();
         let token = identity.session_token.clone();
+        let runtime = self.directory_runtime.clone();
+        let transport = self.directory_transport.clone();
+        let ctx = self.directory_ctx();
         std::thread::spawn(move || {
-            let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
-                Ok(runtime) => runtime,
-                Err(error) => {
-                    eprintln!("[DEBUG] wgpu shell directory stream: tokio runtime build failed: {error}");
-                    return;
-                }
-            };
             runtime.block_on(async move {
-                let client = DirectoryClient::new(NativeDirectoryTransport::new(), base_url);
+                let client = DirectoryClient::new(transport, base_url);
                 client.set_token(Some(token));
                 let mut stream = client.stream(0);
                 loop {
-                    match stream.recv().await {
+                    match stream.recv(&ctx).await {
                         Some(DirectoryStreamEvent::Message(message)) => {
                             if tx.send(message).is_err() {
                                 break;

@@ -2485,3 +2485,417 @@ It did not merely add two property tests — it **temporarily reverted the fix a
 The archived `🔣️bench-native-FINAL.json` also read 7/8 — but that scoreboard was built on a weaker instrument in two places: budget 3 "passed" against a single physical loop wearing K labels, and budget 5 failed with 30 samples inside a 0.1 ms band. **Today's 7/8 is the same score on a genuinely different machine**: four real OS threads with measured 25/25/25/25 placement, and a budget-5 number with 102 ms of real spread behind it.
 
 **Budget 5 remains the one honest failure: p95 241 ms against an 8 ms target.** It moved 218 → 241 ms across two runs, which is ordinary variance at this magnitude and emphatically not a regression to chase. It was not tuned, not skipped, and not reframed. The design gap it measures is specific and actionable: nothing yet keeps interactive actors off shards saturated by CPU-bound ones, even though `Kernel::new(Thread, K, 2, 64)` now reserves two exclusive shards and `request_exclusive` exists to use them. That is the next packet, and for the first time it starts from a number rather than an assertion.
+
+### 🔓️ `bun install` FIXED — repo has been uninstallable on a clean box since 2026-08-06
+
+Verified myself rather than taking the peer's report:
+```
+bun install --dry-run
+error: Couldn't find patch file: 'patches/@electron-forge%2Fcore-utils@7.11.2.patch'
+```
+
+**The evidence chain, which made the fix safe rather than a judgement call:**
+- Root `package.json:249` declared `patchedDependencies` for `@electron-forge/core-utils@7.11.2`, added **2026-08-06** (`git log -S`).
+- `patches/` has **never been tracked in git** (`git ls-files | grep -c '^patches/'` → 0), and is **not gitignored** — it was simply never committed.
+- It does not exist on this box either. **So the patch is not applied anywhere, for anyone, right now.**
+- `@electron-forge/core-utils` is not a declared dependency at all; it arrives transitively via `compose/client/ui/desktop`.
+
+That last chain is what made removal safe rather than a trade-off: **you cannot regress behaviour by deleting the declaration of a patch that is not in effect.** Removing it changes nothing about installed packages; it only stops bun from refusing to resolve. Keeping it guaranteed failure for every clean checkout.
+
+Removed the whole `patchedDependencies` block (asserted first that the electron-forge entry was its ONLY key, rather than deleting blind). `bun install --dry-run` now completes in 2.66s; `git diff --stat` shows **3 deletions, no other churn**.
+
+**Seventh instance of this ticket's signature pattern, and the first outside Rust**: *the artifact was created, its registration was committed, the artifact never was.* Previous six were mount tables, workspace members, struct initializers, generated-file paths. This one is a package manager's patch table — same shape, different toolchain.
+
+**Consequence for exit item 3**: my earlier "parity is unblocked" claim was true only on this box (where `node_modules` predates the breakage). It is now true on a clean checkout too. If the desktop app genuinely needs that patch, it must be **committed to `patches/`** — flagged to peers rather than silently reinstated.
+
+## ✅ SLICE A COMPLETE — the WASI 0.3 ABI is landed and all four gates pass
+
+```
+gate 1  guest  cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest → exit 0
+gate 2  host   cargo check -p semio-framework-plugin-host --all-targets                                → exit 0
+gate 3  RUN    cargo test  -p semio-framework-plugin-host --lib schema_parity → 4 passed; 0 failed — exit 0
+gate 4  emit   cargo check -p semio-framework-plugin-describe --all-targets   → Finished in 25.65s, exit 0
+```
+
+### Gate 3 — the schema was right, the test was wrong, and only *running* it could tell
+
+On first execution the parity suite failed 3 of 4:
+```
+`host-async.blob-load` param `params` must reuse the SAME type as `blob-load.params`
+  left: Id(168)   right: Id(34)
+`emit`'s parameter must be THE SAME `effect` type `effects.effect` defines, not a copy
+  left: Id(187)   right: Id(103)
+```
+Read literally, that says the async world **copied** the payload records instead of sharing them — precisely the drift the `*-params` refactor exists to prevent, and a serious finding if true.
+
+It was not true. `interface host-async` genuinely does `use effects.{storage-read-params, …, blob-load-params, …, effect}`. But `wit-parser` materialises a `use`d type as a **fresh `TypeDef` whose kind is `TypeDefKind::Type(original)`** — an alias — so two genuinely-shared types compare unequal by raw `TypeId`. The test compared raw ids; it had to resolve alias chains to their root first.
+
+Fixed by me: a `canonical_type(resolve, ty)` helper that walks `TypeDefKind::Type` to the defining type, applied at all three comparison sites. **4/4 pass.**
+
+Two things worth keeping from this. First, it is the second time this same parity suite was **too strict** — the first was asserting `world actor` imports *only* `pure` when type-only `use` legitimately materialises six interfaces. A test that asserts something which cannot be true is worse than no test, and both defects were invisible until the suite actually executed: `--all-targets` **compiled** these tests clean while they were wrong. Second, it vindicates insisting on gate 3 separately from gate 2 rather than accepting "it compiles" as coverage — this ticket's most expensive recurring lesson, now paid forward instead of paid for.
+
+### Slice A final state
+One WIT package, two worlds: `world actor` (poll/compat, untouched, still what all 33 plugins build against) and `world actor-async` (WASI 0.3 — `async func`, `stream<u8>` HTTP bodies, `run(events: stream<event>)`), sharing every record by construction. `host-async` reuses the `*-params` records rather than redeclaring them, and a **running** parity test now enforces that mechanically. Toolchain: wasmtime **47.0.3**, wit-bindgen **0.57.1** (SDK **and** the scale fixture's private generator, which had to move in lockstep).
+
+## 🚀️ Final wave dispatched — five packets, no stopping
+
+| packet | mission |
+|---|---|
+| `interactive-isolation` | **budget 5**: stop interactive turns queueing behind CPU-bound ones. Given the measurement (p95 241 ms, valid instrument) and the unused primitives (2 reserved exclusive shards, `request_exclusive`, lane deadlines, count-blind `pin`), told to **design the mechanism itself** and forbidden from tuning the bench or threshold |
+| `web-effect-backbone` | the TS counterpart to the verified Rust `EffectBackbone`, conforming to it field-for-field with a cross-language parity test |
+| `directory-and-run` | the last synchronous holdouts: `AppChannelHost::exchange`'s blocking duplex, and the directory client's blocking-`ureq`-on-a-thread + `block_on` + **private tokio runtime** (tokio must exist only in the services crate) |
+| `shell-unpark` | the last UI-thread parks — scoped write access granted to registrar-only `Shell/🧊️component.rs`, with the `Rc<ShellIo>` split that resolves the `RefCell` borrow conflict which blocked an earlier attempt |
+| `web-shellhost` | scoped access to registrar-only `ShellHost/🟦️component.tsx`: non-blocking effect batches, bounded install concurrency, event-driven identity wait replacing a fixed 2 s sleep, abortable fetches |
+
+Both registrar-file grants carry the same hard conditions: surgical region-scoped edits, re-read from disk before each edit, exhaustive line-range reporting, and no reformatting of adjacent code — the two files are shared with live presence/hover/dock tickets.
+
+### ✅ shell-unpark — 3 of 3 named parks removed, and it corrected my analysis twice
+
+**All three targets are gone from the live tree** (census run by me, not taken from the report): the hot-reload `boot()` park and the `pump_sync_events()` park in `📦️glue.rs` both became `spawn_app_task` via `self_weak`, and `Shell/🧊️component.rs`'s `LoadDocument` park became a self-contained `spawn_app_task`. `📦️glue.rs:1517` now carries only a comment recording what used to block there.
+
+**Correction 1 — my census was wrong about what a "park" is.** I handed it five surviving non-test `block_on` sites and asked it to classify them. It read each call site and found my framing was too coarse:
+- `1783`/`1796`/`1806`/`1810` are **all inside one function**, `poll_pending_assets` — a single `ControlFlow::Poll`-coupled exclusion the brief already named, not four open questions.
+- `2467` (`run_smoke`) is a **headless CLI entry point with no winit loop at all** — never a UI-thread park.
+- `3206`/`3263` are inside **`std::thread::spawn` closures already on dedicated background threads** — also never UI-thread parks, and independently `directory-and-run`'s to retire.
+
+The distinction matters and I had blurred it: the objective is *the UI thread never waits on a plugin*, so a `block_on` on a background thread or in a headless binary is not the same defect. Grepping for `block_on(` finds parks; only reading the call site tells you which thread is blocked. **The census I published overstated the remaining work.**
+
+**Correction 2 — it declined my design sketch, correctly.** The brief specified an `Rc<ShellIo>` + `VecDeque<SyncEvent>` split to resolve the `RefCell` borrow conflict that defeated an earlier attempt. On reading the code it found the machinery unnecessary: `AppRuntime::self_weak` already covers both `glue.rs` sites, and the `Shell` site needs no shared state after firing (`ProgramBridgeEntry` is `Clone`; `pack`/`spr` are already owned). Building the sketch anyway would have meant sprawling edits across a **registrar-shared file** to satisfy a plan the code had already made redundant. The brief said "adapt if the code disagrees — the code wins", and it did exactly that instead of following instructions off a cliff.
+
+Edits are correspondingly tiny for a registrar-shared file: `Shell/🧊️component.rs` **1697–1718 only**; `📦️glue.rs` **1517–1556** and **1590–1601**. `ControlFlow::Poll` confirmed untouched (still `Poll` at 2270, no `Wait` anywhere). It reused the `self_weak`/`try_borrow_mut()` pattern already established at the `on_context_menu`/camera-dispatch call sites rather than inventing a second convention.
+
+**Honest position on verification**: it marked all three acceptance commands **UNRUN** and stopped its detached build and monitor when told, rather than letting them run unobserved and reporting numbers it had not seen. Its stated confidence comes from a manual signature check against the real type definitions and the pre-existing call sites using the same pattern — explicitly *not* a build result. It also declined to confirm the pre-existing `Dock` break it never reproduced, recording "not contradicted, not confirmed by me". Coordinator-run wgpu verification is in flight.
+
+### ✅ web-effect-backbone — the guest↔store path exists on BOTH sides now
+
+Coordinator-verified: `💻️os/📦️packages/🟦️typescript` → **206 passed / 1 failed (207)**, real exit 1 from the single remaining pre-existing failure.
+
+New `💻️os/🟦️effect-backbone.ts`: a **per-instance** `EffectBackbone` (never module-global — a process-global is exactly what was deleted and cannot survive pooled multi-instance actors), capability-gated sends on `messaging.backbone:<uri>`, latest-wins delta coalescing, and lossless reject-and-report send queues built on the already-landed `createBoundedMailbox` rather than a second queue implementation. It routes through `🟦️backbone-worker.ts`'s existing `open`/`send`/`publishPreview`/`preview` protocol instead of opening a second path to the hub, and **edited neither that file nor `🟦️component.ts`**. Its wire mirrors are machine-parity-tested against the Rust source, so drift fails loudly — the same protection `web-shardframe` added, and the direct answer to `Lane`'s casing having diverged silently earlier in this session.
+
+It also added its file to `includeSource`/`coverage.include` unprompted, which is what stops a new in-source suite running zero tests while reporting green.
+
+**It corrected my briefed baseline.** I stated 184 passed / **2** failed; the live tree was 184 / **1** — a concurrent session had already fixed `decodes the Rust-generated binary wire fixtures byte-identically`. I confirmed that independently: only `matches the Rust plan_workflow … decoded via wasm` remains, and my `bun 📜️script.ts wasm` build of the missing `pkg/` artifact is queued behind the build lock to clear it. That is the second time this wave a packet has caught a stale number in my brief, and both times measuring beat quoting.
+
+**Honest gap it declared:** the worker bridge can only feed the coalesced/delta path, not a lossless inbound "send", because the reused `publishPreview` wire carries no such distinction. Stated rather than papered over — and it is a wire-shape limitation, not a bug in the implementation.
+
+**Both halves of the backbone now exist**: the Rust host side (`⚡️effects/`, verified by name — `backbone_send_is_rejected_without_the_capability`, `backbone_delta_fanout_coalesces_a_burst_for_the_same_uri`) and this TypeScript counterpart conforming to it field-for-field. The gap that had **no path at all** since `set_host_backbone_channel` was deleted is closed on both platforms.
+
+### 🧷️ Fifth idling incident — and the rule that follows is structural, not disciplinary
+
+`interactive-isolation` ended its turn waiting on detached builds, as four packets did before it. I stopped treating this as executor error some time ago; this instance settles it. At the moment it detached, the box was at **35 concurrent cargo processes** (peer sessions running a large sweep alongside three of my packets), where **even a 600 s foreground timeout cannot finish a wgpu build**. "Run it in the foreground" had simply ceased to be an available option, and the harness's ~120 s auto-background did the rest.
+
+Recorded as rule 23: **the coordinator owns every acceptance build.** Executors write code and reasoning, run only cheap checks, and mark acceptance UNRUN. This costs nothing, because I have re-run every packet's acceptance myself all wave anyway — an executor's own number has never once been accepted as evidence on this ticket. What it buys is that a packet's *reasoning* — the part only it has — stops being lost to a build queue it cannot win.
+
+Its redirect asks for exactly that: the mechanism and why it works, confirmation the kernel keys off **observed behaviour rather than fixture profile names** (`hang`/`cpu`/`idle` exist only in the bench; keying on them would make the whole mechanism a lie outside it), the budget-3 non-regression argument, purity, exact line ranges, and an explicit warning if the file is mid-refactor — since I am about to build it. It was told **not to predict a p95**: a predicted number in a report is worse than no number.
+
+Measured before redirecting: `🎭️actor/🦀️component.rs` modified ~6 minutes prior, and **nothing else** under the actor/shard/wgpu trees — so the scheduler-side change exists and is narrow. Verification is queued behind a drain-gate that waits for builders to fall below 8 before spending a build.
+
+## 🔬️ BUDGET 5 HAS NEVER MEASURED WHAT IT CLAIMS — the fourth instrument defect, and the decisive one
+
+`interactive-isolation` delivered a sound mechanism and then flagged, unprompted, that **its gate structurally cannot fire for budget 5**. Chasing that admission down produced the real answer.
+
+**What it built** (one file, `🎭️actor/🦀️component.rs`, pure): `ActorMetrics::is_saturating` (≥2 turns and `wall_us_p95` ≥70 % of the actor's own `Budget::wall_ms` — **behaviour-derived, no fixture profile strings anywhere in the crate**), `ShardTable::pin_avoiding` sharing a refactored `least_loaded` with `pin` (empty avoid-set ⇒ byte-identical arithmetic, so budget 3 cannot regress), and `Kernel::activate` routing **only `Lane::Interactive` actors** through it. Coordinator-relevant: it verified budget 3's non-regression by *reading* `scale_bench::Env::activate` and finding it hardcodes `Lane::Background`, so the new branch is never taken there. **actor 70/70**, wasm32-unknown-unknown clean, purity grepped — the two commands it could complete are real; the rest it marked UNRUN rather than estimating.
+
+**The finding that matters.** Reading budget 5's loop (`📦️glue.rs` ≈986-1017):
+```rust
+let start = Instant::now();
+for actor in &cpu_actors { env.send(*actor, &Event::Wake); }  // wake all 40 cpu actors
+env.send(interactive_actor, &Event::AppCommandEvent{…});       // then the interactive command
+env.pump();                                                    // drives EVERY actor to completion
+let outcomes = env.drain();
+samples_ms.push(start.elapsed());                              // ← the whole round
+```
+`pump()`'s own docstring says it *"drives every actor with a non-empty mailbox **to completion**"*. **So every budget-5 sample ever recorded is the wall time of the entire round — 40 CPU actors plus the interactive one — not interactive command→patch latency.**
+
+That resolves the mystery of a number that would not move: 295 → 241 → 217.9 ms across a single-shard servant, K real shard threads, DRR grants and a live kernel loop. It could not move, because **40 actors busy-looping their declared milliseconds cannot finish in 8 ms**. The budget was unreachable by construction, and no scheduler work of any quality could have reached it.
+
+Compounding it: `Env::send_payload` hardcodes `lane: Lane::Background` for **every** bench envelope, so the "interactive" probe never travelled the interactive lane — which is also exactly why `interactive-isolation`'s `Lane::Interactive` gate could not fire, precisely as it reported.
+
+**Four instrument defects in one budget**, each hiding the next: one physical `ShardLoop` behind K labels (30 samples in a 0.1 ms band); a `faults == 0` criterion absent from the spec; the probe on the wrong lane; and the measured interval spanning the entire round.
+
+### The line I am holding
+Correcting an instrument to measure the quantity the budget **names** is required. Making a number look better is forbidden. `bench-instrument` is dispatched to time from the interactive command to that actor's own outcome — with the 40 CPU actors still saturating, just **outside** the measured interval — and to put the probe on `Lane::Interactive`. It may not touch the 8 ms threshold, the fixture, the actor count or the round count.
+
+It must also state plainly that **the old and new numbers are not comparable** (round wall-time vs command→patch latency) and must **predict the expected sample behaviour before I measure** — a tight cluster after the fix would itself indicate a *remaining* instrument problem, and I want that prediction on record so it functions as a check rather than a rationalisation. If a correct measurement still exceeds 8 ms, that ships as a failure.
+
+### ✅ web-shellhost accepted — and the last "pre-existing failure" has a real root cause
+
+**web-shellhost**: all 5 findings confirmed live and fixed in `ShellHost/🟦️component.tsx` (registrar-shared, scoped grant): `invokeExtension` extracted to module scope and dispatched through the **already-tested** `serializePerActor` without awaiting in the loop, so one slow extension no longer stalls the batch; boot install fan-out bounded and aborting on unmount; the fixed 2 s identity `setTimeout` replaced by `waitForEvent` raced against `AbortSignal.any([unmount, timeout(2000)])`; three `/extensions/install` fetches on a component-lifetime controller; presence beat parallelised per document with latest-wins. **325/336**, and the 11 remaining failures are an **exact subset** of the 15-name pre-existing baseline recorded in this ticket's own `terra-H1-vitest-final.txt` — named-set comparison, not counts. Two lease-requests filed (export `poolConcurrency` rather than keep its documented duplicate; wire real test coverage).
+
+### 🔍️ The `plan_workflow` failure: not "pre-existing", a broken build
+
+I tried to build the missing `pkg/` artifact that a peer session had diagnosed as the cause. It **fails**:
+```
+error: The "wasm_js" backend requires the `wasm_js` feature for `getrandom`
+error: could not compile `getrandom` (lib)
+```
+The repo **does** configure that backend — in `.cargo/config.toml`'s wasm32 rustflags. But this ticket already documented the hazard, in V1a's entry: **`RUSTFLAGS` REPLACES rather than merges with `.cargo/config.toml` rustflags**, which is why deny-on-warnings must use clippy's trailing `-- -D warnings`. The wasm-pack path sets `RUSTFLAGS` and so silently drops the `getrandom_backend` cfg (along with `-Z threads=8` and mold).
+
+So the artifact was never "not built yet" — **the build has been broken**, and a test failure has been carried for over a day as "pre-existing wasm-artifact" when it had a specific, fixable cause one layer down. Two independent sessions classified it without diagnosing it; the peer got as far as "`pkg/` was never built", and this is the reason why.
+
+Routed out-of-band with the full diagnosis, `📌️important.md` rule 6 (do not edit `.cargo/config.toml` or add per-crate `RUSTFLAGS` — the fix belongs in the build helper's env handling, preserving existing flags), and an exclusion list of every path this ticket's live packets hold. Not fixed here: it is build infrastructure, unrelated to the async rewrite, and the machine is at 31 concurrent cargo processes.
+
+**Generalisable point, since this is the second time today the same shape appeared:** *"pre-existing failure"* is a classification, not a diagnosis. Both times — the `plan_workflow` wasm test, and the four-in-isolation SDK failures — the honest move was to keep the label only until someone asked *why*, and both times the answer was specific and actionable rather than ambient.
+
+## 📌️ W5 CONSOLIDATION — async-first rewrite, coordinator-verified state
+
+Every number below was re-run by me; no packet's own figure is quoted as evidence.
+
+### Landed and verified
+
+| area | evidence |
+|---|---|
+| **Async interface crate** `semio-framework-async` (PURE) | `OperationContext`, tri-state `CancelToken` + `child()`, `Scope`/`ScopeDrainReport`, `ChannelPolicy`, `ThreadPlan`/`ThreadBudget`, `HostAsyncRuntime`. **16/0**, wasm32-unknown-unknown clean, purity grep clean. Member + alias applied by me |
+| **Services crate** `semio-framework-os-services` (tokio confined) | `TokioHostRuntime` (takes `ThreadPlan`, never reads core count), `ScopeTable` with honest `leaked` accounting, one `TimerWheel` (pure `WheelCore` + driver), semaphore-bounded `ComputePool`, `HttpPool`, `StorageScheduler`, `EventRouter`, `CompletionSink`. **26/0**, clippy `-D warnings` clean, **no tokio type in any public signature** |
+| **WASI 0.3 ABI** | one package, two worlds (`actor` poll + `actor-async`), `host-async` reusing the `*-params` records, `stream<u8>` HTTP bodies, `run(events: stream<event>)`. **All 4 gates**: guest parse ✅, host parse ✅, **parity tests EXECUTE 4/4** ✅, describe crate ✅ |
+| **Toolchain** | wasmtime **22.0.1 → 47.0.3** (86/0/1 preserved, descriptor byte-identical across versions on fixed input), wit-bindgen **0.36.0 → 0.57.1** (SDK **and** the scale fixture's private generator) |
+| **Async effect execution** | `AsyncEffectExecutor` + per-instance `EffectBackbone`. **115/0/1**, with properties verified **by name**: revocation cancels only its own ops, stale-generation completions dropped, `Park` buffers and resumes in order, completion bursts bounded, quota denial typed not panicking, deltas coalesced per URI |
+| **Live parallel kernel** | `ParallelRuntime`: real `submit`→`tick`→`Grant`→**`Kernel::complete`** over **K real `ShardExecutor` OS threads**, K from `thread_plan`, traps synthesised so the failure ladder finally sees them |
+| **Shard wire** | `ShardFrame{Register,Unregister,Grant,Envelope}`, DRR budgets travelling in `Grant`, `TURN_BUDGET`/`JOB_STEP_BUDGET`/`budget_for` **deleted** |
+| **serde sibling sweep** | 6 internally-tagged newtype variants → struct variants; regenerated TS mirror has **zero** `} & ` impossible intersections (which is what unblocked the web adopting the wire) |
+| **Registration race** | `ShardExecutor::register` now acks — a genuine happens-before. Found by **reverting the fix and watching the new property tests fail with the exact bench fault text** |
+| **Bench (native, K=4)** | **7 of 8** budgets: registry 2.85 ms / 0 instantiations; cold boot 0 faults; **perShard {25,25,25,25}**; 2550 actors @ 598 MB; hang killed, siblings restored; suspend→resume identical hash **and genuinely resumed**; capability revoked, actor survived |
+| **TypeScript** | glue **87**, actor **29→40**, kernel **29** (was in NO gate at all), os **206/1**, dev **17**, PluginRuntime **26**, ShellHost **325/336** (11 = exact subset of the 15-name baseline) |
+| **Web async** | SSE-primary backbone with bounded lossless outbox; sustained-health backoff reset (both transports); directory calls all signal+timeout so a hung server degrades to offline instead of hanging boot; lane-priority turn scheduler; self-ticking watchdog (had **zero** production callers); `failShard` clearing routing; memory-aware LRU; `ShardFrame` on the worker wire; per-instance TS `EffectBackbone` |
+
+### Honest remaining
+
+1. **Budget 5 — the instrument, not the runtime.** Now known: every sample ever recorded timed the **whole round** (40 CPU actors + interactive) via `pump()`-to-quiescence, and the probe travelled `Lane::Background`. Correction in flight; **old and new numbers will not be comparable**, and if a correct measurement still exceeds 8 ms that ships as a failure.
+2. **`directory-and-run`** in flight — `AppChannelHost::exchange`'s sync duplex, and the directory client's blocking `ureq` + `block_on` + **private tokio runtime** (the one remaining tokio outside the services crate).
+3. **`shell-unpark` verification** queued — its 3 named parks are gone (census by me); the 5 survivors it classified are asset-polls coupled to `ControlFlow::Poll`, a headless CLI entry, and two background-thread sites owned by `directory-and-run`.
+4. **`pkg/semio_framework_os.js` build is BROKEN** (`RUSTFLAGS` clobbering `.cargo/config.toml`'s `getrandom_backend`), routed out-of-band — root cause of the last os-package failure.
+5. **Not started**: 23 remaining descriptors (peer-gated), Z1 zero-warnings ×3 targets, parity 58/58, web benches, launch-seed entries.
+6. **~253 tests never run** repo-wide (cad-js broken by a stale package rename; two infinite-canvas projects green against zero files) — routed out-of-band.
+
+### The wave's methodological result
+
+Five packets ended a turn idling on detached builds. The cause is structural — the Bash tool auto-backgrounds at ~120 s, a subagent's detached job cannot report across its turn boundary, and above ~20 concurrent cargo processes even the 600 s maximum cannot finish a wgpu build. **Rule 23 moves every acceptance build to the coordinator**, which costs nothing because no executor figure has ever been accepted as evidence here anyway.
+
+Four instrument defects were found in a single budget, each hiding the next. Three separate "pre-existing failure" labels dissolved into specific causes once someone asked why. And four times a too-narrow or silently-failing query produced a confident wrong picture — three of which would have misjudged **another session's** work. Rules 19–23 exist so the next session inherits the checks rather than the anecdotes.
+
+### ✅ shell-unpark verified — the UI thread no longer waits on a plugin
+
+Coordinator-run: `cargo check -p semio-framework-os-renderer-wgpu --lib` → **WGPU_EXIT=0, 0 errors**.
+
+That closes the packet the executor could not verify itself (it marked all three commands UNRUN rather than reporting numbers it had not seen). Combined with my own park census, the position is: **all three named UI-thread parks are gone** — hot-reload `boot()` and `pump_sync_events()` in `📦️glue.rs` both moved to `spawn_app_task` via `self_weak`, and `Shell/🧊️component.rs`'s `LoadDocument` park became a self-contained `spawn_app_task` needing no `AppRuntime` re-borrow at all.
+
+The surviving `block_on` sites are **not** UI-thread parks, which its call-site reading established and my grep-based census had wrongly implied: four are one function (`poll_pending_assets`, coupled to `ControlFlow::Poll`, explicitly out of scope), one is a headless CLI entry with no winit loop, and two sit inside `std::thread::spawn` closures on dedicated background threads and belong to `directory-and-run`.
+
+Total edits in the registrar-shared file: **22 lines** (`Shell/🧊️component.rs` 1697–1718), because it declined the brief's `Rc<ShellIo>` sketch on finding the existing `self_weak` pattern already sufficient. `ControlFlow::Poll` confirmed untouched.
+
+### ✅ interactive-isolation — scheduler primitives verified (70/70)
+
+Coordinator-run: `cargo test -p semio-framework-actor` → **70 passed / 0 failed, exit 0** (69 baseline + its 1 new placement test). Its own wasm32-unknown-unknown check and purity grep were already real and clean.
+
+What landed, in **one file** (`🎭️actor/🦀️component.rs`), all pure:
+- `ActorMetrics::is_saturating(&self, budget)` — true once an actor has ≥2 turns **and** its own `wall_us_p95` reaches ≥70 % of its own `Budget::wall_ms`. **Behaviour-derived**: no `hang`/`cpu`/`idle` profile strings anywhere in the crate, so the mechanism means the same thing outside the bench as inside it. That constraint was explicit in the brief and it honoured it.
+- `ShardTable::pin_avoiding(actor, avoid)` sharing a refactored `least_loaded` with `pin` — with an empty avoid-set the arithmetic is **byte-identical** to before, which is the structural reason budget 3's 25/25/25/25 cannot regress.
+- `Kernel::activate` routes **only `Lane::Interactive`** actors through it, fed by `saturated_shards()` reading already-tracked metrics — **no new state, no clock**.
+
+It proved budget-3 non-regression by *reading* `scale_bench::Env::activate` and finding it hardcodes `Lane::Background`, so the new branch is never taken there — and then reported the uncomfortable corollary itself: **its gate therefore cannot fire for budget 5 either.** That admission is what led to discovering the four-deep instrument defect. A packet that had quietly claimed success would have left the real problem buried.
+
+Honest gaps it declared: placement-time only (no live migration of an already-pinned actor), and plugin-host/wgpu compiling against its diff genuinely unverified — both now running from this session.
+
+### 🔴️ Cross-crate red found by verification — attributed correctly, not to the packet under test
+
+Verifying `interactive-isolation`'s downstream impact, both consumers failed:
+```
+cargo test  -p semio-framework-plugin-host --lib -- --skip schema_parity → HOST_EXIT=101
+cargo check -p semio-framework-os-renderer-wgpu --lib                    → WGPU_EXIT=101, 3 errors
+```
+**The failures are not its.** Both are the same two errors, in `semio-framework-os-kernel`:
+```
+error[E0061]: `client.me()` — argument #1 of type `&OperationContext` is missing
+error[E0061]: `client.mint_session(&env.user_email)` — argument #1 of type `&OperationContext` is missing
+  --> 📇️directory/🪪️identity/🦀️component.rs:149, :167
+```
+Attribution by timestamp rather than inference: `📇️directory/🔌️client/🦀️component.rs` modified **2.2 min** ago and `🏃️run/🦀️component.rs` **9.8 min** ago (both `directory-and-run`, live), while `📇️directory/🪪️identity/🦀️component.rs` has not been touched in **36 hours**. So the in-flight packet added `&OperationContext` to the client — which is exactly what it was asked to do — and the call sites in a **sibling module outside its owned scope** have not caught up.
+
+This is the fifth time this ticket has met the signature *"the artifact changed, its registration did not"* — but the first time we generated it ourselves rather than absorbing it from a peer, which is worth recording plainly rather than filing under someone else's lesson.
+
+**Scope extended** to `📇️directory/🪪️identity/**` so it can repair its own fallout instead of filing a lease and waiting, with the standing conditions (surgical edits, re-read before each edit, exhaustive line ranges) and an instruction to stop and report if the fallout reaches further rather than widening again unilaterally.
+
+One substantive constraint attached: **thread a real `OperationContext`, do not pass a default to make it compile.** An empty context at the identity/session call sites would compile cleanly and silently sever cancellation, deadline and trace propagation precisely on the path most worth cancelling at shutdown — a green build concealing the exact regression the packet exists to prevent. It was also authorised to run `cargo check -p semio-framework-os-kernel --lib` itself despite the coordinator-owns-builds rule, since the tree is red *now* and that gate is cheap.
+
+**`interactive-isolation` is therefore not yet cleared downstream** — its actor crate is verified (70/70) but plugin-host/wgpu could not be evaluated against its diff while an unrelated red sat upstream of it. Re-verification is queued behind the fix.
+
+### 🔧️ bench-instrument delivered — budget 5 will finally measure command→patch latency
+
+Its diagnosis matched mine independently and added the mechanism: `pump()`'s `wait_for_outcomes(decision.run.len(), …)` **blocks until all 41 granted outcomes arrive**, and `start.elapsed()` was taken after it returned. So every sample was the round's wall time.
+
+The fix, entirely inside `//#region 🔖️ScaleBench`:
+- **`Env::pump_tracking(target)`** — same tick-drives-to-completion loop, but waits **one outcome at a time** and stamps `Instant::now()` the moment the *target's* own `ShardOutcome` arrives. The other 40 CPU actors keep running and keep contending on the real `ShardExecutor` threads; they simply no longer gate the clock. That preserves the load the budget specifies while removing it from the measured interval — the distinction that makes this a correction rather than a weakening.
+- **`Env::send_payload_lane(actor, payload, lane)`**, with `send_payload` delegating at `Lane::Background`, so **every other budget's call site is byte-for-byte unchanged**. Budget 5's round loop is the only `Lane::Interactive` caller.
+- Round loop rewritten: the 40 `Wake`s are submitted **before** `start`; `start` is taken immediately before the interactive send; `pump_tracking` replaces `pump()`.
+- It also corrected a **stale doc comment on `pump()` claiming "this is the instrument budget 5 measures"** — the sentence that would have misled the next reader exactly as it misled everyone until now.
+
+**Two things it did that I want on record as the standard:**
+1. **A pre-registered prediction, before I measured**: expect genuine spread (shard assignment is fixed across rounds, but the interactive actor's queue position among its shard-mates is subject to real OS scheduling jitter); expect a p95 far below the old 150–240 ms band; but **not necessarily under 8 ms** — and *"if samples cluster tightly again, that would itself indicate a remaining instrument problem, not a pass."* A prediction filed before the number exists is a check; filed after, it is a rationalisation.
+2. **An honest limitation**: fixing the *envelope's* lane does **not** make `interactive-isolation`'s placement gate reachable, because that gate reads the actor's **activation** lane, and `Env::activate` hardcodes `Lane::Background` for every budget — out of scope here. So the two packets do not yet compose, and it said so rather than implying a combined win.
+
+**Upstream red cleared first**: `cargo check -p semio-framework-os-kernel --lib` → **exit 0, 0 errors**, so `directory-and-run` repaired the `&OperationContext` call sites in the scope I extended to it. Bench now running against the corrected instrument.
+
+### ⏳️ Bench blocked again — second fallout wave from the same signature change
+
+The corrected budget-5 instrument is **in the tree but not yet measured**: `bench … --shards 4` → `BENCH_EXIT=1`, because `semio-framework-os-renderer-wgpu` fails to compile with **7 × E0061, all `&OperationContext` missing, all in `🧱️elements/Shell/🧊️component.rs`** (`:3148, 3173, 3205, 3206, 3221, 3264, 3268`).
+
+Same root as the first wave — `directory-and-run` threading `OperationContext` through the directory client — and its `🪪️identity` fix genuinely worked (`os-kernel --lib` → **exit 0**, verified). The wgpu path simply has its own call sites, in a different file.
+
+Two of them are recognisable from this ticket's own park census earlier today: `:3206` is `pollster::block_on(mint_or_restore(&client, &env))` and `:3264` is the `runtime.block_on(…)` wrapping a **private tokio runtime**. Those were always that packet's to convert — `shell-unpark` had already classified them as *"not UI-thread parks, and `directory-and-run`'s to retire"*. The only surprise is which file they live in, and the earlier classification is what let me attribute this in one step instead of suspecting the instrument change.
+
+**Scope extended a second time**, now to registrar-only `Shell/🧊️component.rs`, with the conditions `shell-unpark` operated under successfully (surgical region-scoped edits, re-read before each edit, exhaustive line ranges, `--lib` only because another session's `Dock` test-module break lives in that file's `--all-targets` path). It was also told that if fallout reaches a **third** file it must stop and report the full list rather than widening again unilaterally — scope should grow by decision, not by drift.
+
+Three constraints attached, in priority order: **retire the private tokio runtime at `:3264` rather than merely adding an argument** (tokio outside `semio-framework-os-services` is the containment this whole architecture rests on, and this is the last instance in the tree); **thread a real `OperationContext`, never a default** (an empty one at `mint_or_restore` would compile, pass, and silently sever cancellation on shutdown-sensitive identity paths — a green build hiding the exact regression the packet exists to prevent); and it may run the wgpu `--lib` gate itself, with an explicit 600 s timeout and instructions to report **unrun** rather than detach if it exceeds that.
+
+**Status of budget 5, stated precisely:** the instrument correction is written and reviewed but **unmeasured**. No number exists yet. The prediction filed before measurement — real spread, p95 far below the old 150–240 ms band, but not necessarily under 8 ms — remains untested and stays on record as a check.
+
+### ⚠️ Disk emergency during D4 — 78 GB → 11 GB, halted correctly
+
+D4 stopped after 2 of 5 plugins because free space hit **11 GB**, honouring the 60 GB floor its brief set rather than pushing on and failing mid-build. That is the behaviour the floor exists for, and the first packet to actually exercise it.
+
+Reclaimed **62 GB** from my own completed packets (`🎯️target-v1b` 27 G, `-d3` 19 G, `-d2` 6.2 G), each verified as a cargo cache before deletion. **Peer dirs left untouched** — `🎯️target-kl` is the async session's live `kernel-loop`, and `witb`/`u1`/`dr`/`sr`/`w0`/`s1` are not mine to judge. Free space 11 GB → **62 GB**.
+
+D4's own footprint was 6.9 GB against ~119 GB of accumulated target dirs in this ticket folder — **the pressure was cumulative, not any one packet's fault.** Per-packet target dirs remain correct for lock contention and remain expensive for disk; the reconciliation is that finished packets' caches must be reclaimed promptly, not at session end.
+
+### 📋️ D4 result: 2/5 verified, 0 ratcheted — and it declined to ratchet on principle
+
+`🌀️procedural` and `🌍️gis`: `describe` exit 0, both descriptors landed at the owner root, **both confirmed real** (`pluginId` = `procedural`/`gis`, not `assembly-failed`). Neither ratcheted — procedural's test build fails on **36 pre-existing unrelated compile errors** (`ArtifactStore::new()` `Result`-unwrap fallout, already known), and gis never got its run before the disk floor. `energy`/`imperative`/`layout` untouched.
+
+It also rode out a transient kernel-red blip from a peer's `OperationContext` refactor, confirmed it unrelated, and continued — correctly distinguishing a peer's moving target from its own breakage.
+
+### 🔍️ Git index discrepancy it caught and could not fix
+
+The **index** has `"procedural"` staged into `DESCRIPTOR_MIGRATED_PLUGINS` (from an earlier session); the **working tree** does not. Confirmed by `git diff --cached`:
+```
+-  … "animate", "draw"];
++  … "animate", "draw", "procedural"];
+```
+D4 reverted its own working-tree edit to net zero and reported the staged entry rather than touching it — correct under the no-git-modifying-commands rule, which forbids unstaging as much as committing.
+
+**Assessment**: low risk *today* — procedural now has a real committed descriptor, and its `descriptor_is_fresh` cannot run at all while those 36 compile errors stand. But when someone repairs them, that test executes for the first time against an entry nobody verified, and a failure will read as a fresh regression rather than a pre-existing unknown. **Flagged for whoever commits: the working tree (11 entries, no procedural) is the intended state.**
+
+Descriptors now **23 committed, 11 ratcheted, zero placeholders** — the emitter guard is holding across two further emissions.
+
+### ✅ Launch entries registered — closing a CLAUDE.md obligation I had deferred and forgotten
+
+A peer warned that `.vscode/launch.json` **silently lost four of their entries** — rewritten by another session with no conflict and no error, and nothing surfaces it because `bun nx run` keeps working. Checked my own: **`bench` and `verify rust-warnings` were registered nowhere.** Not lost — I deferred them earlier ("the seed is regenerated, so adding entries for not-yet-existing verbs would bake a broken launch.json") and never came back once the verbs existed.
+
+That deferral was defensible at the time and became a **standing violation of repo law** the moment the commands worked: *"All devs are using `launch.json` and never use the cli. You MUST register all executable commands there."* A verb no dev can reach through their launcher is, for this repo's purposes, not shipped.
+
+Added to `.vscode/🧩️launch.seed.jsonc`, following the existing group/order conventions:
+
+| entry | group | order |
+|---|---|---|
+| `⚖️gate🧵️plugin-runtime🖥️native` | 4_gate | 411.0 |
+| `⚖️gate🦀️zero-warnings🖥️native` | 4_gate | 411.4 |
+| `⚖️gate🦀️zero-warnings🌐️wasip2` | 4_gate | 411.41 |
+| `⚖️gate🦀️zero-warnings🎭️actor-wasm` | 4_gate | 411.42 |
+
+Those orders match `📓️design-workforce.md` §5's own plan (`⚖️gate🦀️zero-warnings🌐️wasm` at 411.4, `⚖️gate🧵️plugin-runtime…` at 411), split three ways because the warnings gate turned out to need one entry per target rather than one for all.
+
+Verified rather than assumed at each step: seed diff **44 insertions, 0 deletions** (purely additive — nobody else's entries touched, which matters given the peer's loss); `plugin-registry:generate` exit 0; `launch.json` went **0 → 4** matching entries by name.
+
+**Exit-checklist item 7's `launch.json` clause is now met.** The peer's own four lost entries are theirs to restore — I checked and the four `scale-fixture` entries from this ticket are intact, so nothing of ours went missing in the same incident.
+
+Two file-handling notes from them worth keeping: the seed is **JSONC**, so a plain `json.load` dies on the leading comment (strip `^\s*//.*$` first), and it is one of the few hand-maintained files with **no generator guard** — no equivalent of the `#[path]` test that would catch silent loss.
+
+### ✅ Tree green again — and tokio containment verified INDEPENDENTLY, not taken from a report
+
+```
+cargo check -p semio-framework-os-renderer-wgpu --lib → DR_WGPU_EXIT=0, 0 errors
+cargo check -p semio-framework-os-kernel        --lib → exit 0, 0 errors
+```
+`directory-and-run` repaired both fallout waves (`🪪️identity`, then the 7 sites in `Shell/🧊️component.rs`) inside the scope I extended to it.
+
+**The design question I cared about — answered by measurement, not by asking.** A green build cannot tell you whether a private tokio runtime was *retired* or merely *given an argument*. Searching for live constructions outside `🛎️services`:
+
+| location | verdict |
+|---|---|
+| `Shell/🧊️component.rs:46, :1058` | **comments only** — `:46` records the `Builder::new_current_thread()` that `open_directory_stream` *used* (past tense). **The private runtime is genuinely gone.** |
+| `🛢️db/🐘️postgres`, `🛢️db/🌐️neo4j` | live, and legitimately so — database drivers, pre-existing, never in this wave's scope |
+| `🔄️sync`, `🌉️mcp/🚚️transport` | live, pre-existing, separate subsystems |
+
+So **tokio containment holds where this architecture claims it**: the plugin-runtime path (kernel → shard → host services) constructs tokio only inside `semio-framework-os-services`. The surviving runtimes are database and gateway subsystems that were never part of the claim. That distinction is worth stating precisely rather than declaring a blanket "tokio is confined", which would be false.
+
+**Method note, since it nearly bit me a fifth time:** my first containment grep used `Runtime::new\(\)` and matched **`MockGuestRuntime::new()`** — eight false positives that, read carelessly, would have suggested tokio runtimes scattered through the shard layer. Re-run with an anchored pattern (`tokio::runtime::(Runtime|Builder)`, `Builder::new_(multi_thread|current_thread)`) it resolves to 12 real hits, of which the two in `Shell` are comments. Rule 21 exists for exactly this; I applied it to myself.
+
+Bench now running against a green tree with the corrected budget-5 instrument.
+
+### ✅ directory-and-run — the last sync holdouts converted, and the honest gap is the valuable part
+
+`Shell/🧊️component.rs` compiles clean, all 7 sites done; both my check and its own agree (`wgpu --lib` exit 0, warnings only in the unrelated `Dock` module).
+
+**On the tokio runtime, its answer matches my independent grep and then improves on it.** `open_directory_stream` no longer constructs anything: it captures `self.directory_runtime.clone()` — an `Arc<TokioHostRuntime>`, the services crate's own type, minted exactly once in `ShellState::new` — and calls its inherent `.block_on(...)` rather than `spawn_scoped`. The reason is a real constraint, not a shortcut: `DirectoryStream`/`DirectoryWsConnection` are deliberately `?Send` because the browser transport closes over non-`Send` `wasm_bindgen::JsValue`, so `spawn_scoped`'s `Send` bound is **unsatisfiable** there, while `block_on` drives the future locally without it. So the containment claim holds in the form that matters — tokio is *owned* by the services crate and merely *used* here — and the deviation from "everything goes through `spawn_scoped`" is explained rather than glossed.
+
+**No default or empty `OperationContext` anywhere.** All 7 sites route through one `directory_ctx()` helper built from `self.directory_cancel.child()` — a genuine child of a shared root, which is precisely what I warned against faking. It would have been trivially easy to pass a fresh empty context, compile green, and be technically able to say "contexts are threaded".
+
+**And then it named the gap that makes the difference:** nothing ever calls `.cancel()` on `directory_cancel`. **Cancellation is architecturally live but inert** — the plumbing is correct end to end and no shutdown hook is wired to pull it. A second, smaller gap: `deadline_ms: None` at every site, so no deadline path is exercised. Both are recorded as named follow-ups rather than discovered later by someone trusting the word "propagates".
+
+That distinction — *wired* versus *effective* — is the same one this ticket has paid for repeatedly (a heartbeat watchdog with zero callers, a metrics publisher with no caller, `descriptor_is_fresh` reading the wrong path). This is the first time a packet volunteered it about its own work **before** anyone measured.
+
+Budget: ~524k tokens, 342 tool calls — by far the wave's largest, driven by two unforeseen fallout waves in registrar-shared files rather than by its own scope.
+
+## 🎯️ BUDGET 5 MEASURED HONESTLY AT LAST — p95 140.9 ms, and it FAILS
+
+`bench plugins --renderer native --count 50 --extensions 50 --shards 4` → exit 0, archived `🔣️bench-instrument.json`.
+**`1:pass 2:pass 3:pass 4:pass 5:fail 6:pass 7:pass 8:pass`**
+
+```
+budget 5   p95 = 140.911 ms   threshold 8.0 ms   →  FAIL
+           min 82.333   max 142.356   spread 60.023 ms
+           30 rounds, 0 round faults
+```
+
+### The prediction, filed before measurement, scored honestly
+
+| predicted | actual |
+|---|---|
+| real spread, not a constant | ✅ **60.0 ms** spread (the broken instrument gave 0.1 ms) |
+| p95 "far below" the old 150–242 ms band | ⚠️ **partly** — 140.9 vs 217.9/241.2 is a ~35 % reduction, not the order of magnitude implied |
+| **not necessarily under 8 ms** | ✅ correct — it is **17.6× over** |
+
+Scoring my own agent's prediction against the result rather than quietly dropping it: two of three held, and the miss (how far it would fall) is itself informative — it says the remaining latency is *not* mostly measurement overhead.
+
+### What this number means, precisely
+
+It is the **first honest measurement of budget 5 in this ticket's history**. Every earlier figure (295, 241, 217.9) timed the whole 41-actor round to quiescence; this one times the interactive command to that actor's own outcome, with the 40 CPU actors still saturating real `ShardExecutor` threads but outside the clock. **The numbers are not comparable and the earlier ones should not be cited as a baseline.**
+
+And it is a **real design result, not an artefact**: an interactive turn still waits ~82–142 ms because its actor is pinned to a shard shared with ~10 CPU-bound actors and cannot start until the turns ahead of it finish. K parallel shards distribute *work*; they do not protect *latency*.
+
+### The one remaining instrument variable — named, not silently fixed
+
+`interactive-isolation`'s placement gate keys off an actor's **activation** lane, but budget 5 selects its probe from budget 4's live 2550-actor fleet, all activated `Lane::Background`. So the isolation mechanism **still cannot fire**, exactly as that packet reported about its own work.
+
+I added `Env::activate_on_lane(…, lane)` with `activate()` delegating at `Lane::Background` — **byte-identical behaviour for every budget**, verified (`wgpu --lib` exit 0, 0 errors). It is a seam, deliberately unused. Wiring budget 5's probe through it means changing how budget 4's shared fleet is activated, which is real surgery on another budget's setup and belongs to a scoped packet, not to a coordinator editing at the end of a long wave.
+
+**So the open question is stated exactly**: *does interactive-lane activation plus saturation-aware placement bring command→patch under 8 ms?* Unknown — the mechanism is built and verified (70/70) but has never been exercised. That is a far better position than this wave started from, where the question could not even be asked because the instrument measured the wrong quantity.
+
+### Everything else on the bench passes
+
+1 registry (2550 records, 0 instantiations) · 2 cold boot, 0 faults · 3 **perShard {25,25,25,25}** · 4 2550 actors live · 6 hang killed, siblings restored · 7 suspend→resume identical hash, genuinely resumed · 8 capability revoked, actor survived.
+
+### ✅ D4 finished — 5/5 real descriptors, and it found two genuine data bugs
+
+**`🔋️energy`**: `describe` failed with *"no declared codec capability owns the runtime claims"*. Root cause was a real mismatch — the declared `extension` claim said **`"model"`** while the runtime derives **`"energy"`** from `EnergyModelSnapshot::EXTENSION`. Fixed, re-ran, EXIT 0.
+**`📜️imperative`**: same class, different capability — *"no declared composer capability"*. The native composer row (`s.imperative@1/*`) was **missing entirely** from `definition()`. Added, re-ran, EXIT 0.
+
+Both are exactly the defect the capability-claim rule exists to catch, and both were invisible until `describe` actually ran. Neither is a channel migration; both are one-line data corrections inside the plugin's own declarations.
+
+### 🔒️ Ratchet advanced to 13 — coordinator-run, on measured passes only
+
+```
+cargo test -p semio-s-plugin-energy --lib descriptor_is_fresh → EXIT 0, 1 passed
+cargo test -p semio-s-plugin-layout --lib descriptor_is_fresh → EXIT 0, 1 passed
+```
+`DESCRIPTOR_MIGRATED_PLUGINS` = note, sequence, vcs, forms, sourcing, dag, mathematical, writer, reasoning-mindmap, animate, draw, **energy**, **layout**.
+
+**Three plugins have real descriptors but cannot be ratcheted, all for the same reason and none of it descriptor-related** — their test crates do not build:
+| plugin | pre-existing test-compile failure |
+|---|---|
+| `🌀️procedural` | 36 errors, `ArtifactStore::new()` `Result`-unwrap fallout |
+| `🌍️gis` | `no field `definition` on type `AppDefinition`` |
+| `📜️imperative` | `cannot find type `App` in this scope` |
+
+**`imperative`'s is a bug I have already fixed twice today.** Earlier this session I added missing `EditorApp`/`App` imports to `➗️mathematical` and `🖍️draw`'s `#[cfg(test)]` modules — their test code had simply never compiled. This is the third instance of the identical defect in a third plugin, which makes it a **class, not three coincidences**: plugin test modules using `App`/`EditorApp` without importing them, invisible because nobody had run those suites.
+
+Descriptors now **26 committed, 13 ratcheted, zero placeholders** across the whole fleet.

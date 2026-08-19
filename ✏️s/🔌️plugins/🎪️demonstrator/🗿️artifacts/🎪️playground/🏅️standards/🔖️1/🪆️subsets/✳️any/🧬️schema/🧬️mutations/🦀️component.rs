@@ -37,7 +37,7 @@ mod tests {
             "playground",
             crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot(),
             None,
-        ));
+        )).expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })],

@@ -58,8 +58,8 @@ import type { Dimension, Edge, Face, OrientedFace, Shape3D, ValidSolid, Wire } f
 import initOpenCascade from "brepjs-opencascade";
 import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff } from "../🗺️spatial/🟦️component.ts";
 import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../📐️geometry/🟦️component.ts";
-import { executeActionCapability, type ActionResult } from "../../../../🔌️plugins/📐️cad/🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts";
-import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeGroup, type EdgeInfo, type FaceGroup, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/kernel-3d-js";
+import { executeActionCapability, type ActionResult } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts";
+import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeGroup, type EdgeInfo, type FaceGroup, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
 export { kernelGeometry };
 // #endregion 🔌️Adapters
 
@@ -2683,7 +2683,7 @@ export async function exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "
 
 /** @emoji 💾️ Exports `space` solids as merged OBJ via tessellation. */
 export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1): Promise<string> {
-  const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/kernel-3d-js");
+  const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
   const kernel = new BrepjsKernel();
   const meshes = [];
   for (const model of Object.values(space.models)) {
@@ -2698,7 +2698,7 @@ export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1)
 
 /** @emoji 💾️ Exports `space` solids as merged GLB via tessellation. */
 export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
-  const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/kernel-3d-js");
+  const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
   const kernel = new BrepjsKernel();
   const meshes = [];
   for (const model of Object.values(space.models)) {
@@ -2713,7 +2713,7 @@ export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1)
 
 /** @emoji 📐️ Exports `space` solids as merged DWG bytes via tessellation, routed through the Rust DWG codec (flow-core wasm) rather than OpenCascade. */
 export async function exportModelSpaceToDwg(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
-  const { mergeMeshTransfers, emptyMeshTransfer } = await import("@semio-tech/kernel-3d-js");
+  const { mergeMeshTransfers, emptyMeshTransfer } = await import("@semio-tech/s-3d-js");
   const kernel = new BrepjsKernel();
   const meshes = [];
   for (const model of Object.values(space.models)) {
@@ -2817,7 +2817,7 @@ if (isBrepjsDedicatedWorker()) {
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { beforeEach, describe, expect, it } = import.meta.vitest;
-  const { bootstrapCadModules } = await import("../../../../🔌️plugins/📐️cad/🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts");
+  const { bootstrapCadModules } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts");
   const { AEC_BUILDING_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building");
   const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
   const { AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-structure");

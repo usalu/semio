@@ -41,20 +41,6 @@ pub struct TriangleMesh {
     pub indices: Vec<u32>,
 }
 
-/// 📦 STL binary vs ASCII flavor. 🕳️ `Ascii` is only ever constructed by this file's own tests
-/// (`export_stl(&mesh, StlFormat::Ascii)`) — `export_solid_stl`'s real callers all pass `Binary`;
-/// no production command surface lets a user request ASCII STL export yet. `write_ascii_stl` (the
-/// arm this variant selects) IS real, tested code, so this is a genuine gap, not dead code — found
-/// while chasing a Z1 zero-warnings `dead_code` warning, flagged for follow-up rather than wired
-/// here since it needs a real export-format choice threaded from whatever command triggers STL
-/// export, not a guess.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[allow(dead_code, reason = "no production caller requests Ascii yet — see comment above, follow-up needed")]
-pub enum StlFormat {
-    Binary,
-    Ascii,
-}
-
 // #endregion 🔖️Types
 
 // #region 🔖️Convert
@@ -104,10 +90,11 @@ pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
 
 // #region 🔖️Api
 
-/// 📦 Tessellates `solid` and encodes STL (`binary` or `ascii`).
-pub fn export_solid_stl(body: &Body, solid: SolidId, deflection: f64, format: StlFormat) -> Result<Vec<u8>, KernelError> {
+/// 📦 Tessellates `solid` and encodes binary STL. ASCII STL export lives in the `s.stdio.stl/ascii`
+/// artifact dialect (`SemioMeshToStl` + `encode_stl_ascii`), not here.
+pub fn export_solid_stl(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
-    export_stl(&triangle_mesh_from_transfer(&transfer), format)
+    export_stl(&triangle_mesh_from_transfer(&transfer))
 }
 
 /// 📦 Decodes STL bytes into `body` as a single solid.
@@ -148,16 +135,12 @@ pub fn import_dwg_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Resul
     import_triangle_mesh_to_body(body, &import_dwg(data)?, tolerance)
 }
 
-/// 📦 Encodes a [`TriangleMesh`] as STL.
-pub fn export_stl(mesh: &TriangleMesh, format: StlFormat) -> Result<Vec<u8>, KernelError> {
+/// 📦 Encodes a [`TriangleMesh`] as binary STL.
+pub fn export_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     if mesh.indices.len() < 3 {
         return Err(KernelError::InvalidInput("mesh has no triangles".into()));
     }
-    let data = mesh_to_mesh_data(mesh);
-    match format {
-        StlFormat::Binary => Ok(mesh_to_stl(&data)),
-        StlFormat::Ascii => write_ascii_stl(mesh),
-    }
+    Ok(mesh_to_stl(&mesh_to_mesh_data(mesh)))
 }
 
 /// 📦 Decodes STL bytes (auto-detects binary vs ASCII).
@@ -282,37 +265,6 @@ fn read_ascii_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     Ok(mesh)
 }
 
-fn write_ascii_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
-    let tri_count = mesh.indices.len() / 3;
-    if tri_count == 0 {
-        return Err(KernelError::InvalidInput("mesh has no triangles".into()));
-    }
-    let mut out = String::from("solid mesh_io\n");
-    for t in 0..tri_count {
-        let i0 = mesh.indices[t * 3] as usize;
-        let i1 = mesh.indices[t * 3 + 1] as usize;
-        let i2 = mesh.indices[t * 3 + 2] as usize;
-        let p0 = mesh.positions[i0];
-        let p1 = mesh.positions[i1];
-        let p2 = mesh.positions[i2];
-        let n = triangle_normal(p0, p1, p2);
-        out.push_str(&format!("  facet normal {} {} {}\n", n.x, n.y, n.z));
-        out.push_str("    outer loop\n");
-        for p in [p0, p1, p2] {
-            out.push_str(&format!("      vertex {} {} {}\n", p.x, p.y, p.z));
-        }
-        out.push_str("    endloop\n  endfacet\n");
-    }
-    out.push_str("endsolid mesh_io\n");
-    Ok(out.into_bytes())
-}
-
-fn triangle_normal(p0: Pnt3, p1: Pnt3, p2: Pnt3) -> Vec3 {
-    let e1 = p1 - p0;
-    let e2 = p2 - p0;
-    e1.cross(e2).normalized().unwrap_or(Vec3::Z)
-}
-
 fn parse_vec3_token(s: &str) -> Result<Vec3, KernelError> {
     let parts: Vec<&str> = s.split_whitespace().collect();
     if parts.len() < 3 {
@@ -368,7 +320,7 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-        let bytes = export_solid_stl(&body, solid, 0.1, StlFormat::Binary).unwrap();
+        let bytes = export_solid_stl(&body, solid, 0.1).unwrap();
         assert!(bytes.len() > 84, "binary STL must include header and triangles");
         let tri_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
         assert!(tri_count > 0);
@@ -379,22 +331,10 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-        let bytes = export_solid_stl(&body, solid, 0.1, StlFormat::Binary).unwrap();
+        let bytes = export_solid_stl(&body, solid, 0.1).unwrap();
         let mut imported_body = Body::new();
         let imported = import_stl_to_body(&mut imported_body, &bytes, 1e-4).unwrap();
         assert!(!imported_body.solid_faces(imported).is_empty());
-    }
-
-    #[test]
-    fn stl_ascii_round_trip_preserves_triangle_count() {
-        let mut body = Body::new();
-        let mut rec = OpRecorder::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-        let binary = export_solid_stl(&body, solid, 0.05, StlFormat::Binary).unwrap();
-        let mesh = import_stl(&binary).unwrap();
-        let ascii = export_stl(&mesh, StlFormat::Ascii).unwrap();
-        let decoded = import_stl(&ascii).unwrap();
-        assert_eq!(decoded.indices.len() / 3, mesh.indices.len() / 3);
     }
 
     #[test]

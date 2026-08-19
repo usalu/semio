@@ -5,11 +5,21 @@
 //! No concrete HTTP/WS client type ever appears in a public signature here (CLAUDE.md: external
 //! libraries sit behind our own interface) — `DirectoryTransport`/`DirectoryWsConnection` are the
 //! seam, mirroring `🎒️pack/🌐️http`'s `RangeTransport` and this crate's own `🏪️store/🔄️sync`
-//! (native `tokio-tungstenite`, browser `web_sys`) pattern. Native implementations reuse this
-//! crate's EXISTING optional `ureq`/`sync` deps (no new dependency added); see `🔖️Native` below.
+//! (native `tokio-tungstenite`, browser `web_sys`) pattern.
 //! `🪪️identity/🦀️component.rs` (sibling module) layers the mint-or-restore session helper on top.
+//!
+//! 🌀️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet terra-directory-and-run:
+//! every request-issuing method now takes an `OperationContext` (`semio-framework-async` —
+//! cancellation/deadline/trace/capability), checked up front so an already-cancelled caller never
+//! reaches the transport. The native transport (`🔖️Native` below) is rebuilt on
+//! `semio-framework-os-services`'s `HttpPool`/`ComputePool` — the per-call blocking-`ureq`-on-a-
+//! dedicated-thread pattern and the ad hoc private tokio runtime this crate's own native `open_ws`
+//! used to need are RETIRED, not wrapped: tokio stays confined to `semio-framework-os-services`
+//! (this crate names it nowhere), and every native HTTP call is now admitted onto that crate's
+//! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView};
+use semio_framework_async::OperationContext;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::sync::{PoisonError, RwLock};
@@ -37,6 +47,15 @@ pub struct HttpResponse {
 pub enum TransportError {
     #[error("transport io: {0}")]
     Io(String),
+    /// 🛑️ The `OperationContext` handed to this call was already cancelled, or was cancelled
+    /// before the call finished — a transport checks this itself (rather than relying solely on
+    /// the caller's own pre-check) so an in-flight call started just before cancellation still
+    /// surfaces it instead of returning a stale success.
+    #[error("cancelled")]
+    Cancelled,
+    /// ⏰️ `ctx.deadline_ms` elapsed before this call could complete.
+    #[error("deadline exceeded")]
+    DeadlineExceeded,
 }
 
 /// 🔌️ The injection seam: no concrete HTTP client type may appear in any public signature
@@ -45,10 +64,16 @@ pub enum TransportError {
 /// impl closes over `wasm_bindgen::JsValue`-backed handles, which are never `Send` — same reason
 /// `🏪️store/🔄️sync`'s native actor deliberately runs on a CURRENT-THREAD tokio runtime rather
 /// than a multi-threaded one, so no future crossing an `.await` here ever needs to be `Send`.
+/// `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) carries cancellation/deadline/
+/// trace/capability through to whichever concrete transport is wired — a native call routes it
+/// into `semio-framework-os-services`'s `HttpPool`/`ComputePool` (see `🔖️Native` below), so the
+/// SAME `OperationContext` that gates `SpaceRunner::compute_node`'s `exchange` calls
+/// (`🏃️run/🦀️component.rs`) also gates a directory request, rather than each path inventing its
+/// own bolted-on cancellation.
 #[async_trait::async_trait(?Send)]
 pub trait DirectoryTransport {
-    async fn http(&self, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
-    async fn open_ws(&self, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError>;
+    async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+    async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError>;
 }
 
 /// 🔌️ One open `/directory/ws` connection. Sequential by construction (`DirectoryStream` never
@@ -75,6 +100,12 @@ pub enum DirectoryClientError {
     Unauthorized,
     #[error("http {status}: {body}")]
     Http { status: u16, body: String },
+    /// 🛑️ `ctx.cancel` was already cancelled BEFORE this call ever reached the transport — checked
+    /// in `DirectoryClient::request_json`/`DirectoryStream::recv` up front, so a cancelled caller
+    /// never even builds a request. `TransportError::Cancelled` (via the `Transport` variant above)
+    /// is the other half: cancelled WHILE the transport call was in flight.
+    #[error("cancelled")]
+    Cancelled,
 }
 //#endregion 🔖️Errors
 
@@ -156,9 +187,15 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         format!("{}{}", self.base_url.trim_end_matches('/'), path)
     }
 
-    async fn request_json<R: DeserializeOwned>(&self, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
+    /// 🛑️ Checked BEFORE every call reaches `self.transport` — an already-cancelled `ctx` never
+    /// builds a request at all (`TransportError::Cancelled`, via the SAME transport call, is the
+    /// other half: cancelled WHILE the call was in flight — see that variant's own doc).
+    async fn request_json<R: DeserializeOwned>(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
+        if ctx.cancel.is_cancelled() {
+            return Err(DirectoryClientError::Cancelled);
+        }
         let bearer = self.token();
-        let response = self.transport.http(method, &self.url(path), bearer.as_deref(), body).await?;
+        let response = self.transport.http(ctx, method, &self.url(path), bearer.as_deref(), body).await?;
         match response.status {
             200..=299 => Ok(serde_json::from_slice(&response.body)?),
             401 => Err(DirectoryClientError::Unauthorized),
@@ -166,33 +203,33 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
     }
 
-    pub async fn spaces(&self) -> Result<Vec<SpaceView>, DirectoryClientError> {
-        self.request_json(HttpMethod::Get, "/directory/spaces", None).await
+    pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<SpaceView>, DirectoryClientError> {
+        self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await
     }
 
-    pub async fn space(&self, id: &str) -> Result<SpaceDetail, DirectoryClientError> {
-        self.request_json(HttpMethod::Get, &format!("/directory/spaces/{id}"), None).await
+    pub async fn space(&self, ctx: &OperationContext, id: &str) -> Result<SpaceDetail, DirectoryClientError> {
+        self.request_json(ctx, HttpMethod::Get, &format!("/directory/spaces/{id}"), None).await
     }
 
-    pub async fn events(&self, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryClientError> {
-        self.request_json(HttpMethod::Get, &format!("/directory/events?since={since}"), None).await
+    pub async fn events(&self, ctx: &OperationContext, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryClientError> {
+        self.request_json(ctx, HttpMethod::Get, &format!("/directory/events?since={since}"), None).await
     }
 
-    pub async fn me(&self) -> Result<SessionView, DirectoryClientError> {
-        self.request_json(HttpMethod::Get, "/auth/sessions/me", None).await
+    pub async fn me(&self, ctx: &OperationContext) -> Result<SessionView, DirectoryClientError> {
+        self.request_json(ctx, HttpMethod::Get, "/auth/sessions/me", None).await
     }
 
     /// 🎫️ Dev-mode session mint (§C2 "unchanged"): does NOT touch `self.token` — the caller
     /// (typically `🪪️identity::mint_or_restore`) decides when a freshly minted token replaces
     /// the current one.
-    pub async fn mint_session(&self, email: &str) -> Result<SessionMintResponse, DirectoryClientError> {
+    pub async fn mint_session(&self, ctx: &OperationContext, email: &str) -> Result<SessionMintResponse, DirectoryClientError> {
         let body = serde_json::to_vec(&serde_json::json!({ "email": email }))?;
-        self.request_json(HttpMethod::Post, "/auth/sessions", Some(body)).await
+        self.request_json(ctx, HttpMethod::Post, "/auth/sessions", Some(body)).await
     }
 
-    pub async fn command(&self, command: &DirectoryCommand) -> Result<CommandOutcome, DirectoryClientError> {
+    pub async fn command(&self, ctx: &OperationContext, command: &DirectoryCommand) -> Result<CommandOutcome, DirectoryClientError> {
         let body = serde_json::to_vec(command)?;
-        self.request_json(HttpMethod::Post, "/directory/commands", Some(body)).await
+        self.request_json(ctx, HttpMethod::Post, "/directory/commands", Some(body)).await
     }
 
     pub fn stream(&self, since: u64) -> DirectoryStream<'_, T> {
@@ -270,15 +307,22 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
         self.connection = None;
     }
 
-    pub async fn recv(&mut self) -> Option<DirectoryStreamEvent> {
+    /// 🛑️ `ctx` is checked once per loop iteration (top of the loop, same as `request_json`) —
+    /// cancelling it closes the stream (same as `close()`) rather than leaving it silently stuck
+    /// reconnecting forever against a caller nobody is listening for anymore.
+    pub async fn recv(&mut self, ctx: &OperationContext) -> Option<DirectoryStreamEvent> {
         if self.closed {
             return None;
         }
         loop {
+            if ctx.cancel.is_cancelled() {
+                self.close();
+                return None;
+            }
             if self.connection.is_none() {
                 let token = self.client.token().unwrap_or_default();
                 let url = directory_ws_url(self.client.base_url(), &token, self.since);
-                match self.client.transport.open_ws(&url).await {
+                match self.client.transport.open_ws(ctx, &url).await {
                     Ok(connection) => {
                         self.connection = Some(connection);
                         self.backoff_ms = HUB_RECONNECT_MIN_MS;
@@ -320,49 +364,67 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
 //#endregion 🔖️Stream
 
 //#region 🔖️Native
-/// 🐎️ Native transport: blocking `ureq` for HTTP (this crate's EXISTING optional `ureq` dep, off
-/// by default), `tokio-tungstenite` for WS (this crate's EXISTING `sync` feature, which already
-/// wires it up for `🏪️store/🔄️sync`'s native actor). Both features are required together because
-/// a real client needs both halves; either alone would leave the other method type unusable.
+/// 🐎️ Native transport: HTTP routes through `semio-framework-os-services`'s `HttpPool`/
+/// `ComputePool` (this crate's EXISTING optional `ureq` dep supplies the ONE blocking call
+/// `HttpPool` admits onto its bounded pool — no per-call `std::thread::spawn` and no private
+/// tokio runtime built by this crate), `tokio-tungstenite` for WS (this crate's EXISTING `sync`
+/// feature, which already wires it up for `🏪️store/🔄️sync`'s native actor). Both features are
+/// required together because a real client needs both halves; either alone would leave the other
+/// method type unusable.
 #[cfg(all(feature = "ureq", feature = "sync", not(target_arch = "wasm32")))]
 pub mod native {
     use super::{DirectoryTransport, DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
     use futures_util::{SinkExt, StreamExt};
+    use semio_framework_actor::{ActorId, PackageId};
+    use semio_framework_async::{HostAsyncRuntime, OperationContext, ScopeHandle};
+    use semio_framework_os_services::{ComputeError, ComputePool, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponse as PoolHttpResponse, HttpTransport};
     use std::io::Read;
+    use std::sync::Arc;
     use tokio_tungstenite::tungstenite::Message;
 
-    /// 🐎️ One blocking `ureq` call per request, on a dedicated thread so the `async fn` never
-    /// blocks the caller's executor — same shape as `🎒️pack/🌐️http`'s `UreqRangeTransport`.
-    fn ureq_call(agent: ureq::Agent, method: HttpMethod, url: String, bearer: Option<String>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
-        std::thread::spawn(move || -> Result<HttpResponse, TransportError> {
-            let mut request = match method {
-                HttpMethod::Get => agent.get(&url),
-                HttpMethod::Post => agent.post(&url),
-                HttpMethod::Delete => agent.delete(&url),
+    /// 🐎️ The ONE place this crate still names `ureq` directly — a plain, SYNCHRONOUS
+    /// `HttpTransport` for `HttpPool`. No thread spawn here anymore: `HttpPool::request` runs this
+    /// through `ComputePool::run_blocking`, which admits it onto a BOUNDED semaphore (replacing the
+    /// old unbounded `std::thread::spawn` per call) and races it against `ctx.deadline_ms` via the
+    /// shared `HostAsyncRuntime`.
+    struct UreqHttpTransport {
+        agent: ureq::Agent,
+    }
+
+    impl HttpTransport for UreqHttpTransport {
+        fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
+            let mut builder = match request.method.as_str() {
+                "GET" => self.agent.get(&request.url),
+                "POST" => self.agent.post(&request.url),
+                "DELETE" => self.agent.delete(&request.url),
+                other => return Err(std::io::Error::other(format!("NativeDirectoryTransport: unsupported HTTP method {other}"))),
             };
-            if let Some(token) = &bearer {
-                request = request.set("Authorization", &format!("Bearer {token}"));
+            for (name, value) in &request.headers {
+                builder = builder.set(name, value);
             }
-            let outcome = match body {
-                Some(bytes) => request.set("Content-Type", "application/json").send_bytes(&bytes),
-                None => request.call(),
-            };
+            let outcome = if request.body.is_empty() { builder.call() } else { builder.set("Content-Type", "application/json").send_bytes(&request.body) };
             let response = match outcome {
                 Ok(response) => response,
                 Err(ureq::Error::Status(status, response)) => {
                     let mut bytes = Vec::new();
                     let _ = response.into_reader().read_to_end(&mut bytes);
-                    return Ok(HttpResponse { status, body: bytes });
+                    return Ok(PoolHttpResponse { status, headers: Vec::new(), body: bytes });
                 }
-                Err(error) => return Err(TransportError::Io(error.to_string())),
+                Err(error) => return Err(std::io::Error::other(error.to_string())),
             };
             let status = response.status();
             let mut bytes = Vec::new();
-            response.into_reader().read_to_end(&mut bytes).map_err(|error| TransportError::Io(error.to_string()))?;
-            Ok(HttpResponse { status, body: bytes })
-        })
-        .join()
-        .map_err(|_| TransportError::Io("ureq worker thread panicked".to_string()))?
+            response.into_reader().read_to_end(&mut bytes).map_err(std::io::Error::other)?;
+            Ok(PoolHttpResponse { status, headers: Vec::new(), body: bytes })
+        }
+    }
+
+    fn http_method_str(method: HttpMethod) -> &'static str {
+        match method {
+            HttpMethod::Get => "GET",
+            HttpMethod::Post => "POST",
+            HttpMethod::Delete => "DELETE",
+        }
     }
 
     type TungsteniteStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
@@ -392,30 +454,66 @@ pub mod native {
         }
     }
 
-    /// 🚀️ A `DirectoryTransport` for the wgpu native host and native tests.
+    /// 🚀️ A `DirectoryTransport` for the wgpu native host and native tests. `runtime`/`scope`/
+    /// `http_pool` are INJECTED, never constructed by this crate — `TokioHostRuntime` stays
+    /// confined to `semio-framework-os-services` (this crate names no tokio type anywhere; see the
+    /// packet report's `## tokio-containment evidence`), and one `HttpPool` belongs to the WHOLE
+    /// host process (its byte budget/outstanding cap are per-package/per-actor accounting,
+    /// meaningless re-created fresh per client). The ideal caller is whoever already owns the host
+    /// process's single `TokioHostRuntime`/`HttpPool` — seeded via `with_new_http_pool` below if a
+    /// caller has a runtime/scope/`ComputePool` but wants its own pool. `Clone` (every field is
+    /// itself cheap to clone — `Arc`/`ScopeHandle`/`PackageId`/`Copy` `ActorId`) so a host that
+    /// wants several `DirectoryClient`s sharing the SAME pool/quota bucket can build one transport
+    /// once and `.clone()` it per client, rather than re-deriving the pool per client.
+    #[derive(Clone)]
     pub struct NativeDirectoryTransport {
-        agent: ureq::Agent,
+        runtime: Arc<dyn HostAsyncRuntime>,
+        scope: ScopeHandle,
+        http_pool: Arc<HttpPool>,
+        package: PackageId,
+        actor: ActorId,
     }
 
     impl NativeDirectoryTransport {
-        pub fn new() -> Self {
-            Self { agent: ureq::Agent::new() }
+        pub fn new(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
+            Self { runtime, scope, http_pool, package, actor }
         }
-    }
 
-    impl Default for NativeDirectoryTransport {
-        fn default() -> Self {
-            Self::new()
+        /// 🐎️ Convenience constructor: builds its own `HttpPool` (and the one `ureq::Agent` behind
+        /// it) over a caller-supplied `runtime`/`scope`/`ComputePool` — still never constructs the
+        /// runtime itself.
+        pub fn with_new_http_pool(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+            let transport: Arc<dyn HttpTransport> = Arc::new(UreqHttpTransport { agent: ureq::Agent::new() });
+            Self::new(runtime, scope, Arc::new(HttpPool::new(transport, compute, bytes_per_minute_cap, outstanding_cap)), package, actor)
         }
     }
 
     #[async_trait::async_trait(?Send)]
     impl DirectoryTransport for NativeDirectoryTransport {
-        async fn http(&self, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
-            ureq_call(self.agent.clone(), method, url.to_string(), bearer.map(str::to_string), body)
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
+            let mut headers = Vec::new();
+            if let Some(token) = bearer {
+                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
+            }
+            let request = PoolHttpRequest { method: http_method_str(method).to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
+            self.http_pool
+                .request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request)
+                .await
+                .map(|response| HttpResponse { status: response.status, body: response.body })
+                .map_err(|error| match error {
+                    HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+                    HttpPoolError::Compute(ComputeError::WorkerLost) if ctx.cancel.is_cancelled() => TransportError::Cancelled,
+                    other => TransportError::Io(other.to_string()),
+                })
         }
 
-        async fn open_ws(&self, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
             let (stream, _response) = tokio_tungstenite::connect_async(url).await.map_err(|error| TransportError::Io(error.to_string()))?;
             Ok(Box::new(TungsteniteConnection(stream)))
         }
@@ -430,6 +528,7 @@ pub mod native {
 #[cfg(target_arch = "wasm32")]
 pub mod browser {
     use super::{DirectoryTransport, DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
+    use semio_framework_async::OperationContext;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
@@ -445,7 +544,10 @@ pub mod browser {
 
     #[async_trait::async_trait(?Send)]
     impl DirectoryTransport for BrowserDirectoryTransport {
-        async fn http(&self, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
             let window = web_sys::window().ok_or_else(|| TransportError::Io("no window".to_string()))?;
             let init = RequestInit::new();
             init.set_method(match method {
@@ -469,7 +571,10 @@ pub mod browser {
             Ok(HttpResponse { status, body: bytes })
         }
 
-        async fn open_ws(&self, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
             let socket = WebSocket::new(url).map_err(|error| TransportError::Io(format!("{error:?}")))?;
             socket.set_binary_type(BinaryType::Blob);
             let (incoming_tx, incoming_rx) = tokio::sync::mpsc::unbounded_channel::<String>();
@@ -513,7 +618,9 @@ pub mod browser {
 #[cfg(test)]
 pub mod test_support {
     use super::{DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
+    use semio_framework_async::OperationContext;
     use std::collections::VecDeque;
+    use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::{Arc, Mutex};
 
     #[derive(Clone, Debug, PartialEq)]
@@ -529,6 +636,12 @@ pub mod test_support {
         pub requests: Arc<Mutex<Vec<RecordedRequest>>>,
         pub ws_outcomes: Arc<Mutex<VecDeque<Result<VecDeque<Result<Option<String>, TransportError>>, TransportError>>>>,
         pub ws_urls: Arc<Mutex<Vec<String>>>,
+        /// 🧪️ Cooperative yield points `http()` passes through (checking `ctx.cancel` at each one)
+        /// BEFORE touching `responses`/`requests` — 0 (the default) keeps every existing test's
+        /// synchronous-looking behavior unchanged; a cancellation test sets this > 0 so an
+        /// interleaved caller has a real window to flip the token between yields (see
+        /// `an_in_flight_request_is_cancelled_when_its_context_is_cancelled` below).
+        pub yields_before_response: Arc<AtomicU32>,
     }
 
     impl FakeTransport {
@@ -562,12 +675,24 @@ pub mod test_support {
 
     #[async_trait::async_trait(?Send)]
     impl super::DirectoryTransport for FakeTransport {
-        async fn http(&self, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            for _ in 0..self.yields_before_response.load(Ordering::SeqCst) {
+                if ctx.cancel.is_cancelled() {
+                    return Err(TransportError::Cancelled);
+                }
+                futures_lite::future::yield_now().await;
+            }
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
             self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string) });
             self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
         }
 
-        async fn open_ws(&self, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Box<dyn DirectoryWsConnection>, TransportError> {
+            if ctx.cancel.is_cancelled() {
+                return Err(TransportError::Cancelled);
+            }
             self.ws_urls.lock().unwrap().push(url.to_string());
             let frames = self.ws_outcomes.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted ws".to_string())))?;
             Ok(Box::new(FakeWs(frames)))
@@ -579,6 +704,11 @@ pub mod test_support {
 mod tests {
     use super::test_support::FakeTransport;
     use super::*;
+    use semio_framework_async::{CancelToken, TraceId};
+
+    fn root_ctx() -> OperationContext {
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
+    }
 
     #[test]
     fn ws_url_switches_scheme_and_encodes_query() {
@@ -601,7 +731,7 @@ mod tests {
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
         client.set_token(Some("tok".to_string()));
 
-        let spaces = futures_lite::future::block_on(client.spaces()).expect("decodes");
+        let spaces = futures_lite::future::block_on(client.spaces(&root_ctx())).expect("decodes");
         assert!(spaces.is_empty());
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].url, "http://hub.local/directory/spaces");
@@ -614,7 +744,7 @@ mod tests {
         transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() }));
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let error = futures_lite::future::block_on(client.me()).expect_err("401 is unauthorized");
+        let error = futures_lite::future::block_on(client.me(&root_ctx())).expect_err("401 is unauthorized");
         assert!(matches!(error, DirectoryClientError::Unauthorized));
     }
 
@@ -630,19 +760,19 @@ mod tests {
         client.set_token(Some("tok".to_string()));
         let mut stream = client.stream(0);
 
-        assert_eq!(futures_lite::future::block_on(stream.recv()), Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }), "call 1: the first dial fails outright");
-        match futures_lite::future::block_on(stream.recv()) {
+        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx())), Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }), "call 1: the first dial fails outright");
+        match futures_lite::future::block_on(stream.recv(&root_ctx())) {
             Some(DirectoryStreamEvent::Message(DirectoryStreamMessage::Event { event })) => assert_eq!(event.seq, 7),
             other => panic!("call 2: expected the decoded event from the second (successful) dial, got {other:?}"),
         }
         assert_eq!(stream.since(), 7);
         assert_eq!(
-            futures_lite::future::block_on(stream.recv()),
+            futures_lite::future::block_on(stream.recv(&root_ctx())),
             Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }),
             "call 3: the live connection's next frame is Ok(None) (peer closed) — reported WITHOUT a new dial yet, backoff still at the floor because the prior dial succeeded"
         );
         assert_eq!(
-            futures_lite::future::block_on(stream.recv()),
+            futures_lite::future::block_on(stream.recv(&root_ctx())),
             Some(DirectoryStreamEvent::Reconnecting { after_ms: next_backoff_ms(HUB_RECONNECT_MIN_MS) }),
             "call 4: NOW the third dial actually happens (lazily, on this call) and fails, so the reported backoff has already advanced past the floor"
         );
@@ -652,5 +782,60 @@ mod tests {
         assert!(ws_urls[0].ends_with("since=0"));
         assert!(ws_urls[2].ends_with("since=7"), "the resumed dial carries the last-seen seq, not the original since");
     }
+
+    //#region 🔖️CancellationTests
+    /// 🧪️ A `ctx` that is ALREADY cancelled before the call starts must never reach the transport
+    /// at all — `request_json`'s own up-front check (see `DirectoryClientError::Cancelled`'s doc).
+    #[test]
+    fn a_request_with_an_already_cancelled_context_never_reaches_the_transport() {
+        let transport = FakeTransport::default();
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])));
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        let ctx = root_ctx();
+        ctx.cancel.cancel();
+
+        let result = futures_lite::future::block_on(client.spaces(&ctx));
+        assert!(matches!(result, Err(DirectoryClientError::Cancelled)), "got {result:?}");
+        assert!(transport.requests.lock().unwrap().is_empty(), "an already-cancelled context must never even build a request");
+    }
+
+    /// 🧪️ The property this ticket asks for: an IN-FLIGHT request — already past
+    /// `request_json`'s up-front check, genuinely inside the transport call — is cancelled once its
+    /// `OperationContext` is cancelled. `FakeTransport::yields_before_response` gives `http()` two
+    /// cooperative yield points (checking `ctx.cancel` at each); `futures_lite::future::zip` drives
+    /// the request future and a "canceller" future that cancels after ONE yield in lockstep on the
+    /// SAME thread — no real time, no real thread, fully deterministic.
+    #[test]
+    fn an_in_flight_request_is_cancelled_when_its_context_is_cancelled() {
+        let transport = FakeTransport::default();
+        transport.yields_before_response.store(2, std::sync::atomic::Ordering::SeqCst);
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])));
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        let ctx = root_ctx();
+
+        let request_fut = client.spaces(&ctx);
+        let canceller_fut = async {
+            futures_lite::future::yield_now().await;
+            ctx.cancel.cancel();
+        };
+        let (result, ()) = futures_lite::future::block_on(futures_lite::future::zip(request_fut, canceller_fut));
+        assert!(matches!(result, Err(DirectoryClientError::Transport(TransportError::Cancelled))), "an in-flight request must observe cancellation, got {result:?}");
+        assert!(transport.requests.lock().unwrap().is_empty(), "the cancelled call must never reach the scripted response — the response stays queued, unconsumed");
+    }
+
+    /// 🧪️ `DirectoryStream::recv` checks `ctx` at the top of its own loop too — cancelling mid-
+    /// stream must close it (same as `DirectoryStream::close`) rather than reconnecting forever.
+    #[test]
+    fn cancelling_the_context_closes_an_open_stream() {
+        let transport = FakeTransport::default();
+        let client = DirectoryClient::new(transport, "http://hub.local");
+        let mut stream = client.stream(0);
+        let ctx = root_ctx();
+        ctx.cancel.cancel();
+
+        assert_eq!(futures_lite::future::block_on(stream.recv(&ctx)), None, "a cancelled context must end the stream, never dial");
+        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx())), None, "close() is sticky — a fresh, live context does not resurrect the stream");
+    }
+    //#endregion 🔖️CancellationTests
 }
 //#endregion 🧪️Tests

@@ -16281,7 +16281,7 @@ pub mod plugin_runtime {
                 let plugin_id = $crate::plugin_runtime::plugin_manifest().plugin_id;
                 let assembled = $crate::describe::describe_plugin();
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
-                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning-mindmap", "animate", "draw"];
+                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning-mindmap", "animate", "draw", "energy", "layout"];
                 match std::fs::read(expected_path) {
                     Ok(expected) => {
                         if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {

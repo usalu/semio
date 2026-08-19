@@ -55,6 +55,24 @@ mod tests {
         }
     }
 
+    /// 🧷️ Resolves a [`Type`] through the alias chain that `use` creates, down to the `TypeDef` that
+    /// actually defines it. `use effects.{blob-load-params}` does NOT reuse the original `TypeId` —
+    /// `wit-parser` materialises a fresh `TypeDef` whose kind is `TypeDefKind::Type(original)`. So two
+    /// genuinely-shared types compare UNEQUAL by raw id, and only their roots may be compared. Without
+    /// this, these tests reported drift for a schema that is correct: `host-async` really does
+    /// `use effects.{…-params, effect}`, which is exactly the sharing the `*-params` refactor exists
+    /// to guarantee.
+    fn canonical_type(resolve: &Resolve, ty: Type) -> Type {
+        let mut current = ty;
+        loop {
+            let Type::Id(id) = current else { return current };
+            match &resolve.types[id].kind {
+                TypeDefKind::Type(inner) => current = *inner,
+                _ => return Type::Id(id),
+            }
+        }
+    }
+
     /// 🧬️ One parse of `🧬️schema/📜️component.wit` per test, kept cheap and side-effect-free — this
     /// never touches the filesystem outside `🧬️schema/`, never writes, and never depends on a prior
     /// `cargo build` having run.
@@ -157,7 +175,7 @@ mod tests {
                     case.name, field.name
                 );
                 assert_eq!(
-                    param.ty, field.ty,
+                    canonical_type(&fixture.resolve, param.ty), canonical_type(&fixture.resolve, field.ty),
                     "`host-async.{async_name}` param `{}` must reuse the SAME type as `{}.{}` — a new \
                      type here would be exactly the drift the `*-params` refactor exists to prevent",
                     param.name, case.name, field.name
@@ -206,7 +224,7 @@ mod tests {
         assert_eq!(function.params.len(), fields.len());
         for (param, field) in function.params.iter().zip(fields.iter()) {
             assert_eq!(&param.name, &field.name);
-            assert_eq!(param.ty, field.ty);
+            assert_eq!(canonical_type(&fixture.resolve, param.ty), canonical_type(&fixture.resolve, field.ty));
         }
     }
 
@@ -225,8 +243,8 @@ mod tests {
         assert_eq!(emit.kind, FunctionKind::Freestanding, "`emit` must be fire-and-forget, not `async func`");
         assert_eq!(emit.params.len(), 1, "`emit` must take exactly the `effect` variant");
         assert_eq!(
-            emit.params[0].ty,
-            Type::Id(effect_type_id),
+            canonical_type(&fixture.resolve, emit.params[0].ty),
+            canonical_type(&fixture.resolve, Type::Id(effect_type_id)),
             "`emit`'s parameter must be THE SAME `effect` type `effects.effect` defines, not a copy"
         );
 

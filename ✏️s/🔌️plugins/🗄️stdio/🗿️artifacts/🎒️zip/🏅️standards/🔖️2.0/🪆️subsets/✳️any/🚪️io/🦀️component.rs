@@ -240,21 +240,6 @@ fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ParsedExtraField>, ZipError> {
     Ok(out)
 }
 
-/// 🕰️ Info-ZIP extended-timestamp (`UT`, 0x5455) mtime, if present and flagged. Local-header
-/// copies may also carry atime/ctime; only mtime is surfaced as a typed convenience field —
-/// recognized metadata is projected into named logical entry fields. 🕳️ Genuinely unwired: `ZipEntry`
-/// (`../../🧬️schema/📸️snapshot/🦀️component.rs`) has no `mtime` field yet for this to feed, so no
-/// caller exists (found while chasing a Z1 zero-warnings `dead_code` warning — flagged for
-/// follow-up rather than fixed here, since adding the field is a snapshot-schema decision).
-#[allow(dead_code, reason = "no ZipEntry.mtime field to feed yet — see comment above, follow-up needed")]
-fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
-    let f = fields.iter().find(|f| f.id == EXTRA_UT)?;
-    if f.payload.len() < 5 || f.payload[0] & 0x01 == 0 {
-        return None;
-    }
-    Some(i32::from_le_bytes([f.payload[1], f.payload[2], f.payload[3], f.payload[4]]) as i64)
-}
-
 fn canonical_local_extra(entry: &ZipEntry) -> Vec<u8> {
     let (size, discriminator) = match entry.name.as_str() {
         "[Content_Types].xml" | "_rels/.rels" => (516usize, 2u8),
@@ -314,6 +299,53 @@ fn parse_zip64_extra(fields: &[ParsedExtraField], need_uncomp: bool, need_comp: 
     Ok(out)
 }
 //#endregion ExtraFields
+
+//#region CentralInspect
+/// 📇 Central-directory header fields surfaced for subset conformance checks without persisting
+/// native ZIP metadata in the logical `ZipSnapshot`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ZipCentralEntryHeader {
+    pub name: String,
+    pub flags: u16,
+    pub version_needed: u16,
+}
+
+/// 🔎 Walks the central directory and returns per-entry general-purpose flags and version-needed
+/// values. Does not decompress payloads — only enough structure to validate ISO/IEC 21320-1 header
+/// policy against wire bytes.
+pub fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCentralEntryHeader>, ZipError> {
+    let eocd = find_eocd(data)?;
+    let loc = resolve_central_directory(data, eocd)?;
+    if loc.cd_offset + loc.cd_size > data.len() {
+        return Err(ZipError::Malformed("central directory out of range".into()));
+    }
+
+    let mut out = Vec::with_capacity(loc.count);
+    let mut pos = loc.cd_offset;
+    for _ in 0..loc.count {
+        if read_u32(data, pos)? != SIG_CENTRAL {
+            return Err(ZipError::BadSignature { what: "central directory header", at: pos });
+        }
+        let version_needed = read_u16(data, pos + 6)?;
+        let flags = read_u16(data, pos + 8)?;
+        let name_len = read_u16(data, pos + 28)? as usize;
+        let extra_len = read_u16(data, pos + 30)? as usize;
+        let comment_len = read_u16(data, pos + 32)? as usize;
+        let name_start = pos + 46;
+        let name_end = name_start + name_len;
+        let extra_end = name_end + extra_len;
+        let comment_end = extra_end + comment_len;
+        if comment_end > data.len() {
+            return Err(ZipError::Truncated("central directory record (name/extra/comment)"));
+        }
+        let utf8 = flags & 0x0800 != 0;
+        let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename")?;
+        out.push(ZipCentralEntryHeader { name, flags, version_needed });
+        pos = comment_end;
+    }
+    Ok(out)
+}
+//#endregion CentralInspect
 
 //#region Eocd
 const SIG_LOCAL: u32 = 0x0403_4b50;

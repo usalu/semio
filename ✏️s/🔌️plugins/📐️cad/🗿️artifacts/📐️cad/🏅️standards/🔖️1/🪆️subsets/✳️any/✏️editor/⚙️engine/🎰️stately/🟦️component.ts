@@ -4,7 +4,7 @@
 
 // #region 🔌️Adapters
 import { createActor, setup } from "xstate";
-import type { Vec3 } from "@semio-tech/kernel-3d-js";
+import type { Vec3 } from "@semio-tech/s-3d-js";
 import {
   Model,
   defaultModelDefinitionId,
@@ -16,8 +16,8 @@ import {
   type FaceRef,
   type VertexRef,
   type WireRef,
-} from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
-import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
+} from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
 import { applyTransition, pureTsStateEngineProvider, type ActionRegistry, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🟦️component.ts";
 import { createInteractionRuntime, loadSpatialInteraction, type InteractionRuntime } from "../📄️artifact/🟦️component.ts";
 // #endregion 🔌️Adapters
@@ -249,7 +249,7 @@ export class StatelyStateEngine implements StateEngine {
     this.rebuildMachine(state);
   }
 
-  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
+  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
     if (String(this.actor.getSnapshot().value) !== this.interactionState) {
       this.rebuildMachine(this.interactionState);
     }
@@ -275,7 +275,7 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 
 // #region 🧪️Tests
 const __spatialStatelyTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
-const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {
   __spatialStatelyTestRuntime!.bootstrapCadModules();

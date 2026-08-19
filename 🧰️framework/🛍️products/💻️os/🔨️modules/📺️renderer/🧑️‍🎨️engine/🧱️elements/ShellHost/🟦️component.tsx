@@ -61,6 +61,7 @@ import {
   type HistoryEntry,
   type HistoryPatch,
   type IntroductionInteraction,
+  latestWins,
   type LocalizedLabel,
   NamedLayoutStore,
   normalizeAppLabelsOverlay,
@@ -105,6 +106,7 @@ import {
   type UiDirtyScope,
   type UiNode,
   type UtilityNode,
+  waitForEvent,
   windowElementId,
   type WindowEngagement,
   type WindowLayout,
@@ -472,7 +474,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../ChromePanels/🟦️component.tsx";
-import { type PluginWasmHandle, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
+import { type PluginWasmHandle, serializePerActor, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️catalog.ts";
 
@@ -895,6 +897,70 @@ function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string |
   return storageNamespace ? createScopedStoragePort(browser, storageNamespace) : browser;
 }
 
+//#region 🧵️ConcurrencyHelpers
+/** 🧮️ terra-web-shellhost (finding 2) — MIRRORS `PluginRuntime/🟦️component.tsx`'s private
+ * `poolConcurrency()` formula exactly (`min(hardwareConcurrency-1, 4)`, same `5` SSR/test fallback so
+ * the clamp still lands on `4`): the boot-time install fan-out below must not run more concurrent
+ * plugin activations than there are shard workers to service them (`PluginRuntime`'s own
+ * `getShardClient` sizes its pool with this same formula) — requesting more would only add
+ * `ActivationRegistry.evictForMemoryPressure` LRU thrashing for zero extra real parallelism, exactly
+ * the reasoning `poolConcurrency()`'s own doc comment gives. This is a duplicate of that private
+ * function, not a second invented bound — see this packet's `📓️terra-web-shellhost-report.md`
+ * `## lease-requests` for the ask to export it from `PluginRuntime` instead, at which point this
+ * function should be deleted in favor of importing it directly. */
+function pluginInstallConcurrency(): number {
+  const hardwareConcurrency = typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 5;
+  return Math.max(1, Math.min(hardwareConcurrency - 1, 4));
+}
+//#endregion 🧵️ConcurrencyHelpers
+
+//#region 🔁️InvokeExtensionDispatch
+/** 🔁️ terra-web-shellhost (finding 1) — runs one `invokeExtension` effect's extension call plus its
+ * `req`-correlated completion. Split out of `applyHostEffects`'s `for`-loop body so that loop can
+ * dispatch it through `serializePerActor` (below) instead of `await`ing it inline: before this packet,
+ * a slow `invoke()` against one extension actor blocked EVERY later effect in the same batch — and
+ * every caller `await`ing `applyHostEffects` itself — until it settled. Errors are still never
+ * swallowed: a failed `invoke()` is caught and reported back to the requesting actor as a `fault`
+ * completion (unchanged from the pre-existing behaviour), and this function's own promise still
+ * rejects to its caller if `completeExtensionInvoke` itself is unavailable/throws, so the per-actor
+ * dispatch site has something real to `.catch()`. */
+async function runInvokeExtensionEffect(
+  requestingPlugin: LoadedProgramState,
+  extensionEntry: LoadedProgramState | undefined,
+  instanceId: number,
+  extensionId: string,
+  capability: string,
+  requestJson: string,
+  req: number,
+): Promise<void> {
+  try {
+    let outputJson = "";
+    const invoke = (extensionEntry?.handle as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
+    if (typeof invoke === "function" && extensionEntry) {
+      const raw = await invoke(capability, requestJson);
+      outputJson = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
+      console.log("[DEBUG] invokeExtension via handle.invoke", { extensionId, capability, req });
+    } else {
+      console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
+    }
+    if (requestingPlugin.handle.completeExtensionInvoke) {
+      const outcomeBytes = encodePackValue(outputJson.length > 0 ? JSON.parse(outputJson) : {});
+      await requestingPlugin.handle.completeExtensionInvoke(instanceId, req, { ok: outcomeBytes });
+    } else {
+      console.warn("[DEBUG] invokeExtension: requesting plugin's handle has no completeExtensionInvoke — completion not delivered", { extensionId, capability, req });
+    }
+  } catch (error) {
+    console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
+    if (requestingPlugin.handle.completeExtensionInvoke) {
+      const message = error instanceof Error ? error.message : String(error);
+      await requestingPlugin.handle.completeExtensionInvoke(instanceId, req, { fault: encodePackValue({ code: "extension.invoke-failed", message }) }).catch((completionError) => {
+        console.warn("[os-shell] invokeExtension: fault completion also failed to deliver", { extensionId, capability, req, completionError });
+      });
+    }
+  }
+}
+//#endregion 🔁️InvokeExtensionDispatch
+
 /** @emoji 🐚️ Mounts a `.semio-scope` root (theme/appearance/id scoping lands with later waves) carrying a
  * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
  * implementation in {@link FrameworkOsShellInner}. */
@@ -1141,6 +1207,17 @@ function FrameworkOsShellInner({
   const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
   const presenceConnectedAtMsRef = useRef(Date.now());
   const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
+  /** 🐚️ terra-web-shellhost (finding 5) — per-document `latestWins` triggers for the presence-beat
+   * effect below: keyed lazily on first beat so each document gets its own single-flight-with-trailing-
+   * coalesce wrapper instead of sharing one across every open document, which would serialize them.
+   * Cleared on that effect's own cleanup (identity/ephemeral change or unmount). */
+  const presenceBeatTriggersRef = useRef<Map<string, () => Promise<void>>>(new Map());
+  /** 🌐️ terra-web-shellhost (finding 4) — one `AbortController` for the whole component's lifetime,
+   * aborted from the unmount-teardown effect below (never recreated: this file's own `presenceConnectedAtMsRef`
+   * a few lines up is the same "construct once, keep for the component's life" idiom). Ties every
+   * `/extensions/install` fetch (`installExtension`/`installExtensionFromFile`/`uninstallExtension`) to
+   * the component's own lifetime instead of leaving them free-running past unmount. */
+  const extensionFetchAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
   /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
@@ -1288,6 +1365,7 @@ function FrameworkOsShellInner({
     // existing `🛠️dev🖥️s⚛️react` launcher (no `S_HUB_URL`) never reaches any code below this guard.
     if (!hubEnv) return;
     let cancelled = false;
+    const identityWaitAbort = new AbortController();
     (async () => {
       const worker = ensureBackboneWorker();
       const identityConfig = identityActorConfig(shellActorIdRef.current, hubEnv.dataDir);
@@ -1296,16 +1374,31 @@ function FrameworkOsShellInner({
       // real actor id is known) is a harmless idempotent re-subscribe (`openArtifact` always closes
       // any prior state for the same id first).
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", ...identityConfig }) });
-      // 📇️ Bounded one-shot wait for a previously-persisted identity's `snapshotReplaced` (a 404/no-
-      // file-yet folder read never emits one at all — see `pollFolderOnce`'s doc in
-      // `🟦️backbone-worker.ts` — so this can only be resolved by a timeout, not a second event).
-      // 2s is generous for a local folder read; never blocks the UI thread (this whole effect body
-      // runs off-render, in a microtask/timer chain).
-      const cachedIdentity = await new Promise<Identity | null>((resolve) => {
-        identitySnapshotResolverRef.current = resolve;
-        setTimeout(() => resolve(null), 2000);
-      });
-      identitySnapshotResolverRef.current = null;
+      // 📇️ terra-web-shellhost (finding 3) — event-driven wait for a previously-persisted identity's
+      // `snapshotReplaced`, raced against a 2s `AbortSignal.timeout` instead of an unconditional fixed
+      // `setTimeout`: a 404/no-file-yet folder read never emits a `snapshotReplaced` at all (see
+      // `pollFolderOnce`'s doc in `🟦️backbone-worker.ts`), so the timeout branch is still the only way
+      // a session with no persisted identity ever proceeds — but a REAL event now resolves as soon as
+      // it arrives instead of always paying the full 2s. `identityWaitAbort` folds into the same raced
+      // signal so an unmount tears the subscription down immediately (this effect's own cleanup below)
+      // rather than leaking a live listener/timer until the timeout fires on its own.
+      let cachedIdentity: Identity | null = null;
+      try {
+        cachedIdentity = await waitForEvent<Identity | null>(
+          (handler) => {
+            identitySnapshotResolverRef.current = handler;
+            return () => {
+              if (identitySnapshotResolverRef.current === handler) identitySnapshotResolverRef.current = null;
+            };
+          },
+          { signal: AbortSignal.any([identityWaitAbort.signal, AbortSignal.timeout(2000)]) },
+        );
+      } catch {
+        // 📇️ Either the 2s grace period elapsed (no persisted identity — proceed with `null`, same as
+        // the old fixed-timeout fallback) or the component unmounted mid-wait (`cancelled` below is
+        // what actually stops further work in that case).
+        cachedIdentity = null;
+      }
       if (cancelled) return;
       const client = new DirectoryClient(hubEnv.hubBaseUrl, cachedIdentity?.sessionToken);
       directoryClientRef.current = client;
@@ -1353,6 +1446,7 @@ function FrameworkOsShellInner({
     })().catch((error) => console.error("[os-shell] identity bootstrap failed unexpectedly", error));
     return () => {
       cancelled = true;
+      identityWaitAbort.abort();
     };
   }, [hubEnv]);
 
@@ -1700,6 +1794,7 @@ function FrameworkOsShellInner({
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ url: sourceUri }),
+          signal: extensionFetchAbortRef.current.signal,
         });
         if (!response.ok) {
           const body = await response.text();
@@ -1778,6 +1873,7 @@ function FrameworkOsShellInner({
           method: "POST",
           headers: { "content-type": "application/octet-stream" },
           body: bytes,
+          signal: extensionFetchAbortRef.current.signal,
         });
         if (!response.ok) {
           const body = await response.text();
@@ -1858,7 +1954,7 @@ function FrameworkOsShellInner({
         setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
         void dispatchSpaceExtensionOp("uninstallExtension", { extensionId });
         try {
-          await fetch(`/extensions/install?extensionId=${encodeURIComponent(extensionId)}`, { method: "DELETE" });
+          await fetch(`/extensions/install?extensionId=${encodeURIComponent(extensionId)}`, { method: "DELETE", signal: extensionFetchAbortRef.current.signal });
         } catch {
           /* store may not expose DELETE yet */
         }
@@ -2142,6 +2238,9 @@ function FrameworkOsShellInner({
 
   useEffect(() => {
     return () => {
+      // 🌐️ terra-web-shellhost (finding 4) — aborts any in-flight `/extensions/install` fetch at real
+      // component unmount; see `extensionFetchAbortRef`'s own doc a few hundred lines up.
+      extensionFetchAbortRef.current.abort();
       for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
       pluginBackboneRouteUnregistersRef.current.clear();
       const primary = sessionRef.current;
@@ -2198,20 +2297,54 @@ function FrameworkOsShellInner({
   // already built, including a dev server that was already fully built before this shell mounted) plus
   // a `built` event per crate as `buildPluginsStreaming`/the folded-in watch loop finishes it. An event
   // for an already-loaded plugin routes to `reloadPlugin` (hot-swap) instead of `installPlugin`.
+  // 🧮️ terra-web-shellhost (finding 2) — a cold boot's `snapshot` event can carry ~20 already-built
+  // plugins at once; before this packet each one fired an unbounded, uncancellable
+  // `void installPlugin(...)`, all instantiating real wasm modules through the shard pool
+  // simultaneously. `pending`/`pump` below is a plain worker-pool queue (mirrors `PluginRuntime`'s own
+  // `runBounded` shape): at most `pluginInstallConcurrency()` installs/reloads run at once, extras wait
+  // their turn, and `installPlugin`/`reloadPlugin` are still called with a FRESH `alreadyLoaded` read
+  // at dispatch time (not at enqueue time) so a plugin that finished loading while queued still routes
+  // correctly. `aborted` stops handing out new work on unmount — an install already in flight (already
+  // called) settles on its own, same "stop starting, let in-flight finish" contract
+  // `loadPluginModulesInDependencyOrder`'s own `signal` documents.
   useEffect(() => {
     const registryIds = new Set(registry.map((entry) => entry.pluginId));
-    const handlePluginAvailable = (pluginId: string, rebuiltAt: number) => {
-      if (!registryIds.has(pluginId)) return;
-      const alreadyLoaded = loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId);
-      void (alreadyLoaded ? reloadPlugin(pluginId, rebuiltAt) : installPlugin(pluginId, rebuiltAt));
+    let aborted = false;
+    const pending: Array<{ readonly pluginId: string; readonly rebuiltAt: number }> = [];
+    let activeWorkers = 0;
+    const limit = pluginInstallConcurrency();
+
+    const pump = (): void => {
+      while (!aborted && activeWorkers < limit && pending.length > 0) {
+        const next = pending.shift()!;
+        activeWorkers += 1;
+        const alreadyLoaded = loadedPluginsRef.current.some((entry) => entry.handle.pluginId === next.pluginId);
+        void (alreadyLoaded ? reloadPlugin(next.pluginId, next.rebuiltAt) : installPlugin(next.pluginId, next.rebuiltAt))
+          .catch((error) => console.error("[os-shell] plugin install/reload failed", next.pluginId, error))
+          .finally(() => {
+            activeWorkers -= 1;
+            pump();
+          });
+      }
     };
-    return pluginSource.subscribe((event: PluginSourceEvent) => {
+
+    const handlePluginAvailable = (pluginId: string, rebuiltAt: number) => {
+      if (aborted || !registryIds.has(pluginId)) return;
+      pending.push({ pluginId, rebuiltAt });
+      pump();
+    };
+    const unsubscribe = pluginSource.subscribe((event: PluginSourceEvent) => {
       if (event.kind === "snapshot") {
         for (const plugin of event.plugins) handlePluginAvailable(plugin.pluginId, plugin.rebuiltAt);
         return;
       }
       handlePluginAvailable(event.pluginId, event.rebuiltAt);
     });
+    return () => {
+      aborted = true;
+      pending.length = 0;
+      unsubscribe();
+    };
   }, [registry, pluginSource, installPlugin, reloadPlugin]);
 
   const requestContextMenu = useCallback(
@@ -2861,38 +2994,27 @@ function FrameworkOsShellInner({
           const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
           const requestingPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           const extensionEntry = loadedPlugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((c) => "extensionId" in c && (c as { extensionId?: string }).extensionId === extensionId));
+          // 🔁️ terra-web-shellhost (finding 1) — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react):
+          // `invoke-extension` no longer carries a `responseAction` to redispatch; the result is
+          // correlated back to the ORIGINATING actor by `req` and delivered as `Event::Completed`,
+          // which resumes the guest SDK's parked `RequestRegistry` future (design-abi.md §2). Dispatched
+          // through `serializePerActor` (keyed on the REQUESTING instance) rather than `await`ed here: a
+          // slow extension call used to stall every later effect in this batch (and every caller
+          // `await`ing `applyHostEffects` itself). `serializePerActor` still runs same-actor calls
+          // strictly in submission order (never two in flight at once for the same key) — only
+          // DIFFERENT actors' invokeExtension calls now run concurrently with each other. The dispatch
+          // is fired in loop order (never awaited here), so submission order into the per-actor queue
+          // matches effect order; failures are never swallowed — `runInvokeExtensionEffect` itself
+          // reports a failed `invoke()` back to the requester as a `fault` completion, and any residual
+          // rejection (e.g. the actor's queue is full) is logged here rather than becoming a silent
+          // unhandled rejection.
           if (requestingPlugin && request.operatorId && request.inputJson != null && request.nodeHash != null) {
-            try {
-              let outputJson = "";
-              const invoke = (extensionEntry?.handle as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
-              if (typeof invoke === "function" && extensionEntry) {
-                const raw = await invoke(capability, requestJson);
-                outputJson = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
-                console.log("[DEBUG] invokeExtension via handle.invoke", { extensionId, capability, operatorId: request.operatorId, nodeHash: request.nodeHash });
-              } else {
-                console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
-              }
-              // 🔁️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react) — `invoke-extension` no longer
-              // carries a `responseAction` to redispatch; the result is correlated back to the
-              // ORIGINATING actor by `req` and delivered as `Event::Completed`, which resumes the
-              // guest SDK's parked `RequestRegistry` future (design-abi.md §2). `outputJson` is empty
-              // when the extension had no `invoke` — still a real `ok` completion (an empty object),
-              // not a fault, matching this branch's pre-existing "return empty output" fallback above.
-              if (requestingPlugin.handle.completeExtensionInvoke) {
-                const outcomeBytes = encodePackValue(outputJson.length > 0 ? JSON.parse(outputJson) : {});
-                await requestingPlugin.handle.completeExtensionInvoke(baseSession.instanceId, req, { ok: outcomeBytes });
-              } else {
-                console.warn("[DEBUG] invokeExtension: requesting plugin's handle has no completeExtensionInvoke — completion not delivered", { extensionId, capability, req });
-              }
-            } catch (error) {
-              console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
-              if (requestingPlugin.handle.completeExtensionInvoke) {
-                const message = error instanceof Error ? error.message : String(error);
-                await requestingPlugin.handle.completeExtensionInvoke(baseSession.instanceId, req, { fault: encodePackValue({ code: "extension.invoke-failed", message }) }).catch((completionError) => {
-                  console.warn("[os-shell] invokeExtension: fault completion also failed to deliver", { extensionId, capability, req, completionError });
-                });
-              }
-            }
+            const invokeExtensionActorKey = `${baseSession.pluginId}:${baseSession.instanceId}`;
+            void serializePerActor(invokeExtensionActorKey, () =>
+              runInvokeExtensionEffect(requestingPlugin, extensionEntry, baseSession.instanceId, extensionId, capability, requestJson, req),
+            ).catch((error) => {
+              console.error("[os-shell] invokeExtension: per-actor dispatch failed unexpectedly", { extensionId, capability, req, error });
+            });
           }
           continue;
         }
@@ -3945,14 +4067,23 @@ function FrameworkOsShellInner({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    let publishing = false;
     const presenceIdentity = presenceClientIdentity(ephemeral, identityRef.current ? { clientId: shellActorIdRef.current, name: identityRef.current.displayName } : undefined);
-    const beat = async () => {
-      const worker = backboneWorkerRef.current;
-      if (!worker || publishing) return;
-      publishing = true;
-      try {
-        for (const [documentId, entry] of openDocumentSessionsRef.current) {
+    // 🐚️ terra-web-shellhost (finding 5) — one `latestWins` trigger PER open document (lazily created,
+    // cached in `presenceBeatTriggersRef`): a slow `ephemeralSnapshot` for one document no longer
+    // delays the heartbeat for every OTHER open document — each document's beat now runs independently
+    // and concurrently. `latestWins` still protects a SINGLE document against overlapping beats if its
+    // own snapshot takes longer than one heartbeat interval (collapses to at most one trailing follow-
+    // up), the same guarantee the old shell-WIDE `publishing` flag gave the whole loop, now scoped per
+    // document instead of stalling every document behind the slowest one. `run` reads
+    // `backboneWorkerRef`/`openDocumentSessionsRef` fresh on every actual invocation (never captured at
+    // trigger-creation time), so a still-open document's beat never serves a stale plugin/session pair.
+    const beatOneDocument = (documentId: string): Promise<void> => {
+      let trigger = presenceBeatTriggersRef.current.get(documentId);
+      if (!trigger) {
+        trigger = latestWins(async () => {
+          const worker = backboneWorkerRef.current;
+          const entry = openDocumentSessionsRef.current.get(documentId);
+          if (!worker || !entry) return;
           const snapshot = await entry.plugin.ephemeralSnapshot?.(entry.session.instanceId);
           const request: BackboneWorkerRequest = {
             kind: "send",
@@ -3970,14 +4101,27 @@ function FrameworkOsShellInner({
             },
           };
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-        }
-      } finally {
-        publishing = false;
+        });
+        presenceBeatTriggersRef.current.set(documentId, trigger);
+      }
+      return trigger();
+    };
+    const beat = () => {
+      // 🧹️ Drops triggers for documents closed since the last tick — bounded growth instead of one
+      // entry per document ever opened this session.
+      for (const documentId of presenceBeatTriggersRef.current.keys()) {
+        if (!openDocumentSessionsRef.current.has(documentId)) presenceBeatTriggersRef.current.delete(documentId);
+      }
+      for (const documentId of openDocumentSessionsRef.current.keys()) {
+        void beatOneDocument(documentId).catch((error) => console.error("[os-shell] presence heartbeat failed for document", documentId, error));
       }
     };
-    void beat();
-    const timer = window.setInterval(() => void beat(), PRESENCE_HEARTBEAT_INTERVAL_MS);
-    return () => window.clearInterval(timer);
+    beat();
+    const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
+    return () => {
+      window.clearInterval(timer);
+      presenceBeatTriggersRef.current.clear();
+    };
   }, [ephemeral, identity]);
 
   usePanelChromeHotkeys({

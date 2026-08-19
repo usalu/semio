@@ -246,7 +246,7 @@ mod tests {
 
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
+        let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);

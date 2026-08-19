@@ -1,0 +1,19 @@
+
+ RUN  v4.1.10 /private/tmp/claude-501/-Users-ueli-Documents-semio/41af9a75-e120-4706-9c10-c16aea8e3dee/scratchpad
+
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > bounded install queue (ShellHost finding 2) > never runs more than `limit` installs concurrently, and drains the rest as slots free 7ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > bounded install queue (ShellHost finding 2) > abort stops starting new items; an already in-flight item still settles 12ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > identity wait (ShellHost finding 3) > resolves as soon as the event fires, without waiting out the full timeout 1ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > identity wait (ShellHost finding 3) > rejects immediately on unmount abort, well before the 2s timeout, and unsubscribes 0ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > identity wait (ShellHost finding 3) > a plain AbortController alone (no timeout race) rejects on abort and never resolves on its own 0ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > per-document latestWins presence beat (ShellHost finding 5) > runs two different documents' beats concurrently — a slow document never blocks a fast one 0ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > per-document latestWins presence beat (ShellHost finding 5) > coalesces a burst of ticks for the SAME document into at most one trailing follow-up 0ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > serializePerActor dispatch for invokeExtension (ShellHost finding 1, real import) > keeps same-actor calls strictly ordered while a different actor runs fully concurrently 4ms
+ ✓ |terra-web-shellhost-scratch| terra-web-shellhost-verify.test.ts > serializePerActor dispatch for invokeExtension (ShellHost finding 1, real import) > a rejected run surfaces to the caller's .catch() instead of being swallowed 4ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  00:24:59
+   Duration  1.87s (transform 1.19s, setup 0ms, import 1.38s, tests 40ms, environment 0ms)
+
+EXIT:0

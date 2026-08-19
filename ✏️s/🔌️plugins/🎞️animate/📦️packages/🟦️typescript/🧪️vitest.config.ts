@@ -28,7 +28,7 @@ export default defineConfig({
     name: "@semio-tech/animate-js",
     mode: "test",
     environment: "jsdom",
-    include: ["../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx"],
+    include: [],
     coverage: { include: ["../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx"] },
     includeSource: ["../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx"],
     passWithNoTests: false,

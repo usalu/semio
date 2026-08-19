@@ -1,0 +1,1258 @@
+   Compiling stable_deref_trait v1.2.1
+   Compiling writeable v0.6.3
+   Compiling litemap v0.8.2
+   Compiling utf8_iter v1.0.4
+   Compiling typenum v1.20.1
+   Compiling thiserror v2.0.18
+   Compiling zerofrom v0.1.8
+   Compiling smallvec v1.15.1
+   Compiling zeroize v1.9.0
+   Compiling icu_properties_data v2.2.0
+   Compiling getrandom v0.3.4
+   Compiling serde v1.0.228
+   Compiling zerocopy v0.8.48
+   Compiling icu_normalizer_data v2.2.0
+   Compiling bytes v1.12.1
+   Compiling getrandom v0.2.17
+   Compiling yoke v0.8.2
+   Compiling generic-array v0.14.7
+   Compiling rustls-pki-types v1.15.0
+   Compiling untrusted v0.9.0
+   Compiling rand_core v0.9.5
+   Compiling cpufeatures v0.2.17
+   Compiling percent-encoding v2.3.2
+   Compiling foldhash v0.2.0
+   Compiling once_cell v1.21.4
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling ppv-lite86 v0.2.21
+   Compiling ring v0.17.14
+   Compiling webpki-roots v1.0.8
+   Compiling form_urlencoded v1.2.2
+   Compiling hashbrown v0.16.1
+   Compiling http v1.4.2
+   Compiling tokio v1.52.3
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling digest v0.10.7
+   Compiling rand_chacha v0.9.0
+   Compiling httparse v1.10.1
+   Compiling flate2 v1.1.9
+   Compiling subtle v2.6.1
+   Compiling same-file v1.0.6
+   Compiling rustls-webpki v0.103.13
+   Compiling icu_locale_core v2.2.0
+   Compiling icu_collections v2.2.0
+   Compiling sha1 v0.10.7
+   Compiling rand v0.9.5
+   Compiling data-encoding v2.11.0
+   Compiling utf-8 v0.7.6
+   Compiling futures-util v0.3.32
+   Compiling hashlink v0.11.0
+   Compiling walkdir v2.5.0
+   Compiling rustls v0.23.41
+   Compiling icu_provider v2.2.0
+   Compiling libsqlite3-sys v0.36.0
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1137:12
+     |
+1137 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1163:12
+     |
+1163 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1182:12
+     |
+1182 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1197:12
+     |
+1197 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1206:12
+     |
+1206 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1216:12
+     |
+1216 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1238:12
+     |
+1238 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1248:12
+     |
+1248 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1261:12
+     |
+1261 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1271:12
+     |
+1271 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1284:12
+     |
+1284 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1297:12
+     |
+1297 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1359:12
+     |
+1359 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1370:12
+     |
+1370 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1475:12
+     |
+1475 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1517:12
+     |
+1517 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1574:12
+     |
+1574 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1584:12
+     |
+1584 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1254:16
+     |
+1254 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1290:16
+     |
+1290 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+   Compiling webpki-roots v0.26.11
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+warning: `semio-framework-replication` (lib) generated 20 warnings
+   Compiling notify-types v2.1.0
+   Compiling tungstenite v0.26.2
+   Compiling fsevent-sys v4.1.0
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling icu_normalizer v2.2.0
+   Compiling icu_properties v2.2.0
+   Compiling fallible-iterator v0.3.0
+   Compiling semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling zip v2.4.2
+   Compiling tempfile v3.27.0
+   Compiling notify v8.2.0
+   Compiling tokio-tungstenite v0.26.2
+   Compiling rusqlite v0.38.0
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling url v2.5.8
+   Compiling ureq v2.12.1
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12372:6
+      |
+12372 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+12372 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+12372 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:42
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:97
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12374:64
+      |
+12374 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12374 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+12374 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12375:9
+      |
+12375 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12375 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+12375 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:49
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:101
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12378:21
+      |
+12378 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12378 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+12378 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12379:55
+      |
+12379 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12379 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+12379 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+warning: constant `EXAMPLES_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:398:15
+    |
+398 |     pub const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    |               ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `ASSETS_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:399:15
+    |
+399 |     pub const ASSETS_DIR_NAME: &str = "🖼️assets";
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `repo_root` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:402:12
+    |
+402 |     pub fn repo_root() -> PathBuf {
+    |            ^^^^^^^^^
+
+warning: function `collect_files` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:414:8
+    |
+414 |     fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    |        ^^^^^^^^^^^^^
+
+warning: function `find_example_asset` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:431:12
+    |
+431 |     pub fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
+    |            ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_text` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:468:12
+    |
+468 |     pub fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_bytes` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:474:12
+    |
+474 |     pub fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `artifact_dir` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:480:12
+    |
+480 |     pub fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
+    |            ^^^^^^^^^^^^
+
+warning: field `plugin` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:645:13
+    |
+644 |     pub struct DiscoveredGrammarFacet {
+    |                ---------------------- field in this struct
+645 |         pub plugin: String,
+    |             ^^^^^^
+    |
+    = note: `DiscoveredGrammarFacet` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+warning: `semio-framework-os-kernel` (lib test) generated 18 warnings (9 duplicates)
+    Finished `test` profile [unoptimized] target(s) in 45.36s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-dr/debug/deps/semio_framework_os_kernel-9af0d9430d451910)
+
+running 800 tests
+test os_directory::client::tests::backoff_doubles_and_caps ... ok
+test os_directory::client::tests::ws_url_switches_scheme_and_encodes_query ... ok
+test os_directory::identity::tests::actor_id_matches_contract_grammar ... ok
+test os_directory::client::tests::cancelling_the_context_closes_an_open_stream ... ok
+test os_directory::client::tests::a_request_with_an_already_cancelled_context_never_reaches_the_transport ... ok
+test os_directory::client::tests::unauthorized_status_maps_to_unauthorized_error ... ok
+test os_directory::client::tests::an_in_flight_request_is_cancelled_when_its_context_is_cancelled ... ok
+test every_path_mount_in_this_glue_resolves_to_an_existing_file ... ok
+test os_directory::client::tests::spaces_decodes_and_sends_bearer ... ok
+test os_directory::client::tests::stream_reconnects_and_resumes_from_last_seq ... ok
+test os_directory::identity::tests::expired_cache_falls_through_to_mint ... ok
+test os_directory::identity::tests::unreachable_hub_degrades_to_cached_identity_offline ... ok
+test os_directory::schema::tests::command_kind_is_kebab_case ... ok
+test os_directory::schema::tests::stream_message_kinds_round_trip ... ok
+test os_directory::identity::tests::unreachable_hub_with_no_cache_is_unavailable_not_a_panic ... ok
+test os_directory::schema::tests::event_body_kind_is_the_dotted_wire_string ... ok
+test os_directory::identity::tests::no_cache_mints_a_fresh_session ... ok
+test os_directory::tests::folding_is_idempotent_on_replay ... ok
+test os_directory::identity::tests::valid_cache_restores_without_minting ... ok
+test os_directory::tests::folds_the_golden_fixture_into_the_expected_projection ... ok
+test os_dsl::component::tests::derived_document_round_trips_through_vcs_document_dsl ... ok
+test os_dsl::component::tests::derived_op_binary_round_trips_every_variant_and_matches_text ... ok
+test os_dsl::component::tests::derived_op_text_round_trips_every_variant_as_one_line ... ok
+test os_dsl::component::tests::derived_op_satisfies_vcs_test_support_helpers ... ok
+test os_dsl::component::tests::derived_document_round_trips_with_optional_field_present ... ok
+test os_dsl::component::tests::dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks ... ok
+test os_dsl::component::tests::derived_self_referential_record_struct_round_trips_nested_values ... ok
+test os_dsl::component::tests::derived_document_dsl_satisfies_vcs_test_support_helpers ... ok
+test os_dsl::component::tests::derived_option_block_record_field_omits_rather_than_printing_empty_braces_when_absent ... ok
+test os_dsl::component::tests::derived_table_field_prints_compact_soa_and_round_trips ... ok
+test os_dsl::component::tests::derived_required_statements_boxed_field_round_trips ... ok
+test os_dsl::component::tests::derived_option_statements_field_round_trips_present_and_absent ... ok
+test os_dsl::component::tests::derived_enum_recursive_block_tree_and_map_and_nested_collections_round_trip ... ok
+test os_dsl::component::tests::dsl_idiom_round_trips_through_its_own_parse_and_print ... ok
+test os_dsl::component::tests::derived_newtype_tuple_variants_round_trip ... ok
+test os_dsl::component::tests::dsl_value_dsl_field_round_trips_through_record_value ... ok
+test os_dsl::component::tests::language_registry_resolves_by_id_and_semio_content ... ok
+test os_dsl::component::tests::primitive_dsl_field_impls_round_trip ... ok
+test os_dsl::component::tests::wire_field_dsl_field_impl_round_trips ... ok
+test os_dsl::family::catalog::tests::compat_pair_reuses_the_edge_grammar_directly ... ok
+test os_dsl::family::catalog::tests::parses_and_prints_a_count_literal ... ok
+test os_dsl::family::catalog::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::catalog::tests::parses_and_prints_a_slash_path ... ok
+test os_dsl::family::catalog::tests::rejects_a_non_count_ident ... ok
+test os_dsl::family::catalog::tests::rejects_bare_x_with_no_digits ... ok
+test os_dsl::family::catalog::tests::rejects_empty_segments ... ok
+test os_dsl::family::catalog::tests::rejects_more_than_one_token ... ok
+test os_dsl::family::catalog::tests::single_segment_path_round_trips ... ok
+test os_dsl::family::embed::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::graph::tests::contract_returns_none_when_endpoints_dont_thread ... ok
+test os_dsl::family::graph::tests::expand_lowers_a_chain_into_plain_edges ... ok
+test os_dsl::family::graph::tests::contract_returns_none_when_the_run_never_reaches_two_edges ... ok
+test os_dsl::family::graph::tests::contract_reassembles_a_maximal_anonymous_run ... ok
+test os_dsl::family::graph::tests::parses_a_directed_chain ... ok
+test os_dsl::family::graph::tests::parses_an_undirected_chain ... ok
+test os_dsl::family::graph::tests::rejects_mixed_direction_chains ... ok
+test os_dsl::family::recipe::tests::parses_a_step_with_a_text_argument ... ok
+test os_dsl::family::recipe::tests::rejects_a_missing_colon ... ok
+test os_dsl::family::recipe::tests::parses_a_typed_call_step_with_a_dotted_target ... ok
+test os_dsl::family::geo::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::recipe::tests::parses_a_step_with_no_args ... ok
+test os_dsl::family::recipe::tests::rejects_trailing_content ... ok
+test os_dsl::family::sheet::tests::division_by_zero_is_diagnosed ... ok
+test os_dsl::family::sheet::tests::evaluates_a_load_combination_formula ... ok
+test os_dsl::family::sheet::tests::canonicalize_trace_is_idempotent_once_correct ... ok
+test os_dsl::family::recipe::tests::round_trip_matrix ... ok
+test os_dsl::family::sheet::tests::canonicalize_trace_surfaces_an_unknown_variable_as_an_error ... ok
+test os_dsl::family::scene::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::graph::tests::round_trip_matrix ... ok
+test os_dsl::family::recipe::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::sheet::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::sheet::tests::round_trip_matrix ... ok
+test os_dsl::family::graph::tests::grammar_file_is_syntactically_valid ... ok
+test os_dsl::family::sheet::tests::canonicalize_trace_recomputes_a_stale_value ... ok
+test os_dsl::family::sheet::tests::evaluates_min_max_abs_sqrt ... ok
+test os_dsl::family::sheet::tests::parses_and_prints_a_trace_line ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_parses_under_the_real_dialect ... ok
+test os_dsl::grammar::tests::be_prim_variants_round_trip_and_decode_big_endian_for_real ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_real_wrap_binary_payload ... ok
+test os_dsl::grammar::tests::backward_scan_and_jump_to_resolve_zip_eocd_and_central_directory_offset ... ok
+test os_dsl::family::sheet::tests::unknown_variable_and_function_are_diagnosed_not_panicked ... ok
+test os_dsl::grammar::tests::comment_header_directive_disables_hash_and_enables_block_comment_step_style ... ok
+test os_dsl::grammar::tests::endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_walk_tiff_style ... ok
+test os_dsl::grammar::tests::conditional_field_and_segment_presence_gate_on_an_earlier_field_bmp_style ... ok
+test os_dsl::grammar::tests::hash_comment_hides_quote_and_pipe_characters_from_the_operator_prescan ... ok
+test os_dsl::grammar::tests::cross_block_field_env_threads_header_field_into_a_later_segment_las_vlr_style ... ok
+test os_dsl::grammar::tests::marker_scan_prim_finds_next_marker_byte_over_fill_bytes_jpg_style ... ok
+test os_dsl::grammar::tests::missing_start_directive_is_an_error ... ok
+test os_dsl::grammar::tests::grammar_without_string_or_comment_directives_keeps_default_lex_options ... ok
+test os_dsl::grammar::tests::parse_grammar_sets_dialect_grammar_vs_protocol ... ok
+test os_dsl::grammar::tests::line_terminal_captures_rest_of_physical_line_verbatim_stl_style ... ok
+test os_dsl::grammar::tests::parse_protocol_roundtrips_magic_pack ... ok
+test os_dsl::grammar::tests::parses_extension_and_uses ... ok
+test os_dsl::grammar::tests::parses_alternation_group_and_quantifiers ... ok
+test os_dsl::grammar::tests::parses_terminal_vs_ref_vs_macro ... ok
+test os_dsl::grammar::tests::parses_minimal_grammar_header ... ok
+test os_dsl::grammar::tests::promoted_tokens_are_real_terminals_the_recognizer_can_require_positionally ... ok
+test os_dsl::grammar::tests::print_grammar_round_trips_comment_and_string_header_directives ... ok
+test os_dsl::grammar::tests::recognizer_matches_bool_terminal ... ok
+test os_dsl::grammar::tests::protocol_parse_print_round_trip_retains_body ... ok
+test os_dsl::grammar::tests::repeat_block_dispatches_png_shaped_chunks_and_skips_unknown_type ... ok
+test os_dsl::grammar::tests::recognizer_matches_literals_terminals_and_quantifiers ... ok
+test os_dsl::grammar::tests::repeat_block_two_level_nested_dispatch_gif89a_shaped ... ok
+test os_dsl::grammar::tests::recognizer_matches_plain_arrow_via_registered_edge_macro ... ok
+test os_dsl::grammar::tests::rest_terminal_captures_to_eof_txt_style_over_out_of_alphabet_characters ... ok
+test os_dsl::grammar::tests::self_hosting_grammar_grammar_parses_and_round_trips ... ok
+test os_dsl::grammar::tests::protocol_parses_rich_struct_enum_segment_forms ... ok
+test os_dsl::grammar::tests::round_trip_matrix_over_representative_grammars ... ok
+test os_dsl::grammar::tests::string_header_directive_drives_csv_doubled_quote_decode ... ok
+test os_dsl::grammar::tests::string_header_directive_supports_step_single_quote_doubling ... ok
+test os_dsl::grammar::tests::verify_protocol_bytes_accepts_any_0x89_magic ... ok
+test os_dsl::grammar::tests::string_header_directive_drives_backslash_decode_end_to_end ... ok
+test os_dsl::grammar::tests::ref_self_recursion_matches_a_three_level_nested_shape_tree_pptx_style ... ok
+test os_dsl::grammar::tests::walk_protocol_consumes_magic_and_header ... ok
+test os_dsl::grammar::tests::self_hosting_protocol_grammar_semio_parses_as_grammar ... ok
+test os_dsl::grammar::tests::walk_protocol_minimal_op_binary_record ... ok
+test os_dsl::grammar::tests::walk_protocol_shape_a_spk_like_buffer ... ok
+test os_dsl::grammar::tests::verify_protocol_source_ok ... ok
+test os_dsl::grammar::tests::walk_protocol_spr_record_body_as_rest ... ok
+test os_dsl::lexer::tests::bare_gt_lexes_standalone_outside_fused_edge_arrow_context ... ok
+test os_dsl::grammar::tests::trailing_dot_float_and_leading_dot_enum_literal_terminals_match_through_recognizer ... ok
+test os_dsl::lexer::tests::block_comment_step_style_spans_lines_and_does_not_consume_entity_hash ... ok
+test os_dsl::lexer::tests::csv_style_doubled_quote_mode_decodes_doubled_delimiter_and_ignores_backslash ... ok
+test os_dsl::grammar::tests::string_header_directive_supports_single_and_double_quote_together_xml_style ... ok
+test os_dsl::lexer::tests::comment_line_marker_is_configurable_and_disableable ... ok
+test os_dsl::lexer::tests::default_lex_options_is_byte_identical_to_pre_m1_raw_double_quote_behavior ... ok
+test os_dsl::lexer::tests::diagnostic_lowers_to_text_error_with_expected_description ... ok
+test os_dsl::lexer::tests::escape_round_trips_every_control_case ... ok
+test os_dsl::lexer::tests::float_format_round_trips_including_specials ... ok
+test os_dsl::lexer::tests::is_bare_ident_accepts_normal_idents_and_rejects_reserved_and_number_shaped ... ok
+test os_dsl::lexer::tests::json_style_backslash_mode_decodes_standard_escapes_and_u_xxxx_surrogate_pairs ... ok
+test os_dsl::lexer::tests::leading_dot_enum_literals_lex_as_dotenum_step_style ... ok
+test os_dsl::lexer::tests::lexer_fence_captures_lang_and_multiline_content ... ok
+test os_dsl::lexer::tests::lexer_caret_and_dotdot_tokenize_distinctly_from_neighbors ... ok
+test os_dsl::lexer::tests::lexer_back_arrow_tokenizes_distinctly_from_dash_and_arrow ... ok
+test os_dsl::lexer::tests::lexer_fence_with_no_lang_tag_and_empty_content ... ok
+test os_dsl::lexer::tests::lexer_forgiving_mode_never_fails_on_malformed_input ... ok
+test os_dsl::lexer::tests::lexer_kebab_case_ident_and_arrow_coexist ... ok
+test os_dsl::lexer::tests::lexer_lone_underscore_is_placeholder_but_underscore_words_are_ident ... ok
+test os_dsl::lexer::tests::lexer_recognizes_negative_infinity_as_one_float_token ... ok
+test os_dsl::lexer::tests::lexer_spans_are_real_not_placeholder ... ok
+test os_dsl::lexer::tests::lexer_strict_mode_errors_on_unterminated_string_with_real_span ... ok
+test os_dsl::lexer::tests::lexer_tokenizes_a_representative_record_line ... ok
+test os_dsl::lexer::tests::lexer_unterminated_fence_is_a_strict_error_and_forgiving_error_token ... ok
+test os_dsl::lexer::tests::lexer_wire_literal_alphabet_tokenizes ... ok
+test os_dsl::lexer::tests::limits_reject_oversized_input_with_a_diagnostic_not_a_panic ... ok
+test os_dsl::lexer::tests::lone_leading_dot_without_closing_dot_is_unaffected_by_dotenum ... ok
+test os_dsl::lexer::tests::promoted_tokens_lex_standalone_without_breaking_arrow_forms ... ok
+test os_dsl::lexer::tests::single_quote_strings_work_alongside_double_quote_xml_style ... ok
+test os_dsl::lexer::tests::step_style_single_quote_doubled_mode_decodes_doubled_apostrophe ... ok
+test os_dsl::lexer::tests::symbol_interning_is_stable_and_deduplicates ... ok
+test os_dsl::lexer::tests::token_classes_distinguish_keywords_from_idents ... ok
+test os_dsl::lexer::tests::unescape_forgiving_mode_keeps_unknown_escapes_literal ... ok
+test os_dsl::lexer::tests::trailing_dot_floats_lex_while_range_dotdot_still_wins ... ok
+test os_dsl::lexer::tests::unit_conversion_round_trips_back_to_the_original_value ... ok
+test os_dsl::lexer::tests::unit_conversion_scales_within_a_dimension_and_rejects_across_dimensions ... ok
+test os_dsl::notation::tests::angle_accepts_radians_and_converts_to_degrees ... ok
+test os_dsl::lexer::tests::unit_lookup_finds_known_symbols_and_rejects_unknown_ones ... ok
+test os_dsl::lexer::tests::unit_conversion_same_unit_short_circuits_bit_exactly ... ok
+test os_dsl::notation::tests::back_arrow_is_sugar_normalized_by_endpoint_swap ... ok
+test os_dsl::notation::tests::bare_number_with_no_suffix_is_read_in_native_unit ... ok
+test os_dsl::notation::tests::bracket_labeled_edge_still_parses ... ok
+test os_dsl::notation::tests::empty_label_is_rejected ... ok
+test os_dsl::notation::tests::node_kind_and_port_round_trip ... ok
+test os_dsl::notation::tests::converts_a_compatible_alien_unit_into_native_scale ... ok
+test os_dsl::notation::tests::endpoints_carry_kind_and_port ... ok
+test os_dsl::notation::tests::parses_a_bare_node_with_no_link ... ok
+test os_dsl::notation::tests::labeled_back_arrow_is_sugar_normalized_by_endpoint_swap ... ok
+test os_dsl::notation::tests::parses_and_prints_angles_in_degrees ... ok
+test os_dsl::notation::tests::parses_labeled_directed_edge_with_id_and_kind ... ok
+test os_dsl::notation::tests::parses_plain_directed_arrow ... ok
+test os_dsl::notation::tests::parses_labeled_edge_kind_only ... ok
+test os_dsl::notation::tests::parses_plain_undirected_dash ... ok
+test os_dsl::notation::tests::parses_quantity_in_native_unit ... ok
+test os_dsl::notation::tests::parses_labeled_undirected_edge_id_only ... ok
+test os_dsl::notation::tests::rejects_a_dimensionally_incompatible_unit ... ok
+test os_dsl::registry::tests::full_resolver_from_map_bypasses_the_global_registry ... ok
+test os_dsl::notation::tests::rejects_an_unknown_unit_symbol ... ok
+test os_dsl::notation::tests::round_trip_matrix_over_representative_values ... ok
+test os_dsl::registry::tests::full_resolver_resolves_a_registered_schema_and_none_for_an_unregistered_one ... ok
+test os_dsl::schema::json_schema_tests::list_and_fixed_tuple_map_onto_json_schema_arrays ... ok
+test os_dsl::registry::tests::full_resolver_resolves_the_diff_schema_id_separately_from_its_document_id ... ok
+test os_dsl::lexer::tests::ten_thousand_iteration_generative_escape_round_trip ... ok
+test os_dsl::schema::json_schema_tests::enum_becomes_a_string_enum_of_its_tags ... ok
+test os_dsl::schema::json_schema_tests::flatten_splices_nested_fields_into_the_same_properties_map ... ok
+test os_dsl::schema::json_schema_tests::record_shape_recurses_via_record_spec_json_schema ... ok
+test os_dsl::schema::json_schema_tests::record_spec_json_schema_covers_required_and_optional_fields ... ok
+test os_dsl::schema::json_schema_tests::primitive_shapes_map_onto_the_expected_json_schema_types ... ok
+test os_dsl::schema::json_schema_tests::record_spec_json_schema_round_trips_embed_and_positional_fields ... ok
+test os_dsl::schema::json_schema_tests::ref_carries_the_entity_kind_and_quantity_carries_its_unit ... ok
+test os_dsl::schema::tests::bare_strings_print_unquoted_and_reserved_or_number_shaped_values_stay_quoted ... ok
+test os_dsl::schema::tests::call_layout_prints_name_equals_dotted_keyword_parens_args ... ok
+test os_dsl::schema::tests::canonicalization_is_idempotent ... ok
+test os_dsl::schema::tests::coord_dir_dim_range_count_ref_round_trip ... ok
+test os_dsl::schema::tests::call_layout_round_trips_with_and_without_the_optional_keyed_arg ... ok
+test os_dsl::schema::tests::call_layout_spec_without_a_call_name_field_is_a_clear_parse_error_not_a_panic ... ok
+test os_dsl::schema::tests::call_layout_rejects_the_wrong_call_target ... ok
+test os_dsl::schema::tests::coord_dir_dim_range_count_reject_wrong_arity_or_form ... ok
+test os_dsl::schema::tests::deeply_nested_blocks_hit_the_depth_limit_as_a_diagnostic ... ok
+test os_dsl::schema::tests::embed_document_and_inline_renders_agree ... ok
+test os_dsl::schema::tests::embed_empty_content_round_trips ... ok
+test os_dsl::schema::tests::embed_empty_lang_tag_is_accepted_and_canonicalizes_to_the_declared_lang ... ok
+test os_dsl::schema::tests::embed_inline_mode_accepts_a_quoted_escaped_string_directly ... ok
+test os_dsl::schema::tests::embed_rejects_a_mismatched_lang_tag ... ok
+test os_dsl::schema::tests::embed_round_trips_multiline_fenced_content_in_document_mode ... ok
+test os_dsl::schema::tests::expr_glued_negative_number_after_operand_canonicalizes_to_spaced_subtraction ... ok
+test os_dsl::schema::tests::expr_parses_with_correct_precedence ... ok
+test os_dsl::schema::tests::expr_right_nested_addition_round_trips_through_parens ... ok
+test os_dsl::schema::tests::glue_removes_the_key_equals_space_for_every_composite_shape ... ok
+test os_dsl::schema::tests::expr_round_trips_a_load_combination_formula ... ok
+test os_dsl::schema::tests::expr_supports_unary_minus_and_function_calls ... ok
+test os_dsl::schema::tests::language_service_completions_include_every_declared_key ... ok
+test os_dsl::schema::tests::language_service_reports_semantic_tokens_and_diagnostics ... ok
+test os_dsl::schema::tests::parse_wire_text_parses_a_standalone_wire_literal_with_back_arrow ... ok
+test os_dsl::schema::tests::primitive_comments_are_skipped_as_trivia ... ok
+test os_dsl::schema::tests::primitive_escaped_text_handles_quotes_newlines_and_trailing_position ... ok
+test os_dsl::schema::tests::primitive_recursive_blocks_round_trip ... ok
+test os_dsl::schema::tests::primitive_dynamic_value_round_trips ... ok
+test os_dsl::schema::tests::primitive_optional_field_omits_on_print_and_absent_on_parse ... ok
+test os_dsl::schema::tests::primitive_spans_are_real_on_parse_error ... ok
+test os_dsl::schema::tests::primitive_scalar_record_round_trips_and_is_order_independent ... ok
+test os_dsl::schema::tests::primitive_statements_collection_preserves_order_and_round_trips ... ok
+test os_dsl::schema::tests::primitive_tuple_list_and_base64_round_trip ... ok
+test os_dsl::schema::tests::primitive_sparse_patch_distinguishes_absent_from_present ... ok
+test os_dsl::schema::tests::quantity_with_no_suffix_is_already_in_the_declared_unit ... ok
+test os_dsl::schema::tests::primitive_wire_literal_directed_and_undirected_round_trip ... ok
+test os_dsl::schema::tests::quantity_accepts_a_compatible_alien_unit_and_canonicalizes_to_the_declared_one ... ok
+test os_dsl::schema::tests::quantity_and_angle_round_trip_in_their_declared_unit ... ok
+test os_dsl::schema::tests::quantity_rejects_an_incompatible_unit ... ok
+test os_dsl::schema::tests::table_accepts_verbose_aos_input_and_canonicalizes_to_soa_output ... ok
+test os_dsl::schema::tests::table_row_containing_its_own_table_field_round_trips_without_desync ... ok
+test os_dsl::schema::tests::table_rejects_non_self_delimiting_column_shapes_at_spec_build_time ... ok
+test os_dsl::schema::tests::range_without_step_round_trips_with_two_elements ... ok
+test os_dsl::schema::tests::wire_back_arrow_normalizes_to_forward_arrow_with_swapped_endpoints ... ok
+test os_dsl::schema::tests::table_header_without_explicit_type_tags_is_still_parseable ... ok
+test os_engine::component::tests::derive_twice_same_key_is_cache_hit ... ok
+test os_engine::component::tests::engine_key_is_stable ... ok
+test os_engine::component::tests::engine_rep_build_is_deterministic ... ok
+test os_dsl::schema::tests::table_document_and_inline_renders_agree ... ok
+test os_dsl::schema::tests::table_soa_round_trips_with_underscore_absent_cell_and_a_wire_column ... ok
+test os_engine::component::tests::eviction_when_budget_exceeded ... ok
+test os_engine::component::tests::unknown_engine_fault ... ok
+test os_dsl::schema::tests::table_row_with_two_columns_of_the_same_record_type_does_not_cross_contaminate ... ok
+test os_engine::component::tests::register_and_derive_echoes_input ... ok
+test os_extension::tests::dependencies_default_absent_on_the_wire ... ok
+test os_extension::tests::content_hash_is_stable_blake3 ... ok
+test os_extension::tests::extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case ... ok
+test os_extension::tests::extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency ... ok
+test os_extension::tests::pack_rejects_empty_component ... ok
+test os_extension::tests::package_plugin_dependency_round_trips_as_a_plain_string_pair ... ok
+test os_extension::tests::pack_unpack_verify_round_trip ... ok
+test os_extension::tests::verify_rejects_wrong_envelope ... ok
+test os_inference::component::tests::changing_a_leaf_weight_only_recomputes_that_leaf_and_its_descendants ... ok
+test os_inference::component::tests::changing_the_root_weight_recomputes_the_entire_subtree ... ok
+test os_inference::component::tests::clear_drops_every_entry_and_resets_used_bytes ... ok
+test os_inference::component::tests::default_config_is_disabled ... ok
+test os_inference::component::tests::dep_hash_chain_differs_from_root_for_the_same_input ... ok
+test os_inference::component::tests::cold_and_warm_cache_match_pure_recompute ... ok
+test os_inference::component::tests::dep_hash_chain_is_order_independent_over_parent_set ... ok
+test os_inference::component::tests::dep_hash_root_is_deterministic_and_input_sensitive ... ok
+test os_inference::component::tests::disabled_cache_matches_pure_recompute ... ok
+test os_inference::component::tests::identical_snapshot_recompute_is_all_cache_hits ... ok
+test os_inference::component::tests::infer_field_computes_expected_values_over_the_dag ... ok
+test os_inference::component::tests::schema_version_bump_yields_zero_hits_on_an_otherwise_warm_cache ... ok
+test os_inference::component::tests::tiny_budget_eviction_storm_still_matches_pure_recompute ... ok
+test os_io::io_fidelity_tests::io_fidelity_class_parse_and_rank ... ok
+test os_io::io_fidelity_tests::io_fidelity_declaration_validate ... ok
+test os_io::io_mechanism::laws::conformance_runs_after_deserialize ... ok
+test os_io::io_mechanism::laws::duplicate_entry_is_a_typed_error ... ok
+test os_io::io_mechanism::laws::identify_only_sniffs_carriers ... ok
+test os_io::io_mechanism::laws::registration_is_all_or_nothing ... ok
+test os_io::io_mechanism::laws::route_is_deterministic ... ok
+test os_io::tests::artifact_kind_id_accepts_canonical_grammar ... ok
+test os_io::io_mechanism::laws::route_never_cycles ... ok
+test os_io::io_mechanism::laws::route_prefers_higher_minimum_fidelity ... ok
+test os_io::io_mechanism::laws::route_respects_max_hops ... ok
+test os_io::tests::artifact_kind_id_rejects_non_canonical_grammar ... ok
+test os_io::tests::artifact_ref_parse_uri_rejects_malformed_input ... ok
+test os_io::tests::artifact_ref_to_uri_matches_expected_shape ... ok
+test os_io::tests::codec_budget_enforces_limits_and_shared_cancellation ... ok
+test os_io::tests::artifact_ref_uri_round_trips ... ok
+test os_io::tests::codec_context_bounds_streaming_random_access_recursion_and_resolved_resources ... ok
+test os_io::tests::codec_result_requires_valid_owned_spans_and_deterministic_opaque_order ... ok
+test os_io::tests::format_registry_allows_an_unregistered_mime_and_rejects_duplicate_claims ... ok
+test os_io::tests::io_compose_via_chains_two_registered_hops ... ok
+test os_io::tests::resolved_resources_cannot_outlive_their_cancellation_budget ... ok
+test os_io::tests::io_compose_via_surfaces_hub_resolve_failure ... ok
+test os_io::tests::io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry ... ok
+test os_pack::cli::tests::cli_help_and_unknown_subcommand ... ok
+test os_io::tests::wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning ... ok
+test os_pack::cli::tests::cli_from_dsl_reports_parse_failure_without_panicking ... ok
+test os_pack::cli::tests::cli_parse_args_splits_flags_and_positionals ... ok
+test os_pack::cli::tests::cli_handles_truncated_pack_without_panicking ... ok
+test os_pack::cli::tests::cli_reports_missing_file_without_panicking ... ok
+test os_pack::cli::tests::cli_inspect_verify_hash_on_valid_pack ... ok
+test os_pack::component::tests::facade_content_hash_is_stable_across_two_encodes ... ok
+test os_pack::component::tests::facade_encode_document_decode_document_round_trip ... ok
+test os_pack::cli::tests::cli_verify_fails_on_corrupted_pack_without_panicking ... ok
+test os_pack::testkit::tests::exhaustive::fuzz_truncation_never_panics_at_every_single_byte_offset ... ok
+test os_pack::testkit::tests::fuzz_bit_flips_never_panics_on_a_real_encoded_document ... ok
+test os_pack::testkit::tests::fuzz_truncation_and_bit_flips_report_zero_cases_for_empty_input ... ok
+test os_pack::testkit::tests::golden_hash_hex_is_deterministic_and_sensitive_to_content ... ok
+test os_pack::testkit::tests::fuzz_truncation_never_panics_on_a_real_encoded_document ... ok
+test os_pack::testkit::tests::fuzz_harness_catches_a_panicking_decoder_instead_of_crashing_the_process ... ok
+test os_pack::testkit::tests::golden_hash_hex_matches_a_real_encoded_document_across_two_encodes ... ok
+test os_pack::testkit::tests::law_dsl_pack_bidirectional_holds_for_a_hand_built_sample ... ok
+test os_pack::cli::tests::cli_to_dsl_and_from_dsl_round_trip_via_registry ... ok
+test os_pack::testkit::tests::law_encode_decode_identity_holds_for_generated_records ... ok
+test os_pack::testkit::tests::law_canonical_stable_holds_for_generated_records ... ok
+test os_pack::testkit::tests::law_unknown_field_preserved_holds ... ok
+test os_pack::testkit::tests::record_value_gen_differs_across_seeds ... ok
+test os_pack::testkit::tests::record_value_gen_bounds_recursion_by_max_depth ... ok
+test os_pack::testkit::tests::exhaustive::fuzz_bit_flips_never_panics_at_every_single_bit ... ok
+test os_pack::testkit::tests::long::fuzz_truncation_and_bit_flips_never_panic_at_long_density ... ok
+test os_pack::testkit::tests::record_value_gen_is_deterministic_for_the_same_seed ... ok
+test os_pack::value::tests::canonical_encoding_is_byte_stable_across_shuffled_insertion_order ... ok
+test os_pack::value::tests::packed_numeric_list_and_tuple_round_trip_and_use_packed_tags ... ok
+test os_pack::value::tests::preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_reports_them ... ok
+test os_pack::value::tests::record_body_is_deterministic_for_equal_inputs ... ok
+test os_pack::value::tests::document_body_splits_across_multiple_frames_when_frame_size_is_small ... ok
+test os_pack::testkit::tests::record_value_gen_produces_values_the_pack_codec_accepts ... ok
+test os_pack::value::tests::record_body_preserves_and_reports_unknown_fields ... ok
+test os_pack::value::tests::record_body_round_trips_every_shape ... ok
+test os_pack::value::tests::round_trips_every_shape_variant_in_one_document ... ok
+test os_pack::value::tests::record_body_keeps_oversized_bytes_inline_instead_of_chunking ... ok
+test os_pack::value::tests::round_trips_scalar_edge_cases ... ok
+test os_pack::value::tests::schema_hash_is_order_independent_and_content_sensitive ... ok
+test os_pack::value::tests::table_soa_nested_record_column_backfills_absent_option_subfield ... ok
+test os_pack::value::tests::table_soa_round_trips_with_sparse_columns ... ok
+test os_pack::value::tests::table_soa_tuple_column_round_trips_as_tuple_not_list ... ok
+test os_pack::value::tests::wire_literal_round_trips_bare_node_and_undirected_edge ... ok
+test os_pack::value::tests::unknown_field_round_trips_through_decode_then_reencode ... ok
+test os_semio::tests::binary_header_round_trip ... ok
+test os_semio::tests::sniff_text_and_binary ... ok
+test os_semio::tests::text_preamble_round_trip ... ok
+test os_spr::channel::tests::app_command_apply_envelopes_round_trips ... ok
+test os_spr::channel::tests::app_command_clear_default_app_round_trips ... ok
+test os_spr::channel::tests::app_command_command_round_trips ... ok
+test os_spr::channel::tests::app_command_command_text_round_trips ... ok
+test os_spr::channel::tests::app_command_config_command_round_trips ... ok
+test os_spr::channel::tests::app_command_context_menu_round_trips ... ok
+test os_spr::channel::tests::app_command_document_command_round_trips ... ok
+test os_spr::channel::tests::app_command_load_config_round_trips ... ok
+test os_spr::channel::tests::app_command_fixture_corpus_matches_golden_hex_and_round_trips ... ok
+test os_spr::channel::tests::app_command_media_fingerprint_round_trips ... ok
+test os_spr::channel::tests::app_command_load_document_round_trips ... ok
+test os_spr::channel::tests::app_command_media_in_round_trips ... ok
+test os_spr::channel::tests::app_command_media_out_round_trips ... ok
+test os_spr::channel::tests::app_command_open_artifact_round_trips_resolved_and_explicit_forms ... ok
+test os_spr::channel::tests::app_command_pure_command_round_trips ... ok
+test os_spr::channel::tests::app_command_read_artifact_round_trips ... ok
+test os_spr::channel::tests::app_command_read_config_round_trips ... ok
+test os_spr::channel::tests::app_command_read_conflicts_round_trips ... ok
+test os_spr::channel::tests::app_command_resolve_conflict_round_trips ... ok
+test os_spr::channel::tests::app_command_set_default_app_round_trips ... ok
+test os_spr::channel::tests::app_command_set_merge_policy_round_trips ... ok
+test os_spr::channel::tests::app_command_transaction_commit_round_trips ... ok
+test os_spr::channel::tests::app_command_transaction_prepare_round_trips_owner_and_preplanned_forms ... ok
+test os_spr::channel::tests::app_command_transaction_redo_round_trips ... ok
+test os_spr::channel::tests::app_command_transaction_rollback_round_trips ... ok
+test os_spr::channel::tests::app_command_transaction_undo_round_trips ... ok
+test os_spr::channel::tests::app_frame_config_changed_round_trips ... ok
+test os_spr::channel::tests::app_frame_config_round_trips ... ok
+test os_spr::channel::tests::app_frame_conflicts_round_trips ... ok
+test os_spr::channel::tests::app_frame_context_menu_round_trips ... ok
+test os_spr::channel::tests::app_frame_document_changed_round_trips ... ok
+test os_spr::channel::tests::app_frame_document_round_trips ... ok
+test os_spr::channel::tests::app_frame_done_round_trips ... ok
+test os_spr::channel::tests::app_frame_draft_round_trips ... ok
+test os_spr::channel::tests::app_frame_emit_round_trips ... ok
+test os_spr::channel::tests::app_frame_error_round_trips ... ok
+test os_spr::channel::tests::app_frame_fixture_corpus_matches_golden_hex_and_round_trips ... ok
+test os_spr::channel::tests::app_frame_invocation_round_trips ... ok
+test os_spr::channel::tests::app_frame_media_fingerprint_round_trips ... ok
+test os_spr::channel::tests::app_frame_media_round_trips ... ok
+test os_spr::channel::tests::app_frame_merge_report_round_trips ... ok
+test os_spr::channel::tests::app_frame_transaction_committed_round_trips ... ok
+test os_spr::channel::tests::app_frame_transaction_prepared_round_trips_with_and_without_rejection ... ok
+test os_spr::channel::tests::app_frame_transaction_proposal_round_trips ... ok
+test os_spr::channel::tests::app_frame_transaction_rolled_back_round_trips ... ok
+test os_spr::channel::tests::app_frame_ui_patch_round_trips_with_and_without_in_reply_to ... ok
+test os_spr::channel::tests::app_frame_ui_snapshot_end_round_trips ... ok
+test os_spr::channel::tests::channel_opening_fixtures_match_shared_cross_language_json_vectors ... ok
+test os_spr::channel::tests::channel_merge_fixtures_match_shared_cross_language_json_vectors ... ok
+test os_spr::channel::tests::channel_version_matches_the_shared_cross_language_pin ... ok
+test os_spr::channel::tests::channel_transaction_fixtures_match_shared_cross_language_json_vectors ... ok
+test os_pack::testkit::tests::law_streamed_equals_buffered_holds ... ok
+test os_spr::channel::tests::child_pack_commands_round_trip ... ok
+test os_spr::channel::tests::decode_app_command_never_panics_on_arbitrary_short_buffers ... ok
+test os_spr::channel::tests::decode_app_command_rejects_empty_bytes ... ok
+test os_spr::channel::tests::decode_app_command_rejects_unknown_tag ... ok
+test os_spr::channel::tests::decode_app_command_rejects_truncated_field ... ok
+test os_spr::channel::tests::decode_app_frame_never_panics_on_arbitrary_short_buffers ... ok
+test os_spr::channel::tests::decode_app_frame_rejects_empty_bytes ... ok
+test os_spr::channel::tests::decode_app_frame_rejects_truncated_field ... ok
+test os_spr::channel::tests::decode_app_frame_rejects_unknown_tag ... ok
+test os_spr::channel::tests::encoding_is_deterministic ... ok
+test os_spr::cli::tests::cli_compile_rejects_malformed_ops_text ... ok
+test os_spr::cli::tests::cli_diff_reports_identical_and_divergent_files ... ok
+test os_spr::cli::tests::cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix ... ok
+test os_spr::cli::tests::cli_help_and_unknown_subcommand ... ok
+test os_spr::cli::tests::cli_inspect_reports_error_on_missing_file ... ok
+test os_spr::cli::tests::cli_hash_prints_commit_seq_and_chain_hash ... ok
+test os_spr::cli::tests::cli_compile_and_decompile_round_trip_via_files ... ok
+test os_spr::cli::tests::cli_inspect_reports_header_kinds_and_commit_chain ... ok
+test os_spr::cli::tests::cli_repair_reports_error_on_missing_file ... ok
+test os_pack::value::tests::large_bytes_field_is_chunked_and_round_trips ... ok
+test os_spr::cli::tests::cli_log_filters_by_actor_and_alternative_and_respects_limit_reverse ... ok
+test os_spr::cli::tests::cli_repair_reports_clean_file_and_truncates_a_torn_tail ... ok
+test os_spr::cli::tests::cli_upgrade_fails_on_corrupt_file ... ok
+test os_spr::cli::tests::cli_verify_ok_at_every_level_on_a_clean_file ... ok
+test os_spr::cli::tests::kind_name_covers_every_frozen_kind_byte ... ok
+test os_spr::cli::tests::parse_args_splits_flags_and_positionals ... ok
+test os_spr::cli::tests::cli_upgrade_passes_through_a_valid_file ... ok
+test os_spr::cli::tests::cli_verify_rejects_unknown_level ... ok
+test os_spr::cli::tests::parse_commit_fields_matches_a_real_commit_frame ... ok
+test os_spr::cli::tests::cli_verify_rejects_file_with_corrupted_header ... ok
+test os_spr::cli::tests::parse_commit_fields_rejects_wrong_length_payload ... ok
+test os_spr::cli::tests::parse_level_accepts_known_values_and_rejects_unknown ... ok
+test os_spr::cli::tests::parse_repair_args_extracts_both_boolean_flags ... ok
+test os_spr::command::tests::apply_add_remove_move_patch ... ok
+test os_spr::cli::tests::parse_log_args_extracts_reverse_without_disturbing_value_flags ... ok
+test os_spr::command::tests::approved_verbs_are_unique_and_lowercase ... ok
+test os_spr::command::tests::collection_diff_from_operation_projects_each_kind ... ok
+test os_spr::command::tests::command_outcome_default_is_empty ... ok
+test os_spr::command::tests::derive_composite_mutation_wires_delegating_mutation_kind ... ok
+test os_spr::command::tests::composite_of_composite_nests_and_folds_identically_to_flattened_plan ... ok
+test os_spr::command::tests::derive_mutations_wires_mutation_and_semantic_mutation ... ok
+test os_spr::cli::tests::cli_compact_in_place_and_via_out_both_leave_a_verifiable_file ... ok
+test os_spr::command::tests::fold_plan_diff_equals_sequential_apply ... ok
+test os_spr::command::tests::edit_serde_round_trip ... ok
+test os_spr::command::tests::fold_plan_inverse_restores_base ... ok
+test os_spr::command::tests::foreign_steps_are_excluded_from_fold_plan_diff ... ok
+test os_spr::command::tests::indexed_apply_rejects_duplicate_added_indices_without_mutating ... ok
+test os_spr::command::tests::indexed_triple_diff_is_empty_holds ... ok
+test os_spr::command::tests::inference_default_law ... ok
+test os_spr::command::tests::indexed_apply_modifies_removes_descending_then_inserts_ascending ... ok
+test os_spr::command::tests::inference_determinism_law ... ok
+test os_spr::command::tests::inference_diff_consistency_law ... ok
+test os_spr::command::tests::inference_spec_carries_schema_identity ... ok
+test os_spr::command::tests::is_approved_verb_matches_the_table ... ok
+test os_spr::command::tests::invert_collection_operation_round_trips_every_kind ... ok
+test os_spr::command::tests::mutation_apply_error_json_round_trip_matches_typescript_parity_vector ... ok
+test os_spr::command::tests::mutation_apply_error_under_prefixes_without_losing_inner_target ... ok
+test os_spr::command::tests::mutation_descriptor_with_semantics_attaches_without_changing_fingerprint ... ok
+test os_spr::command::tests::named_apply_removes_patches_then_adds ... ok
+test os_spr::command::tests::named_triple_diff_is_empty_holds ... ok
+test os_spr::command::tests::op_text_parse_error_carries_message ... ok
+test os_spr::command::tests::operation_diff_absorb_accumulates ... ok
+test os_spr::command::tests::operation_descriptor_fingerprint_is_golden_pinned ... ok
+test os_spr::command::tests::op_text_round_trip ... ok
+test os_spr::command::tests::operation_defaults_are_stable ... ok
+test os_spr::command::tests::operation_diff_apply_matches_backwards_inverse ... ok
+test os_spr::command::tests::operation_event_serde_round_trip ... ok
+test os_spr::command::tests::plan_cycle_is_typed_error_never_panics ... ok
+test os_spr::command::tests::plan_depth_beyond_max_is_typed_error_never_panics ... ok
+test os_spr::command::tests::str_eq_matches_std_partial_eq ... ok
+test os_spr::command::tests::touched_paths_default_is_empty_and_intersects_nothing ... ok
+test os_spr::command::tests::operation_meta_serde_round_trip ... ok
+test os_spr::command::tests::touched_paths_intersects_ancestor_and_descendant_prefixes ... ok
+test os_spr::command::tests::touched_paths_intersects_any_matches_first_hit ... ok
+test os_spr::command::tests::upcaster_is_idempotent_at_target_version ... ok
+test os_spr::component::tests::compile_ops_rejects_malformed_text ... ok
+test os_spr::component::tests::content_frontier_on_empty_history_reports_zero_head_and_no_alternatives ... ok
+test os_spr::component::tests::extract_range_rejects_empty_and_out_of_bounds_ranges ... ok
+test os_spr::component::tests::reexported_types_match_sibling_crate_shapes ... ok
+test os_spr::component::tests::content_frontier_reports_head_edit_and_chain_tip ... ok
+test os_spr::component::tests::extract_range_returns_contiguous_slice_covering_requested_edits ... ok
+test os_spr::component::tests::verify_slice_accepts_genuine_content_and_rejects_tamper ... ok
+test os_spr::history::tests::active_payload_round_trips_some_and_none ... ok
+test os_spr::history::tests::alternative_payload_round_trips ... ok
+test os_spr::component::tests::compile_ops_decompile_ops_round_trip ... ok
+test os_spr::history::tests::checkpoint_payload_round_trips_with_authors ... ok
+test os_spr::history::tests::a_log_without_composition_writes_no_composition_record ... ok
+test os_spr::history::tests::a_log_without_conflicts_writes_no_conflict_record ... ok
+test os_spr::history::tests::change_payload_round_trips_and_references_edit_ordinals ... ok
+test os_spr::history::tests::conflict_codec_rejects_unknown_kind_and_status_tags ... ok
+test os_spr::history::tests::append_cursor_then_decode_recovers_it ... ok
+test os_spr::history::tests::conflict_decoder_rejects_duplicate_ids_and_trailing_payload_bytes ... ok
+test os_spr::history::tests::cursor_decoder_rejects_unknown_presence_bits_and_trailing_payload ... ok
+test os_spr::history::tests::cursor_payload_round_trips_with_dict_and_ordinal_refs ... ok
+test os_spr::history::tests::cursor_payload_round_trips_without_a_checkpoint ... ok
+test os_spr::history::tests::decode_rejects_unsupported_format ... ok
+test os_spr::history::tests::doc_payload_round_trips ... ok
+test os_spr::history::tests::composition_overlay_round_trips_through_the_binary_log ... ok
+test os_spr::history::tests::edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads ... ok
+test os_spr::history::tests::conflict_payload_round_trips_both_kinds_byte_identically ... ok
+test os_spr::history::tests::edit_payload_round_trips_minimal_edit ... ok
+test os_spr::history::tests::encode_conflicts_round_trips_empty ... ok
+test os_spr::history::tests::edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty ... ok
+test os_spr::history::tests::frontier_delta_reports_equal_ahead_behind_diverged ... ok
+test os_spr::history::tests::encode_conflicts_round_trips_with_dict_and_ordinal_refs ... ok
+test os_spr::history::tests::edit_payload_round_trips_with_all_optionals_and_meta ... ok
+test os_spr::history::tests::history_encode_decode_identity_full_verification ... ok
+test os_spr::history::tests::history_encode_decode_identity_standard ... ok
+test os_spr::history::tests::history_message_decoder_rejects_invalid_severity_presence_and_index_width ... ok
+test os_spr::history::tests::history_full_verification_detects_tampering ... ok
+test os_spr::history::tests::history_encode_is_canonically_stable ... ok
+test os_spr::history::tests::index_round_trips_edits_checkpoints_and_snapshots ... ok
+test os_spr::history::tests::history_strips_backwards_when_write_backwards_section_is_unset_even_if_populated ... ok
+test os_spr::history::tests::history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set ... ok
+test os_spr::history::tests::message_code_interning_does_not_grow_the_dictionary_linearly ... ok
+test os_spr::history::tests::op_meta_messages_round_trip_every_severity_and_target_shape ... ok
+test os_spr::history::tests::op_meta_without_messages_writes_no_messages_section ... ok
+test os_spr::history::tests::ops_text_edit_without_active_line_leaves_none ... ok
+test os_spr::history::tests::ops_text_rejects_unknown_line_keyword ... ok
+test os_spr::history::tests::ops_text_without_a_cursor_line_leaves_cursor_none ... ok
+test os_spr::history::tests::ops_text_skips_comments_and_blank_lines ... ok
+test os_spr::history::tests::ops_text_is_a_fixpoint_under_reprint ... ok
+test os_spr::history::tests::reader_edits_forward_matches_log ... ok
+test os_spr::history::tests::ops_text_round_trips_a_cursor_line_with_undo_then_apply_interleaving ... ok
+test os_spr::history::tests::reader_edits_rev_matches_tail_in_reverse ... ok
+test os_spr::history::tests::ops_text_round_trips_a_full_log ... ok
+test os_spr::history::tests::reader_edits_rev_full_matches_reversed_forward ... ok
+test os_spr::history::tests::streamed_append_equals_buffered_encode ... ok
+test os_spr::io::native::tests::create_then_append_then_commit_round_trips_through_open_read_only ... ok
+test os_spr::io::native::tests::appender_panics_on_a_read_only_handle - should panic ... ok
+test os_spr::io::native::tests::open_append_resumes_and_preserves_prior_edits_across_a_process_restart ... ok
+test os_dsl::schema::tests::generative_round_trip_over_scalar_records ... ok
+test os_spr::io::native::tests::open_read_only_never_writes_to_the_file ... ok
+test os_spr::io::native::tests::read_sidecar_missing_file_is_an_io_error ... ok
+test os_spr::io::native::tests::open_append_truncates_a_torn_tail_before_resuming ... ok
+test os_spr::io::native::tests::compact_on_an_already_minimal_file_is_a_harmless_no_op_content_wise ... ok
+test os_spr::io::native::tests::compact_preserves_every_edit_and_records_a_compaction_provenance_marker ... ok
+test os_spr::io::native::tests::recover_file_reports_the_committed_record_count ... ok
+test os_spr::io::native::tests::tail_follower_open_from_a_nonzero_ordinal_skips_already_known_edits ... ok
+test os_spr::materialize::tests::checkpoint_policy_default_matches_documented_values ... ok
+test os_spr::io::native::tests::tail_follower_polls_new_edits_across_multiple_commits_and_advances_its_ordinal ... ok
+test os_spr::materialize::tests::checkpoint_policy_triggers_on_any_threshold ... ok
+test os_spr::materialize::tests::resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index ... ok
+test os_spr::io::native::tests::sidecar_write_read_round_trips_and_names_by_hex8_of_hash ... ok
+test os_spr::materialize::tests::resolve_plan_at_edit_ordinal_beyond_snapshot_replays_full_tail ... ok
+test os_spr::materialize::tests::resolve_plan_falls_back_to_initial_pack_when_target_precedes_every_snapshot ... ok
+test os_spr::materialize::tests::resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack ... ok
+test os_spr::materialize::tests::resolve_plan_picks_snapshot_and_replays_only_the_tail ... ok
+test os_spr::materialize::tests::snapshot_rejects_unknown_format ... ok
+test os_spr::materialize::tests::snapshot_round_trips_embedded_dsl_with_ordinal_only_anchor ... ok
+test os_spr::materialize::tests::snapshot_round_trips_embedded_with_checkpoint_anchor ... ok
+test os_spr::materialize::tests::snapshot_round_trips_sidecar_without_body ... ok
+test os_spr::testkit::tests::channel_frame_round_trip_holds_for_command_and_frame_samples ... ok
+test os_spr::testkit::tests::conflict_spr_round_trip_holds_for_an_identity_codec ... ok
+test os_spr::testkit::tests::chronological_determinism_holds_for_an_order_independent_run ... ok
+test os_spr::testkit::tests::chronological_determinism_panics_for_an_order_dependent_run - should panic ... ok
+test os_spr::testkit::tests::conflict_spr_round_trip_panics_for_a_lossy_codec - should panic ... ok
+test os_spr::testkit::tests::diff_algebra_between_law_holds_for_add ... ok
+test os_spr::testkit::tests::diff_algebra_inverse_law_holds_for_add ... ok
+test os_spr::testkit::tests::fatal_never_applies_holds_for_a_correct_outcome ... ok
+test os_spr::testkit::tests::fatal_never_applies_panics_on_a_non_empty_diff - should panic ... ok
+test os_spr::testkit::tests::chain_detects_tamper_on_a_generated_history ... ok
+test os_spr::testkit::tests::frame_corpus_round_trip_holds_for_the_real_app_command_codec ... ok
+test os_spr::testkit::tests::frame_corpus_round_trip_panics_for_a_lossy_codec - should panic ... ok
+test os_spr::testkit::tests::fuzz_bit_flips_never_panics_history_reader_open ... ok
+test os_spr::testkit::tests::fuzz_truncation_never_panics_recover ... ok
+test os_spr::testkit::tests::fuzz_truncation_never_panics_history_reader_open ... ok
+test os_spr::testkit::tests::exhaustive::recovery_truncates_to_commit_exhaustive_on_a_small_fixture ... ok
+test os_spr::testkit::tests::golden_hash_hex_is_deterministic_and_hex_encoded ... ok
+test os_spr::testkit::tests::compaction_identity_on_a_generated_history ... ok
+test os_spr::testkit::tests::history_encode_decode_identity_handles_empty_edits_and_history ... ok
+test os_spr::testkit::tests::history_encode_decode_identity_across_profiles ... ok
+test os_spr::testkit::tests::history_log_gen_respects_edit_count_and_checkpoint_cadence ... ok
+test os_spr::testkit::tests::history_log_gen_is_deterministic_for_a_fixed_seed ... ok
+test os_spr::testkit::tests::history_log_gen_different_seeds_usually_differ ... ok
+test os_spr::testkit::tests::history_log_gen_zero_checkpoint_every_produces_no_changes_or_checkpoints ... ok
+test os_spr::testkit::tests::ledger_matches_replay_holds_when_equal ... ok
+test os_spr::testkit::tests::history_streamed_equals_buffered_across_profiles ... ok
+test os_spr::testkit::tests::history_canonical_stable_across_profiles ... ok
+test os_spr::testkit::tests::ledger_matches_replay_panics_when_unequal - should panic ... ok
+test os_spr::testkit::tests::merge_convergence_holds_for_a_commutative_fold ... ok
+test os_spr::testkit::tests::missing_target_is_error_holds_for_a_correct_impl ... ok
+test os_spr::testkit::tests::merge_convergence_panics_for_an_order_dependent_fold - should panic ... ok
+test os_spr::testkit::tests::missing_target_is_error_panics_on_a_buggy_impl - should panic ... ok
+test os_spr::testkit::tests::modify_vs_delete_holds_for_laissez_faire_apply ... ok
+test os_spr::testkit::tests::modify_vs_delete_holds_for_normal_quarantine ... ok
+test os_spr::testkit::tests::modify_vs_delete_panics_when_laissez_faire_part_still_present - should panic ... ok
+test os_spr::testkit::tests::modify_vs_delete_panics_when_normal_wrongly_accepts - should panic ... ok
+test os_spr::testkit::tests::mutation_diff_absorb_law_holds_for_add ... ok
+test os_spr::testkit::tests::mutation_inverse_law_holds_for_add ... ok
+test os_spr::testkit::tests::mutation_inverse_law_panics_when_forward_outcome_is_rejected - should panic ... ok
+test os_spr::testkit::tests::op_text_round_trip_holds_and_rejects_a_broken_impl ... ok
+test os_spr::testkit::tests::op_text_round_trip_panics_on_a_lossy_impl - should panic ... ok
+test os_spr::testkit::tests::op_dag_gen_produces_a_closed_topologically_orderable_set ... ok
+test os_spr::testkit::tests::operation_diff_apply_matches_backwards_inverse ... ok
+test os_spr::testkit::tests::exhaustive::op_dag_convergence_holds_on_a_larger_generated_dag ... ok
+test os_spr::testkit::tests::outcome_deterministic_holds_for_add ... ok
+test os_spr::testkit::tests::outcome_deterministic_panics_on_a_nondeterministic_impl - should panic ... ok
+test os_spr::testkit::tests::ops_protocol_bidirectional_skips_comments_and_blank_lines ... ok
+test os_spr::testkit::tests::policy_matrix_holds_for_the_real_apis ... ok
+test os_spr::testkit::tests::policy_matrix_panics_on_a_wrong_impl - should panic ... ok
+test os_spr::testkit::tests::quarantine_accept_equals_laissez_faire_holds_when_equal ... ok
+test os_spr::testkit::tests::ops_protocol_bidirectional_on_a_hand_written_sample ... ok
+test os_spr::testkit::tests::quarantine_accept_equals_laissez_faire_panics_when_unequal - should panic ... ok
+test os_spr::testkit::tests::quarantine_discard_preserves_state_holds ... ok
+test os_spr::testkit::tests::quarantine_discard_preserves_state_panics_when_relayed - should panic ... ok
+test os_spr::testkit::tests::quarantine_discard_preserves_state_panics_when_state_changes - should panic ... ok
+test os_spr::testkit::tests::history_log_gen_adversarial_op_text_never_breaks_the_ops_line_grammar ... ok
+test os_spr::testkit::tests::quick::op_dag_convergence_holds_on_a_small_generated_dag ... ok
+test os_spr::testkit::tests::wire_frame_round_trip_holds_for_client_and_server_samples ... ok
+test os_spr::testkit::tests::zero_copy_holds_across_a_generated_history ... ok
+test os_store::component::tests::amend_last_absorbs_into_matching_coalesce_key ... ok
+test os_store::component::tests::alternatives_switch_restores_checkpoint_chain ... ok
+test os_spr::testkit::tests::recovery_truncates_to_commit_quick ... ok
+test os_store::component::tests::amend_last_does_not_absorb_into_committed_edit ... ok
+test os_store::component::tests::amend_last_incremental_cache_survives_undo_redo_round_trip ... ok
+test os_store::component::tests::amend_last_starts_new_edit_when_coalesce_key_differs ... ok
+test os_store::component::tests::amend_last_incremental_path_matches_full_replay_over_many_amends ... ok
+test os_store::component::tests::amend_last_with_no_mutations_is_rejected ... ok
+test os_store::component::tests::apply_with_no_mutations_is_rejected ... ok
+test os_store::component::tests::apply_computes_backwards_from_pre_state ... ok
+test os_store::component::tests::applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert ... ok
+test os_store::component::tests::artifact_child_dsl_field_round_trips_via_pack_and_value ... ok
+test os_store::component::tests::artifact_refs_defaults_to_empty_for_a_leaf_snapshot ... ok
+test os_store::component::tests::assert_subset_harness_fidelity_and_inference_helpers ... ok
+test os_store::component::tests::assert_import_export_fidelity_bytes_exact_rejects_divergence - should panic ... ok
+test os_store::component::tests::artifact_link_dsl_field_round_trips_every_link_pin_variant ... ok
+test os_store::component::tests::backbone_message_binary_round_trips_every_variant ... ok
+test os_store::component::tests::checkout_checkpoint_restores_applied_edits ... ok
+test os_store::component::tests::checkout_of_an_unknown_checkpoint_is_rejected ... ok
+test os_store::component::tests::channel_backbone_round_trips_between_store_and_actor ... ok
+test os_store::component::tests::checkout_old_checkpoint_then_commit_creates_a_fork ... ok
+test os_store::component::tests::command_envelope_round_trip_panics_on_a_lossy_operation - should panic ... ok
+test os_store::component::tests::chronological_determinism_any_arrival_order_converges ... ok
+test os_store::component::tests::commit_checkpoint_wraps_edits_into_change ... ok
+test os_store::component::tests::commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits ... ok
+test os_store::component::tests::compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed ... ok
+test os_store::component::tests::compensate_undoes_applied_members_in_reverse_order ... ok
+test os_store::component::tests::checkpoint_after_ingesting_a_remote_edit_stays_valid_once_the_sender_s_own_checkpoint_snapshot_arrives ... ok
+test os_store::component::tests::attach_reconciles_a_pushed_snapshot ... ok
+test os_store::component::tests::compensate_undoes_applied_peer_members_in_reverse_order ... ok
+test os_store::component::tests::compensating_undo_dispatches_semantic_command ... ok
+test os_store::component::tests::composition_graph_links_reject_cycle_but_allow_converging_dag_edges ... ok
+test os_store::component::tests::composition_graph_owns_forest_rejects_second_owner_and_cycle ... ok
+test os_store::component::tests::composition_pins_rederive_checkpoint_identity_without_partial_mutation ... ok
+test os_store::component::tests::create_alternative_with_no_edits_and_no_checkpoints_is_rejected ... ok
+test os_store::component::tests::command_text_binary_equivalence_holds_for_every_document_command_variant ... ok
+test os_store::component::tests::compensating_undo_without_a_semantic_command_is_rejected ... ok
+test os_store::component::tests::conflict_generation_and_validation_canonicalize_repeated_actors ... ok
+test os_store::component::tests::demo_dsl_pack_equivalence ... ok
+test os_store::component::tests::demo_dsl_round_trips ... ok
+test os_store::component::tests::create_alternative_appends_commits_to_its_own_checkpoint_chain ... ok
+test os_store::component::tests::demo_op_binary_rejects_unknown_format_and_ordinal ... ok
+test os_store::component::tests::demo_op_binary_round_trips_and_matches_text ... ok
+test os_spr::testkit::tests::ops_protocol_bidirectional_on_generated_logs ... ok
+test os_store::component::tests::demo_op_text_round_trips ... ok
+test os_store::component::tests::dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format ... ok
+test os_store::component::tests::deserialized_envelope_with_stale_backbone_ref_never_auto_attaches ... ok
+test os_store::component::tests::dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies ... ok
+test os_store::component::tests::dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire ... ok
+test os_store::component::tests::dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop ... ok
+test os_store::component::tests::detach_backbone_stops_synchronizing_but_keeps_the_wip_graph ... ok
+test os_store::component::tests::dispatch_group_owned_path_never_stamps_a_transaction_origin ... ok
+test os_store::component::tests::dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning ... ok
+test os_store::component::tests::dispatch_group_mints_genesis_child_ids_deterministically_across_replicas ... ok
+test os_store::component::tests::dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned ... ok
+test os_store::component::tests::dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing ... ok
+test os_store::component::tests::dispatch_peer_group_commits_both_members_with_one_shared_group_id ... ok
+test os_store::component::tests::dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle ... ok
+test os_store::component::tests::dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it ... ok
+test os_store::component::tests::document_codec_of_round_trips_dsl_and_pack_and_edit_text ... ok
+test os_store::component::tests::document_text_preserves_non_contiguous_edit_sequences_and_rejects_invalid_ones ... ok
+test os_store::component::tests::document_text_round_trips_a_cursor_after_undo_then_apply_interleaving ... ok
+test os_store::component::tests::edit_mutations_exposes_the_latest_edit ... ok
+test os_store::component::tests::document_text_rejects_missing_metadata_and_unknown_cursor_without_synthesis ... ok
+test os_store::component::tests::edits_for_ids_errors_loudly_on_a_ghost_edit_id_instead_of_silently_filtering_it ... ok
+test os_store::component::tests::document_text_round_trips_authoritative_metadata_messages_conflicts_and_cursor ... ok
+test os_store::component::tests::empty_store_snapshot_merge_rejects_document_or_schema_mismatch_without_mutation ... ok
+test os_store::component::tests::document_codecs_share_complete_authoritative_history_validation ... ok
+test os_store::component::tests::empty_store_snapshot_merge_replays_hlc_order_and_preserves_local_policy ... ok
+test os_store::component::tests::exact_base_only_undo_refuses_a_foreign_tail ... ok
+test os_store::component::tests::group_receipt_messages_contains_the_union_with_member_path_prefixed_targets ... ok
+test os_store::component::tests::document_text_round_trips_after_apply_and_checkpoint ... ok
+test os_store::component::tests::empty_store_snapshot_policy_rejection_keeps_remote_history_quarantined ... ok
+test os_store::component::tests::history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk ... ok
+test os_store::component::tests::history_columns_orders_newest_first_and_labels_trunk_root ... ok
+test os_store::component::tests::document_text_round_trips_with_an_active_alternative_and_a_quoted_description ... ok
+test os_store::component::tests::history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane ... ok
+test os_store::component::tests::history_lane_default_undo_and_redo_skip_interaction_entries ... ok
+test os_store::component::tests::history_lane_defaults_to_document ... ok
+test os_store::component::tests::history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane ... ok
+test os_store::component::tests::history_lane_interaction_entries_survive_envelope_json_round_trip ... ok
+test os_store::component::tests::interaction_store_apply_updates_hover_and_bumps_generation ... ok
+test os_store::component::tests::interaction_store_default_seeds_from_hover_default ... ok
+test os_store::component::tests::interaction_store_reset_discards_hover_and_bumps_generation ... ok
+test os_store::component::tests::ledger_matches_a_fresh_replay_of_the_same_envelopes ... ok
+test os_store::component::tests::link_resolver_reports_resolved_missing_and_pinned_only_states ... ok
+test os_store::component::tests::local_storage_backbone_port_falls_back_to_its_in_memory_store ... ok
+test os_store::component::tests::malformed_alternative_checkpoint_pin_is_rejected_at_construction ... ok
+test os_store::component::tests::materialize_document_snapshot_rejects_an_unknown_edit_id ... ok
+test os_store::component::tests::materialize_replays_forward_mutations ... ok
+test os_store::component::tests::ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capacity ... ok
+test os_store::component::tests::memory_backbone_port_round_trips_and_reports_a_missing_file ... ok
+test os_store::component::tests::merge_base_is_none_for_a_dangling_unknown_checkpoint_id ... ok
+test os_store::component::tests::merge_base_finds_the_nearest_common_ancestor_across_a_fork ... ok
+test os_store::component::tests::member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins ... ok
+test os_store::component::tests::memory_backbone_pair_propagates_edits_bidirectionally ... ok
+test os_store::component::tests::mint_child_id_converges_across_two_replicas_and_varies_by_ordinal_and_slot ... ok
+test os_store::component::tests::no_backbone_by_default ... ok
+test os_store::component::tests::modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict ... ok
+test os_store::component::tests::modify_vs_delete_quarantines_under_normal_and_vigilant ... ok
+test os_store::component::tests::ops_author_conversion_drops_avatar_matching_the_ops_text_format ... ok
+test os_store::component::tests::ops_header_line_checkpoint_round_trips_including_delimiter_and_quote_characters_in_authors ... ok
+test os_store::component::tests::operations_then_snapshot_partitions_a_multi_forward_ledger_by_wire_edit ... ok
+test os_store::component::tests::ops_header_line_parse_op_rejects_a_line_with_no_known_keyword ... ok
+test os_store::component::tests::operations_then_snapshot_keeps_the_durable_message_ledger_on_the_shared_edit_id ... ok
+test os_store::component::tests::owner_ref_dsl_field_round_trips_via_pack ... ok
+test os_store::component::tests::ops_header_line_cursor_round_trips_the_full_applied_and_redo_lists ... ok
+test os_store::component::tests::ops_header_line_edit_round_trips_including_a_quoted_description ... ok
+test os_store::component::tests::parse_document_text_rejects_invalid_op_line_with_span ... ok
+test os_store::component::tests::parse_document_text_rejects_a_header_line_missing_its_required_positional_id ... ok
+test os_store::component::tests::parse_document_text_rejects_an_unknown_header_line_keyword ... ok
+test os_store::component::tests::pack_wire_value_fixture_corpus_hex_dump ... ok
+test os_store::component::tests::pack_at_checkpoint_reads_history_without_moving_the_live_cursor ... ok
+test os_store::component::tests::preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops_there ... ok
+test os_store::component::tests::persisted_conflict_requires_a_global_owned_operation_index ... ok
+test os_store::component::tests::projection_result_gate_rejects_results_after_dependency_and_checkpoint_transitions ... ok
+test os_store::component::tests::print_edit_lines_emits_one_indented_line_per_forward_op ... ok
+test os_store::component::tests::preview_wire_reports_the_same_messages_the_real_apply_would_produce_and_changes_nothing ... ok
+test os_store::component::tests::projection_result_gate_rejects_results_after_every_invalidating_store_transition ... ok
+test os_store::component::tests::quarantine_accept_equals_laissez_faire_result ... ok
+test os_store::component::tests::quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_batch ... ok
+test os_store::component::tests::quarantine_discard_preserves_state ... ok
+test os_store::component::tests::pump_acks_ingested_operations ... ok
+test os_store::component::tests::quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal ... ok
+test os_store::component::tests::reconcile_alternative_requires_an_existing_checkpoint ... ok
+test os_store::component::tests::reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint ... ok
+test os_store::component::tests::redo_with_nothing_undone_is_rejected ... ok
+test os_store::component::tests::redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest ... ok
+test os_store::component::tests::register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first ... ok
+test os_store::component::tests::rejected_remote_ingest_keeps_state_and_dag_unpoisoned ... ok
+test os_store::component::tests::remote_ingest_requires_duplicate_mutation_payload_equivalence ... ok
+test os_store::component::tests::replay_suffix_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it ... ok
+test os_store::component::tests::replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it ... ok
+test os_store::component::tests::pack_value_fixture_corpus_hex_dump ... ok
+test os_store::component::tests::register_space_documents_registers_manifest_collections_and_artifacts_together ... ok
+test os_store::component::tests::reset_and_apply_reject_malformed_history_before_persisting ... ok
+test os_store::component::tests::snapshot_ledger_remap_rejects_ambiguous_established_operation_ownership ... ok
+test os_store::component::tests::snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ingestion ... ok
+test os_store::component::tests::save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position ... ok
+test os_store::component::tests::space_history_op_round_trips ... ok
+test os_store::component::tests::snapshot_merge_preflights_every_conflict_before_committing ... ok
+test os_store::component::tests::space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale ... ok
+test os_store::component::tests::space_checkout_checkpoint_fans_out_and_restores_pinned_member_state ... ok
+test os_store::component::tests::resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_cap_while_open_ones_survive ... ok
+test os_store::component::tests::space_checkpoint_commits_dirty_members_and_pins_their_checkpoints ... ok
+test os_store::component::tests::space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt ... ok
+test os_store::component::tests::space_switch_alternative_fans_out_and_restores_pinned_member_state ... ok
+test os_store::component::tests::stateful_current_matches_full_replay_across_interleaved_commands ... ok
+test os_store::component::tests::spr_round_trip_preserves_edit_messages_and_conflicts ... ok
+test os_store::component::tests::spr_parse_rejects_history_without_authoritative_operation_metadata ... ok
+test os_store::component::tests::snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records ... ok
+test os_store::component::tests::switch_to_an_unknown_alternative_is_rejected ... ok
+test os_store::component::tests::test_support_round_trip_helpers_pass_for_demo_operation ... ok
+test os_store::component::tests::testkit_law_chronological_determinism_holds_for_a_real_modify_vs_delete_batch ... ok
+test os_store::component::tests::testkit_law_ledger_matches_replay_via_real_store ... ok
+test os_store::component::tests::testkit_law_conflict_spr_round_trip_via_real_store ... ok
+test os_store::component::tests::testkit_law_modify_vs_delete_holds_under_laissez_faire ... ok
+test os_store::component::tests::testkit_law_quarantine_accept_equals_laissez_faire_via_real_store ... ok
+test os_store::component::tests::testkit_law_modify_vs_delete_holds_under_normal_and_vigilant ... ok
+test os_store::component::tests::testkit_law_quarantine_discard_preserves_state_via_real_store ... ok
+test os_store::component::tests::transform_against_concurrent_undo_skips_over_a_foreign_tail ... ok
+test os_store::component::tests::typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child ... ok
+test os_store::component::tests::undo_group_reverses_both_members_of_a_real_peer_transaction ... ok
+test os_store::component::tests::undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest ... ok
+test os_store::component::tests::undo_redo_round_trip ... ok
+test os_store::component::tests::undo_with_nothing_applied_is_rejected ... ok
+test os_store::sync::tests::actor_stamps_session_color_and_surface_on_outbound_heartbeat ... ok
+test os_store::component::tests::space_vcs_host_meta_document_is_backbone_attachable_and_detachable ... ok
+test os_store::component::tests::typed_child_store_factory_round_trips_a_child_through_create_persist_open ... ok
+test os_store::sync::tests::actor_tests::fixtures_replay_matches_expected_events ... FAILED
+test os_store::sync::tests::actor_tests::folder_external_edit_delivers_remote_operations ... FAILED
+test os_store::sync::tests::artifact_host_presence_heartbeat_owns_cadence_per_document ... ok
+test os_store::sync::tests::blob_store_put_get_dedupes_idempotently ... ok
+test os_store::sync::tests::folder_sqlite_storage_round_trips_by_document_id ... ok
+test os_store::sync::tests::folder_sqlite_storage_round_trips_undo_position_through_pack_spr ... FAILED
+test os_store::sync::tests::folder_text_storage_round_trips_dsl_and_appends_ops ... FAILED
+test os_store::sync::tests::folder_text_storage_round_trips_pack ... FAILED
+test os_store::sync::tests::hub_ws_url_derives_ws_endpoint_from_remote_uri ... ok
+test os_store::sync::tests::op_envelope_from_stored_edit_round_trips_through_ingest ... ok
+test os_store::sync::tests::presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest ... ok
+test os_store::sync::tests::receive_buffers_out_of_order_envelopes_until_dependencies_arrive ... ok
+test os_store::sync::tests::receive_materializes_remote_envelope_into_the_edit_timeline ... ok
+test os_store::sync::tests::rollback_envelope_synthesizes_an_undo_from_the_original_inverse ... ok
+test os_store::sync::tests::wire_fixtures_stay_byte_identical_across_rust_and_ts ... ok
+test os_vcs::tests::collection_diff_from_op_projects_each_variant ... ok
+test os_vcs::tests::collection_op_add_and_invert ... ok
+test os_vcs::tests::collection_op_move_and_invert ... ok
+test os_vcs::tests::collection_op_patch_and_invert ... ok
+test os_vcs::tests::collection_op_remove_and_invert ... ok
+test os_vcs::tests::content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible ... ok
+test os_vcs::tests::content_addressed_checkpoint_id_is_deterministic_and_content_sensitive ... ok
+test os_vcs::tests::content_addressed_entity_and_mint_helpers_are_deterministic ... ok
+test os_store::sync::tests::actor_tests::publish_preview_round_trips_through_hub ... ok
+test os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
+test os_store::sync::tests::actor_tests::command_outcome_accepted_fires_after_hub_ack has been running for over 60 seconds
+test os_store::sync::tests::actor_tests::detach_drains_pending_outbound_operations has been running for over 60 seconds
+test os_store::sync::tests::actor_tests::reconnect_since_catch_up_replays_backlog has been running for over 60 seconds
+test os_store::sync::tests::actor_tests::two_hosts_converge_through_hub has been running for over 60 seconds
+EXIT:137

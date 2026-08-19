@@ -151,9 +151,9 @@ import {
   typologyStyleCacheKey,
   type ResolvedTypologyStyle,
   type SpatialEntityFlags,
-} from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+} from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
 import { typologyObjectPascalFromLabel, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️component.ts";
-import { applyModelDiff, EMPTY_MODEL_DIFF, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
+import { applyModelDiff, EMPTY_MODEL_DIFF, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
 import {
   abortActiveInteractionSession,
   primaryAttributeSelectionTarget,
@@ -208,7 +208,7 @@ type WireRef = kernelGeometry.WireRef;
 type EdgeRef = kernelGeometry.EdgeRef;
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts";
+import { PreciseSpatialKernelMath, faceNormal, preciseSpatialKernelMath } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts";
 
 // #region ⚡️R3FPreviewKernel
 /** @emoji ⚡️ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
@@ -6706,7 +6706,7 @@ export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId
 
 // #region ­ƒº¬Tests
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
-const __cadRendererTestKernel = import.meta.vitest ? await import("../📐️brepjs/🟦️component.ts") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {
   __cadRendererTestRuntime!.bootstrapCadModules();

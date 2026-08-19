@@ -156,8 +156,8 @@ pub(crate) mod kernel_runtime {
 
     pub(crate) struct ExchangeOutcome {
         pub frames: Vec<protocol::AppFrame>,
-        /// 🖼️ Surfaces this turn actually repainted, already reconciled against the kernel thread's
-        /// own retained tree (`KernelThreadState::retained`) — see that field's doc for the
+        /// 🖼️ Surfaces this turn repainted or retained on desync — reconciled against the kernel
+        /// thread's own retained tree (`KernelThreadState::retained`); see that field's doc for the
         /// full-body-vs-desync policy.
         pub surfaces: HashMap<String, UiNode>,
         /// 🧾️ Every effect this turn produced that was NOT one of the `Effect::SendMessage{target:
@@ -278,12 +278,6 @@ pub(crate) mod kernel_runtime {
     //#region 🔖️KernelThreadState
     struct RetainedSurface {
         revision: u64,
-        // 🕳️ Write-only: `apply_ui_patch`'s desync branch says "Previous snapshot is reused (item 4)"
-        // but never actually reads this back into `out` — the desync path only records a pending
-        // rejection, so whether the surface visually freezes-on-stale (fine) or drops (a bug) depends
-        // on what the caller does with a surface key missing from `out`. Found while chasing a Z1
-        // zero-warnings `dead_code` warning; flagged for follow-up rather than guessed at here.
-        #[allow(dead_code, reason = "write-only pending a real reuse-on-desync path — see comment above, follow-up needed")]
         node: UiNode,
     }
 
@@ -505,13 +499,14 @@ pub(crate) mod kernel_runtime {
                 self.retained.insert(key.clone(), RetainedSurface { revision: patch.revision, node: node.clone() });
                 self.pending_rejections.remove(&key);
                 out.insert(patch.surface.clone(), node);
-            } else if patch.base_revision == local_revision && local_revision != 0 {
-                // 🚧️ Incremental `InsertChild`/`RemoveChild`/`SetProps`/non-root `Replace` — no guest
-                // emits these yet (see `KernelThreadState::retained`'s doc); treated as a desync
-                // rather than silently mis-walked. Previous snapshot is reused (item 4).
-                self.pending_rejections.insert(key, local_revision);
             } else {
-                self.pending_rejections.insert(key, local_revision);
+                // 🚧️ Incremental ops or `base_revision` mismatch — queue `PatchRejected` and reuse the
+                // previous full-body snapshot (item 4) so `render_with_document` keeps painting stale UI
+                // instead of erroring on a missing surface key.
+                self.pending_rejections.insert(key.clone(), local_revision);
+                if let Some(retained) = self.retained.get(&key) {
+                    out.insert(patch.surface.clone(), retained.node.clone());
+                }
             }
         }
     }
@@ -625,12 +620,6 @@ pub mod scale_bench {
     #[derive(Deserialize, Clone, Copy)]
     #[serde(rename_all = "camelCase")]
     struct RegistryQuotas {
-        // 🕳️ Deserialized from the scale-bench registry fixture but never applied by the bench
-        // harness (deadline_ms/max_effects/max_patch_bytes/max_frames all ARE enforced elsewhere in
-        // this file; fuel is not). Found while chasing a Z1 zero-warnings `dead_code` warning;
-        // flagged for follow-up rather than wired here.
-        #[allow(dead_code, reason = "parsed quota not yet enforced by the bench harness — see comment above, follow-up needed")]
-        fuel: u64,
         deadline_ms: u32,
         max_effects: u32,
         max_patch_bytes: u32,
@@ -686,15 +675,11 @@ pub mod scale_bench {
             .collect()
     }
 
-    /// ⛽️ Coordinator-flagged (mid-session, after WASI-p2 landed in `WasmtimeRuntime`): the
-    /// generator's `quotas.fuel` (100K-900K, `🔖️ScaleFixture`'s `scaleFixtureRecordConfig` in the dev
-    /// `📜️script.ts`) is sized as a plausible PRODUCTION per-turn ceiling, not against real wasmtime
-    /// dispatch + wit-bindgen marshaling overhead in an unoptimized `wasip2` build — measured
-    /// reference point: `🗒️note`'s `describe()` alone burns ~92M fuel in debug. Using the generator's
-    /// number here would fuel-starve almost every real turn, which traps with a bare "error while
-    /// executing" that is trivially misread as a genuine budget failure. `BENCH_FUEL` overrides fuel
-    /// only; `deadline_ms`/`max_effects`/`max_patch_bytes`/`max_frames` stay record-derived (they are
-    /// real per-turn dimensions this bench DOES want to exercise, e.g. budget 6's hang deadline).
+    /// ⛽️ Bench-wide fuel ceiling — not per-record (`RegistryQuotas` omits fuel on purpose: wasmtime
+    /// dispatch + wit-bindgen overhead in an unoptimized `wasip2` build dwarfs plausible production
+    /// per-turn ceilings; measured reference: `🗒️note`'s `describe()` alone burns ~92M fuel in debug).
+    /// `deadline_ms`/`max_effects`/`max_patch_bytes`/`max_frames` stay record-derived (real per-turn
+    /// dimensions this bench exercises, e.g. budget 6's hang deadline).
     const BENCH_FUEL: u64 = 200_000_000;
 
     fn turn_budget_of(record: &RegistryRecord) -> TurnBudget {
@@ -763,7 +748,16 @@ pub mod scale_bench {
             *self.ordinals.entry(package_id.to_string()).or_insert(next)
         }
 
+        /// 🎚️ Activation lane defaults to `Background` for every budget (unchanged). Budget 5 is the
+        /// sole caller of [`Self::activate_on_lane`] with `Lane::Interactive`: the budget's own text
+        /// names an *interactive* actor, and the kernel's placement gate keys off the actor's
+        /// ACTIVATION lane, so activating the probe as `Background` measured a background actor and
+        /// left the interactive path untested. This is an instrument correction, not a threshold change.
         fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
+            self.activate_on_lane(compiled, record, Lane::Background)
+        }
+
+        fn activate_on_lane(&mut self, compiled: &CompiledHandle, record: &RegistryRecord, lane: Lane) -> Result<ActorId, String> {
             let kind = if record.kind == "extension" {
                 ActorKind::Extension { plugin: PackageId(record.parent_id.clone().unwrap_or_default()), extension_id: record.id.clone() }
             } else {
@@ -772,7 +766,7 @@ pub mod scale_bench {
             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
             let ordinal = self.ordinal(&package_id);
             let budget = turn_budget_of(record);
-            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, Lane::Background, None, ActorActivationTrigger::Manual, compiled, &[], &budget)?;
+            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget)?;
             self.budgets.insert(actor.0, budget);
             Ok(actor)
         }
@@ -793,8 +787,28 @@ pub mod scale_bench {
         /// (128-1024 depending on lane, `lane_defaults::budget_for`), so treating a reject as fatal
         /// here would be testing the mailbox ceiling, not the budget this harness measures.
         fn send_payload(&mut self, actor: ActorId, payload: Payload) {
+            self.send_payload_lane(actor, payload, Lane::Background);
+        }
+
+        /// 🎯️ terra-bench-instrument: sibling of `send_payload` that lets a caller pick the
+        /// envelope's own `Lane` instead of the hardcoded `Lane::Background` every other send in
+        /// this harness still uses (`send_payload` now delegates here with `Lane::Background`
+        /// unchanged, so every existing call site — budgets 2/3/4/6/7/8's `env.send`, budget 7's
+        /// direct `Payload::Suspend`/`Resume` sends — keeps the exact envelope it always sent).
+        /// Budget 5 is the ONLY caller that passes `Lane::Interactive`, for the one envelope this
+        /// bench ever sends that is meant to model a real interactive command — see that budget's
+        /// own round loop for why: the instrument was found to send EVERY bench envelope, including
+        /// the "interactive" probe, on `Lane::Background`, which both skips whatever lane-priority
+        /// the mailbox/DRR machinery gives `Lane::Interactive` and structurally cannot activate the
+        /// terra-interactive-isolation packet's `Kernel::activate`-time placement gate (that gate
+        /// reads the ACTOR's own activation lane, set once in `Env::activate` above — unconditionally
+        /// `Lane::Background` for every bench actor, out of scope here since `Env::activate` is
+        /// shared by every budget, not just 5 — so fixing only this envelope's lane does not, by
+        /// itself, make that isolation mechanism reachable from this bench; see this packet's own
+        /// report for the honest gap).
+        fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
             self.seq += 1;
-            let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Background, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
+            let envelope = Envelope { to: actor, from: Origin::Kernel, lane, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
             let _ = self.runtime.submit(&envelope);
         }
 
@@ -804,9 +818,14 @@ pub mod scale_bench {
         /// 100-2550-actor rounds, genuinely takes several ticks; this loop is what makes that real
         /// instead of assuming one call suffices). Each tick's `ShardOutcome`s are awaited via
         /// `wait_for_outcomes` — a genuine blocking wait on the SAME aggregated channel K real
-        /// `ShardExecutor` threads report through, so the elapsed time IS the K-real-shard dispatch
-        /// latency (this is the instrument budget 5 measures). `Kernel::complete` is called for every
+        /// `ShardExecutor` threads report through. `Kernel::complete` is called for every
         /// `ShardOutcome::Turn` collected, closing the gap budget 8's own note used to flag.
+        ///
+        /// 🎯️ terra-bench-instrument correction: this method's own `start.elapsed()`, timed by a
+        /// caller around a WHOLE call, is round wall-time across every actor granted that round —
+        /// budget 5 used to time itself this way and that is exactly the defect this packet fixed;
+        /// budget 5 now uses `pump_tracking` below instead, which stamps the moment ONE specific
+        /// actor's own outcome is observed rather than waiting on this method's own return.
         fn pump(&mut self) -> Result<usize, String> {
             let mut total = 0usize;
             loop {
@@ -847,6 +866,59 @@ pub mod scale_bench {
                 self.pending.extend(outcomes);
             }
             Ok(total)
+        }
+
+        /// 🎯️ terra-bench-instrument: same `Kernel::tick`-drives-every-granted-actor-to-completion
+        /// shape as `pump` above — every actor granted this round, `target` included, still gets a
+        /// genuine `tick_and_dispatch` → `wait_for_outcomes` → `Kernel::complete` round trip, so the
+        /// kernel's own bookkeeping (fuel/throttle/mailbox state) ends this call exactly as
+        /// consistent as `pump` would leave it, and the next round starts clean. The ONLY behavioural
+        /// difference: `pump`'s own `wait_for_outcomes(decision.run.len(), ..)` blocks for a WHOLE
+        /// tick's outcomes at once, so nothing is observable until the SLOWEST of that tick's actors
+        /// has reported in. This method instead waits one outcome at a time
+        /// (`wait_for_outcomes(1, ..)`) — the same total outcomes arrive, just individually — and
+        /// stamps `Instant::now()` the first moment `target`'s own `ShardOutcome` (`Turn` or `Fault`,
+        /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
+        /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
+        /// `send -> this call returning`.
+        fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
+            let mut target_seen: Option<Instant> = None;
+            loop {
+                self.now_ms += 1;
+                let budgets = self.budgets.clone();
+                let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background));
+                if decision.run.is_empty() {
+                    break;
+                }
+                let mut remaining = decision.run.len();
+                while remaining > 0 {
+                    let outcomes = self.runtime.wait_for_outcomes(1, PUMP_OUTCOME_TIMEOUT);
+                    if outcomes.is_empty() {
+                        return Err(format!("Env::pump_tracking: {remaining} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}"));
+                    }
+                    remaining = remaining.saturating_sub(outcomes.len());
+                    for outcome in &outcomes {
+                        let reporting_actor = match outcome {
+                            ShardOutcome::Turn { actor, result } => {
+                                let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms);
+                                Some(*actor)
+                            }
+                            ShardOutcome::Fault { actor, message } => {
+                                let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+                                let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms);
+                                Some(*actor)
+                            }
+                            _ => None,
+                        };
+                        if target_seen.is_none() && reporting_actor == Some(target.0) {
+                            target_seen = Some(Instant::now());
+                        }
+                    }
+                    self.pending.extend(outcomes);
+                }
+            }
+            Ok(target_seen)
         }
 
         fn drain(&mut self) -> Vec<ShardOutcome> {
@@ -1007,20 +1079,46 @@ pub mod scale_bench {
                 let mut samples_ms: Vec<f64> = Vec::with_capacity(ROUNDS);
                 let mut round_faults = 0usize;
                 for _ in 0..ROUNDS {
-                    let start = Instant::now();
+                    // 🎯️ terra-bench-instrument: the 40 cpu-actor `Wake`s are submitted BEFORE the
+                    // clock starts, on `Lane::Background` (`env.send`, unchanged) — they still get
+                    // GRANTED in the SAME `Kernel::tick` as the interactive command just below
+                    // (`grants_per_tick` comfortably covers 41 single-turn grants), so they are
+                    // genuinely running/contending on their own real `ShardExecutor` threads for the
+                    // WHOLE measured interval below, which is exactly the "40 cpu actors saturating
+                    // the background" load this budget names. They are just not what stops the clock.
                     for actor in &cpu_actors {
                         env.send(*actor, &Event::Wake);
                     }
-                    env.send(interactive_actor, &Event::AppCommandEvent { instance: PluginInstanceId(interactive_actor.0.to_string()), seq: 0, command: Vec::new() });
-                    if env.pump().is_err() {
-                        round_faults += 1;
-                        continue;
+                    let start = Instant::now();
+                    // 🎯️ terra-bench-instrument: the one envelope in this bench that carries
+                    // `Lane::Interactive` (`Env::send_payload_lane`) — every other envelope this
+                    // harness ever sends, including the 40 `Wake`s above, stays `Lane::Background`.
+                    env.send_payload_lane(
+                        interactive_actor,
+                        Payload::Event { bytes: serde_json::to_vec(&Event::AppCommandEvent { instance: PluginInstanceId(interactive_actor.0.to_string()), seq: 0, command: Vec::new() }).unwrap_or_default() },
+                        Lane::Interactive,
+                    );
+                    // 🎯️ terra-bench-instrument (THE measurement fix): the interval this bench
+                    // records is send -> `interactive_actor`'s OWN `ShardOutcome` being observed,
+                    // via `Env::pump_tracking`'s `Instant` stamp — NOT the moment `pump_tracking`
+                    // itself returns. `pump_tracking` still drives every actor granted this round
+                    // (the 40 cpu actors included) all the way to `Kernel::complete`, exactly like
+                    // `pump()` does elsewhere in this file, so kernel bookkeeping stays correct for
+                    // the next round; those other 40 completions may land AFTER the stamp below and
+                    // are deliberately excluded from `samples_ms`. Before this fix, the interval was
+                    // `start.elapsed()` taken AFTER `pump()` (bulk-waits for ALL 41 outcomes) had
+                    // already returned — i.e. it timed the slowest of 41 actors every round, not this
+                    // one actor's own response; see this packet's own report for why that made the
+                    // 8ms budget unreachable by construction, independent of scheduler quality.
+                    match env.pump_tracking(interactive_actor) {
+                        Ok(Some(seen_at)) => samples_ms.push((seen_at - start).as_secs_f64() * 1000.0),
+                        Ok(None) => round_faults += 1,
+                        Err(_) => round_faults += 1,
                     }
                     let outcomes = env.drain();
                     if outcomes.iter().any(|o| matches!(o, ShardOutcome::Fault { actor, .. } if *actor == interactive_actor.0)) {
                         round_faults += 1;
                     }
-                    samples_ms.push(start.elapsed().as_secs_f64() * 1000.0);
                 }
                 samples_ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let p95 = samples_ms.get(((samples_ms.len() as f64) * 0.95).floor() as usize).copied().unwrap_or(f64::NAN);
@@ -1031,7 +1129,7 @@ pub mod scale_bench {
                     if pass { "pass" } else { "fail" },
                     json!({ "p95Ms": p95, "rounds": ROUNDS, "roundFaults": round_faults, "samplesMs": samples_ms }),
                     json!({ "nativeMs": NATIVE_BUDGET_MS }),
-                    "single physical ShardLoop / single thread: the 40 cpu-actor turns and the interactive actor's turn are drained by the SAME pump() call each round, so this measures full-round serialized cost, not K-way parallel background threads",
+                    "terra-bench-instrument: measured from the interactive command's own submit to THIS actor's own ShardOutcome (Turn or Fault) being observed on its real ShardExecutor thread (Env::pump_tracking), NOT to global quiescence of all 41 actors granted in the round -- the 40 cpu actors keep running/completing in the background across the measured interval, which is the load this budget specifies, they just no longer gate the clock. The interactive envelope also now carries Lane::Interactive (Env::send_payload_lane); every other envelope in this bench, including the 40 cpu Wakes, stays Lane::Background as before. NOT comparable to any p95 recorded before this fix: those measured full-round wall time across all 41 actors, not this actor's own response.",
                 )
             }
         };
@@ -1529,14 +1627,19 @@ impl AppRuntime {
         }
     }
 
-    /// 🎠️ H3-wgpu-native — this used to `pollster::block_on(self.shell.boot())` directly on the
-    /// winit thread. It still blocks the CALLING thread (`frame()` runs with `self` already
-    /// exclusively borrowed via `Rc<RefCell<AppRuntime>>`, so a future stored across `frame()` calls
-    /// would need to re-borrow that SAME cell from inside its own body — a genuine deadlock, not a
-    /// style choice; see `📓️terra-H3-wgpu-native-report.md`'s honest-limits section). What DOES move
-    /// off the winit thread: every actual plugin turn `boot()` triggers (`create_app`/`render`) now
-    /// runs on the dedicated kernel thread via `KernelClient`, not in-process here — `pollster`
-    /// parks this thread on that thread's response instead of running wasmtime itself.
+    /// 🎠️ H3-wgpu-native / terra-shell-unpark — this used to `pollster::block_on(self.shell.boot())`
+    /// directly on the winit thread. The H3 comment this replaces reasoned that `frame()` already
+    /// holds `self` via `Rc<RefCell<AppRuntime>>`'s `try_borrow_mut()`, so re-borrowing that SAME
+    /// cell from INSIDE `frame()`'s own call stack panics rather than working — true, but that only
+    /// rules out borrowing synchronously; it does not rule out deferring the whole call. This now
+    /// uses the identical `self_weak`/`try_borrow_mut()`-held-across-`.await` pattern `on_context_menu`/
+    /// the camera-dispatch closures below already use: `spawn_app_task` queues the future, and it
+    /// only actually re-borrows from `about_to_wait`'s `poll_tasks()` tick — strictly AFTER `frame()`
+    /// has already returned and dropped its own borrow, so there is no re-entrant conflict. Holding
+    /// the borrow across `.boot()`'s `.await` makes `frame()`'s outer `try_borrow_mut()` fail (and
+    /// skip redrawing) for however many ticks the reload's kernel round trip takes — a graceful
+    /// frame-skip, not a UI-thread park; the winit event loop keeps pumping OS messages the whole
+    /// time. See `📓️terra-shell-unpark-report.md`.
     #[cfg(not(target_arch = "wasm32"))]
     fn maybe_reload_native_plugins(&mut self) {
         if !self.native_reload_pending {
@@ -1553,11 +1656,16 @@ impl AppRuntime {
             }
         };
         self.shell.prepare_hot_reload(entries);
-        if let Err(error) = pollster::block_on(self.shell.boot()) {
-            log_debug(&format!("wasm program hot reload failed: {error}"));
-        } else {
-            log_debug("wasm program hot reload complete");
-        }
+        let runtime = self.self_weak.clone();
+        spawn_app_task(async move {
+            let Some(runtime) = runtime.upgrade() else { return };
+            let Ok(mut app) = runtime.try_borrow_mut() else { return };
+            if let Err(error) = app.shell.boot().await {
+                log_debug(&format!("wasm program hot reload failed: {error}"));
+            } else {
+                log_debug("wasm program hot reload complete");
+            }
+        });
     }
 
     fn frame(&mut self) {
@@ -1592,7 +1700,18 @@ impl AppRuntime {
         {
             self.poll_native_plugin_hot_swap();
             self.maybe_reload_native_plugins();
-            pollster::block_on(self.shell.pump_sync_events());
+            // 🎠️ terra-shell-unpark — same `self_weak`/`try_borrow_mut()`-held-across-`.await`
+            // deferral as `maybe_reload_native_plugins` above (see its doc comment for why this is
+            // sound despite `frame()` itself running inside a borrow): `pump_sync_events` no longer
+            // runs to completion before the rest of `frame()` continues below, it resumes from
+            // `about_to_wait`'s `poll_tasks()` tick. One tick of staleness on directory/sync events is
+            // invisible at `ControlFlow::Poll`'s frame rate. See `📓️terra-shell-unpark-report.md`.
+            let runtime = self.self_weak.clone();
+            spawn_app_task(async move {
+                let Some(runtime) = runtime.upgrade() else { return };
+                let Ok(mut app) = runtime.try_borrow_mut() else { return };
+                app.shell.pump_sync_events().await;
+            });
         }
         self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
         self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
