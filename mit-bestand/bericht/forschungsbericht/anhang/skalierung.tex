@@ -6,162 +6,161 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 
 \appendixsection[SM]{Systemkarte}
 
-\begin{Figure}[title=Systemkarte Skalierung der Wiederverwendung, break=false]
-\begin{tikzpicture}[semio, x=1mm, y=0.985mm,
-  box/.style={semio cell, inner xsep=0.28em, inner ysep=0.12em},
-  proc/.style={box, fill=semio-chrome-window, text=semio-chrome-foreground,
-               anchor=north west, align=left,
-               font=\SemioSans\fontsize{6.6pt}{7.4pt}\selectfont},
-  span/.style={draw=semio-chrome-border-normal, fill=semio-chrome-panel, line width=0.75pt},
-  guide/.style={draw=semio-chrome-border-normal, line width=0.75pt, opacity=0.28},
-  sep/.style={draw=semio-chrome-border-normal, line width=0.75pt, opacity=0.55},
-  Lm/.style={font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont,
-             text=semio-chrome-text-normal, anchor=west, align=left},
-  T/.style={font=\SemioMono\fontsize{7.2pt}{8.4pt}\selectfont,
-            text=semio-chrome-foreground, anchor=north west},
-  hchip/.style={semio chip, anchor=center,
-                font=\SemioMono\fontsize{6.4pt}{7pt}\selectfont,
-                inner xsep=0.2em, inner ysep=0.08em},
-  val/.style={font=\SemioMono\fontsize{6.6pt}{7.6pt}\selectfont,
-              text=semio-chrome-foreground, anchor=east},
-]
-\def\PX{27}
-\def\PW{13.28}
-\def\W{147}
+%region Daten
+% Ein Spaltenraster für B, C und D: der Prozess-Rückgrat der neun D2R-Prozesse
+% (buildingSMART), auf das die Funktions- und Dienste-Spannen sich beziehen.
+\SemioVizScale{d2r}{band}
+  {pre-decon, decon, bank, reuse, reman, inventory, design-reuse, design-with, building}
+  {27, 146.5}
 
-%% ===== SYNTHESE-BANNER =====
-\node[draw=none, fill=none,
-      anchor=north west, text width=143mm, align=left, inner xsep=0mm, inner ysep=0.9mm,
-      font=\SemioSans\fontsize{6.8pt}{8.2pt}\selectfont, text=semio-chrome-foreground] at (0,247) {%
-  {\SemioMono SYNTHESE (E2\SemioSlash{}E3):}\ \ Skalierung entsteht nicht durch eine digitale Plattform allein, sondern aus dem Zusammenspiel von Wiederverwendungsprozessen~(B), digitalen Plattformfunktionen~(C), operativen Diensten~(D) und institutionellen Rahmenbedingungen~(E). Hemmnisse~(F) wirken an den Schnittstellen und bestimmen, ob dauerhaft skaliert wird.};
+\SemioVizTable{sk-dimension}{label}
+\SemioVizRow{sk-dimension}{Geografische Reichweite}
+\SemioVizRow{sk-dimension}{Organisa\-torische Reichweite}
+\SemioVizRow{sk-dimension}{Operative Aktivität}
+\SemioVizRow{sk-dimension}{Institu\-tionelle Reife}
+\SemioVizRow{sk-dimension}{Kontinuität}
+\SemioVizRow{sk-dimension}{Funktionale Integration}
 
-%% ===== A SKALIERUNG =====
-\draw[sep] (0,236) -- (\W,236);
-\node[T] at (0,232.5) {A \ SKALIERUNG \ \textperiodcentered\ \ sechs Dimensionen (E3)};
-\foreach \i/\n in {0/Geografische Reichweite, 1/Organisa\-torische Reichweite, 2/Operative Aktivität,
-                   3/Institu\-tionelle Reife, 4/Kontinuität, 5/Funktionale Integration}{
-  \node[proc, text width=22.9mm, minimum height=7.5mm] at (\i*24.4,227) {\n};
-}
+\SemioVizTable{sk-evidenz}{chip, s1, s2, s3, s4}
+\SemioVizRow{sk-evidenz}{EU26,   {Öffentliche Beschaffung}, {planbare Nachfrage}, {Marktbildung}, {Operative Aktivität}}
+\SemioVizRow{sk-evidenz}{CCRI25, {Regionales Kataster}, {interkommunaler Austausch}, {größerer Sekundärmarkt}, {Geografische Reichweite}}
+\SemioVizRow{sk-evidenz}{UPP25,  {Förderung und Lagerung}, {stetigere Materialflüsse}, {neue Akteure}, {Institutionelle Reife}}
+\SemioVizRow{sk-evidenz}{CCRI25, {Risikoteilung}, {Vertrauen}, {regelmäßige Rückgewinnung}, {Operative Aktivität}}
 
-%% ===== G EVIDENZPFADE =====
-\draw[sep] (0,217) -- (\W,217);
-\node[T] at (0,213.5) {G \ EVIDENZPFADE \ \textperiodcentered\ \ durchgezogen belegt, gestrichelt analytisch (E3)};
-\foreach \r/\src/\a/\b/\c/\d in {%
-  0/EU26/Öffentliche Beschaffung/planbare Nachfrage/Marktbildung/Operative Aktivität,
-  1/CCRI25/Regionales Kataster/interkommunaler Austausch/größerer Sekundärmarkt/Geografische Reichweite,
-  2/UPP25/Förderung und Lagerung/stetigere Materialflüsse/neue Akteure/Institutionelle Reife,
-  3/CCRI25/Risikoteilung/Vertrauen/regelmäßige Rückgewinnung/Operative Aktivität}{
-  \pgfmathsetmacro\yy{205.5-\r*4.7}
-  \node[hchip] at (5,\yy) {\src};
-  \node[proc, text width=27mm, minimum height=4.4mm, anchor=west] at (11,\yy) {\a};
-  \node[proc, text width=27mm, minimum height=4.4mm, anchor=west] at (44,\yy) {\b};
-  \node[proc, text width=27mm, minimum height=4.4mm, anchor=west] at (77,\yy) {\c};
-  \node[box, fill=semio-chrome-window, text width=32mm, minimum height=4.4mm, anchor=west,
-        font=\SemioSans\fontsize{6.6pt}{7.4pt}\selectfont, text=semio-chrome-foreground] at (110,\yy) {\d};
-  \draw[semio edge] (38.2,\yy) -- (43.2,\yy);
-  \draw[semio edge] (71.2,\yy) -- (76.2,\yy);
-  \draw[semio edge synth] (104.2,\yy) -- (109.2,\yy);
-}
+\SemioVizTable{sk-prozess}{key, label}
+\SemioVizRow{sk-prozess}{pre-decon,    Pre-decon\-struction}
+\SemioVizRow{sk-prozess}{decon,        Decon\-struction}
+\SemioVizRow{sk-prozess}{bank,         Material Bank Assess\-ment}
+\SemioVizRow{sk-prozess}{reuse,        Reuse}
+\SemioVizRow{sk-prozess}{reman,        Remanu\-facturing}
+\SemioVizRow{sk-prozess}{inventory,    Inventory Manage\-ment}
+\SemioVizRow{sk-prozess}{design-reuse, Pre-con\-struction Design for Reuse}
+\SemioVizRow{sk-prozess}{design-with,  Pre-con\-struction Design with Reus\-ables}
+\SemioVizRow{sk-prozess}{building,     Building Design}
 
-%% ===== B D2R PROZESSE =====
-\draw[sep] (0,186.5) -- (\W,186.5);
-\node[T] at (0,183) {B \ D2R-PROZESSE \ \textperiodcentered\ \ buildingSMART, neun Prozesse, nicht-linear};
-\node[Lm, text width=25mm] at (0,170.5) {Prozess-Rückgrat};
-\foreach \i/\n in {0/Pre-decon\-struction, 1/Decon\-struction, 2/Material Bank Assess\-ment,
-                   3/Reuse, 4/Remanu\-facturing, 5/Inventory Manage\-ment,
-                   6/Pre-con\-struction Design for Reuse,
-                   7/Pre-con\-struction Design with Reus\-ables, 8/Building Design}{
-  \pgfmathsetmacro\xx{\PX+\i*\PW}
-  \node[proc, text width=11.4mm, minimum height=14.5mm] at (\xx,177.5) {\n};
-}
+% Spannen als benannte Endpunkte auf dem D2R-Rückgrat, nicht als Indexpaare:
+% eine Umsortierung eines Prozesses kann keine Spanne mehr stillschweigend verschieben.
+\SemioVizTable{sk-funktion}{label, von, bis}
+\SemioVizRow{sk-funktion}{{Interoperabilität},  pre-decon, building}
+\SemioVizRow{sk-funktion}{{Lebenszyklus},       pre-decon, building}
+\SemioVizRow{sk-funktion}{{Bestandserfassung},  pre-decon, bank}
+\SemioVizRow{sk-funktion}{{Suche und Matching}, bank, design-with}
+\SemioVizRow{sk-funktion}{{Bedarfserfassung},   design-reuse, building}
+\SemioVizRow{sk-funktion}{{Austauschwege},      reuse, inventory}
+\SemioVizRow{sk-funktion}{{Reservierung},       reuse, inventory}
+\SemioVizRow{sk-funktion}{{Portfolio},          bank, inventory}
+\SemioVizRow{sk-funktion}{{Auswertung},         bank, building}
 
-%% ===== C DIGITALE FUNKTIONEN =====
-\foreach \i in {0,1,2,3,4,5,6,7,8,9}{
-  \pgfmathsetmacro\gx{\PX+\i*\PW}
-  \draw[guide] (\gx,157.5) -- (\gx,132);
-  \draw[guide] (\gx,127) -- (\gx,103);
-}
-\draw[sep] (0,160.5) -- (\W,160.5);
-\foreach \x/\h in {2/H-05, 4/H-09, 7/H-10}{
-  \pgfmathsetmacro\xx{\PX+\x*\PW+\PW/2}\node[hchip] at (\xx,160.5) {\h};}
-\node[T] at (0,157) {C \ DIGITALE FUNKTIONEN \ \textperiodcentered\ \ neun Gruppen als Spannen (E3)};
-\foreach \r/\a/\b/\n in {%
-  0/0/8/Interoperabilität, 1/0/8/Lebenszyklus, 2/0/2/Bestandserfassung,
-  3/2/7/Suche und Matching, 4/6/8/Bedarfserfassung, 5/3/5/Austauschwege,
-  6/3/5/Reservierung, 7/2/5/Portfolio, 8/2/8/Auswertung}{
-  \pgfmathsetmacro\yy{150.5-\r*2.4}
-  \pgfmathsetmacro\xa{\PX+\a*\PW}\pgfmathsetmacro\xb{\PX+\b*\PW+\PW-1.0}
-  \node[Lm] at (0,\yy) {\n};
-  \draw[span] (\xa,\yy-0.8) rectangle (\xb,\yy+0.8);
-}
+\SemioVizTable{sk-dienst}{label, von, bis}
+\SemioVizRow{sk-dienst}{{Dienstleister},    pre-decon, building}
+\SemioVizRow{sk-dienst}{{Rückbau},          pre-decon, decon}
+\SemioVizRow{sk-dienst}{{Prüfung},          decon, bank}
+\SemioVizRow{sk-dienst}{{Zertifizierung},   bank, reuse}
+\SemioVizRow{sk-dienst}{{Aufbereitung},     bank, reman}
+\SemioVizRow{sk-dienst}{{Reparatur},        reuse, reman}
+\SemioVizRow{sk-dienst}{{Lagerung},         bank, inventory}
+\SemioVizRow{sk-dienst}{{Logistik},         decon, inventory}
 
-%% ===== D OPERATIVE DIENSTE =====
-\draw[sep] (0,129.5) -- (\W,129.5);
-\foreach \x/\h in {1/H-11, 3/H-07, 5/H-04}{
-  \pgfmathsetmacro\xx{\PX+\x*\PW+\PW/2}\node[hchip] at (\xx,129.5) {\h};}
-\node[T] at (0,126) {D \ OPERATIVE DIENSTE \ \textperiodcentered\ \ physische Ausführung};
-\foreach \r/\a/\b/\n in {%
-  0/0/8/Dienstleister, 1/0/1/Rückbau, 2/1/2/Prüfung, 3/2/3/Zertifizierung,
-  4/2/4/Aufbereitung, 5/3/4/Reparatur, 6/2/5/Lagerung, 7/1/5/Logistik}{
-  \pgfmathsetmacro\yy{119.5-\r*2.4}
-  \pgfmathsetmacro\xa{\PX+\a*\PW}\pgfmathsetmacro\xb{\PX+\b*\PW+\PW-1.0}
-  \node[Lm] at (0,\yy) {\n};
-  \draw[span] (\xa,\yy-0.8) rectangle (\xb,\yy+0.8);
-}
+\SemioVizTable{sk-rahmen}{label}
+\SemioVizRow{sk-rahmen}{Öffentliche Beschaffung}
+\SemioVizRow{sk-rahmen}{Normen}
+\SemioVizRow{sk-rahmen}{Finan\-zierung}
+\SemioVizRow{sk-rahmen}{Geneh\-migung}
+\SemioVizRow{sk-rahmen}{Fläche und Raum}
+\SemioVizRow{sk-rahmen}{Risiko und Haftung}
+\SemioVizRow{sk-rahmen}{Kompe\-tenzen}
+\SemioVizRow{sk-rahmen}{Governance}
+\SemioVizRow{sk-rahmen}{Ressourcen\-kataster}
+\SemioVizRow{sk-rahmen}{Wertmodell}
 
-%% ===== E RAHMENBEDINGUNGEN =====
-\draw[sep] (0,99) -- (\W,99);
-\foreach \x/\h in {0/H-01, 3/H-13, 6/H-03, 8/H-12}{
-  \pgfmathsetmacro\xx{\PX+\x*\PW+\PW/2}\node[hchip] at (\xx,99) {\h};}
-\node[T] at (0,95.5) {E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen};
-\foreach \i/\n in {0/Öffentliche Beschaffung, 1/Normen, 2/Finan\-zierung, 3/Geneh\-migung, 4/Fläche und Raum,
-                   5/Risiko und Haftung, 6/Kompe\-tenzen, 7/Governance, 8/Ressourcen\-kataster, 9/Wertmodell}{
-  \pgfmathtruncatemacro\col{mod(\i,5)}
-  \pgfmathtruncatemacro\rw{int(\i/5)}
-  \pgfmathsetmacro\xx{\col*29.2}\pgfmathsetmacro\yy{90-\rw*7.6}
-  \node[proc, text width=27.3mm, minimum height=6.6mm] at (\xx,\yy) {\n};
-}
+\SemioVizTable{sk-h1}{label, value}
+\SemioVizRow{sk-h1}{{Öffentliche Beschaffung},   83}
+\SemioVizRow{sk-h1}{{Finanzielle Anreize},       72}
+\SemioVizRow{sk-h1}{{Technische Normen},         56}
+\SemioVizRow{sk-h1}{{Vereinfachte Genehmigung},  44}
+\SemioVizRow{sk-h1}{{EU-Finanzierung},           44}
+\SemioVizRow{sk-h1}{{Qualifizierung},            28}
+\SemioVizRow{sk-h1}{{Matching-Plattformen},      11}
 
-%% ===== INSETS: H1 (links) + H2 (rechts) =====
-\draw[sep] (0,73.5) -- (\W,73.5);
-\node[T] at (0,70) {H1 \ UNTERSTÜTZUNG (EU26)};
-\node[Lm, text width=72mm] at (0,64.5) {19 Antworten, 10 Länder; n\,=\,18 abgeleitet};
-\foreach \r/\v/\n in {0/83/Öffentliche Beschaffung, 1/72/Finanzielle Anreize, 2/56/Technische Normen,
-                      3/44/Vereinfachte Genehmigung, 4/44/EU-Finanzierung, 5/28/Qualifizierung,
-                      6/11/Matching-Plattformen}{
-  \pgfmathsetmacro\yy{60-\r*2.6}
-  \node[Lm] at (0,\yy) {\n};
-  \draw[span] (39,\yy-0.85) rectangle (39+\v*0.185,\yy+0.85);
-  \node[val] at (72,\yy) {\v\,\%};
-}
+\SemioVizTable{sk-h2}{zeile, spalte, value}
+\SemioVizRow{sk-h2}{Markt,       Kos, .44}
+\SemioVizRow{sk-h2}{Regulierung, Kos, .49}
+\SemioVizRow{sk-h2}{Regulierung, Mkt, .45}
+\SemioVizRow{sk-h2}{Wahrnehmung, Kos, .36}
+\SemioVizRow{sk-h2}{Wahrnehmung, Mkt, .35}
+\SemioVizRow{sk-h2}{Wahrnehmung, Reg, .40}
+\SemioVizRow{sk-h2}{Risiko,      Kos, .34}
+\SemioVizRow{sk-h2}{Risiko,      Mkt, .38}
+\SemioVizRow{sk-h2}{Risiko,      Reg, .38}
+\SemioVizRow{sk-h2}{Risiko,      Wah, .63}
+\SemioVizRow{sk-h2}{Gesundheit,  Kos, .35}
 
-\node[T] at (77,70) {H2 \ HEMMNIS-KOPPLUNG};
-\node[Lm, text width=66mm] at (77,64.5) {C-Index (Jaccard), sign. Paare, Rakhshan 2020};
-\foreach \c/\n in {0/Kos, 1/Mkt, 2/Reg, 3/Wah}{\node[val, anchor=base] at (99+\c*8,58) {\n};}
-\foreach \r/\n in {0/Markt, 1/Regulierung, 2/Wahrnehmung, 3/Risiko, 4/Gesundheit}{
-  \pgfmathsetmacro\yy{55.5-\r*2.85}\node[Lm] at (77,\yy) {\n};}
-\foreach \r/\c/\v in {0/0/.44, 1/0/.49, 1/1/.45, 2/0/.36, 2/1/.35, 2/2/.40,
-                      3/0/.34, 3/1/.38, 3/2/.38, 3/3/.63, 4/0/.35}{
-  \pgfmathsetmacro\yy{55.5-\r*2.85}\pgfmathsetmacro\xx{99+\c*8}
-  \draw[span] (\xx-3.6,\yy-1.15) rectangle (\xx+3.6,\yy+1.15);
-  \node[val, anchor=center] at (\xx,\yy) {\v};}
-\node[Lm, text width=66mm] at (77,40) {Zusammenhang, keine Kausalität (eigene Einordnung).};
+\SemioVizTable{sk-h3}{label, value}
+\SemioVizRow{sk-h3}{{RBC-Händler},        46.4}
+\SemioVizRow{sk-h3}{{BC-Händler},         17.2}
+\SemioVizRow{sk-h3}{{Abbruchunternehmen}, 15.6}
+\SemioVizRow{sk-h3}{{Marktplatz},         5.9}
+\SemioVizRow{sk-h3}{{Lokales Handwerk},   5.6}
+\SemioVizRow{sk-h3}{{Netzwerkplattform},  4.6}
+\SemioVizRow{sk-h3}{{RBC-Dienstleistung}, 1.9}
+\SemioVizRow{sk-h3}{{RBC-Wissen},         1.6}
+\SemioVizRow{sk-h3}{{Datenplattform},     1.3}
+%endregion Daten
 
-%% ===== INSET: H3 =====
-\draw[sep] (0,36.5) -- (\W,36.5);
-\node[T] at (0,33) {H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa};
-\foreach \r/\v/\n in {0/46.4/RBC-Händler, 1/17.2/BC-Händler, 2/15.6/Abbruchunternehmen,
-                      3/5.9/Marktplatz, 4/5.6/Lokales Handwerk, 5/4.6/Netzwerkplattform,
-                      6/1.9/RBC-Dienstleistung, 7/1.6/RBC-Wissen, 8/1.3/Datenplattform}{
-  \pgfmathsetmacro\yy{27.5-\r*2.55}
-  \node[Lm] at (0,\yy) {\n};
-  \draw[span] (39,\yy-0.85) rectangle (39+\v*0.5,\yy+0.85);
-  \node[val] at (72,\yy) {\v};
-}
-\node[Lm, text width=64mm, anchor=north west] at (79,28.5) {Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.};
+\begin{VizFigure}[title=Systemkarte Skalierung der Wiederverwendung, width=147]
 
-\end{tikzpicture}
-\end{Figure}
+\begin{VizSection}[rule=false]
+\SemioVizText{label}[width=143]{0,-1}{%
+  {\SemioMono SYNTHESE (E2\SemioSlash{}E3):}\ \ Skalierung entsteht nicht durch eine digitale Plattform allein, sondern aus dem Zusammenspiel von Wiederverwendungsprozessen~(B), digitalen Plattformfunktionen~(C), operativen Diensten~(D) und institutionellen Rahmenbedingungen~(E). Hemmnisse~(F) wirken an den Schnittstellen und bestimmen, ob dauerhaft skaliert wird.}
+\end{VizSection}
+
+\begin{VizSection}[title={A \ SKALIERUNG \ \textperiodcentered\ \ sechs Dimensionen (E3)}]
+\SemioVizLayout{grid}[data=sk-dimension, label=label, columns=6, boxheight=7.5]
+\end{VizSection}
+
+\begin{VizSection}[title={G \ EVIDENZPFADE \ \textperiodcentered\ \ durchgezogen belegt, gestrichelt analytisch (E3)}]
+\SemioVizLayout{process}[data=sk-evidenz, chip=chip, stages={s1,s2,s3,s4}, boxheight=4.7]
+\end{VizSection}
+
+\begin{VizSection}[title={B \ D2R-PROZESSE \ \textperiodcentered\ \ buildingSMART, neun Prozesse, nicht-linear}]
+\SemioVizText{label}[width=25]{0,-7.5}{Prozess-Rückgrat}
+\SemioVizLayout{grid}[data=sk-prozess, label=label, key=key, scale=d2r, boxheight=14.5]
+\end{VizSection}
+
+\begin{VizSection}[title={C \ DIGITALE FUNKTIONEN \ \textperiodcentered\ \ neun Gruppen als Spannen (E3)}, aside={H-05 \SemioSlash{} H-09 \SemioSlash{} H-10}]
+\SemioVizLayout{gantt}[data=sk-funktion, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\end{VizSection}
+
+\begin{VizSection}[title={D \ OPERATIVE DIENSTE \ \textperiodcentered\ \ physische Ausführung}, aside={H-11 \SemioSlash{} H-07 \SemioSlash{} H-04}]
+\SemioVizLayout{gantt}[data=sk-dienst, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\end{VizSection}
+
+\begin{VizSection}[title={E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen}, aside={H-01 \SemioSlash{} H-13 \SemioSlash{} H-03 \SemioSlash{} H-12}]
+\SemioVizLayout{grid}[data=sk-rahmen, label=label, columns=5, boxheight=6.6]
+\end{VizSection}
+
+\begin{VizSection}[title={H1 \ UNTERSTÜTZUNG (EU26)}]
+\begin{VizColumn}[width=72]
+\SemioVizText{label}[width=72]{0,-1}{19 Antworten, 10 Länder; n\,=\,18 abgeleitet}
+\SemioVizLayout{bar}[data=sk-h1, label=label, value=value, orient=horizontal, domain={0,100}, unit={\,\%}, labelwidth=38, boxheight=2.6, frame=false]
+\end{VizColumn}
+\begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}]
+\SemioVizText{label}[width=66]{0,-1}{C-Index (Jaccard), sign. Paare, Rakhshan 2020}
+\SemioVizLayout{heat}[data=sk-h2, row=zeile, col=spalte, value=value, header=true, boxheight=8]
+\SemioVizText{label}[width=66]{0,-38}{Zusammenhang, keine Kausalität (eigene Einordnung).}
+\end{VizColumn}
+\end{VizSection}
+
+\begin{VizSection}[title={H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa}]
+\begin{VizColumn}[width=72]
+\SemioVizLayout{bar}[data=sk-h3, label=label, value=value, orient=horizontal, labelwidth=38, boxheight=2.55, frame=false]
+\end{VizColumn}
+\begin{VizColumn}[width=68]
+\SemioVizText{label}[width=64]{0,-1}{Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.}
+\end{VizColumn}
+\end{VizSection}
+
+\end{VizFigure}
 
 \clearpage
 

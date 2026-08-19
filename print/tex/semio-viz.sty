@@ -57,14 +57,17 @@
   height .code:n = {
     \semio_viz_number_check:nn { height } {#1}
     \tl_set:Nn \l_semio_viz_height_tl {#1}
+    \bool_set_false:N \l_semio_viz_height_auto_bool
   },
 }
 
+\bool_new:N \l_semio_viz_height_auto_bool
 \cs_new_protected:Npn \semio_viz_figure_keys_reset: {
   \tl_clear:N \l_semio_viz_title_tl
   \tl_clear:N \l_semio_viz_window_tl
   \tl_set:Nn \l_semio_viz_width_tl { \semio@viz@frame@width }
   \tl_set:Nn \l_semio_viz_height_tl { \semio@viz@frame@height }
+  \bool_set_true:N \l_semio_viz_height_auto_bool
 }
 %endregion Keys
 
@@ -72,9 +75,22 @@
 \cs_new_protected:Npn \semio_viz_figure_open:n #1 {
   \begin{Figure}[#1]
   \begin{tikzpicture}[ semio~viz~picture ]
-  \useasboundingbox (0,0) rectangle ( \l_semio_viz_width_tl , \l_semio_viz_height_tl ) ;
   \fp_set:Nn \l_semio_viz_width_fp { \l_semio_viz_width_tl }
-  \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_height_tl }
+  \bool_if:NTF \l_semio_viz_height_auto_bool
+    {
+      % 🪢 Height left to grow with content, per semio-tree.sty's own
+      % \path (0,0)--(width,0) idiom: a bare \path pins the horizontal
+      % extent only, and pgf computes the vertical bounding box from
+      % whatever VizSection/VizColumn calls actually draw -- what lets a
+      % section that wraps to three lines push the rest of the figure down
+      % without anyone measuring it.
+      \use:x { \exp_not:N \path (0,0) -- ( \l_semio_viz_width_tl , 0 ) ; }
+      \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_width_fp }
+    }
+    {
+      \useasboundingbox (0,0) rectangle ( \l_semio_viz_width_tl , \l_semio_viz_height_tl ) ;
+      \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_height_tl }
+    }
 }
 
 \cs_new_protected:Npn \semio_viz_figure_begin:n #1 {
@@ -113,6 +129,120 @@
   { \semio_viz_figure_begin:n {#1} }
   { \semio_viz_figure_end: }
 %endregion Figure
+
+%region Sections
+% 🪜 VizSection/VizColumn replace a stacked-panel figure's hand-placed
+% section origins (skalierung.tex's eight hardcoded Y separators) the same
+% way semio-tree.sty replaces a hand-placed hierarchy: no y-accumulator, no
+% measured line heights. Each section is a `local bounding box` scope --
+% pgf computes it from what was actually drawn inside -- shifted to sit on
+% the PREVIOUS section's own measured `.south west`. A three-line label
+% pushes every section below it down with nobody counting lines.
+\providecommand{\semio@viz@section@gap}{3.5mm}
+\providecommand{\semio@viz@section@content@gap}{4mm}
+\providecommand{\semio@viz@column@gutter}{4mm}
+
+\tl_new:N \l_semio_viz_section_title_tl
+\tl_new:N \l_semio_viz_section_aside_tl
+\bool_new:N \l_semio_viz_section_rule_bool
+\tl_new:N \l_semio_viz_section_prev_tl
+\tl_new:N \l_semio_viz_section_name_tl
+\int_new:N \g_semio_viz_section_int
+\fp_new:N \g_semio_viz_column_cursor_fp
+\fp_new:N \l_semio_viz_saved_width_fp
+
+\keys_define:nn { semio / viz / section } {
+  title .tl_set:N = \l_semio_viz_section_title_tl,
+  aside .tl_set:N = \l_semio_viz_section_aside_tl,
+  rule  .bool_set:N = \l_semio_viz_section_rule_bool,
+}
+
+\cs_new_protected:Npn \semio_viz_section_keys_reset: {
+  \tl_clear:N \l_semio_viz_section_title_tl
+  \tl_clear:N \l_semio_viz_section_aside_tl
+  \bool_set_true:N \l_semio_viz_section_rule_bool
+}
+
+\cs_new_protected:Npn \semio_viz_section_chrome: {
+  \bool_if:NT \l_semio_viz_section_rule_bool {
+    \use:x { \exp_not:N \draw [ semio~viz~rule ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_width_fp } , 0 ) ; }
+  }
+  \tl_if_empty:NF \l_semio_viz_section_title_tl {
+    \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+      at ( 0 , -1.4 ) { \exp_not:V \l_semio_viz_section_title_tl } ;
+  }
+  \tl_if_empty:NF \l_semio_viz_section_aside_tl {
+    \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal, anchor=north~east ]
+      at ( \fp_eval:n { \l_semio_viz_width_fp } , -1.4 ) { \exp_not:V \l_semio_viz_section_aside_tl } ;
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_section_open:n #1 {
+  \semio_viz_frame_require:n { VizSection }
+  \semio_viz_section_keys_reset:
+  \keys_set:nn { semio / viz / section } {#1}
+  \int_gincr:N \g_semio_viz_section_int
+  \tl_set:Nx \l_semio_viz_section_name_tl { vizsectionbox \int_use:N \g_semio_viz_section_int }
+  \fp_gzero:N \g_semio_viz_column_cursor_fp
+  \tl_if_empty:NTF \l_semio_viz_section_prev_tl
+    { \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ] }
+    {
+      \begin{scope}[
+        shift={([yshift=-\semio@viz@section@gap]\l_semio_viz_section_prev_tl.south~west)},
+        local~bounding~box=\l_semio_viz_section_name_tl
+      ]
+    }
+  \semio_viz_section_chrome:
+  \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+}
+
+\cs_new_protected:Npn \semio_viz_section_close: {
+  \end{scope}
+  \end{scope}
+  \tl_set_eq:NN \l_semio_viz_section_prev_tl \l_semio_viz_section_name_tl
+}
+
+% 📐 One horizontal band of the Systemkarte: a title/rule and everything the
+% body draws, auto-stacked below the previous VizSection.
+\NewDocumentEnvironment { VizSection } { O{} }
+  { \semio_viz_section_open:n {#1} }
+  { \semio_viz_section_close: }
+
+\fp_new:N \l_semio_viz_column_width_fp
+\tl_new:N \l_semio_viz_column_title_tl
+
+\keys_define:nn { semio / viz / column } {
+  width .fp_set:N = \l_semio_viz_column_width_fp,
+  title .tl_set:N = \l_semio_viz_column_title_tl,
+}
+
+\cs_new_protected:Npn \semio_viz_column_open:n #1 {
+  \semio_viz_frame_require:n { VizColumn }
+  \fp_set_eq:NN \l_semio_viz_column_width_fp \l_semio_viz_width_fp
+  \tl_clear:N \l_semio_viz_column_title_tl
+  \keys_set:nn { semio / viz / column } {#1}
+  \fp_set_eq:NN \l_semio_viz_saved_width_fp \l_semio_viz_width_fp
+  \begin{scope}[ shift={(\fp_eval:n{\g_semio_viz_column_cursor_fp},0)} ]
+  \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_column_width_fp
+  \tl_if_empty:NF \l_semio_viz_column_title_tl {
+    \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+      at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_column_close: {
+  \end{scope}
+  \fp_gset:Nn \g_semio_viz_column_cursor_fp
+    { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \semio@viz@column@gutter } }
+  \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_saved_width_fp
+}
+
+% 🏛️ One vertical slot of a VizSection, siblings placed left to right by
+% their own declared width -- no `x=77` literal for what sits beside what.
+\NewDocumentEnvironment { VizColumn } { O{} }
+  { \semio_viz_column_open:n {#1} }
+  { \semio_viz_column_close: }
+%endregion Sections
 
 %region ChartKinds
 \seq_new:N \g_semio_viz_chart_kinds_seq

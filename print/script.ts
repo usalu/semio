@@ -104,7 +104,10 @@ const VIZ_API_COMMANDS = [
   "\\SemioVizScale",
   "\\SemioVizChartKind",
   "\\SemioVizDemo",
+  "\\SemioVizText",
   "VizFigure",
+  "VizSection",
+  "VizColumn",
 ] as const;
 
 function vizGallerySources(): string {

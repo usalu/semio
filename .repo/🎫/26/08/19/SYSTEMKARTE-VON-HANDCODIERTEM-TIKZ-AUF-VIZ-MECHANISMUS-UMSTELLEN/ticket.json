@@ -1,0 +1,10 @@
+{
+  "title": "Systemkarte Von Handcodiertem Tikz Auf Viz-Mechanismus Umstellen",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Die Anlage „Systemkarte Skalierung der Wiederverwendung\" (mit-bestand/bericht/forschungsbericht/anhang/skalierung.tex) rendert als einziger Anhang im gesamten Bericht eine handcodierte tikzpicture mit ~34 hartcodierten Koordinaten-Literalen statt der semantischen semio-viz-Mechanismen. Ziel: die Anlage auf \\SemioVizTable/\\SemioVizScale/\\SemioVizLayout umstellen, dafür fehlende Mechanismen (VizSection/VizColumn für vertikales Stapeln ohne Koordinaten, \\SemioVizText für textführende Marks, echte data-driven grid/gantt/heat-Layoutfamilien statt der bisherigen Demo-Stubs, Band-Scale-Edges) in print/tex/semio-viz*.sty ergänzen. Die Dokument-Preamble-tikzset-Vokabel (forschungsbericht.tex:119-147), die diesem Prinzip widerspricht (\"keine Diagramm-Vokabel lebt im Dokument-Preamble\"), wird dabei entfernt und durch eine paketseitige Vokabel in semio-viz-mark.sty ersetzt. Plan und vollständige Analyse liegen bereits vor (siehe Chat-Session); Scope ist ausschließlich skalierung.tex + die dafür nötige Erweiterung der viz-Pakete.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e07e854240834590978a695a0b1937cb"
+  ]
+}

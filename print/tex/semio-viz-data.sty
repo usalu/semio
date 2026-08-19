@@ -144,12 +144,16 @@
 
 \cs_new_protected:Npn \semio_viz_data_demo: {
   \seq_if_in:NnF \g_semio_viz_table_names_seq { demo } {
-    \semio_viz_table_new:nn { demo } { cat, val, val2, grp, t }
-    \semio_viz_table_row:nn { demo } { A, 4, 2, x, 1 }
-    \semio_viz_table_row:nn { demo } { B, 7, 3, x, 2 }
-    \semio_viz_table_row:nn { demo } { C, 3, 5, y, 3 }
-    \semio_viz_table_row:nn { demo } { D, 8, 4, y, 4 }
-    \semio_viz_table_row:nn { demo } { E, 5, 6, x, 5 }
+    % 🧪 Columns beyond cat/val/val2/grp/t (label/from/to/row/col/chip/s1-3)
+    % exist so the row-structured families rewritten off hand-placed TikZ
+    % (grid/gantt/process/heat) still render real content from the generic
+    % \SemioVizDemo{kind} gallery path, which always binds `data=demo`.
+    \semio_viz_table_new:nn { demo } { cat, val, val2, grp, t, label, value, from, to, row, col, chip, s1, s2, s3 }
+    \semio_viz_table_row:nn { demo } { A, 4, 2, x, 1, {Alpha},   4, A, B, R1, C1, Q1, {Stage 1}, {Stage 2}, {Stage 3} }
+    \semio_viz_table_row:nn { demo } { B, 7, 3, x, 2, {Beta},    7, B, D, R1, C2, Q1, {Stage 1}, {Stage 2}, {Stage 3} }
+    \semio_viz_table_row:nn { demo } { C, 3, 5, y, 3, {Gamma},   3, A, C, R2, C1, Q2, {Stage 1}, {Stage 2}, {Stage 3} }
+    \semio_viz_table_row:nn { demo } { D, 8, 4, y, 4, {Delta},   8, C, E, R2, C2, Q2, {Stage 1}, {Stage 2}, {Stage 3} }
+    \semio_viz_table_row:nn { demo } { E, 5, 6, x, 5, {Epsilon}, 5, B, E, R2, C3, Q3, {Stage 1}, {Stage 2}, {Stage 3} }
   }
 }
 

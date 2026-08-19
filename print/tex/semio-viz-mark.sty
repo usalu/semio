@@ -7,11 +7,62 @@
 
 \ExplSyntaxOn
 
+%region StyleVocabulary
+% 🎨 The Systemkarte's cell/chip/edge/bar vocabulary, formerly a \tikzset
+% block re-declared in every document preamble (forschungsbericht.tex,
+% zwischenbericht.tex) under \makeatletter -- moved here so no report
+% redeclares it, matching semio-graph.sty / semio-tree.sty. Namespaced
+% `semio viz *` so it can never collide with a document's own `semio edge`
+% (which historically carried plain -latex, not -{Latex}).
+\providecommand{\semio@viz@cell@inset@x}{0.55em}
+\providecommand{\semio@viz@cell@inset@y}{0.34em}
+\providecommand{\semio@viz@chip@inset@x}{0.2em}
+\providecommand{\semio@viz@chip@inset@y}{0.08em}
+\providecommand{\semio@viz@guide@opacity}{0.28}
+\providecommand{\semio@viz@rule@opacity}{0.55}
+\providecommand{\semio@viz@font@cell}{\SemioSans\fontsize{7.2pt}{9.4pt}\selectfont}
+\providecommand{\semio@viz@font@chip}{\SemioMono\fontsize{6.4pt}{7pt}\selectfont}
+\providecommand{\semio@viz@font@title}{\SemioMono\fontsize{7.2pt}{8.4pt}\selectfont}
+\providecommand{\semio@viz@font@label}{\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont}
+\providecommand{\semio@viz@font@value}{\SemioMono\fontsize{6.6pt}{7.6pt}\selectfont}
+
+\tikzset{
+  semio~viz~cell/.style={
+    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+    fill=semio-chrome-canvas, align=left, anchor=center,
+    inner~xsep=\semio@viz@cell@inset@x, inner~ysep=\semio@viz@cell@inset@y,
+    font=\semio@viz@font@cell, text=semio-chrome-text-normal,
+  },
+  semio~viz~module/.style={ semio~viz~cell, fill=semio-chrome-window, text=semio-chrome-foreground },
+  semio~viz~chip/.style={
+    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+    fill=semio-chrome-panel, text=semio-chrome-foreground,
+    font=\semio@viz@font@chip,
+    inner~xsep=\semio@viz@chip@inset@x, inner~ysep=\semio@viz@chip@inset@y,
+  },
+  semio~viz~edge/.style={
+    draw=semio-chrome-border-emphasized, line~width=\semio@stroke@hairline, -{Latex},
+  },
+  semio~viz~edge~analytic/.style={ semio~viz~edge, dash~pattern=on~2.25pt~off~1.5pt },
+  semio~viz~bar/.style={
+    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, fill=semio-chrome-panel,
+  },
+  semio~viz~guide/.style={
+    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, draw~opacity=\semio@viz@guide@opacity,
+  },
+  semio~viz~rule/.style={
+    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, draw~opacity=\semio@viz@rule@opacity,
+  },
+}
+%endregion StyleVocabulary
+
 %region Diagnostics
 \msg_new:nnn { semio-viz } { unknown-mark }
   { Unknown~viz~mark~'#1'. }
 \msg_new:nnn { semio-viz } { outside-figure }
   { \iow_char:N\\#1~needs~an~enclosing~VizFigure. }
+\msg_new:nnn { semio-viz } { unknown-text-kind }
+  { Unknown~viz~text~kind~'#1'. }
 %endregion Diagnostics
 
 %region Registry
@@ -102,6 +153,14 @@
   } {
     \use:x { \exp_not:N \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ #1 ] coordinates { \l_semio_viz_path_coords_tl } ; }
   }
+}
+
+\tl_new:N \l_semio_viz_pta_tl
+\tl_new:N \l_semio_viz_ptb_tl
+\cs_new_protected:Npn \semio_viz_points_ends: { % first and last parsed point, for a 2-point connector
+  \semio_viz_points_parse:
+  \tl_set:Nx \l_semio_viz_pta_tl { \seq_item:Nn \l_semio_viz_points_seq { 1 } }
+  \tl_set:Nx \l_semio_viz_ptb_tl { \seq_item:Nn \l_semio_viz_points_seq { \seq_count:N \l_semio_viz_points_seq } }
 }
 
 \cs_new_protected:Npn \semio_viz_points_step: {
@@ -203,13 +262,13 @@
     { annular-arc } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) ++( \semio_viz_polar:nn {20} {14} ) arc [ start~angle=20, end~angle=200, radius=14 ] -- ++( \semio_viz_polar:nn {200} {-6} ) arc [ start~angle=200, end~angle=20, radius=8 ] -- cycle ; }
     { sector } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( \semio_viz_polar:nn {10} {14} ) arc [ start~angle=10, end~angle=110, radius=14 ] -- cycle ; }
     { wedge } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( \semio_viz_polar:nn {40} {16} ) arc [ start~angle=40, end~angle=80, radius=16 ] -- cycle ; }
-    { straight-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) -- ( 68, 28 ) ; \fill [ \l_semio_viz_mark_draw_tl ] ( 12, 10 ) circle [ radius=1.2pt ] ( 68, 28 ) circle [ radius=1.2pt ] ; }
-    { orthogonal-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) -| ( 68, 28 ) ; }
-    { curved-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) to [ out=20, in=200 ] ( 68, 28 ) ; }
-    { elbow-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 28 ) -- ( 12, 10 ) -- ( 68, 10 ) ; }
+    { straight-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; \fill [ \l_semio_viz_mark_draw_tl ] ( \l_semio_viz_pta_tl ) circle [ radius=1.2pt ] ( \l_semio_viz_ptb_tl ) circle [ radius=1.2pt ] ; }
+    { orthogonal-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) -| ( \l_semio_viz_ptb_tl ) ; }
+    { curved-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) to [ out=20, in=200 ] ( \l_semio_viz_ptb_tl ) ; }
+    { elbow-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) |- ( \l_semio_viz_ptb_tl ) ; }
     { bundled-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 10, 8 ) to [ out=90, in=180 ] ( 40, 20 ) to [ out=0, in=90 ] ( 70, 8 ) ( 10, 32 ) to [ out=-90, in=180 ] ( 40, 20 ) to [ out=0, in=-90 ] ( 70, 32 ) ; }
-    { arrow } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, -{Latex} ] ( 12, 16 ) -- ( 68, 24 ) ; }
-    { bidirectional-arrow } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, {Latex}-{Latex} ] ( 12, 20 ) -- ( 68, 20 ) ; }
+    { arrow } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, -{Latex} ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; }
+    { bidirectional-arrow } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, {Latex}-{Latex} ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; }
     { voronoi-region } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 20, 8 ) -- ( 40, 20 ) -- ( 20, 32 ) -- cycle ( 40, 20 ) -- ( 64, 8 ) -- ( 64, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 28, 20 ) circle [ radius=1pt ] ( 52, 20 ) circle [ radius=1pt ] ; }
     { convex-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 64, 10 ) -- ( 68, 28 ) -- ( 24, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 22, 14 ) circle [ radius=1pt ] ( 40, 22 ) circle [ radius=1pt ] ( 56, 16 ) circle [ radius=1pt ] ; }
     { concave-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 40, 16 ) -- ( 64, 8 ) -- ( 68, 28 ) -- ( 40, 22 ) -- ( 16, 30 ) -- cycle ; }
@@ -225,5 +284,78 @@
 % 〰️ Draws a registered line, area, arc, or connector demo.
 \NewDocumentCommand \SemioVizPath { m O{} } { \semio_viz_mark_keys_reset: \keys_set:nn { semio / viz / mark } {#2} \semio_viz_path_demo:n {#1} }
 %endregion Registry
+
+%region TextMarks
+% 🔠 Text-carrying marks: a SEPARATE command from \SemioVizMark, not a
+% `text=` key on it -- l3keys splits key-value lists on commas, and German
+% prose is nothing but commas ("Zusammenhang, keine Kausalität"); one missing
+% brace and a value silently splits into two keys. Content is the mark's own
+% trailing argument instead, never a key.
+\tl_new:N \l_semio_viz_text_width_tl
+\tl_new:N \l_semio_viz_text_height_tl
+\tl_new:N \l_semio_viz_text_anchor_tl
+\tl_new:N \l_semio_viz_text_align_tl
+\tl_new:N \l_semio_viz_text_style_tl
+\tl_new:N \l_semio_viz_text_font_tl
+
+\seq_new:N \g_semio_viz_text_kinds_seq
+\clist_map_inline:nn { cell, module, chip, label, title, value }
+  { \seq_gput_right:Nn \g_semio_viz_text_kinds_seq {##1} }
+
+\cs_new_protected:Npn \semio_viz_text_keys_reset:n #1 { % kind -> its own defaults
+  \tl_clear:N \l_semio_viz_text_width_tl
+  \tl_clear:N \l_semio_viz_text_height_tl
+  \tl_set:Nn \l_semio_viz_text_anchor_tl { north~west }
+  \tl_set:Nn \l_semio_viz_text_align_tl { left }
+  \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@label }
+  \tl_clear:N \l_semio_viz_text_style_tl
+  \str_case:nn {#1} {
+    { cell }   { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~cell } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { module } { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~module } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { chip }   { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~chip } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { title }  { \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@title } }
+    { value }  { \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@value } \tl_set:Nn \l_semio_viz_text_anchor_tl { east } }
+  } { }
+}
+
+\keys_define:nn { semio / viz / text } {
+  width  .tl_set:N = \l_semio_viz_text_width_tl,
+  height .tl_set:N = \l_semio_viz_text_height_tl,
+  anchor .tl_set:N = \l_semio_viz_text_anchor_tl,
+  align  .tl_set:N = \l_semio_viz_text_align_tl,
+  style  .tl_set:N = \l_semio_viz_text_style_tl,
+  font   .tl_set:N = \l_semio_viz_text_font_tl,
+}
+
+\tl_new:N \l_semio_viz_text_opts_tl
+\cs_new_protected:Npn \semio_viz_text_draw:nnnn #1#2#3#4 { % kind, keys, xy, content
+  \semio_viz_frame_require:n { SemioVizText }
+  \seq_if_in:NnF \g_semio_viz_text_kinds_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-text-kind } {#1} }
+  \semio_viz_text_keys_reset:n {#1}
+  \keys_set:nn { semio / viz / text } {#2}
+  \semio_viz_xy:n {#3}
+  \tl_clear:N \l_semio_viz_text_opts_tl
+  \tl_if_empty:NF \l_semio_viz_text_style_tl
+    { \tl_put_right:Nx \l_semio_viz_text_opts_tl { \l_semio_viz_text_style_tl , } }
+  \tl_if_empty:NF \l_semio_viz_text_width_tl
+    { \tl_put_right:Nx \l_semio_viz_text_opts_tl { text~width= \l_semio_viz_text_width_tl ~mm , } }
+  \tl_if_empty:NF \l_semio_viz_text_height_tl
+    { \tl_put_right:Nx \l_semio_viz_text_opts_tl { minimum~height= \l_semio_viz_text_height_tl ~mm , } }
+  \tl_if_empty:NF \l_semio_viz_text_font_tl
+    { \tl_put_right:Nx \l_semio_viz_text_opts_tl { font= \l_semio_viz_text_font_tl , } }
+  \node [
+    anchor= \l_semio_viz_text_anchor_tl ,
+    align= \l_semio_viz_text_align_tl ,
+    \l_semio_viz_text_opts_tl
+    outer~sep=0pt,
+  ] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) { \exp_not:n {#4} } ;
+}
+
+% 🔠 Text-carrying mark: kind (cell/module/chip/label/title/value), keys, a
+% millimetre point, and the content as its own argument -- never a key, so
+% prose commas and braces pass through untouched.
+\NewDocumentCommand \SemioVizText { m O{} m m } { \semio_viz_text_draw:nnnn {#1}{#2}{#3}{#4} }
+%endregion TextMarks
 
 \ExplSyntaxOff

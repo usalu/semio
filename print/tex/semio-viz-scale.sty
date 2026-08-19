@@ -151,7 +151,7 @@
     \msg_error:nnn { semio-viz } { unknown-scale-kind } { \l_semio_viz_scale_kind_tl }
   }
 }
-\cs_generate_variant:Nn \semio_viz_scale_map:nnN { VnN }
+\cs_generate_variant:Nn \semio_viz_scale_map:nnN { VnN , VVN }
 
 \int_new:N \l_semio_viz_band_int
 \seq_new:N \l_semio_viz_quantile_seq
@@ -262,5 +262,63 @@
 % 📐 Named scale: kind, domain, range.
 \NewDocumentCommand \SemioVizScale { m m m m } { \semio_viz_scale_define:nnnn {#1} {#2} {#3} {#4} }
 %endregion Registry
+
+%region BandGeometry
+% ↕️ Band-scale edges: d3's band scale exposes bandwidth() and each band's own
+% start/end, not just its centre (semio_viz_scale_band_map:nnN above). Every
+% span bar, matrix cell and grid box needs an edge, not a point, so this
+% region completes the band scale rather than duplicating it. Dedicated
+% scratch fps (band_lo/band_hi), not \l_tmpa_fp -- band_map already clobbers
+% \l_tmpa_int/\l_tmpb_int and a span calls the edge finder twice.
+\fp_new:N \l_semio_viz_band_lo_fp
+\fp_new:N \l_semio_viz_band_hi_fp
+
+\cs_new_protected:Npn \semio_viz_scale_band_index:nnN #1#2#3 { % scale, category -> band index
+  \int_zero:N #3
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
+    \int_incr:N \l_tmpa_int
+    \tl_if_eq:nnT {##1} {#2} { \int_set_eq:NN #3 \l_tmpa_int }
+  }
+  \int_compare:nNnT #3 = { 0 } { \int_set:Nn #3 { 1 } }
+}
+
+\cs_new_protected:Npn \semio_viz_scale_band_range_prep:n #1 { % scale -> range lo/hi + band count
+  \int_set:Nn \l_tmpb_int { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
+}
+
+% 📏 Width of one band of a band/point/ordinal scale.
+\cs_new_protected:Npn \semio_viz_scale_band_width:nN #1#2 {
+  \semio_viz_scale_band_range_prep:n {#1}
+  \fp_set:Nn #2 { \fp_eval:n { ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) / \l_tmpb_int } }
+}
+
+% 📦 Left and right edge of one named band.
+\cs_new_protected:Npn \semio_viz_scale_band_edges:nnNN #1#2#3#4 {
+  \semio_viz_scale_band_index:nnN {#1} {#2} \l_semio_viz_band_int
+  \semio_viz_scale_band_range_prep:n {#1}
+  \fp_set:Nn #3 { \fp_eval:n { \l_semio_viz_range_lo_fp + ( \l_semio_viz_band_int - 1 ) / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) } }
+  \fp_set:Nn #4 { \fp_eval:n { \l_semio_viz_range_lo_fp + \l_semio_viz_band_int / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) } }
+}
+
+% ↔️ Left edge of the "from" band through the right edge of the "to" band --
+% one span across the grid, for a Gantt-style bar between two named stages.
+\cs_new_protected:Npn \semio_viz_scale_band_span:nnnNN #1#2#3#4#5 {
+  \semio_viz_scale_band_edges:nnNN {#1} {#2} #4 \l_semio_viz_band_hi_fp
+  \semio_viz_scale_band_edges:nnNN {#1} {#3} \l_semio_viz_band_lo_fp #5
+}
+
+% A scale name and a category name almost always arrive from a key (a tl
+% variable) rather than as a literal, e.g. the scale a \SemioVizLayout call
+% names via `scale=`, or a category read out of a table cell -- so every
+% edge finder above needs a variant that expands its tl-variable arguments
+% to their VALUES before the n-type body runs. The two-name span needs all
+% three: the scale plus both endpoint categories.
+\cs_generate_variant:Nn \semio_viz_scale_band_edges:nnNN { VVNN }
+\cs_generate_variant:Nn \semio_viz_scale_band_span:nnnNN { VVVNN }
+\cs_generate_variant:Nn \semio_viz_scale_band_width:nN { V }
+%endregion BandGeometry
 
 \ExplSyntaxOff

@@ -33,4 +33,18 @@
 \SemioVizLegend[legend=gradient]
 \SemioVizDemo{dot}
 \end{VizFigure}
+\section{Sections, columns, and text marks}
+\begin{VizFigure}[title={Section, column, text}, width=100]
+\begin{VizSection}[title={A \ Section title}]
+\SemioVizLayout{grid}[data=demo, label=label, columns=5, boxheight=7]
+\end{VizSection}
+\begin{VizSection}[title={B \ Two columns}]
+\begin{VizColumn}[width=48, title={Left}]
+\SemioVizText{label}[width=40]{0,0}{Text mark inside a column.}
+\end{VizColumn}
+\begin{VizColumn}[width=48, title={Right}]
+\SemioVizLayout{bar}[data=demo, label=label, value=value, orient=horizontal, labelwidth=20, frame=false]
+\end{VizColumn}
+\end{VizSection}
+\end{VizFigure}
 \end{document}
