@@ -457,9 +457,6 @@ pub mod ipc {
         Ok((id.to_string(), payload[2 + id_len..].to_vec()))
     }
 
-    /// 🔌️ Abstract duplex transport used by the dashboard client and daemon.
-    pub trait DashboardTransport: Read + Write + Send {}
-    impl<T: Read + Write + Send> DashboardTransport for T {}
 
     #[cfg(unix)]
     pub fn connect(root: &Path) -> std::io::Result<std::os::unix::net::UnixStream> {
@@ -539,15 +536,22 @@ pub mod daemon {
         _marker: (),
     }
 
-    /// 🧠 In-process supervisor: sessions + fan-out to attached client streams.
-    pub struct Supervisor {
+    /// 🧠 In-process supervisor: sessions + fan-out to attached client streams. `T` is the daemon's
+    /// one duplex transport type per instance — R11: open set (the real `#[cfg(unix)]` accept loop
+    /// stores `UnixStream`, the test suite's `DuplexEnd` mock stores an in-memory pipe, and neither
+    /// is the other's only impl), so this de-dyns to a GENERIC parameter rather than
+    /// `dyn_enum_close!` — a hand-written enum would need a `#[cfg(test)]`-only variant, which the
+    /// macro's DSL cannot express (see `📓️terra-dedyn-fw-hub-repo-report.md`). Only `Write + Send`
+    /// is required: `Supervisor` only ever writes to an attached client (reading happens on the
+    /// per-connection thread against the original, un-stored clone of the same stream).
+    pub struct Supervisor<T: Write + Send> {
         sessions: HashMap<String, LiveSession>,
-        clients: Vec<Box<dyn ipc::DashboardTransport>>,
+        clients: Vec<T>,
         event_log: EventLog,
         _root: PathBuf,
     }
 
-    impl Supervisor {
+    impl<T: Write + Send> Supervisor<T> {
         pub fn new(root: &Path) -> std::io::Result<Self> {
             Ok(Self {
                 sessions: HashMap::new(),
@@ -583,7 +587,7 @@ pub mod daemon {
             }
         }
 
-        pub fn attach_client(&mut self, mut stream: Box<dyn ipc::DashboardTransport>) -> std::io::Result<()> {
+        pub fn attach_client(&mut self, mut stream: T) -> std::io::Result<()> {
             ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id() })?;
             self.clients.push(stream);
             Ok(())
@@ -748,7 +752,7 @@ pub mod daemon {
                     let stream_for_client = stream.try_clone()?;
                     {
                         let mut sup = supervisor.lock().unwrap();
-                        let _ = sup.attach_client(Box::new(stream_for_client));
+                        let _ = sup.attach_client(stream_for_client);
                     }
                     let sup = Arc::clone(&supervisor);
                     let running = Arc::clone(&running);
@@ -809,7 +813,7 @@ pub mod daemon {
     }
 
     /// 🧪 Drive a supervisor against an in-memory duplex for unit tests.
-    pub fn handle_one_for_test(sup: &mut Supervisor, msg: ClientMsg) -> std::io::Result<()> {
+    pub fn handle_one_for_test<T: Write + Send>(sup: &mut Supervisor<T>, msg: ClientMsg) -> std::io::Result<()> {
         sup.handle_client_msg(msg)
     }
 }
@@ -958,7 +962,7 @@ mod tests {
         let mut sup = Supervisor::new(&root).unwrap();
         let (a, mut b) = duplex_pair();
         // attach uses write on the client-facing end we keep in supervisor
-        sup.attach_client(Box::new(a)).unwrap();
+        sup.attach_client(a).unwrap();
         // read Attached
         let (kind, payload) = ipc::read_frame(&mut b).unwrap();
         assert_eq!(kind, ipc::KIND_CONTROL);

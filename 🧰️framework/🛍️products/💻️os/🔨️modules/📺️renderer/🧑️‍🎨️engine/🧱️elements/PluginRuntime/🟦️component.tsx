@@ -2,22 +2,22 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/PluginRuntime/component.tsx
 /** @emoji 🐚️ `PluginRuntime` — the `PluginWasmHandle` binary-channel adapter (`loadPluginModule`/
- * `adaptPluginHandle`) that wraps a leased `framework-core` plugin wasm module's 5-function
- * `exchange` ABI behind the wider action/command/refreshUi/contextMenu/document-sync surface the
- * rest of the shell calls, plus the `AppChannelClient` frame-reassembly helpers
- * (`🔖️ChannelAdapter`) that back it.
+ * `adaptPluginHandle`) that wraps a leased `framework-core` plugin wasm module's `enqueue`/`outcomes`
+ * turn ABI behind the wider action/command/refreshUi/contextMenu/document-sync surface the rest of the
+ * shell calls, plus the `AppChannelClient` frame-reassembly helpers (`🔖️ChannelAdapter`) that back it.
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react, design-runtime.md §1/§3): `loadPluginModule`
  * no longer leases one Worker per plugin (`acquirePluginModule`/`PluginModuleLease`, both deleted
  * in packet H2 — `📓️terra-H2-web-shard-report.md`). It drives a real actor through the kernel's
  * `ActivationRegistry` (manifest-only activation, LRU suspend/resume) over `ShardClient` (bounded
- * shard-worker pool, `actorId`-multiplexed) — see `🔖️ActorAdapter` below. `exchange()` on the raw
- * handle this file constructs submits one `app-command` event per frame through `ShardClient.turn`
- * and demuxes the resulting `TurnResult.effects` for the `SendMessage{Shell{instance}}` entries
- * `⚛️reactor/🦀️component.rs`'s `route_app_frame` wraps every non-`UiPatch` `AppFrame` reply in —
- * everything else in this file (`AppChannelClient`, `adaptPluginHandle`'s command/transaction/merge
- * methods) is unchanged, since it only ever spoke `AppCommand`/`AppFrame` bytes through that one
- * `exchange` seam and does not care what backs it.
+ * shard-worker pool, `actorId`-multiplexed) — see `🔖️ActorAdapter` below. `enqueue()` on the raw
+ * handle this file constructs submits one `app-command` event per queued frame through
+ * `ShardClient.turn` and demuxes the resulting `TurnResult.effects` for the `SendMessage{Shell{
+ * instance}}` entries `⚛️reactor/🦀️component.rs`'s `route_app_frame` wraps every non-`UiPatch`
+ * `AppFrame` reply in, pushing them onto the handle's `outcomes` broadcast (`📌️important.md`'s "Replace, never wrap"
+ * list — the old handle exposed one synchronous per-call method instead) — everything else in this file (`AppChannelClient`, `adaptPluginHandle`'s
+ * command/transaction/merge methods) is unchanged, since it only ever spoke `AppCommand`/`AppFrame`
+ * bytes through that one channel seam and does not care what backs it.
  */
 // #endregion 🧲️Header
 
@@ -59,7 +59,9 @@ import { type UiNode } from "@semio-tech/framework";
 import {
   ActivationRegistry,
   type ActivationReason,
+  createTurnOutcomeBroadcast,
   type PluginWasmHandle as KernelPluginWasmHandle,
+  type TurnOutcome,
 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
 import {
   ShardClient,
@@ -425,7 +427,7 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
 
 /** 🎯️ Per-instance "leftover" `TurnResult.effects` — everything a turn produced that was NOT a
  * `SendMessage{Shell}` reply frame (the old `AppFrame::Effects` wrapper's replacement, design-abi.md
- * §2). `exchange()` fills this on every turn; `performInvocation` drains it right after its own
+ * §2). `runQueuedTurn` fills this on every turn; `performInvocation` drains it right after its own
  * `client.command()` call resolves — both operations share one turn, so this is never stale by more
  * than the caller's own await. */
 const pendingTurnEffects = new Map<number, WireVariant[]>();
@@ -442,7 +444,7 @@ let nextGlobalInstanceId = 1;
  * `inFlightTurnActors` guard: "two turn requests for the SAME actorId overlapping is a caller bug —
  * the scheduler's job to prevent, not this worker's"). The OLD adapter's `withSerializedPluginWasmHandle`
  * (deleted alongside `PluginWorkerClient`, `🎠️kernel/🟦️component.ts`'s own doc comment names it)
- * queued concurrent `exchange()` calls transparently — this is that same guarantee's replacement.
+ * queued concurrent per-call requests transparently — this is that same guarantee's replacement.
  *
  * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): the ORIGINAL implementation
  * here was a raw `Map<actorId, Promise>` FIFO chain — unbounded (a pointer-move burst queued 200 deep
@@ -559,7 +561,7 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
 /**
  * 🚦 This file's own internal turn-dispatch seam — replaces the old unbounded `actorTurnQueue` chain.
  * `lane` prioritizes across an actor's own pending turns (`"Interactive"` for anything a caller awaits
- * a specific reply from — `exchange`/`createApp`/`completeExtensionInvoke` all use it below —
+ * a specific reply from — `runQueuedTurn`/`createApp`/`completeExtensionInvoke` all use it below —
  * `"UserVisible"` for {@link loadPluginModule}'s opportunistic `refreshUi` probe, so a real command
  * always preempts a mere redraw poll). `coalesceKey`, when passed, collapses a burst of same-key calls
  * for the SAME actor into the single latest one — every caller in the burst (not just the winner) still
@@ -641,6 +643,41 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey);
   };
 
+  /** 📤️📥️ Backs {@link KernelPluginWasmHandle.enqueue}/`.outcomes` (see this file's own header doc).
+   * One broadcast per `loadPluginModule` call, matching the handle's own
+   * lifetime: every instance this handle ever `createApp`s shares it, and each instance's
+   * `AppChannelClient` (`💻️os/🟦️component.ts`) filters to its own `instanceId`. */
+  const turnOutcomes = createTurnOutcomeBroadcast<TurnOutcome>();
+
+  /** 🔀️ The real turn-submission body `enqueue` used to run synchronously inline and return — now
+   * run fire-and-forget from `enqueue`, pushing its settlement onto {@link turnOutcomes} instead of
+   * resolving a caller's promise directly (a caller's own promise now lives one layer up, in
+   * `AppChannelClient.sendCommand`, correlated against this broadcast). A turn-submission failure
+   * (NOT an `AppFrame::Error` — that is still an ordinary decoded frame) becomes an `error`-shaped
+   * outcome rather than an uncaught rejection, since nothing here awaits this function's own promise. */
+  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
+    try {
+      const actorId = requireActorId(instanceId);
+      const shardEvents: ShardEventEnvelope[] = events.map((frame) => {
+        eventSeq += 1;
+        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
+      });
+      const result = await submitTurn(actorId, shardEvents);
+      const outFrames: Uint8Array[] = [];
+      const leftover: WireVariant[] = [];
+      for (const effect of result.effects) {
+        const frame = shellFrameBytes(effect, instanceId);
+        if (frame) outFrames.push(frame);
+        else leftover.push(effect);
+      }
+      pendingTurnEffects.set(instanceId, leftover);
+      if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
+      turnOutcomes.push({ instanceId, frames: outFrames });
+    } catch (error) {
+      turnOutcomes.push({ instanceId, error });
+    }
+  };
+
   const handle: KernelPluginWasmHandle = {
     manifest: async () => encodePackValue(manifest),
     createApp: async (appId) => {
@@ -666,30 +703,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       pendingTurnEffects.delete(instanceId);
       shardClient.dispose(actorId);
     },
-    exchange: async (instanceId, frames) => {
-      const actorId = requireActorId(instanceId);
-      const events: ShardEventEnvelope[] = frames.map((frame) => {
-        eventSeq += 1;
-        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
-      });
-      const result = await submitTurn(actorId, events);
-      const outFrames: Uint8Array[] = [];
-      const leftover: WireVariant[] = [];
-      for (const effect of result.effects) {
-        const frame = shellFrameBytes(effect, instanceId);
-        if (frame) outFrames.push(frame);
-        else leftover.push(effect);
-      }
-      pendingTurnEffects.set(instanceId, leftover);
-      if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
-      return outFrames;
+    enqueue: (instanceId, events) => {
+      void runQueuedTurn(instanceId, events);
     },
+    outcomes: turnOutcomes.stream,
     dispose: () => {
       for (const actorId of actorIdByInstance.values()) {
         retainedWindowByActor.delete(actorId);
         shardClient.dispose(actorId);
       }
       actorIdByInstance.clear();
+      turnOutcomes.complete();
     },
   };
 
@@ -870,7 +894,7 @@ export function setPluginRuntimeActor(actor: string): void {
 }
 //#endregion 🔖️ActorIdentity
 
-/** 📡️ Wraps the framework-core `PluginWasmHandle` (the 5-function binary `exchange` ABI) behind the
+/** 📡️ Wraps the framework-core `PluginWasmHandle` (the `enqueue`/`outcomes` turn ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
  * live instance id (created in `createApp`, dropped in `destroyApp`) frames every call through
@@ -897,13 +921,17 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       return instanceId;
     },
     destroyApp: async (instanceId) => {
+      // 🔌️ Ends this instance's channel's own outcome subscription BEFORE dropping it from `channels`
+      // — otherwise it leaks a live subscriber against `handle.outcomes` for the rest of the handle's
+      // lifetime (see `AppChannelClient.dispose`'s own doc).
+      channels.get(instanceId)?.dispose();
       channels.delete(instanceId);
       await handle.destroyApp(instanceId);
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
     // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
-    // path this bare adapter has no access to (only the raw `exchange`-shaped `handle`, no actorId);
+    // path this bare adapter has no access to (only the raw `enqueue`/`outcomes` `handle`, no actorId);
     // `loadPluginModule` overrides this field with the real implementation right after calling this
     // function. A caller that constructs `adaptPluginHandle` directly (every inline test in this file)
     // gets an honest empty result rather than a throw — `AppCommand::RefreshUi`/`SectionProbe` no
@@ -937,7 +965,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     },
     // 🚧️ Channel v12 (A4-channel) retired `AppChannelClient.attachBackbone`/`detachBackbone`/`drain` —
     // backbone attach/detach collapses into event-driven `Event::Message`/`subscribe` (design-abi.md
-    // §2/§4), and `exchange(id, [])`'s drain has no replacement (guests are woken by events/timers/
+    // §2/§4), and the old empty-batch drain call has no replacement (guests are woken by events/timers/
     // `next-wake` now). `EffectBackbone` (the per-instance replacement) has not landed — flagged as a
     // still-open critical-path gap in `📓️status.md`'s "A2-abi-sdk — honest partial" entry, confirmed
     // still open as of `ProgramBridge/🧊️component.rs`'s native twin (H3-wgpu-native), which stubs the
@@ -946,10 +974,10 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     attachBackbone: undefined,
     detachBackbone: undefined,
     // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
-    // `AppFrame::Ephemeral` poll was the literal `exchange(id, [])` drain design-abi.md §4 names as
+    // `AppFrame::Ephemeral` poll was the literal empty-batch drain design-abi.md §4 names as
     // retired outright — `ProgramBridge/🧊️component.rs`'s native twin (`ephemeral_snapshot`) stubs the
     // identical call with an explicit error for the same reason. `Ephemeral` frames still arrive
-    // unsolicited on every real `exchange()` reply (`plugin_exchange` appends one to every batch,
+    // unsolicited on every real turn outcome (`plugin_exchange` appends one to every batch,
     // contract-freeze §C7.6) — a future packet that wants an on-demand snapshot here should cache the
     // most recently observed `Ephemeral` frame per instance rather than resurrecting the retired poll.
     ephemeralSnapshot: undefined,
@@ -1039,7 +1067,7 @@ export type TransactionPrepareOutcome = { readonly foreign: readonly Uint8Array[
 export type TransactionCommitOutcome = { readonly editId: string } | { readonly rejection: Uint8Array };
 
 /** 🧩️ Host-side call into a CONTRIBUTOR plugin's `contributor.artifact-mutation-plan` WIT export
- * (contract freeze §5.3/§6) — a plugin-level component-model export, not an app-instance `exchange`
+ * (contract freeze §5.3/§6) — a plugin-level component-model export, not an app-instance turn-channel
  * call, so it is injected rather than assumed available on every {@link PluginWasmHandle}. No browser
  * WIT bindgen for the `contributor` interface exists yet (0-D's Wave-0 scope was stub exports only,
  * contract freeze §6) — a caller without a real implementation should omit this constructor argument;
@@ -1872,15 +1900,16 @@ if (import.meta.vitest) {
     it("adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient", async () => {
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
       const seenCommands: unknown[] = [];
+      const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       const fakeLease = {
         handle: {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
-          exchange: async (_instanceId: number, frames: Uint8Array[]) => {
-            const commands = frames.map((frame) => decodeAppCommand(frame));
+          enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
+            const commands = events.map((frame) => decodeAppCommand(frame));
             seenCommands.push(...commands);
-            return commands.map((command) => {
+            const frames = commands.map((command) => {
               if ("transactionPrepare" in command) {
                 return encodeAppFrame({ transactionPrepared: { txn_id: command.transactionPrepare.txn_id, foreign: [], rejection: [] } });
               }
@@ -1892,7 +1921,9 @@ if (import.meta.vitest) {
               }
               return encodeAppFrame({ Done: { in_reply_to: 0 } });
             });
+            turnBroadcast.push({ instanceId, frames });
           },
+          outcomes: turnBroadcast.stream,
           dispose: () => {},
         },
         release: () => {},
@@ -1925,15 +1956,18 @@ if (import.meta.vitest) {
 
     it("documentPack() reflects the cache after loadAppDocumentPack() — the adapter reads the SAME live channel it just loaded through", async () => {
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
+      const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       const fakeLease = {
         handle: {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
-          exchange: async (_instanceId: number, frames: Uint8Array[]) => {
-            const commands = frames.map((frame) => decodeAppCommand(frame));
-            return commands.map((command) => ("LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));
+          enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
+            const commands = events.map((frame) => decodeAppCommand(frame));
+            const frames = commands.map((command) => ("LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));
+            turnBroadcast.push({ instanceId, frames });
           },
+          outcomes: turnBroadcast.stream,
           dispose: () => {},
         },
         release: () => {},

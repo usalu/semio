@@ -39,12 +39,14 @@ thread_local! {
     /// 🩹️ One `PatchTracker` shared by every instance this actor hosts (surfaces are already
     /// namespaced by their own `surface` string, which today embeds the instance — see
     /// `render_surface`'s key).
-    static PATCHES: patches::PatchTracker = patches::PatchTracker::new();
+    // 🌉️ `thread_local!` initializer expressions run in a plain (non-const, non-async) context —
+    // bridged via `resolve_ready` since every `::new()` here is a pure `Self::default()`.
+    static PATCHES: patches::PatchTracker = semio_framework::io::resolve_ready(patches::PatchTracker::new());
     /// 📮️ One `RequestRegistry` per actor (today: shared process-wide, matching the "one actor per
     /// app instance is the default" granularity design-abi.md §4 names — a multi-instance pooled
     /// actor is opt-in first-party-only future work, out of this wave).
-    static REGISTRY: requests::RequestRegistry = requests::RequestRegistry::new();
-    static EXECUTOR: executor::LocalExecutor = executor::LocalExecutor::new();
+    static REGISTRY: requests::RequestRegistry = semio_framework::io::resolve_ready(requests::RequestRegistry::new());
+    static EXECUTOR: executor::LocalExecutor = semio_framework::io::resolve_ready(executor::LocalExecutor::new());
     /// 🪪️ Every instance this actor currently has open — `(id, app_id)`, in `InstanceOpen` order.
     /// Used by `📸️checkpoint`.
     static OPEN_INSTANCES: RefCell<Vec<(u32, String)>> = const { RefCell::new(Vec::new()) };
@@ -119,7 +121,10 @@ async fn instance_task_quota(instance: u32) -> u64 {
 /// per-request instance tagging, so `Event::InstanceClose` can cancel exactly this instance's
 /// pending host round-trips and no other's) — see `host::Host::new`.
 pub async fn host_for_instance(instance: u32) -> crate::host::Host {
-    REGISTRY.with(|registry| crate::host::Host::new(registry.for_instance(instance)))
+    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (`for_instance` is a
+    // pure clone-and-scope, no real suspension); `Host::new` itself is awaited normally outside.
+    let registry = REGISTRY.with(|registry| semio_framework::io::resolve_ready(registry.for_instance(instance)));
+    crate::host::Host::new(registry).await
 }
 
 /// 🌐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): the instance-agnostic sibling of
@@ -128,7 +133,7 @@ pub async fn host_for_instance(instance: u32) -> crate::host::Host {
 /// calls this (as `crate::reactor::host()`, zero args): a job is actor-global, not tied to one open
 /// instance the way an `AsyncTask` is, so it has no `instance: u32` to scope by in the first place.
 pub async fn host() -> crate::host::Host {
-    REGISTRY.with(|registry| crate::host::Host::new(registry.clone()))
+    REGISTRY.with(|registry| crate::host::Host::new(registry.clone())).await
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): spawns `task` onto this actor's
@@ -148,7 +153,7 @@ where
     C: ::protocol::OpBinary + 'static,
     D: ::protocol::OpBinary + 'static,
 {
-    let quota = instance_task_quota(instance);
+    let quota = instance_task_quota(instance).await;
     let live = TASK_RECORDS.with(|records| records.borrow().values().filter(|record| record.instance == instance).count() as u64);
     if live >= quota {
         return Err(semio_framework::Fault::new(
@@ -158,35 +163,38 @@ where
         ));
     }
 
-    let (label, key, restart, run) = task.into_parts();
+    let (label, key, restart, run) = task.into_parts().await;
 
     // 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
     // cancels the live one FIRST — its future (and anything it owns, including a parked
     // `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
     if let Some(key) = &key {
         if let Some(old_id) = TASK_KEYS.with(|keys| keys.borrow().get(&(instance, key.clone())).copied()) {
-            EXECUTOR.with(|executor| executor.cancel(old_id));
+            EXECUTOR.with(|executor| semio_framework::io::resolve_ready(executor.cancel(old_id)));
             TASK_RECORDS.with(|records| {
                 records.borrow_mut().remove(&old_id);
             });
         }
     }
 
-    let ctx = crate::app::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
+    let ctx = crate::app::TaskCtx { host: host_for_instance(instance).await, meta: meta.clone() };
     let future = run(ctx);
     let resume_instance = instance;
     let resume_meta = meta.clone();
     let dedupe_key = key.clone();
 
+    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`; `spawn_with_id` only
+    // registers the task and hands back its id, the real awaiting happens later when the
+    // executor polls the parked future.
     let task_id = EXECUTOR.with(|executor| {
-        executor.spawn_with_id(move |id| {
+        semio_framework::io::resolve_ready(executor.spawn_with_id(move |id| {
             Box::pin(async move {
                 let outcome = match future.await {
                     Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
                     Ok(crate::app::TaskResolution::Emit(emit)) => Some(TaskResumeOutcome::Emit {
-                        artifact_ops: encode_mutation_lane(&emit.artifact_mutations),
-                        config_ops: encode_mutation_lane(&emit.config_mutations),
-                        draft_ops: encode_mutation_lane(&emit.draft_mutations),
+                        artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await,
+                        config_ops: encode_mutation_lane(&emit.config_mutations).await,
+                        draft_ops: encode_mutation_lane(&emit.draft_mutations).await,
                     }),
                     Ok(crate::app::TaskResolution::Done) => None,
                     Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
@@ -206,7 +214,7 @@ where
                     TASK_RESUMES.with(|resumes| resumes.borrow_mut().push_back(PendingResume { instance: resume_instance, meta: resume_meta, outcome }));
                 }
             })
-        })
+        }))
     });
 
     TASK_RECORDS.with(|records| {
@@ -225,7 +233,11 @@ where
 /// factored out so `spawn_task`'s `TaskResolution::Emit` erasure and `dispatch_emit` stay
 /// byte-identical without one calling the other across the crate's plugin/reactor split.
 async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
-    protocol::encode_ops_vec(&ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>())
+    let mut encoded = Vec::with_capacity(ops.len());
+    for op in ops.iter() {
+        encoded.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+    }
+    protocol::encode_ops_vec(&encoded).await
 }
 
 /// 🚫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `Event::InstanceClose`
@@ -240,7 +252,10 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 pub(crate) async fn cancel_instance_tasks(instance: u32) {
     let ids: Vec<executor::TaskId> = TASK_RECORDS.with(|records| records.borrow().iter().filter(|(_, record)| record.instance == instance).map(|(id, _)| *id).collect());
     for id in ids {
-        EXECUTOR.with(|executor| executor.cancel(id));
+        // 🌉️ `LocalKey::with`'s closure is sync and cannot hold a future tied to the borrowed
+        // `executor` past its own return — bridged via `resolve_ready` (`cancel`'s body has no
+        // real suspension point; see the framework io module's `resolve_ready` doc comment).
+        EXECUTOR.with(|executor| semio_framework::io::resolve_ready(executor.cancel(id)));
         let removed_key = TASK_RECORDS.with(|records| records.borrow_mut().remove(&id).and_then(|record| record.key));
         if let Some(key) = removed_key {
             TASK_KEYS.with(|keys| {
@@ -255,7 +270,7 @@ pub(crate) async fn cancel_instance_tasks(instance: u32) {
 pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = OPEN_INSTANCES.with(|open| open.borrow().clone());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().clone());
-    let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
+    let pending = REGISTRY.with(|registry| semio_framework::io::resolve_ready(registry.pending_ids()).into_iter().map(|id| id.0).collect());
     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the task itself is never
     // serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
     // `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
@@ -267,7 +282,7 @@ pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
             .filter_map(|record| record.restart.as_ref().map(|command| checkpoint::TaskRestart { instance: record.instance, command: command.clone() }))
             .collect()
     });
-    checkpoint::checkpoint(&instances, timers, pending, task_restarts)
+    checkpoint::checkpoint(&instances, timers, pending, task_restarts).await
 }
 
 /// 📸️ `checkpoint::restore` body — re-arms the timer list from the restored pack;
@@ -278,18 +293,24 @@ pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
 pub async fn restore_now(state: &[u8]) -> Result<(), semio_framework::Fault> {
-    let pack = checkpoint::restore(state)?;
+    let pack = checkpoint::restore(state).await?;
+    let instances = pack.instances().await;
+    let armed_timers = pack.timers().await.to_vec();
+    let mut pending_resumes = Vec::new();
+    for restart in pack.task_restarts().await {
+        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(restart.instance).await, instance_id: restart.instance };
+        pending_resumes.push(PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) });
+    }
     OPEN_INSTANCES.with(|open| {
-        *open.borrow_mut() = pack.instances();
+        *open.borrow_mut() = instances;
     });
     ARMED_TIMERS.with(|timers| {
-        *timers.borrow_mut() = pack.timers().to_vec();
+        *timers.borrow_mut() = armed_timers;
     });
     TASK_RESUMES.with(|resumes| {
         let mut resumes = resumes.borrow_mut();
-        for restart in pack.task_restarts() {
-            let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(restart.instance), instance_id: restart.instance };
-            resumes.push_back(PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) });
+        for pending in pending_resumes {
+            resumes.push_back(pending);
         }
     });
     Ok(())
@@ -842,7 +863,7 @@ pub(crate) mod test_support {
     }
 
     pub(crate) async fn pending_request_count() -> usize {
-        REGISTRY.with(|registry| registry.pending_ids().len())
+        REGISTRY.with(|registry| semio_framework::io::resolve_ready(registry.pending_ids()).len())
     }
 
     /// 🚫️ The exact `RequestRegistry::cancel_instance` call `poll`'s `Event::InstanceClose` arm

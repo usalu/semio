@@ -13,7 +13,6 @@
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
-use async_trait::async_trait;
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
 pub use sqlx_core::row::Row;
 pub use sqlx_postgres::{PgPool, PgPoolOptions};
@@ -258,7 +257,6 @@ impl PostgresDirectory {
     //#endregion 🔖️Projections
 }
 
-#[async_trait]
 impl HubDirectory for PostgresDirectory {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {

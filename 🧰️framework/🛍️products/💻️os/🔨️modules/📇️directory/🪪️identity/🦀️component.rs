@@ -156,7 +156,7 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
     };
 
     if let Some(cached_identity) = &cached {
-        client.set_token(Some(cached_identity.session_token.clone()));
+        client.set_token(Some(cached_identity.session_token.clone())).await;
         match client.me(ctx).await {
             Ok(session) => {
                 let identity = Identity {
@@ -185,7 +185,7 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
                 session_token: minted.token,
                 issued_at_ms: now_ms().await,
             };
-            client.set_token(Some(identity.session_token.clone()));
+            client.set_token(Some(identity.session_token.clone())).await;
             persist(env, &identity).await;
             Ok(IdentityOutcome { identity, status: IdentityStatus::Online })
         }
@@ -207,36 +207,36 @@ mod tests {
     }
 
     async fn root_ctx() -> OperationContext {
-        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root().await, capability: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn actor_id_matches_contract_grammar() {
         let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 };
         assert_eq!(actor_id(&identity, "sess-1"), "user:u-amara#sess-1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_cache_mints_a_fresh_session() {
         let dir = tempfile::tempdir().expect("tempdir");
         let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })));
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })).await);
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
         let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("mints");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-new");
         assert_eq!(transport.requests.lock().unwrap().len(), 1, "restore is skipped entirely with no cache");
-        assert_eq!(cache::load(dir.path()).expect("cached").session_token, "tok-new");
+        assert_eq!(cache::load(dir.path()).await.expect("cached").session_token, "tok-new");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn valid_cache_restores_without_minting() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached);
         let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "userId": "u-1", "email": "amara@semio.dev", "displayName": "Amara", "expiresAt": 999 })));
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "userId": "u-1", "email": "amara@semio.dev", "displayName": "Amara", "expiresAt": 999 })).await);
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
         let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("restores");
@@ -247,14 +247,14 @@ mod tests {
         assert_eq!(requests[0].url, "http://hub.local/auth/sessions/me");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn expired_cache_falls_through_to_mint() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-expired".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached);
         let transport = FakeTransport::default();
         transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() }));
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-fresh", "user_id": "u-1" })));
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-fresh", "user_id": "u-1" })).await);
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
         let outcome = futures_lite::future::block_on(mint_or_restore(&root_ctx(), &client, &env(dir.path()))).expect("mints after 401");
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(requests[1].url, "http://hub.local/auth/sessions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unreachable_hub_degrades_to_cached_identity_offline() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
@@ -279,7 +279,7 @@ mod tests {
         assert_eq!(outcome.identity, cached, "the stale identity is returned as-is, never mutated");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unreachable_hub_with_no_cache_is_unavailable_not_a_panic() {
         let dir = tempfile::tempdir().expect("tempdir");
         let transport = FakeTransport::default();

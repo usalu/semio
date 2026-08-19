@@ -98,7 +98,7 @@ impl From<String> for InteractionRef {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_definition_round_trips_through_json() {
         let def = InteractionDefinition {
             id: "graph".into(),
@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(parsed, def);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_projects_id_granularity_ids_and_selection_only() {
         let def = InteractionDefinition {
             id: "graph".into(),
@@ -137,7 +137,7 @@ mod tests {
             hover: HoverSpec::default(),
             selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
         };
-        let outline = def.outline();
+        let outline = def.outline().await;
         assert_eq!(outline.id, "graph");
         assert_eq!(outline.granularity_ids, vec!["node".to_string(), "edge".to_string()]);
         assert_eq!(outline.selection, def.selection);

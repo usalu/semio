@@ -19,7 +19,6 @@ use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, RunS
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use protocol::BlobStore;
 use store::{Media, MediaFingerprint};
 
 //#region 🔖️FileMediaCache
@@ -242,7 +241,21 @@ fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+/// 🚫️async: E5 executor bridge — this binary's ONE thread-root bridge (R2: at most one per crate).
+/// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): drives `run_async`'s whole
+/// body — not just `SpaceRunner::run` any more — because `WasmtimeNodeHost::new` (and `open`, called
+/// deep inside `SpaceRunner::run`) are now `async fn` themselves, building/driving the real
+/// `NativeKernelRuntime` (`semio-framework-os`'s `🎠️activation.rs`) instead of the old ad hoc actor-id
+/// minting. Uses `semio_framework_async::block_on` — the canonical bridge — rather than
+/// `futures_lite::future::block_on` (what this file used before this packet): a single genuine
+/// thread-root bridge should be the one this repo ships, not an incidental external crate; this
+/// crate's own tests (and `SpaceRunner`'s internal test module) keep `futures_lite::future::block_on`
+/// as their own SEPARATE, `#[cfg(test)]`-sanctioned bridge (R4 clause 5), so nothing there changes.
 fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+    semio_framework_async::block_on(run_async(args))
+}
+
+async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // 🔌️ One-time registration of every framework-builtin `MediaConvertFn` this crate ships a real
     // body for (Vector→Raster today) — mirrors `register_artifact_descriptors`'s "call at
     // composition-root startup, beside plugin resolution" placement (`os-core`'s `PluginHost::
@@ -301,8 +314,8 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let repo_root = find_repo_root()?;
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
-    let blob_store: Arc<dyn BlobStore> = Arc::new(bundle.blob_store());
-    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store));
+    let blob_store = Arc::new(bundle.blob_store());
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store)).await;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy);
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
@@ -319,10 +332,10 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     .map_err(|error| error.to_string())?;
 
     // 🌀️ `SpaceRunner::run` is `async fn` since the async-first rewrite (ticket
-    // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — this CLI awaits the one top-level future
-    // to completion with a plain single-poll executor rather than spinning up a tokio runtime here;
-    // tokio stays confined to `semio-framework-os-services` (see that crate's own module doc).
-    let run_result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink));
+    // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — awaited directly now (`run_async`'s own
+    // caller, `run`, is this file's one `block_on` bridge — see that fn's own doc); tokio stays
+    // confined to `semio-framework-os-services` (see that crate's own module doc).
+    let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink).await;
     // 📊️ Dev-boot smoke line (W7): real `io_router_stats()` numbers, not hardcoded — a zero-plugin or
     // zero-key router (the shared cross-plugin `IoRouter` silently doing nothing) is visible right
     // here, regardless of whether the run itself succeeded or failed partway through.

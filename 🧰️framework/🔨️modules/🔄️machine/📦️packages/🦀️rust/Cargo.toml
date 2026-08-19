@@ -30,6 +30,7 @@ testing = []
 
 [dependencies]
 machine_derive = { path = "../../✨️derive/📦️packages/🦀️rust", optional = true, package = "semio-framework-machine-derive" }
+semio-framework-dispatch-macros = { path = "../../../🔀️dispatch/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 thiserror = "2.0.12"

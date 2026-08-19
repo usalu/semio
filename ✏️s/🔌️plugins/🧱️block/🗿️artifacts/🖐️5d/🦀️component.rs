@@ -171,19 +171,25 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::block5d::schema::block5d_artifact_schema_descriptor())
-        .inferences([crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::block5d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::block5d::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::block5d::Block5dPlayApp>>()
-        .try_build()
+/// 🔖️ New declaration channel (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
+/// `descriptor-prep`): replaces `declaration()`/`ArtifactDeclaration::builder(...).try_build()` — the
+/// old channel's `require_declared_capability_or_record` runs an exact sorted-claims equality check
+/// between `definition()`'s hand-authored capability rows and the runtime registration, which is why
+/// `.artifact(block5d::declaration())` failed assembly. This channel never runs that check; the real
+/// data (schema/inference descriptors, editor/viewer, native codec) is read from
+/// `standards::v1::subsets::any::subset()` instead. Mirrors `🗒️note`/`🖍️draw`/`🔱️trinity`'s own
+/// migration exactly.
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block5d").expect("canonical block5d kind"), localization: &[], standards: vec![crate::artifacts::block5d::standards::v1::standard()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. `pub` (was
+/// private): the new `🪆️subsets/✳️any/🦀️component.rs` reads it to build `io_declaration()`'s native
+/// codec pairs.
+pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

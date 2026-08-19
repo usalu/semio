@@ -37,7 +37,7 @@ use semio_framework_actor::{
 };
 use semio_framework_plugin_host::shard::executor::ShardExecutor;
 use semio_framework_plugin_host::shard::{to_actor_turn_result, ShardFrame, ShardOutcome};
-use semio_framework_plugin_host::{CompiledHandle, GuestRuntime};
+use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -77,7 +77,7 @@ struct ShardHandle {
 /// of that crate.
 pub struct ParallelRuntime {
     kernel: Kernel,
-    guest_runtime: Arc<dyn GuestRuntime>,
+    guest_runtime: Arc<GuestRuntimes>,
     shards: Vec<ShardHandle>,
     outcomes_rx: mpsc::Receiver<(ShardId, Vec<u8>)>,
     forwarders: Vec<JoinHandle<()>>,
@@ -89,7 +89,7 @@ impl ParallelRuntime {
     /// and one `Kernel`. `exclusive_reserve`/`grants_per_tick` pass straight through to
     /// `Kernel::new` — see that constructor's own doc for what each controls
     /// (`request_exclusive`'s reserve pool; the DRR tick's per-call grant ceiling).
-    pub fn new(guest_runtime: Arc<dyn GuestRuntime>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
+    pub fn new(guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
         let shard_count = shard_count.max(1);
         let kernel = Kernel::new(ShardKind::Thread, shard_count, exclusive_reserve, grants_per_tick);
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<(ShardId, Vec<u8>)>();

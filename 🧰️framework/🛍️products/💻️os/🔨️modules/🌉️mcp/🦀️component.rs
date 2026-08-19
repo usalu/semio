@@ -510,7 +510,7 @@ pub fn build_tool_registry(catalog: std::sync::Arc<Catalog>, actions: std::sync:
 /// port scoped to the mutation protocol only). `channel` is boxed so the live binary and every test
 /// can supply either `MockArtifactChannel` (today) or P7's real implementation (tomorrow) with zero
 /// change to this function's body beyond the argument passed in.
-pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<dyn AuditSink>, channel: Box<dyn ArtifactChannel>) -> McpServer {
+pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>) -> McpServer {
     let catalog = std::sync::Arc::new(build_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
@@ -518,7 +518,7 @@ pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
     let tools = build_tool_registry(catalog.clone(), actions, principal);
     let resources = CatalogResourceRegistry::new(catalog);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend))
+    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
 }
 
 /// 🏗️ Convenience default used by every pre-existing P1a/P1b/P2 test and by anywhere a live backend
@@ -527,7 +527,7 @@ pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::
 /// `InMemoryAuditSink` (no disk I/O from unit tests), and a fresh `MockArtifactChannel`.
 pub fn build_server() -> McpServer {
     let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
-    build_server_with_principal(principal, std::sync::Arc::new(InMemoryAuditSink::new()), Box::new(MockArtifactChannel::new()))
+    build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())))
 }
 
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
@@ -540,7 +540,7 @@ pub fn build_server() -> McpServer {
 /// parameter on `build_server_with_principal` itself: that function's 3-argument shape has live
 /// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
 /// disturb mid-flight.
-pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<dyn AuditSink>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<dyn ArtifactChannel>) -> McpServer {
+pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>) -> McpServer {
     let catalog = std::sync::Arc::new(build_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
@@ -551,7 +551,7 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let (workspace_for_context, principal_id) = (workspace.clone(), principal.id.clone());
     registry_override_context_resolve(&mut tools, context_tool, workspace_for_context, principal_id);
     let resources = CatalogResourceRegistry::new(catalog);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(workspace) as Box<dyn GatewayBackend>)
+    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::WorkspaceArc(workspace)))
 }
 
 /// 🔁️ `InMemoryToolRegistry::register` overwrites an existing entry by name (`HashMap::insert`) —
@@ -586,7 +586,7 @@ pub struct HubOptions {
 /// diagnostic otherwise (never a silent downgrade). `folder`/`hub` are mutually exclusive; neither
 /// given falls back to [`build_server_with_principal`] (`NullBackend` + `MockArtifactChannel`,
 /// unchanged pre-P7 behavior — every pre-existing P1a/P1b/P2/P6 test keeps passing).
-fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<dyn AuditSink>, folder: Option<&str>, hub: Option<&HubOptions>) -> Result<McpServer, GatewayError> {
+fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>) -> Result<McpServer, GatewayError> {
     let catalog = std::sync::Arc::new(build_catalog());
     let origin_label;
     let workspace = if let Some(folder) = folder {
@@ -596,13 +596,13 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
         std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), hub.token.clone(), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else {
-        return Ok(build_server_with_principal(principal, audit, Box::new(MockArtifactChannel::new())));
+        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new()))));
     };
-    let channel: Box<dyn ArtifactChannel> = match workspace.open_artifact_channel("note") {
-        Ok(real_channel) => Box::new(real_channel),
+    let channel: Box<ArtifactChannels> = match workspace.open_artifact_channel("note") {
+        Ok(real_channel) => Box::new(ArtifactChannels::Plugin(real_channel)),
         Err(error) => {
             eprintln!("[semio-os-mcp] real ArtifactChannel unavailable for {origin_label} ({error:?}); falling back to MockArtifactChannel");
-            Box::new(MockArtifactChannel::new())
+            Box::new(ArtifactChannels::Mock(MockArtifactChannel::new()))
         }
     };
     Ok(build_server_with_workspace(principal, audit, workspace, channel))
@@ -630,7 +630,7 @@ pub struct StdioOptions {
 /// the safe `AutoApprovePolicy::Never` until a later packet leases `bin.rs` to add the flag.
 pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
-    let audit: std::sync::Arc<dyn AuditSink> = std::sync::Arc::new(FileAuditSink::new(default_audit_dir())?);
+    let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(default_audit_dir())?));
     let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref())?;
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
@@ -671,7 +671,7 @@ pub struct HttpOptions {
 /// minted at start, 0600 file").
 pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
-    let audit: std::sync::Arc<dyn AuditSink> = std::sync::Arc::new(FileAuditSink::new(audit_dir)?);
+    let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref())?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
@@ -798,7 +798,7 @@ mod quick {
     #[test]
     fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-        let server = build_server_with_principal(principal, std::sync::Arc::new(InMemoryAuditSink::new()), Box::new(MockArtifactChannel::new()));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
         let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
         assert!(!result.is_error, "{result:?}");
         let structured = result.structured_content.expect("structured content");
@@ -811,7 +811,7 @@ mod quick {
     #[test]
     fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None); // no scopes granted
-        let server = build_server_with_principal(principal, std::sync::Arc::new(InMemoryAuditSink::new()), Box::new(MockArtifactChannel::new()));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
         let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
         assert!(result.is_error);
         assert_eq!(result.structured_content.as_ref().unwrap()["code"], "PERMISSION_DENIED");
@@ -820,7 +820,7 @@ mod quick {
     #[test]
     fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-        let server = build_server_with_principal(principal, std::sync::Arc::new(InMemoryAuditSink::new()), Box::new(MockArtifactChannel::new()));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
         let prepared = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).unwrap();
         let handle = prepared.structured_content.unwrap()["preparedHandle"].as_str().unwrap().to_string();
         let invoked = server.tools.call("action_invoke", serde_json::json!({ "preparedActionHandle": handle })).expect("known tool name resolves");

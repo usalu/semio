@@ -87,7 +87,7 @@ pub mod queryable {
         async fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
     }
 
-    pub async fn manifest_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_node_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for id in graph.node_ids() {
             if let Some(kind) = graph.node_kind(id.as_str()) {
@@ -102,7 +102,7 @@ pub mod queryable {
         kinds.into_iter().collect()
     }
 
-    pub async fn manifest_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_edge_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for edge in graph.edges() {
             kinds.insert(edge.kind.clone());
@@ -115,7 +115,7 @@ pub mod queryable {
         kinds.into_iter().collect()
     }
 
-    pub async fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_property_names<G: QueryableGraph>(graph: &G) -> Vec<String> {
         let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
         for id in graph.node_ids() {
             for key in ["label", "text"] {
@@ -132,7 +132,7 @@ pub mod queryable {
         props.into_iter().collect()
     }
 
-    pub async fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    pub async fn manifest_port_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
         let mut kinds = BTreeSet::new();
         for edge in graph.edges() {
             if let Some(port) = &edge.source_port {
@@ -1117,19 +1117,19 @@ async fn in_where_clause(tokens: &[SpannedToken]) -> bool {
     seen_where && !seen_return
 }
 
-async fn graph_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_node_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
     manifest_node_kinds(graph)
 }
 
-async fn graph_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_edge_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
     manifest_edge_kinds(graph)
 }
 
-async fn graph_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_property_names<G: QueryableGraph>(graph: &G) -> Vec<String> {
     manifest_property_names(graph)
 }
 
-async fn graph_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+async fn graph_port_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
     manifest_port_kinds(graph)
 }
 
@@ -1156,7 +1156,7 @@ async fn filter_completions(candidates: impl IntoIterator<Item = (String, String
 }
 
 /// 🔎️ Context-aware jack completions for the editor.
-pub async fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<Completion> {
+pub async fn complete<G: QueryableGraph>(graph: &G, source: &str, cursor: usize) -> Vec<Completion> {
     let cursor = cursor.min(source.len());
     let prefix = completion_prefix(source, cursor);
     let tokens = lex_spanned(source, true).unwrap_or_default();
@@ -1320,7 +1320,7 @@ async fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) 
     }
 }
 
-async fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Vec<Diagnostic> {
+async fn semantic_lints<G: QueryableGraph>(graph: &G, query: &Query, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     let node_kinds = graph_node_kinds(graph).into_iter().collect::<BTreeSet<_>>();
     let edge_kinds = graph_edge_kinds(graph).into_iter().collect::<BTreeSet<_>>();
@@ -1393,7 +1393,7 @@ async fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 }
 
 /// 🩺️ Lint jack source with syntax and semantic diagnostics.
-pub async fn lint(graph: &dyn QueryableGraph, source: &str) -> Vec<Diagnostic> {
+pub async fn lint<G: QueryableGraph>(graph: &G, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for span in tokenize(source) {
         if span.class == TokenClass::Error {
@@ -1541,7 +1541,7 @@ async fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, Str
 }
 
 /// 💬️ Hover information at cursor.
-pub async fn hover(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Option<Hover> {
+pub async fn hover<G: QueryableGraph>(graph: &G, source: &str, cursor: usize) -> Option<Hover> {
     let (start, end, word) = hover_word_at(source, cursor)?;
     let upper = word.to_ascii_uppercase();
     if CLAUSE_KEYWORDS.iter().any(|kw| *kw == upper) || LOGIC_KEYWORDS.iter().any(|kw| *kw == upper) {
@@ -1619,9 +1619,9 @@ async fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::Text
 }
 
 async fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
-    // Jack's own `complete` needs a `&dyn QueryableGraph` for schema-aware suggestions (node/edge
-    // kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to supply —
-    // an empty graph still exercises the syntax-only completions (clause/logic keywords).
+    // Jack's own `complete` needs a `QueryableGraph`-bounded generic for schema-aware suggestions
+    // (node/edge kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to
+    // supply — an empty graph still exercises the syntax-only completions (clause/logic keywords).
     struct EmptyGraph;
     impl QueryableGraph for EmptyGraph {
         async fn manifest(&self) -> Option<&crate::manifest::GraphManifest> {
@@ -1973,7 +1973,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a read-only jack query against a queryable graph.
-pub async fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult, GraphDslError> {
+pub async fn execute<G: QueryableGraph>(graph: &G, query: &Query) -> Result<QueryResult, GraphDslError> {
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
     for clause in &query.clauses {
@@ -1999,16 +1999,16 @@ pub async fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryR
 }
 
 /// ▶️ Parse and execute jack in one step.
-pub async fn run_query(graph: &dyn QueryableGraph, source: &str) -> Result<QueryResult, GraphDslError> {
+pub async fn run_query<G: QueryableGraph>(graph: &G, source: &str) -> Result<QueryResult, GraphDslError> {
     execute(graph, &parse(source)?)
 }
 
 /// ▶️ Execute jack and return JSON result.
-pub async fn run_query_json(graph: &dyn QueryableGraph, source: &str) -> Result<String, GraphDslError> {
+pub async fn run_query_json<G: QueryableGraph>(graph: &G, source: &str) -> Result<String, GraphDslError> {
     Ok(serde_json::to_string(&run_query(graph, source)?)?)
 }
 
-async fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
+async fn match_patterns<G: QueryableGraph>(graph: &G, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -2020,7 +2020,7 @@ async fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Res
     Ok(bindings)
 }
 
-async fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, GraphDslError> {
+async fn match_pattern<G: QueryableGraph>(graph: &G, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, GraphDslError> {
     let left = pattern.nodes.first().ok_or(GraphDslError::EmptyPattern)?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
@@ -2090,7 +2090,7 @@ async fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
     base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
-async fn eval_expr(graph: &dyn QueryableGraph, binding: &Binding, expr: &Expr) -> bool {
+async fn eval_expr<G: QueryableGraph>(graph: &G, binding: &Binding, expr: &Expr) -> bool {
     match expr {
         Expr::Eq { var, prop, value } => binding_value(graph, binding, var, prop) == Some(value.clone()),
         Expr::Ne { var, prop, value } => binding_value(graph, binding, var, prop) != Some(value.clone()),
@@ -2099,7 +2099,7 @@ async fn eval_expr(graph: &dyn QueryableGraph, binding: &Binding, expr: &Expr) -
     }
 }
 
-async fn binding_value(graph: &dyn QueryableGraph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
+async fn binding_value<G: QueryableGraph>(graph: &G, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
     let node_id = binding.nodes.get(var)?;
     graph.node_property(node_id, prop)
 }
@@ -2133,7 +2133,7 @@ async fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (
     (node_ids, edge_ids)
 }
 
-async fn build_return(graph: &dyn QueryableGraph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
+async fn build_return<G: QueryableGraph>(graph: &G, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
         .map(|item| match item {

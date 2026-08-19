@@ -199,10 +199,17 @@ pub trait ProjectionClass: Send + Sync {
     fn apply(&self, state: &Self::State, envelope: &MutationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
 }
 
-/// @emoji 🎭️ The object-safe (dyn-compatible) view of a `ProjectionClass` — every method operates
-/// on raw encoded bytes instead of the associated `State` type, so a `ProjectionEngine` can hold a
-/// heterogeneous `Vec<Box<dyn ErasedProjection>>` of differently-typed projections. Implemented
-/// automatically for any `ProjectionClass` via `erase`; not meant to be implemented by hand.
+/// @emoji 🎭️ The object-safe view of a `ProjectionClass` — every method operates on raw encoded
+/// bytes instead of the associated `State` type, so a `ProjectionEngine<S, E>` can be generic over
+/// one concrete `E: ErasedProjection` (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/dedyn-fw-os-guestruntime,
+/// O1/R1: no first-party `dyn` trait objects) instead of erasing into `Box<dyn ErasedProjection>`.
+/// A call site that genuinely mixes several `ProjectionClass` types in one `Vec` (this file's own
+/// `🧪️Tests` module is the only one that does, repo-wide) declares its own small closed enum over
+/// exactly the `ErasedWrapper<P>` types it uses (R11: "closed set ⇒ `dyn_enum_close!`" — hand-written
+/// here per the `GuestRuntimes` precedent, since the variant set is `#[cfg(test)]`-only); a call site
+/// that uses exactly one `ProjectionClass` (`db_testkit`) just names `E = ErasedWrapper<ItsType>`
+/// directly, no enum needed. Implemented automatically for any `ProjectionClass` via `erase`; not
+/// meant to be implemented by hand except for `NoProjections` below.
 pub trait ErasedProjection: Send + Sync {
     fn id(&self) -> &'static str;
     fn schema_version(&self) -> u32;
@@ -213,7 +220,47 @@ pub trait ErasedProjection: Send + Sync {
     fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
 }
 
-struct ErasedWrapper<P: ProjectionClass>(P);
+/// @emoji 🚫️ Zero-variant `ErasedProjection` — `db_artifact::ArtifactEngineConfig`'s `projections`
+/// factory default type parameter. Nothing constructs `NoProjections` (uninhabited), so a
+/// `Vec<NoProjections>` is always empty by construction and every method body's `match *self {}` is
+/// exhaustive over zero arms. Repo-wide, as of this packet, NOTHING overrides that factory with a
+/// real closure (every `ArtifactEngineConfig::default()`/`{ ..Default::default() }` call site
+/// leaves it at the empty-`Vec`-returning default) — this type is the honest reflection of that: the
+/// day a real caller wants to register a projection through `ArtifactEngineConfig`, it swaps this
+/// type parameter for its own closed `ErasedProjection` enum (R11).
+pub enum NoProjections {}
+
+impl ErasedProjection for NoProjections {
+    fn id(&self) -> &'static str {
+        match *self {}
+    }
+
+    fn schema_version(&self) -> u32 {
+        match *self {}
+    }
+
+    fn dependencies(&self) -> &'static [&'static str] {
+        match *self {}
+    }
+
+    fn reads(&self) -> &'static [&'static str] {
+        match *self {}
+    }
+
+    fn affected_by(&self, _touched: &TouchedSet) -> bool {
+        match *self {}
+    }
+
+    fn initial_bytes(&self) -> Vec<u8> {
+        match *self {}
+    }
+
+    fn apply_bytes(&self, _state_bytes: &[u8], _envelope: &MutationEnvelope, _deps: &DepView) -> Result<Vec<u8>, DbError> {
+        match *self {}
+    }
+}
+
+pub struct ErasedWrapper<P: ProjectionClass>(P);
 
 impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
     fn id(&self) -> &'static str {
@@ -246,10 +293,12 @@ impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
     }
 }
 
-/// @emoji 🎁️ Wraps a concrete `ProjectionClass` into its object-safe `ErasedProjection` form, for
-/// registering into a `ProjectionEngine` alongside differently-typed projections.
-pub fn erase<P: ProjectionClass + 'static>(class: P) -> Box<dyn ErasedProjection> {
-    Box::new(ErasedWrapper(class))
+/// @emoji 🎁️ Wraps a concrete `ProjectionClass` into its `ErasedProjection` form for registering
+/// into a `ProjectionEngine`. Returns the concrete `ErasedWrapper<P>` (not boxed/erased) — a caller
+/// mixing several `ProjectionClass` types converts each into its own small closed enum instead (see
+/// `ErasedProjection`'s own doc).
+pub fn erase<P: ProjectionClass + 'static>(class: P) -> ErasedWrapper<P> {
+    ErasedWrapper(class)
 }
 //#endregion 🔖️ProjectionClass
 
@@ -268,7 +317,7 @@ impl ProjectionGraph {
     /// registered projection, and the dependency relation is acyclic — then computes one
     /// deterministic topological order (ties broken lexicographically by id, so the same
     /// registration set always yields the same order across runs/processes).
-    fn build(projections: &[Box<dyn ErasedProjection>]) -> Result<ProjectionGraph, DbError> {
+    fn build<E: ErasedProjection>(projections: &[E]) -> Result<ProjectionGraph, DbError> {
         let mut graph: PGraph<String, (), ()> = PGraph::new();
         let mut ids: Vec<String> = Vec::with_capacity(projections.len());
         for projection in projections {
@@ -344,7 +393,7 @@ fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Result<Ve
 /// checkpoint-resuming path and `rebuild_in_memory`'s pure replay path — see the module doc's
 /// "incremental triggering" design-choice note for why that shared call site is what makes the
 /// rebuild == incremental-apply law hold by construction.
-fn should_run(projection: &dyn ErasedProjection, touched: &TouchedSet, changed_this_step: &std::collections::HashSet<&'static str>) -> bool {
+fn should_run<E: ErasedProjection>(projection: &E, touched: &TouchedSet, changed_this_step: &std::collections::HashSet<&'static str>) -> bool {
     projection.affected_by(touched) || projection.dependencies().iter().any(|dependency| changed_this_step.contains(dependency))
 }
 
@@ -352,19 +401,22 @@ fn should_run(projection: &dyn ErasedProjection, touched: &TouchedSet, changed_t
 /// per-command application with checkpoint persistence (`apply_envelope`), pure in-memory replay
 /// (`rebuild_in_memory`, the ground truth `apply_envelope`'s persisted path is checked against),
 /// checkpoint-recovery rebuild (`rebuild_and_persist`), historical lookup (`state_at`), and
-/// preview augmentation (`preview_augmented`).
-pub struct ProjectionEngine<'a, S: IndexStorage> {
+/// preview augmentation (`preview_augmented`). Generic over `E: ErasedProjection` (dedyn-fw-os-
+/// guestruntime, O1/R1) instead of `Vec<Box<dyn ErasedProjection>>` — see `ErasedProjection`'s own
+/// doc for how a caller picks `E` (a single concrete `ErasedWrapper<P>`, or its own closed enum over
+/// several).
+pub struct ProjectionEngine<'a, S: IndexStorage, E: ErasedProjection> {
     storage: &'a S,
     document: ArtifactId,
-    projections: Vec<Box<dyn ErasedProjection>>,
+    projections: Vec<E>,
     graph: ProjectionGraph,
 }
 
-impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
+impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// @emoji 🏗️ Registers `projections` for `document` against `storage`, validating the
     /// dependency DAG up front (see `ProjectionGraph::build`) so a misconfigured cycle/dangling
     /// dependency fails at construction rather than mid-apply.
-    pub fn new(storage: &'a S, document: ArtifactId, projections: Vec<Box<dyn ErasedProjection>>) -> Result<Self, DbError> {
+    pub fn new(storage: &'a S, document: ArtifactId, projections: Vec<E>) -> Result<Self, DbError> {
         let graph = ProjectionGraph::build(&projections)?;
         Ok(ProjectionEngine { storage, document, projections, graph })
     }
@@ -375,8 +427,8 @@ impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
         self.graph.order.iter().map(|&index| self.projections[index].id()).collect()
     }
 
-    fn projection_by_id(&self, projection_id: &str) -> Result<&dyn ErasedProjection, DbError> {
-        self.projections.iter().find(|projection| projection.id() == projection_id).map(|projection| projection.as_ref()).ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
+    fn projection_by_id(&self, projection_id: &str) -> Result<&E, DbError> {
+        self.projections.iter().find(|projection| projection.id() == projection_id).ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
     }
 
     fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a, S> {
@@ -387,7 +439,7 @@ impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
     /// @emoji 🔓️ Decodes a raw `ProjectionIndex` value (version prefix + state bytes), rejecting a
     /// stale schema version with `DbError::Conflict` rather than misinterpreting incompatible
     /// bytes — the shared guard behind both `load_checkpoint` and `state_at`.
-    fn decode_checkpoint(&self, projection: &dyn ErasedProjection, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
+    fn decode_checkpoint(&self, projection: &E, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
         let (stored_version, state_bytes) = decode_versioned(versioned_bytes)?;
         if stored_version != projection.schema_version() {
             return Err(DbError::Conflict(format!("projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required", projection.id(), projection.schema_version())));
@@ -397,7 +449,7 @@ impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
 
     /// @emoji 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
     /// bytes if nothing has been persisted at or before that point yet.
-    async fn load_checkpoint(&self, projection: &dyn ErasedProjection, at_or_before: u64) -> Result<Vec<u8>, DbError> {
+    async fn load_checkpoint(&self, projection: &E, at_or_before: u64) -> Result<Vec<u8>, DbError> {
         let index = self.index_for(projection.id());
         match index.latest_at_or_before(projection.id(), at_or_before).await? {
             Some((_, versioned_bytes)) => self.decode_checkpoint(projection, &versioned_bytes),
@@ -428,7 +480,7 @@ impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
         let mut out: PMap<String, Vec<u8>> = PMap::new();
         let mut changed_this_step: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
         for &index in &self.graph.order {
-            let projection = self.projections[index].as_ref();
+            let projection = &self.projections[index];
             let prior = self.load_checkpoint(projection, command_seq.saturating_sub(1)).await?;
             let new_state = if should_run(projection, touched, &changed_this_step) {
                 let computed = projection.apply_bytes(&prior, envelope, &deps)?;
@@ -458,7 +510,7 @@ impl<'a, S: IndexStorage> ProjectionEngine<'a, S> {
             let mut deps = DepView::default();
             let mut changed_this_step: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
             for &index in &self.graph.order {
-                let projection = self.projections[index].as_ref();
+                let projection = &self.projections[index];
                 let new_state = if should_run(projection, touched, &changed_this_step) {
                     let computed = projection.apply_bytes(&states[index], envelope, &deps)?;
                     changed_this_step.insert(projection.id());
@@ -614,6 +666,82 @@ mod tests {
         }
     }
 
+    /// @emoji 🎛️ dedyn-fw-os-guestruntime (O1/R1): the closed-set enum letting a `Vec` in this
+    /// module's own tests mix `CounterProjection` AND `SumWithDependencyProjection` — the ONLY
+    /// place, repo-wide, that genuinely needs an `ErasedProjection` erased into more than one
+    /// concrete shape (see `ErasedProjection`'s own doc). Hand-written, not `#[dyn_enum]`/
+    /// `dyn_enum_close!` (`semio-framework-dispatch-macros`), same call as `GuestRuntimes`
+    /// (`🔌️plugin/🖥️host/🦀️component.rs`): wiring a brand-new proc-macro dependency into this
+    /// crate's manifest for a 2-variant, 7-method, all-sync trait is more risk than the mechanical
+    /// match-delegation below.
+    enum AnyTestProjection {
+        Counter(ErasedWrapper<CounterProjection>),
+        SumWithDependency(ErasedWrapper<SumWithDependencyProjection>),
+    }
+
+    impl ErasedProjection for AnyTestProjection {
+        fn id(&self) -> &'static str {
+            match self {
+                Self::Counter(p) => p.id(),
+                Self::SumWithDependency(p) => p.id(),
+            }
+        }
+
+        fn schema_version(&self) -> u32 {
+            match self {
+                Self::Counter(p) => p.schema_version(),
+                Self::SumWithDependency(p) => p.schema_version(),
+            }
+        }
+
+        fn dependencies(&self) -> &'static [&'static str] {
+            match self {
+                Self::Counter(p) => p.dependencies(),
+                Self::SumWithDependency(p) => p.dependencies(),
+            }
+        }
+
+        fn reads(&self) -> &'static [&'static str] {
+            match self {
+                Self::Counter(p) => p.reads(),
+                Self::SumWithDependency(p) => p.reads(),
+            }
+        }
+
+        fn affected_by(&self, touched: &TouchedSet) -> bool {
+            match self {
+                Self::Counter(p) => p.affected_by(touched),
+                Self::SumWithDependency(p) => p.affected_by(touched),
+            }
+        }
+
+        fn initial_bytes(&self) -> Vec<u8> {
+            match self {
+                Self::Counter(p) => p.initial_bytes(),
+                Self::SumWithDependency(p) => p.initial_bytes(),
+            }
+        }
+
+        fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
+            match self {
+                Self::Counter(p) => p.apply_bytes(state_bytes, envelope, deps),
+                Self::SumWithDependency(p) => p.apply_bytes(state_bytes, envelope, deps),
+            }
+        }
+    }
+
+    impl From<ErasedWrapper<CounterProjection>> for AnyTestProjection {
+        fn from(wrapper: ErasedWrapper<CounterProjection>) -> Self {
+            Self::Counter(wrapper)
+        }
+    }
+
+    impl From<ErasedWrapper<SumWithDependencyProjection>> for AnyTestProjection {
+        fn from(wrapper: ErasedWrapper<SumWithDependencyProjection>) -> Self {
+            Self::SumWithDependency(wrapper)
+        }
+    }
+
     fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(operation.to_string()),
@@ -659,7 +787,7 @@ mod tests {
     //#region 🔖️Graph
     #[test]
     fn topological_order_respects_dependency_edges() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![
+        let projections = vec![
             erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] }),
             erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
             erase(CounterProjection { id: "c", schema_version: 1, dependencies: &["a", "b"], reads: &[] }),
@@ -675,21 +803,21 @@ mod tests {
 
     #[test]
     fn build_rejects_duplicate_ids() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
+        let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::AlreadyExists(_))));
     }
 
     #[test]
     fn build_rejects_unknown_dependency() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
+        let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::NotFound(_))));
     }
 
     #[test]
     fn build_rejects_a_dependency_cycle() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
+        let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::InvalidArgument(_))));
     }
@@ -698,7 +826,7 @@ mod tests {
     //#region 🔖️Engine
     #[test]
     fn apply_envelope_advances_and_persists_incrementally() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -715,7 +843,7 @@ mod tests {
 
     #[test]
     fn apply_envelope_rejects_a_mismatched_document() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1), &touch(&["doc"]))), Err(DbError::InvalidArgument(_))));
@@ -723,8 +851,8 @@ mod tests {
 
     #[test]
     fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections: Vec<AnyTestProjection> =
+            vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }).into(), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into()];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -743,12 +871,12 @@ mod tests {
     fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
         let storage = MemoryStorage::new();
         {
-            let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+            let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
             db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
         }
         // A fresh engine registers the SAME projection id at a bumped schema version.
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
+        let projections = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         assert!(matches!(db_actor::block_on(engine.state_at("count", 1)), Err(DbError::Conflict(_))));
         assert!(matches!(db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"]))), Err(DbError::Conflict(_))));
@@ -761,7 +889,7 @@ mod tests {
 
     #[test]
     fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
@@ -779,7 +907,7 @@ mod tests {
     //#region 🔖️IncrementalTriggering
     #[test]
     fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
+        let projections = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -796,11 +924,11 @@ mod tests {
 
     #[test]
     fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![
-            erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] }),
+        let projections: Vec<AnyTestProjection> = vec![
+            erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] }).into(),
             // "cascade" has an EMPTY reads() — per the module doc's design note, empty reads means
             // "not directly triggered by anything"; it must only ever run via the dependency cascade.
-            erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }),
+            erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }).into(),
         ];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
@@ -829,11 +957,11 @@ mod tests {
     #[test]
     fn rebuild_equals_incremental_after_checkpoint_resume() {
         let storage = MemoryStorage::new();
-        let make_projections = || -> Vec<Box<dyn ErasedProjection>> {
+        let make_projections = || -> Vec<AnyTestProjection> {
             vec![
-                erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }),
-                erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }),
-                erase(CounterProjection { id: "never", schema_version: 1, dependencies: &[], reads: &["never-touched"] }),
+                erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into(),
+                erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }).into(),
+                erase(CounterProjection { id: "never", schema_version: 1, dependencies: &[], reads: &["never-touched"] }).into(),
             ]
         };
 

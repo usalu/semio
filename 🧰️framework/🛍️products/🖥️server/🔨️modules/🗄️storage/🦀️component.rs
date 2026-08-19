@@ -19,16 +19,21 @@
 //! - [`SessionStore`] holds authentication state. Revocation must be immediate and cheap, and the
 //!   data is intentionally *not* event-sourced — a revoked session must leave no replayable trace.
 //!
-//! **No clock, no async, no driver.** Every method is synchronous and every timestamp is passed in
-//! by the caller, so a decider and its store can be replayed deterministically in a test. Backends
+//! **No clock, no driver.** Every timestamp is passed in by the caller, so a decider and its store
+//! can be replayed deterministically in a test even though every method is `async` (O1: the literal
+//! `async` keyword is universal here regardless of whether a given backend actually suspends — the
+//! in-memory reference backends below never do, a real disk/network backend will). Backends
 //! (embedded file storage in Wave 2, a server-grade engine later) implement these traits behind
 //! [`StorageProfile`]; the in-memory implementations here are the reference semantics every
-//! backend must reproduce.
+//! backend must reproduce. Each trait is `#[dyn_enum]`'d and closed over its one reference
+//! implementation (`AuthorityStores`/`ProjectionStores`/`BlobStores`/`SessionStores`) rather than
+//! boxed as `dyn` (O1 — drop dyn dispatch); a real second backend adds a variant here, not a `Box`.
 
 use crate::contract::{ActorKey, CommandReceipt, DeviceId, EventRecord, IdempotencyKey, Principal, Revision, SessionId};
 use protocol::codec::ids::ContentHash;
 use protocol::crypto::RecordHasher;
 use protocol::format::Blake3Hasher;
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -114,52 +119,53 @@ impl OutboxEntry {
 
 /// @emoji 🏛️ The authoritative state of a server: command inbox, per-actor event streams, snapshots,
 /// transactional outbox and actor leases. The one role whose data cannot be regenerated.
+#[dyn_enum]
 pub trait AuthorityStore: Send + Sync {
     /// @emoji 🔎️ The receipt already recorded for `key`, if this command was seen before. A retry
     /// answers from here instead of re-executing.
-    fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError>;
+    async fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError>;
 
     /// @emoji 🧾️ Binds `key` to `receipt`. Recording the identical receipt again succeeds silently;
     /// binding a key to a *different* receipt is a [`StorageError::Conflict`].
-    fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError>;
+    async fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError>;
 
     /// @emoji ➕️ Appends `events` to `actor`'s stream and returns the new last sequence. Every event
     /// must carry `actor` as its stream and a sequence exactly one past its predecessor, starting at
     /// `last_seq + 1`; anything else is a [`StorageError::SequenceGap`] and nothing is written.
-    fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError>;
+    async fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError>;
 
     /// @emoji 📜️ Every event of `actor` with a sequence strictly greater than `since`, in order.
-    fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError>;
+    async fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError>;
 
     /// @emoji 🔚️ The highest sequence written for `actor`; `0` for an actor with no history.
-    fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError>;
+    async fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError>;
 
     /// @emoji 📸️ Replaces `actor`'s replay accelerator. A snapshot older than the stored one is a
     /// [`StorageError::Conflict`] — snapshots only ever move forward.
-    fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError>;
+    async fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError>;
 
     /// @emoji 🖼️ The stored snapshot of `actor` and the revision it was taken at, if any.
-    fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError>;
+    async fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError>;
 
     /// @emoji 📤️ Queues `entries` for publication, stamping each with the next queue id and marking
     /// it undelivered; the caller's `id` and `delivered` fields are ignored.
-    fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError>;
+    async fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError>;
 
     /// @emoji 📥️ Up to `limit` undelivered entries in queue order.
-    fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError>;
+    async fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError>;
 
     /// @emoji 📬️ Acknowledges delivery of `ids`. Re-acknowledging is idempotent; an unknown id is a
     /// [`StorageError::NotFound`] and nothing is marked.
-    fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError>;
+    async fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError>;
 
     /// @emoji 🤝️ Takes ownership of `actor` for `holder`. Re-acquiring as the current holder renews
     /// at the same epoch; taking it from a different holder bumps the epoch, which fences the
     /// previous holder out for good.
-    fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError>;
+    async fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError>;
 
     /// @emoji 🛡️ Whether `lease` is still the live lease on `actor`. A stale epoch answers `false`,
     /// and the caller must abandon its turn with [`StorageError::LeaseLost`].
-    fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool;
+    async fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool;
 }
 
 /// @emoji 🧠️ Reference in-memory [`AuthorityStore`]: the semantics every durable backend must match,
@@ -182,11 +188,11 @@ impl MemoryAuthorityStore {
 }
 
 impl AuthorityStore for MemoryAuthorityStore {
-    fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError> {
+    async fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError> {
         Ok(self.receipts.get(key).cloned())
     }
 
-    fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError> {
+    async fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError> {
         match self.receipts.get(key) {
             Some(existing) if existing == receipt => Ok(()),
             Some(existing) => Err(StorageError::Conflict(format!("idempotency key {} is already bound to command {}", key.0, existing.command_id.0))),
@@ -197,7 +203,7 @@ impl AuthorityStore for MemoryAuthorityStore {
         }
     }
 
-    fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError> {
+    async fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError> {
         let stream = self.streams.entry(actor.clone()).or_default();
         let mut expected = stream.last().map_or(0, |record| record.seq) + 1;
         for event in events {
@@ -221,15 +227,15 @@ impl AuthorityStore for MemoryAuthorityStore {
         Ok(head)
     }
 
-    fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError> {
+    async fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError> {
         Ok(self.streams.get(actor).into_iter().flatten().filter(|record| record.seq > since).cloned().collect())
     }
 
-    fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError> {
+    async fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError> {
         Ok(self.streams.get(actor).and_then(|stream| stream.last()).map_or(0, |record| record.seq))
     }
 
-    fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError> {
+    async fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError> {
         if let Some((stored, _)) = self.snapshots.get(actor) {
             if revision < *stored {
                 return Err(StorageError::Conflict(format!("snapshot revision {} is older than stored {}", revision.0, stored.0)));
@@ -239,11 +245,11 @@ impl AuthorityStore for MemoryAuthorityStore {
         Ok(())
     }
 
-    fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError> {
+    async fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError> {
         Ok(self.snapshots.get(actor).cloned())
     }
 
-    fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError> {
+    async fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError> {
         for mut entry in entries {
             self.next_outbox_id += 1;
             entry.id = self.next_outbox_id;
@@ -253,11 +259,11 @@ impl AuthorityStore for MemoryAuthorityStore {
         Ok(())
     }
 
-    fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError> {
+    async fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError> {
         Ok(self.outbox.values().filter(|entry| !entry.delivered).take(limit).cloned().collect())
     }
 
-    fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError> {
+    async fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError> {
         if ids.iter().any(|id| !self.outbox.contains_key(id)) {
             return Err(StorageError::NotFound);
         }
@@ -269,7 +275,7 @@ impl AuthorityStore for MemoryAuthorityStore {
         Ok(())
     }
 
-    fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError> {
+    async fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError> {
         let lease = match self.leases.get(actor) {
             Some(current) if current.holder == holder => current.clone(),
             Some(current) => Lease { epoch: current.epoch + 1, holder: holder.to_owned() },
@@ -279,8 +285,14 @@ impl AuthorityStore for MemoryAuthorityStore {
         Ok(lease)
     }
 
-    fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool {
+    async fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool {
         self.leases.get(actor).is_some_and(|current| current == lease)
+    }
+}
+
+dyn_enum_close! {
+    pub enum AuthorityStores: AuthorityStore {
+        Memory(MemoryAuthorityStore),
     }
 }
 //#endregion 🔖️Authority
@@ -289,26 +301,27 @@ impl AuthorityStore for MemoryAuthorityStore {
 /// @emoji 🔭️ Rebuildable read models, addressed by projection name and key. Nothing here is a source
 /// of truth: [`ProjectionStore::clear`] plus a replay from sequence zero must reproduce it exactly,
 /// which is what makes a schema change a rebuild rather than a migration.
+#[dyn_enum]
 pub trait ProjectionStore: Send + Sync {
     /// @emoji ✍️ Writes `value` at `key` inside `projection`, replacing any previous value.
-    fn put(&mut self, projection: &str, key: &str, value: Vec<u8>);
+    async fn put(&mut self, projection: &str, key: &str, value: Vec<u8>);
 
     /// @emoji 📖️ The value stored at `key`, if the projection has one.
-    fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>>;
+    async fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>>;
 
     /// @emoji 📋️ Every entry of `projection` whose key starts with `prefix`, ascending by key —
     /// ordering is part of the contract so a paged query is stable across backends.
-    fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)>;
+    async fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)>;
 
     /// @emoji 🚩️ The last event sequence folded into `projection`; `0` when it has never been built.
-    fn checkpoint(&self, projection: &str) -> u64;
+    async fn checkpoint(&self, projection: &str) -> u64;
 
     /// @emoji 🏁️ Records that `projection` now reflects everything up to `seq`.
-    fn set_checkpoint(&mut self, projection: &str, seq: u64);
+    async fn set_checkpoint(&mut self, projection: &str, seq: u64);
 
     /// @emoji 🧹️ Drops every entry of `projection` and resets its checkpoint to zero, so the next
     /// fold rebuilds it from the beginning.
-    fn clear(&mut self, projection: &str);
+    async fn clear(&mut self, projection: &str);
 }
 
 /// @emoji 🗂️ Reference in-memory [`ProjectionStore`], ordered by key so `list` is deterministic.
@@ -326,15 +339,15 @@ impl MemoryProjectionStore {
 }
 
 impl ProjectionStore for MemoryProjectionStore {
-    fn put(&mut self, projection: &str, key: &str, value: Vec<u8>) {
+    async fn put(&mut self, projection: &str, key: &str, value: Vec<u8>) {
         self.projections.entry(projection.to_owned()).or_default().insert(key.to_owned(), value);
     }
 
-    fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>> {
+    async fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>> {
         self.projections.get(projection).and_then(|entries| entries.get(key)).cloned()
     }
 
-    fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)> {
+    async fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)> {
         self.projections
             .get(projection)
             .into_iter()
@@ -343,17 +356,23 @@ impl ProjectionStore for MemoryProjectionStore {
             .collect()
     }
 
-    fn checkpoint(&self, projection: &str) -> u64 {
+    async fn checkpoint(&self, projection: &str) -> u64 {
         self.checkpoints.get(projection).copied().unwrap_or(0)
     }
 
-    fn set_checkpoint(&mut self, projection: &str, seq: u64) {
+    async fn set_checkpoint(&mut self, projection: &str, seq: u64) {
         self.checkpoints.insert(projection.to_owned(), seq);
     }
 
-    fn clear(&mut self, projection: &str) {
+    async fn clear(&mut self, projection: &str) {
         self.projections.remove(projection);
         self.checkpoints.remove(projection);
+    }
+}
+
+dyn_enum_close! {
+    pub enum ProjectionStores: ProjectionStore {
+        Memory(MemoryProjectionStore),
     }
 }
 //#endregion 🔖️Projection
@@ -362,23 +381,24 @@ impl ProjectionStore for MemoryProjectionStore {
 /// @emoji #️⃣ The canonical content hash of `bytes`, computed with the same `blake3` primitive the
 /// replication format commits with — offered so a caller can address a blob without picking its own
 /// hash function, and so this crate needs no hashing dependency of its own.
-pub fn content_hash(bytes: &[u8]) -> ContentHash {
-    ContentHash(Blake3Hasher.hash(bytes))
+pub async fn content_hash(bytes: &[u8]) -> ContentHash {
+    ContentHash(Blake3Hasher.hash(bytes).await)
 }
 
 /// @emoji 🧱️ Immutable, content-addressed bytes. The caller supplies the hash (see [`content_hash`])
 /// because the address is minted where the content is produced — an upload is verified once, at the
 /// edge, and every later reference is by hash alone. Identical content is stored once.
+#[dyn_enum]
 pub trait BlobStore: Send + Sync {
     /// @emoji 💾️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
     /// binding a hash to different bytes is a [`StorageError::Conflict`].
-    fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError>;
+    async fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError>;
 
     /// @emoji 📦️ The bytes stored under `hash`, if any.
-    fn get(&self, hash: &ContentHash) -> Option<Vec<u8>>;
+    async fn get(&self, hash: &ContentHash) -> Option<Vec<u8>>;
 
     /// @emoji ❓️ Whether `hash` is already stored — the cheap half of an upload negotiation.
-    fn has(&self, hash: &ContentHash) -> bool;
+    async fn has(&self, hash: &ContentHash) -> bool;
 }
 
 /// @emoji 🎒️ Reference in-memory [`BlobStore`], deduplicating by hash.
@@ -395,7 +415,7 @@ impl MemoryBlobStore {
 }
 
 impl BlobStore for MemoryBlobStore {
-    fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError> {
+    async fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError> {
         match self.blobs.get(&hash) {
             Some(existing) if existing.as_slice() == bytes => Ok(()),
             Some(_) => Err(StorageError::Conflict(format!("content hash {hash} already stores different bytes"))),
@@ -406,12 +426,18 @@ impl BlobStore for MemoryBlobStore {
         }
     }
 
-    fn get(&self, hash: &ContentHash) -> Option<Vec<u8>> {
+    async fn get(&self, hash: &ContentHash) -> Option<Vec<u8>> {
         self.blobs.get(hash).cloned()
     }
 
-    fn has(&self, hash: &ContentHash) -> bool {
+    async fn has(&self, hash: &ContentHash) -> bool {
         self.blobs.contains_key(hash)
+    }
+}
+
+dyn_enum_close! {
+    pub enum BlobStores: BlobStore {
+        Memory(MemoryBlobStore),
     }
 }
 //#endregion 🔖️Blob
@@ -434,19 +460,20 @@ pub struct SessionRecord {
 
 /// @emoji 🎫️ Live authentication state. Deliberately not event-sourced: a revoked session must
 /// vanish rather than survive as a replayable fact, and revocation must be immediate.
+#[dyn_enum]
 pub trait SessionStore: Send + Sync {
     /// @emoji 🆕️ Stores `session`, replacing any record with the same id.
-    fn create(&mut self, session: SessionRecord);
+    async fn create(&mut self, session: SessionRecord);
 
     /// @emoji 🔑️ The session with `id`, if it is still live.
-    fn get(&self, id: &SessionId) -> Option<SessionRecord>;
+    async fn get(&self, id: &SessionId) -> Option<SessionRecord>;
 
     /// @emoji 🗑️ Removes `id`; a no-op if it is already gone.
-    fn delete(&mut self, id: &SessionId);
+    async fn delete(&mut self, id: &SessionId);
 
     /// @emoji 🚪️ Removes every session of `principal` and returns how many were removed — the
     /// "sign out everywhere" primitive.
-    fn revoke_principal(&mut self, principal: &Principal) -> usize;
+    async fn revoke_principal(&mut self, principal: &Principal) -> usize;
 }
 
 /// @emoji 🗝️ Reference in-memory [`SessionStore`].
@@ -463,22 +490,28 @@ impl MemorySessionStore {
 }
 
 impl SessionStore for MemorySessionStore {
-    fn create(&mut self, session: SessionRecord) {
+    async fn create(&mut self, session: SessionRecord) {
         self.sessions.insert(session.id.clone(), session);
     }
 
-    fn get(&self, id: &SessionId) -> Option<SessionRecord> {
+    async fn get(&self, id: &SessionId) -> Option<SessionRecord> {
         self.sessions.get(id).cloned()
     }
 
-    fn delete(&mut self, id: &SessionId) {
+    async fn delete(&mut self, id: &SessionId) {
         self.sessions.remove(id);
     }
 
-    fn revoke_principal(&mut self, principal: &Principal) -> usize {
+    async fn revoke_principal(&mut self, principal: &Principal) -> usize {
         let before = self.sessions.len();
         self.sessions.retain(|_, session| &session.principal != principal);
         before - self.sessions.len()
+    }
+}
+
+dyn_enum_close! {
+    pub enum SessionStores: SessionStore {
+        Memory(MemorySessionStore),
     }
 }
 //#endregion 🔖️Session
@@ -505,150 +538,150 @@ mod tests {
     }
 
     //#region 🔖️Authority
-    #[test]
-    fn receipt_round_trips_and_is_idempotent() {
+    #[semio_framework_async_macros::async_test]
+    async fn receipt_round_trips_and_is_idempotent() {
         let mut store = MemoryAuthorityStore::new();
         let actor = actor("doc-1");
         let key = IdempotencyKey("k1".into());
-        assert_eq!(store.receipt(&key).unwrap(), None);
-        store.record_receipt(&key, &receipt(&actor, 1)).unwrap();
-        store.record_receipt(&key, &receipt(&actor, 1)).unwrap();
-        assert_eq!(store.receipt(&key).unwrap(), Some(receipt(&actor, 1)));
-        assert!(matches!(store.record_receipt(&key, &receipt(&actor, 2)), Err(StorageError::Conflict(_))));
+        assert_eq!(store.receipt(&key).await.unwrap(), None);
+        store.record_receipt(&key, &receipt(&actor, 1)).await.unwrap();
+        store.record_receipt(&key, &receipt(&actor, 1)).await.unwrap();
+        assert_eq!(store.receipt(&key).await.unwrap(), Some(receipt(&actor, 1)));
+        assert!(matches!(store.record_receipt(&key, &receipt(&actor, 2)).await, Err(StorageError::Conflict(_))));
     }
 
-    #[test]
-    fn append_events_rejects_a_sequence_gap_and_writes_nothing() {
+    #[semio_framework_async_macros::async_test]
+    async fn append_events_rejects_a_sequence_gap_and_writes_nothing() {
         let mut store = MemoryAuthorityStore::new();
         let actor = actor("doc-1");
-        assert_eq!(store.append_events(&actor, &[event(&actor, 1), event(&actor, 2)], &[]).unwrap(), 2);
-        assert_eq!(store.append_events(&actor, &[event(&actor, 4)], &[]), Err(StorageError::SequenceGap { expected: 3, got: 4 }));
-        assert_eq!(store.append_events(&actor, &[event(&actor, 3), event(&actor, 5)], &[]), Err(StorageError::SequenceGap { expected: 4, got: 5 }));
-        assert_eq!(store.last_seq(&actor).unwrap(), 2);
+        assert_eq!(store.append_events(&actor, &[event(&actor, 1), event(&actor, 2)], &[]).await.unwrap(), 2);
+        assert_eq!(store.append_events(&actor, &[event(&actor, 4)], &[]).await, Err(StorageError::SequenceGap { expected: 3, got: 4 }));
+        assert_eq!(store.append_events(&actor, &[event(&actor, 3), event(&actor, 5)], &[]).await, Err(StorageError::SequenceGap { expected: 4, got: 5 }));
+        assert_eq!(store.last_seq(&actor).await.unwrap(), 2);
     }
 
-    #[test]
-    fn events_since_returns_only_later_events_of_that_actor() {
+    #[semio_framework_async_macros::async_test]
+    async fn events_since_returns_only_later_events_of_that_actor() {
         let mut store = MemoryAuthorityStore::new();
         let first = actor("doc-1");
         let second = actor("doc-2");
-        store.append_events(&first, &[event(&first, 1), event(&first, 2), event(&first, 3)], &[]).unwrap();
-        store.append_events(&second, &[event(&second, 1)], &[]).unwrap();
-        let tail: Vec<u64> = store.events_since(&first, 1).unwrap().iter().map(|record| record.seq).collect();
+        store.append_events(&first, &[event(&first, 1), event(&first, 2), event(&first, 3)], &[]).await.unwrap();
+        store.append_events(&second, &[event(&second, 1)], &[]).await.unwrap();
+        let tail: Vec<u64> = store.events_since(&first, 1).await.unwrap().iter().map(|record| record.seq).collect();
         assert_eq!(tail, vec![2, 3]);
-        assert!(store.events_since(&first, 3).unwrap().is_empty());
-        assert_eq!(store.events_since(&second, 0).unwrap().len(), 1);
-        assert_eq!(store.last_seq(&actor("doc-3")).unwrap(), 0);
+        assert!(store.events_since(&first, 3).await.unwrap().is_empty());
+        assert_eq!(store.events_since(&second, 0).await.unwrap().len(), 1);
+        assert_eq!(store.last_seq(&actor("doc-3")).await.unwrap(), 0);
     }
 
-    #[test]
-    fn snapshots_only_move_forward() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshots_only_move_forward() {
         let mut store = MemoryAuthorityStore::new();
         let actor = actor("doc-1");
-        assert_eq!(store.snapshot(&actor).unwrap(), None);
-        store.put_snapshot(&actor, Revision(4), vec![1, 2]).unwrap();
-        assert_eq!(store.snapshot(&actor).unwrap(), Some((Revision(4), vec![1, 2])));
-        assert!(matches!(store.put_snapshot(&actor, Revision(3), vec![9]), Err(StorageError::Conflict(_))));
-        store.put_snapshot(&actor, Revision(7), vec![3]).unwrap();
-        assert_eq!(store.snapshot(&actor).unwrap(), Some((Revision(7), vec![3])));
+        assert_eq!(store.snapshot(&actor).await.unwrap(), None);
+        store.put_snapshot(&actor, Revision(4), vec![1, 2]).await.unwrap();
+        assert_eq!(store.snapshot(&actor).await.unwrap(), Some((Revision(4), vec![1, 2])));
+        assert!(matches!(store.put_snapshot(&actor, Revision(3), vec![9]).await, Err(StorageError::Conflict(_))));
+        store.put_snapshot(&actor, Revision(7), vec![3]).await.unwrap();
+        assert_eq!(store.snapshot(&actor).await.unwrap(), Some((Revision(7), vec![3])));
     }
 
-    #[test]
-    fn outbox_delivers_each_entry_exactly_once() {
+    #[semio_framework_async_macros::async_test]
+    async fn outbox_delivers_each_entry_exactly_once() {
         let mut store = MemoryAuthorityStore::new();
         let actor = actor("doc-1");
-        store.enqueue_outbox(vec![OutboxEntry::pending(actor.clone(), event(&actor, 1)), OutboxEntry::pending(actor.clone(), event(&actor, 2))]).unwrap();
-        let pending = store.pending_outbox(10).unwrap();
+        store.enqueue_outbox(vec![OutboxEntry::pending(actor.clone(), event(&actor, 1)), OutboxEntry::pending(actor.clone(), event(&actor, 2))]).await.unwrap();
+        let pending = store.pending_outbox(10).await.unwrap();
         assert_eq!(pending.iter().map(|entry| entry.id).collect::<Vec<_>>(), vec![1, 2]);
         assert!(pending.iter().all(|entry| !entry.delivered));
-        assert_eq!(store.pending_outbox(1).unwrap().len(), 1);
-        store.mark_outbox_delivered(&[1]).unwrap();
-        assert_eq!(store.pending_outbox(10).unwrap().iter().map(|entry| entry.id).collect::<Vec<_>>(), vec![2]);
-        store.mark_outbox_delivered(&[1, 2]).unwrap();
-        assert!(store.pending_outbox(10).unwrap().is_empty());
-        assert_eq!(store.mark_outbox_delivered(&[99]), Err(StorageError::NotFound));
+        assert_eq!(store.pending_outbox(1).await.unwrap().len(), 1);
+        store.mark_outbox_delivered(&[1]).await.unwrap();
+        assert_eq!(store.pending_outbox(10).await.unwrap().iter().map(|entry| entry.id).collect::<Vec<_>>(), vec![2]);
+        store.mark_outbox_delivered(&[1, 2]).await.unwrap();
+        assert!(store.pending_outbox(10).await.unwrap().is_empty());
+        assert_eq!(store.mark_outbox_delivered(&[99]).await, Err(StorageError::NotFound));
     }
 
-    #[test]
-    fn lease_epoch_bump_fences_out_the_previous_holder() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_epoch_bump_fences_out_the_previous_holder() {
         let mut store = MemoryAuthorityStore::new();
         let other = actor("doc-2");
         let actor = actor("doc-1");
-        let first = store.acquire_lease(&actor, "node-a").unwrap();
+        let first = store.acquire_lease(&actor, "node-a").await.unwrap();
         assert_eq!(first, Lease { epoch: 1, holder: "node-a".into() });
-        assert_eq!(store.acquire_lease(&actor, "node-a").unwrap(), first);
-        assert!(store.validate_lease(&actor, &first));
-        let second = store.acquire_lease(&actor, "node-b").unwrap();
+        assert_eq!(store.acquire_lease(&actor, "node-a").await.unwrap(), first);
+        assert!(store.validate_lease(&actor, &first).await);
+        let second = store.acquire_lease(&actor, "node-b").await.unwrap();
         assert_eq!(second, Lease { epoch: 2, holder: "node-b".into() });
-        assert!(!store.validate_lease(&actor, &first));
-        assert!(store.validate_lease(&actor, &second));
-        assert!(!store.validate_lease(&other, &second));
+        assert!(!store.validate_lease(&actor, &first).await);
+        assert!(store.validate_lease(&actor, &second).await);
+        assert!(!store.validate_lease(&other, &second).await);
     }
     //#endregion 🔖️Authority
 
     //#region 🔖️Projection
-    #[test]
-    fn projection_list_is_prefix_scoped_and_key_ordered() {
+    #[semio_framework_async_macros::async_test]
+    async fn projection_list_is_prefix_scoped_and_key_ordered() {
         let mut store = MemoryProjectionStore::new();
-        store.put("members", "space/b", vec![2]);
-        store.put("members", "space/a", vec![1]);
-        store.put("members", "tenant/a", vec![3]);
-        store.put("documents", "space/a", vec![9]);
-        let keys: Vec<String> = store.list("members", "space/").into_iter().map(|(key, _)| key).collect();
+        store.put("members", "space/b", vec![2]).await;
+        store.put("members", "space/a", vec![1]).await;
+        store.put("members", "tenant/a", vec![3]).await;
+        store.put("documents", "space/a", vec![9]).await;
+        let keys: Vec<String> = store.list("members", "space/").await.into_iter().map(|(key, _)| key).collect();
         assert_eq!(keys, vec!["space/a".to_string(), "space/b".to_string()]);
-        assert_eq!(store.list("members", "").len(), 3);
-        assert!(store.list("nothing", "").is_empty());
-        assert_eq!(store.get("members", "space/a"), Some(vec![1]));
-        assert_eq!(store.get("members", "space/z"), None);
+        assert_eq!(store.list("members", "").await.len(), 3);
+        assert!(store.list("nothing", "").await.is_empty());
+        assert_eq!(store.get("members", "space/a").await, Some(vec![1]));
+        assert_eq!(store.get("members", "space/z").await, None);
     }
 
-    #[test]
-    fn clearing_a_projection_resets_it_for_rebuild() {
+    #[semio_framework_async_macros::async_test]
+    async fn clearing_a_projection_resets_it_for_rebuild() {
         let mut store = MemoryProjectionStore::new();
-        store.put("members", "space/a", vec![1]);
-        store.set_checkpoint("members", 42);
-        assert_eq!(store.checkpoint("members"), 42);
-        store.clear("members");
-        assert_eq!(store.checkpoint("members"), 0);
-        assert_eq!(store.get("members", "space/a"), None);
-        store.put("members", "space/a", vec![7]);
-        store.set_checkpoint("members", 43);
-        assert_eq!(store.get("members", "space/a"), Some(vec![7]));
-        assert_eq!(store.checkpoint("members"), 43);
+        store.put("members", "space/a", vec![1]).await;
+        store.set_checkpoint("members", 42).await;
+        assert_eq!(store.checkpoint("members").await, 42);
+        store.clear("members").await;
+        assert_eq!(store.checkpoint("members").await, 0);
+        assert_eq!(store.get("members", "space/a").await, None);
+        store.put("members", "space/a", vec![7]).await;
+        store.set_checkpoint("members", 43).await;
+        assert_eq!(store.get("members", "space/a").await, Some(vec![7]));
+        assert_eq!(store.checkpoint("members").await, 43);
     }
     //#endregion 🔖️Projection
 
     //#region 🔖️Blob
-    #[test]
-    fn blob_put_get_and_has_are_content_addressed() {
+    #[semio_framework_async_macros::async_test]
+    async fn blob_put_get_and_has_are_content_addressed() {
         let mut store = MemoryBlobStore::new();
-        let hash = content_hash(b"hello");
-        assert!(!store.has(&hash));
-        assert_eq!(store.get(&hash), None);
-        store.put(hash, b"hello").unwrap();
-        store.put(hash, b"hello").unwrap();
-        assert!(store.has(&hash));
-        assert_eq!(store.get(&hash), Some(b"hello".to_vec()));
-        assert_ne!(content_hash(b"hello"), content_hash(b"world"));
-        assert!(matches!(store.put(hash, b"world"), Err(StorageError::Conflict(_))));
+        let hash = content_hash(b"hello").await;
+        assert!(!store.has(&hash).await);
+        assert_eq!(store.get(&hash).await, None);
+        store.put(hash, b"hello").await.unwrap();
+        store.put(hash, b"hello").await.unwrap();
+        assert!(store.has(&hash).await);
+        assert_eq!(store.get(&hash).await, Some(b"hello".to_vec()));
+        assert_ne!(content_hash(b"hello").await, content_hash(b"world").await);
+        assert!(matches!(store.put(hash, b"world").await, Err(StorageError::Conflict(_))));
     }
     //#endregion 🔖️Blob
 
     //#region 🔖️Session
-    #[test]
-    fn revoke_principal_removes_every_session_of_that_principal() {
+    #[semio_framework_async_macros::async_test]
+    async fn revoke_principal_removes_every_session_of_that_principal() {
         let mut store = MemorySessionStore::new();
         let alice = Principal::User { id: "alice".into() };
         let bob = Principal::User { id: "bob".into() };
-        store.create(session("s1", alice.clone()));
-        store.create(session("s2", alice.clone()));
-        store.create(session("s3", bob.clone()));
-        assert_eq!(store.get(&SessionId("s1".into())).map(|record| record.principal), Some(alice.clone()));
-        store.delete(&SessionId("s2".into()));
-        assert_eq!(store.revoke_principal(&alice), 1);
-        assert_eq!(store.revoke_principal(&alice), 0);
-        assert_eq!(store.get(&SessionId("s1".into())), None);
-        assert_eq!(store.get(&SessionId("s3".into())).map(|record| record.principal), Some(bob));
+        store.create(session("s1", alice.clone())).await;
+        store.create(session("s2", alice.clone())).await;
+        store.create(session("s3", bob.clone())).await;
+        assert_eq!(store.get(&SessionId("s1".into())).await.map(|record| record.principal), Some(alice.clone()));
+        store.delete(&SessionId("s2".into())).await;
+        assert_eq!(store.revoke_principal(&alice).await, 1);
+        assert_eq!(store.revoke_principal(&alice).await, 0);
+        assert_eq!(store.get(&SessionId("s1".into())).await, None);
+        assert_eq!(store.get(&SessionId("s3".into())).await.map(|record| record.principal), Some(bob));
     }
     //#endregion 🔖️Session
 }

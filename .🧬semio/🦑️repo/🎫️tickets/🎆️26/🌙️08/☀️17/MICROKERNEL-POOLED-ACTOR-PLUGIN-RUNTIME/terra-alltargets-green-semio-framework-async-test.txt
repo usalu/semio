@@ -1,0 +1,31 @@
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 1.01s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/semio_framework_async-1313de002dfe9c3b)
+
+running 17 tests
+test component::tests::block_on_drives_a_future_through_several_pending_polls_before_completing ... ok
+test component::tests::cancel_token_cancel_is_terminal_over_park ... ok
+test component::tests::cancel_token_park_then_unpark_returns_to_live ... ok
+test component::tests::cancel_token_root_starts_live ... ok
+test component::tests::cancelling_parent_transitively_cancels_child_and_grandchild ... ok
+test component::tests::child_cancel_never_propagates_upward_to_parent ... ok
+test component::tests::manual_runtime_cancel_scope_reports_finished_and_cancelled ... ok
+test component::tests::manual_runtime_sleep_until_resolves_only_after_injected_time_advances ... ok
+test component::tests::manual_runtime_spawn_scoped_runs_a_ready_future_on_drive ... ok
+test component::tests::parking_parent_does_not_downgrade_an_already_live_reading_below_park ... ok
+test component::tests::scope_handle_child_scope_shares_cancellation_lineage ... ok
+test component::tests::thread_budget_checkout_debits_and_returns_remaining ... ok
+test component::tests::thread_plan_invariant_holds_once_floors_stop_binding ... ok
+test component::tests::thread_plan_is_deterministic ... ok
+test component::tests::thread_plan_low_core_counts_oversubscribe_but_never_zero_a_role ... ok
+test component::tests::thread_budget_checkout_debug_panics_on_overdraw - should panic ... ok
+test component::tests::thread_plan_shards_and_io_workers_never_exceed_their_ceilings ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_async
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

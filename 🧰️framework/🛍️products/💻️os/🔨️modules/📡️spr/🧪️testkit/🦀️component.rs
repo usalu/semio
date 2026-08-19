@@ -726,12 +726,12 @@ async fn policy_matrix_expected_reject(policy: crate::os_spr::MergePolicy, level
 /// ✅️ LAW: `rejects` (typically `MergePolicy::rejects`) and `is_applicable` (typically a
 /// single-message `MutationOutcome::is_applicable` probe at `level`) must both agree with the
 /// frozen 3×4 policy matrix for every `(policy, level)` pair.
-pub async fn assert_policy_matrix(rejects: impl Fn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool, is_applicable: impl Fn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool) {
+pub async fn assert_policy_matrix(rejects: impl Fn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool, is_applicable: impl AsyncFn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool) {
     for policy in POLICY_MATRIX_POLICIES {
         for level in POLICY_MATRIX_LEVELS {
             let expected_reject = policy_matrix_expected_reject(policy, level).await;
             assert_eq!(rejects(policy, level), expected_reject, "rejects({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix");
-            assert_eq!(is_applicable(policy, level), !expected_reject, "is_applicable({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix");
+            assert_eq!(is_applicable(policy, level).await, !expected_reject, "is_applicable({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix");
         }
     }
 }
@@ -791,13 +791,13 @@ pub async fn assert_modify_vs_delete<P: PartialEq + std::fmt::Debug>(policy: cra
 /// `applied_edit_ids` order, and the same set of raised conflicts. `run` builds a fresh authority
 /// from scratch and ingests `order` (a permutation of `0..envelope_count`), returning
 /// `(final_state, applied_edit_ids, conflict_ids)`.
-pub async fn assert_chronological_determinism<P: PartialEq + std::fmt::Debug>(envelope_count: usize, seed: u64, permutation_count: usize, mut run: impl FnMut(&[usize]) -> (P, Vec<String>, Vec<crate::os_spr::ConflictId>)) {
+pub async fn assert_chronological_determinism<P: PartialEq + std::fmt::Debug>(envelope_count: usize, seed: u64, permutation_count: usize, mut run: impl AsyncFnMut(&[usize]) -> (P, Vec<String>, Vec<crate::os_spr::ConflictId>)) {
     let mut rng = SplitMix64(seed);
     let mut expected: Option<(P, Vec<String>, Vec<crate::os_spr::ConflictId>)> = None;
     for _ in 0..permutation_count.max(1) {
         let mut order: Vec<usize> = (0..envelope_count).collect();
         fisher_yates_shuffle(&mut rng, &mut order).await;
-        let result = run(&order);
+        let result = run(&order).await;
         match &expected {
             None => expected = Some(result),
             Some((state, applied, conflicts)) => {
@@ -836,9 +836,9 @@ pub async fn assert_ledger_matches_replay(ledger: &std::collections::HashMap<Str
 /// ✅️ LAW (§C7): `decode(encode(conflict)) == conflict` through the `.spr` conflict ledger codec
 /// (`REC_CONFLICT`) — `encode`/`decode` are typically `crate::os_spr::history::encode_conflicts`/
 /// `decode_conflicts` sliced to one entry.
-pub async fn assert_conflict_spr_round_trip(conflict: &crate::os_spr::Conflict, encode: impl Fn(&crate::os_spr::Conflict) -> Vec<u8>, decode: impl Fn(&[u8]) -> crate::os_spr::Conflict) {
-    let bytes = encode(conflict);
-    let decoded = decode(&bytes);
+pub async fn assert_conflict_spr_round_trip(conflict: &crate::os_spr::Conflict, encode: impl AsyncFn(&crate::os_spr::Conflict) -> Vec<u8>, decode: impl AsyncFn(&[u8]) -> crate::os_spr::Conflict) {
+    let bytes = encode(conflict).await;
+    let decoded = decode(&bytes).await;
     assert_eq!(&decoded, conflict, "decode(encode(conflict)) must equal conflict");
 }
 //#endregion 🔖️Conflict
@@ -849,10 +849,10 @@ pub async fn assert_conflict_spr_round_trip(conflict: &crate::os_spr::Conflict, 
 /// `_app_frame` to sweep the C8 new-frame corpus
 /// (`AppCommand::{SetMergePolicy,ResolveConflict,ReadConflicts}`,
 /// `AppFrame::{MergeReport,Conflicts}`) once 1-C lands those variants.
-pub async fn assert_channel_frame_corpus<T: PartialEq + std::fmt::Debug>(corpus: &[T], encode: impl Fn(&T) -> Vec<u8>, decode: impl Fn(&[u8]) -> T) {
+pub async fn assert_channel_frame_corpus<T: PartialEq + std::fmt::Debug>(corpus: &[T], encode: impl AsyncFn(&T) -> Vec<u8>, decode: impl AsyncFn(&[u8]) -> T) {
     for sample in corpus {
-        let bytes = encode(sample);
-        let decoded = decode(&bytes);
+        let bytes = encode(sample).await;
+        let decoded = decode(&bytes).await;
         assert_eq!(&decoded, sample, "decode(encode(sample)) must equal sample for every entry in the corpus");
     }
 }
@@ -879,27 +879,27 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn history_log_gen_is_deterministic_for_a_fixed_seed() {
         let profile = GenProfile { edit_count: 5, max_ops_per_edit: 3, checkpoint_every: 2, adversarial: false };
-        let a = HistoryLogGen::new(42).generate(&profile);
-        let b = HistoryLogGen::new(42).generate(&profile);
+        let a = HistoryLogGen::new(42).await.generate(&profile);
+        let b = HistoryLogGen::new(42).await.generate(&profile);
         assert_eq!(a, b, "the same seed must generate the same HistoryLog");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_log_gen_different_seeds_usually_differ() {
         let profile = GenProfile { edit_count: 5, max_ops_per_edit: 3, checkpoint_every: 2, adversarial: false };
-        let a = HistoryLogGen::new(1).generate(&profile);
-        let b = HistoryLogGen::new(2).generate(&profile);
+        let a = HistoryLogGen::new(1).await.generate(&profile);
+        let b = HistoryLogGen::new(2).await.generate(&profile);
         assert_ne!(a, b);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_log_gen_respects_edit_count_and_checkpoint_cadence() {
         let profile = GenProfile { edit_count: 9, max_ops_per_edit: 2, checkpoint_every: 3, adversarial: false };
-        let log = HistoryLogGen::new(7).generate(&profile);
-        assert_eq!(log.edits.len(), 9);
-        assert_eq!(log.changes.len(), 3, "9 edits at checkpoint_every=3 must produce 3 changes");
-        assert_eq!(log.checkpoints.len(), 3);
-        for edit in &log.edits {
+        let log = HistoryLogGen::new(7).await.generate(&profile);
+        assert_eq!(log.await.edits.len(), 9);
+        assert_eq!(log.await.changes.len(), 3, "9 edits at checkpoint_every=3 must produce 3 changes");
+        assert_eq!(log.await.checkpoints.len(), 3);
+        for edit in &log.await.edits {
             assert!(edit.ops.len() <= 2);
             assert!(edit.meta.is_none(), "this generator never populates the derived-data meta slot");
         }
@@ -908,18 +908,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn history_log_gen_zero_checkpoint_every_produces_no_changes_or_checkpoints() {
         let profile = GenProfile { edit_count: 4, max_ops_per_edit: 2, checkpoint_every: 0, adversarial: false };
-        let log = HistoryLogGen::new(3).generate(&profile);
-        assert!(log.changes.is_empty());
-        assert!(log.checkpoints.is_empty());
-        assert!(log.alternatives.is_empty(), "no checkpoints -> no alternatives to reference them");
+        let log = HistoryLogGen::new(3).await.generate(&profile);
+        assert!(log.await.changes.is_empty());
+        assert!(log.await.checkpoints.is_empty());
+        assert!(log.await.alternatives.is_empty(), "no checkpoints -> no alternatives to reference them");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_log_gen_adversarial_op_text_never_breaks_the_ops_line_grammar() {
         let profile = GenProfile { edit_count: 40, max_ops_per_edit: 6, checkpoint_every: 0, adversarial: true };
         for seed in 0..20u64 {
-            let log = HistoryLogGen::new(seed).generate(&profile);
-            for edit in &log.edits {
+            let log = HistoryLogGen::new(seed).await.generate(&profile);
+            for edit in &log.await.edits {
                 for op in &edit.ops {
                     let text = op.text.as_deref().expect("generator always sets text");
                     assert!(!text.is_empty(), "generated op text must never be empty");
@@ -933,10 +933,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_dag_gen_produces_a_closed_topologically_orderable_set() {
-        let envelopes = OpDagGen::new(11).generate(30);
-        assert_eq!(envelopes.len(), 30);
-        let known: std::collections::HashSet<String> = envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
-        for (index, envelope) in envelopes.iter().enumerate() {
+        let envelopes = OpDagGen::new(11).await.generate(30);
+        assert_eq!(envelopes.await.len(), 30);
+        let known: std::collections::HashSet<String> = envelopes.await.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
+        for (index, envelope) in envelopes.await.iter().enumerate() {
             assert_eq!(envelope.mutation_id.0, format!("op-{index}"));
             for dependency in &envelope.dependencies {
                 assert!(known.contains(&dependency.0), "every dependency must reference a node within the generated set");
@@ -963,7 +963,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn history_encode_decode_identity_across_profiles() {
         for (seed, profile) in [(1u64, tiny_profile()), (2, typical_profile()), (3, adversarial_profile())] {
-            let log = HistoryLogGen::new(seed).generate(&profile);
+            let log = HistoryLogGen::new(seed).await.generate(&profile);
             assert_history_encode_decode_identity(&log);
         }
     }
@@ -971,7 +971,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn history_canonical_stable_across_profiles() {
         for (seed, profile) in [(4u64, tiny_profile()), (5, typical_profile()), (6, adversarial_profile())] {
-            let log = HistoryLogGen::new(seed).generate(&profile);
+            let log = HistoryLogGen::new(seed).await.generate(&profile);
             assert_history_canonical_stable(&log);
         }
     }
@@ -979,17 +979,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn history_streamed_equals_buffered_across_profiles() {
         for (seed, profile) in [(7u64, tiny_profile()), (8, typical_profile()), (9, adversarial_profile())] {
-            let log = HistoryLogGen::new(seed).generate(&profile);
+            let log = HistoryLogGen::new(seed).await.generate(&profile);
             assert_streamed_equals_buffered(&log);
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_encode_decode_identity_handles_empty_edits_and_history() {
-        assert_history_encode_decode_identity(&HistoryLogGen::new(10).generate(&GenProfile { edit_count: 0, max_ops_per_edit: 0, checkpoint_every: 0, adversarial: false }));
+        assert_history_encode_decode_identity(&HistoryLogGen::new(10).await.generate(&GenProfile { edit_count: 0, max_ops_per_edit: 0, checkpoint_every: 0, adversarial: false }));
         let mut zero_op_profile = tiny_profile();
-        zero_op_profile.max_ops_per_edit = 0;
-        assert_history_encode_decode_identity(&HistoryLogGen::new(11).generate(&zero_op_profile));
+        zero_op_profile.await.max_ops_per_edit = 0;
+        assert_history_encode_decode_identity(&HistoryLogGen::new(11).await.generate(&zero_op_profile));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1012,35 +1012,35 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn ops_protocol_bidirectional_on_generated_logs() {
         for (seed, profile) in [(12u64, tiny_profile()), (13, typical_profile())] {
-            let log = HistoryLogGen::new(seed).generate(&profile);
+            let log = HistoryLogGen::new(seed).await.generate(&profile);
             let bytes = write_history_log(&log, false).await;
-            let ops_text = crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).expect("decompile_ops");
+            let ops_text = crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).await.expect("decompile_ops");
             assert_ops_protocol_bidirectional(&ops_text);
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn zero_copy_holds_across_a_generated_history() {
-        let log = HistoryLogGen::new(14).generate(&typical_profile());
+        let log = HistoryLogGen::new(14).await.generate(&typical_profile());
         assert_zero_copy(&write_history_log(&log, false).await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn chain_detects_tamper_on_a_generated_history() {
-        let log = HistoryLogGen::new(15).generate(&typical_profile());
+        let log = HistoryLogGen::new(15).await.generate(&typical_profile());
         assert_chain_detects_tamper(&write_history_log(&log, false).await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn recovery_truncates_to_commit_quick() {
-        let log = HistoryLogGen::new(16).generate(&typical_profile());
+        let log = HistoryLogGen::new(16).await.generate(&typical_profile());
         assert_recovery_truncates_to_commit(&write_history_log(&log, true).await, CorruptionLevel::Quick);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn compaction_identity_on_a_generated_history() {
-        let log = HistoryLogGen::new(17).generate(&typical_profile());
+        let log = HistoryLogGen::new(17).await.generate(&typical_profile());
         assert_compaction_identity(&write_history_log(&log, false).await);
     }
 
@@ -1050,7 +1050,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn op_dag_convergence_holds_on_a_small_generated_dag() {
-            let envelopes = OpDagGen::new(20).generate(6);
+            let envelopes = OpDagGen::new(20).await.generate(6);
             assert_op_dag_convergence(&envelopes, 100, 8);
         }
     }
@@ -1062,13 +1062,13 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn op_dag_convergence_holds_on_a_larger_generated_dag() {
-            let envelopes = OpDagGen::new(21).generate(60);
+            let envelopes = OpDagGen::new(21).await.generate(60);
             assert_op_dag_convergence(&envelopes, 200, 40);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn recovery_truncates_to_commit_exhaustive_on_a_small_fixture() {
-            let log = HistoryLogGen::new(22).generate(&tiny_profile());
+            let log = HistoryLogGen::new(22).await.generate(&tiny_profile());
             assert_recovery_truncates_to_commit(&write_history_log(&log, true).await, CorruptionLevel::Exhaustive);
         }
     }
@@ -1097,7 +1097,7 @@ mod tests {
     impl crate::os_spr::Mutation<i64> for AddOp {
         type Diff = AddDiff;
         async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta })
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta }).await
         }
         async fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
@@ -1134,7 +1134,7 @@ mod tests {
     impl crate::os_spr::Mutation<i64> for MissingTargetOp {
         type Diff = AddDiff;
         async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
+            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"]).await
         }
         async fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
@@ -1146,7 +1146,7 @@ mod tests {
     impl crate::os_spr::Mutation<i64> for BuggyMissingTargetOp {
         type Diff = AddDiff;
         async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 })
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 }).await
         }
         async fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![BuggyMissingTargetOp]
@@ -1163,7 +1163,7 @@ mod tests {
         async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
             let count = self.calls.get();
             self.calls.set(count + 1);
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: count })
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: count }).await
         }
         async fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
@@ -1175,7 +1175,7 @@ mod tests {
     impl crate::os_spr::Mutation<i64> for RejectedForwardOp {
         type Diff = AddDiff;
         async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
+            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]).await
         }
         async fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
@@ -1183,7 +1183,7 @@ mod tests {
     }
 
     async fn sample_conflict(id: &str, kind: crate::os_spr::ConflictKind) -> crate::os_spr::Conflict {
-        crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100) }
+        crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100).await }
     }
     //#endregion 🧸️Fixtures
 
@@ -1199,10 +1199,10 @@ mod tests {
         use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
+        let forward = op.diff(&base).await.diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
+        assert_eq!(undo.diff(&forward).await.diff().apply(&forward), Ok(base));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1280,14 +1280,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fatal_never_applies_holds_for_a_correct_outcome() {
-        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
+        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]).await;
         assert_fatal_never_applies(&outcome);
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "Fatal outcome must carry diff == D::default()")]
     async fn fatal_never_applies_panics_on_a_non_empty_diff() {
-        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
+        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).await.absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
         assert_fatal_never_applies(&outcome);
     }
 
@@ -1306,10 +1306,10 @@ mod tests {
     //#region 🔖️Policy
     async fn message_at_level(level: crate::os_dsl::Severity) -> crate::os_spr::MutationMessage {
         match level {
-            crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
-            crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe"),
-            crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
-            crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
+            crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe").await,
+            crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe").await,
+            crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe").await,
+            crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe").await,
         }
     }
 
@@ -1317,9 +1317,9 @@ mod tests {
     async fn policy_matrix_holds_for_the_real_apis() {
         assert_policy_matrix(
             |policy, level| policy.rejects(level),
-            |policy, level| {
-                let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).absorb_messages([message_at_level(level)]);
-                outcome.is_applicable(policy)
+            async |policy, level| {
+                let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).await.absorb_messages([message_at_level(level).await]).await;
+                outcome.is_applicable(policy).await
             },
         );
     }
@@ -1327,14 +1327,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "diverged from the frozen 3x4 policy matrix")]
     async fn policy_matrix_panics_on_a_wrong_impl() {
-        assert_policy_matrix(|_, _| false, |_, _| true);
+        assert_policy_matrix(|_, _| false, async |_, _| true);
     }
     //#endregion 🔖️Policy
 
     //#region 🔖️Merge
     #[semio_framework_async_macros::async_test]
     async fn merge_convergence_holds_for_a_commutative_fold() {
-        let envelopes = OpDagGen::new(30).generate(10);
+        let envelopes = OpDagGen::new(30).await.generate(10);
         assert_merge_convergence(300, 5, &envelopes, |batch| {
             let mut batch = batch.to_vec();
             batch.sort_by_key(|envelope| envelope.timestamp);
@@ -1349,7 +1349,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must converge on the same state")]
     async fn merge_convergence_panics_for_an_order_dependent_fold() {
-        let envelopes = OpDagGen::new(31).generate(10);
+        let envelopes = OpDagGen::new(31).await.generate(10);
         assert_merge_convergence(301, 6, &envelopes, |batch| batch.iter().map(|envelope| envelope.mutation_id.0.clone()).collect::<Vec<_>>().join(","));
     }
 
@@ -1358,7 +1358,7 @@ mod tests {
         let pre = Some("part".to_string());
         let post = pre.clone();
         let conflict = sample_conflict("c1", crate::os_spr::ConflictKind::Quarantined { envelopes: Vec::new() });
-        let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(crate::os_dsl::Severity::Error), conflict: Some(conflict.id.clone()) };
+        let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(crate::os_dsl::Severity::Error), conflict: Some(conflict.await.id.clone()) };
         assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
     }
 
@@ -1380,9 +1380,9 @@ mod tests {
             policy: crate::os_spr::MergePolicy::LaissezFaire,
             accepted: true,
             insertion_index: 0,
-            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone").await] }],
             worst: Some(crate::os_dsl::Severity::Error),
-            conflict: Some(conflict.id.clone()),
+            conflict: Some(conflict.await.id.clone()),
         };
         assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
     }
@@ -1397,16 +1397,16 @@ mod tests {
             policy: crate::os_spr::MergePolicy::LaissezFaire,
             accepted: true,
             insertion_index: 0,
-            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone").await] }],
             worst: Some(crate::os_dsl::Severity::Error),
-            conflict: Some(conflict.id.clone()),
+            conflict: Some(conflict.await.id.clone()),
         };
         assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn chronological_determinism_holds_for_an_order_independent_run() {
-        assert_chronological_determinism(5, 400, 6, |order| {
+        assert_chronological_determinism(5, 400, 6, async |order| {
             let mut sorted = order.to_vec();
             sorted.sort_unstable();
             (sorted.clone(), sorted.iter().map(|i| format!("edit-{i}")).collect(), Vec::new())
@@ -1416,7 +1416,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must not change the final state")]
     async fn chronological_determinism_panics_for_an_order_dependent_run() {
-        assert_chronological_determinism(5, 401, 6, |order| (order.to_vec(), order.iter().map(|i| format!("edit-{i}")).collect(), Vec::new()));
+        assert_chronological_determinism(5, 401, 6, async |order| (order.to_vec(), order.iter().map(|i| format!("edit-{i}")).collect(), Vec::new()));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1471,14 +1471,14 @@ mod tests {
     async fn conflict_spr_round_trip_holds_for_an_identity_codec() {
         let conflict = sample_conflict("c4", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
         let for_decode = conflict.clone();
-        assert_conflict_spr_round_trip(&conflict, |_c| Vec::new(), move |_bytes| for_decode.clone());
+        assert_conflict_spr_round_trip(&conflict, async |_c| Vec::new(), async move |_bytes| for_decode.clone());
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must equal conflict")]
     async fn conflict_spr_round_trip_panics_for_a_lossy_codec() {
         let conflict = sample_conflict("c5", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
-        assert_conflict_spr_round_trip(&conflict, |_c| Vec::new(), |_bytes| sample_conflict("different", crate::os_spr::ConflictKind::Degraded { edit_ids: Vec::new() }));
+        assert_conflict_spr_round_trip(&conflict, async |_c| Vec::new(), async |_bytes| sample_conflict("different", crate::os_spr::ConflictKind::Degraded { edit_ids: Vec::new() }));
     }
     //#endregion 🔖️Conflict
 
@@ -1486,21 +1486,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
         let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }, crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }];
-        assert_channel_frame_corpus(&corpus, |command| crate::os_spr::encode_app_command(command), |bytes| crate::os_spr::decode_app_command(bytes).unwrap());
+        assert_channel_frame_corpus(&corpus, async |command| crate::os_spr::encode_app_command(command), async |bytes| crate::os_spr::decode_app_command(bytes).await.unwrap());
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must equal sample")]
     async fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
         let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }];
-        assert_channel_frame_corpus(&corpus, |_command| Vec::new(), |_bytes| crate::os_spr::AppCommand::ReadConflicts { seq: 0 });
+        assert_channel_frame_corpus(&corpus, async |_command| Vec::new(), async |_bytes| crate::os_spr::AppCommand::ReadConflicts { seq: 0 });
     }
     //#endregion 🔖️Channel
 
     //#region 🔖️Corrupt
     #[semio_framework_async_macros::async_test]
     async fn fuzz_truncation_never_panics_history_reader_open() {
-        let log = HistoryLogGen::new(23).generate(&typical_profile());
+        let log = HistoryLogGen::new(23).await.generate(&typical_profile());
         let bytes = write_history_log(&log, true).await;
         let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a truncated buffer: {:?}", report.cases_panicked);
@@ -1508,7 +1508,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fuzz_bit_flips_never_panics_history_reader_open() {
-        let log = HistoryLogGen::new(24).generate(&typical_profile());
+        let log = HistoryLogGen::new(24).await.generate(&typical_profile());
         let bytes = write_history_log(&log, true).await;
         let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a bit-flipped buffer: {:?}", report.cases_panicked);
@@ -1516,10 +1516,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fuzz_truncation_never_panics_recover() {
-        let log = HistoryLogGen::new(25).generate(&typical_profile());
+        let log = HistoryLogGen::new(25).await.generate(&typical_profile());
         let bytes = write_history_log(&log, true).await;
         let limits = crate::os_spr::ProtocolLimits::default();
-        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit).map(|_| ()).map_err(|error| error.to_string()));
+        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "crate::os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
     }
     //#endregion 🔖️Corrupt
@@ -1530,8 +1530,8 @@ mod tests {
         let a = golden_hash_hex(b"protocol_testkit golden fixture");
         let b = golden_hash_hex(b"protocol_testkit golden fixture");
         assert_eq!(a, b);
-        assert_eq!(a.len(), 64);
-        assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(a.await.len(), 64);
+        assert!(a.await.chars().all(|c| c.is_ascii_hexdigit()));
     }
     //#endregion 🔖️Golden
 }

@@ -277,24 +277,24 @@ mod tests {
     }
 
     //#region 🔖️DependencyAndContributionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case() {
-        assert!(sample_manifest().extends_matches_primary_dependency());
+        assert!(sample_manifest().await.extends_matches_primary_dependency());
 
-        let vacuous = ExtensionPackageManifest { extends: String::new(), dependencies: Vec::new(), ..sample_manifest() };
+        let vacuous = ExtensionPackageManifest { extends: String::new(), dependencies: Vec::new(), ..sample_manifest().await };
         assert!(vacuous.extends_matches_primary_dependency());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency() {
-        let mismatched = ExtensionPackageManifest { extends: "cad".into(), ..sample_manifest() };
+        let mismatched = ExtensionPackageManifest { extends: "cad".into(), ..sample_manifest().await };
         assert!(!mismatched.extends_matches_primary_dependency());
 
-        let no_dependencies = ExtensionPackageManifest { dependencies: Vec::new(), ..sample_manifest() };
+        let no_dependencies = ExtensionPackageManifest { dependencies: Vec::new(), ..sample_manifest().await };
         assert!(!no_dependencies.extends_matches_primary_dependency(), "non-empty extends with no dependencies is inconsistent");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dependencies_default_absent_on_the_wire() {
         let bare = serde_json::json!({
             "extensionId": "flow.math",
@@ -310,7 +310,7 @@ mod tests {
         assert_eq!(parsed.contributions, serde_json::Value::Null);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
         let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
         let json = serde_json::to_value(&dependency).unwrap();
@@ -320,7 +320,7 @@ mod tests {
     }
     //#endregion 🔖️DependencyAndContributionTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_unpack_verify_round_trip() {
         let manifest = sample_manifest();
         let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
@@ -329,31 +329,31 @@ mod tests {
             ("nested/icon.svg".into(), b"<svg/>".to_vec()),
         ];
 
-        let packed = pack(&manifest, &component, &assets).expect("pack");
+        let packed = pack(&manifest, &component, &assets).await.expect("pack");
         assert!(packed.starts_with(&crate::os_semio::BINARY_MAGIC));
 
-        let verified = verify(&packed).expect("verify");
-        assert_eq!(verified, manifest);
+        let verified = verify(&packed).await.expect("verify");
+        assert_eq!(verified, manifest.await);
 
-        let unpacked = unpack(&packed).expect("unpack");
-        assert_eq!(unpacked.manifest, manifest);
+        let unpacked = unpack(&packed).await.expect("unpack");
+        assert_eq!(unpacked.manifest, manifest.await);
         assert_eq!(unpacked.component_wasm, component);
         assert_eq!(unpacked.assets.get("readme.txt").map(Vec::as_slice), Some(b"hello".as_slice()));
         assert_eq!(unpacked.assets.get("nested/icon.svg").map(Vec::as_slice), Some(b"<svg/>".as_slice()));
 
-        let again = pack(&unpacked.manifest, &unpacked.component_wasm, &unpacked.assets.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()).expect("repack");
+        let again = pack(&unpacked.manifest, &unpacked.component_wasm, &unpacked.assets.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()).await.expect("repack");
         assert_eq!(packed, again);
         assert_eq!(content_hash(&packed), content_hash(&again));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_hash_is_stable_blake3() {
-        let packed = pack(&sample_manifest(), b"component-bytes", &[]).expect("pack");
+        let packed = pack(&sample_manifest(), b"component-bytes", &[]).await.expect("pack");
         assert_eq!(content_hash(&packed), semio_framework_hash::hash_bytes(&packed));
         assert_ne!(content_hash(&packed), content_hash(b"other"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_rejects_wrong_envelope() {
         let foreign = wrap_binary(
             &SemioEnvelope {
@@ -364,13 +364,13 @@ mod tests {
             },
             b"not-an-sxt",
         );
-        assert!(matches!(verify(&foreign), Err(ExtensionPackageError::UnexpectedEnvelope(_))));
+        assert!(matches!(verify(&foreign).await, Err(ExtensionPackageError::UnexpectedEnvelope(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_rejects_empty_component() {
         assert!(matches!(
-            pack(&sample_manifest(), b"", &[]),
+            pack(&sample_manifest(), b"", &[]).await,
             Err(ExtensionPackageError::EmptyComponent)
         ));
     }

@@ -1,0 +1,35 @@
+[DEBUG] pre-flight smoke test — bench-web-harness against a SMALL synthetic fixture (6 plugins x 6
+extensions, shardCount=2), run BEFORE the real 50x50 CLI run, purpose: prove budget 3's
+`activeActors===100` check is a real assertion and not a tautology that always reports "pass".
+
+command (bun -e, inline, not via the CLI script — direct harness invocation):
+  process.env.PLAYWRIGHT_BROWSERS_PATH = "./node_modules/.cache/ms-playwright";
+  bundle 🧪️bench-web-harness.ts for browser via Bun.build({target:"browser", format:"esm"})
+  pluginIds = plugin-0000..plugin-0005 (6)
+  firstPluginExtensionIds = plugin-0000-ext-0000..0005 (6)
+  shardCount = 2
+  launch playwright chromium headless, page.setContent(html wrapping the bundle),
+  await runBenchWebBudgets({pluginIds, firstPluginExtensionIds, shardCount})
+
+result (window.__BENCH_WEB__, exit 0):
+{
+  "done": true,
+  "rows": [
+    { "id": 2, "ok": true,  "measured": { "coldBootMs": 13.5, "shardCount": 2 } },
+    { "id": 3, "ok": false, "measured": { "activeActors": 12, "distinctShards": 2, "expectedShards": 2, "maxPerShard": 6, "ceilBound": 7 } },
+    { "id": 4, "ok": true,  "measured": { "workerCount": 2, "expectedShardCount": 2 } },
+    { "id": 5, "ok": true,  "measured": { "p95Ms": 0.3, "samples": 50, "minMs": 0, "maxMs": 0.4 } },
+    { "id": 6, "ok": true,  "measured": { "trapped": true, "totalPauseMs": 36.4, "siblingsRestored": true } },
+    { "id": 7, "ok": true,  "measured": { "hashBefore": "9bc23426", "hashAfter": "9bc23426", "stateByteLength": 4 } },
+    { "id": 8, "ok": true,  "measured": { "denied": true, "actorAlive": true } }
+  ],
+  "error": null
+}
+
+Interpretation: id 3 correctly reports ok:false with activeActors:12 (6 plugins + 6 extensions = 12
+actors, not 100) — the same code path that later reports ok:true with activeActors:100 at the real
+50x50 scale. This is the evidence the check is real and scale-sensitive, not hardcoded true.
+
+Everything else (2,4,5,6,7,8) already exercises real ShardClient/Worker/postMessage mechanics at this
+small scale identically to the full run — only budget 3's pass/fail threshold differs by construction
+(it is defined relative to a fixed literal 100, not to whatever fixture size was passed in).

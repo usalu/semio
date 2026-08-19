@@ -653,10 +653,15 @@ pub trait Actor: Send + 'static {
 
 /// @emoji 🧭️ What an `Actor` sees while handling a message: its own address (for self-sends),
 /// which generation it is, and the observability seam.
+// 🔀️ dedyn-emit-runtime, O1/R11(c): `emit: Arc<NullEmit>`, not `Arc<dyn Emit>` or a generic `E:
+// Emit` param — this whole `Actor`/`Supervisor` mechanism has no production caller (`db_artifact`'s
+// `ArtifactAuthority` explicitly does NOT implement `db_actor::Actor`, see its own doc), only this
+// crate's self-tests, and every one of them constructs `Supervisor::new(.., Arc::new(NullEmit), ..)`
+// — "exactly one impl" throughout the real call graph, so O1 takes the delete-the-erasure branch.
 pub struct ActorContext<M: Send + 'static> {
     pub address: Address<M>,
     pub generation: GenerationId,
-    pub emit: Arc<dyn Emit>,
+    pub emit: Arc<NullEmit>,
 }
 //#endregion 🔖️Actor
 
@@ -699,7 +704,12 @@ impl RestartStrategy {
 /// crate depending on any runtime crate.
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
 pub trait ThreadSpawner: Send + Sync {
-    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<dyn JoinHandleLike>;
+    // 🔀️ dedyn-fw-os-misc, O1/R11 case 3: `JoinHandleLike` has exactly one impl (`StdJoinHandle`,
+    // right below) — `Box<StdJoinHandle>` replaces `Box<dyn JoinHandleLike>`. `#[dyn_enum]` doesn't
+    // apply here even with a second implementor someday: its receiver classifier hard-rejects an
+    // explicit `self: Box<Self>` (`join`'s own receiver), which is exactly this trait's one method.
+    // `ThreadSpawner` itself (this trait) stays `dyn`-dispatched — out of this packet's family list.
+    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<StdJoinHandle>;
 }
 
 /// @emoji 🤝️ A join handle abstracted away from `std::thread::JoinHandle` specifically, so a
@@ -716,14 +726,15 @@ pub struct StdThreadSpawner;
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
 impl ThreadSpawner for StdThreadSpawner {
-    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<dyn JoinHandleLike> {
+    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<StdJoinHandle> {
         let handle = std::thread::Builder::new().name(name).spawn(task).expect("db_actor: failed to spawn OS thread");
         Box::new(StdJoinHandle(Some(handle)))
     }
 }
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-struct StdJoinHandle(Option<std::thread::JoinHandle<()>>);
+// 🔀️ `pub` (was private): now named in `ThreadSpawner::spawn`'s public return type.
+pub struct StdJoinHandle(Option<std::thread::JoinHandle<()>>);
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
 impl JoinHandleLike for StdJoinHandle {
@@ -750,7 +761,7 @@ enum ActorOutcome {
 /// poisoned incarnation can never take down the OS thread pool or a sibling actor, then reports
 /// its terminal `ActorOutcome` back to the owning `Supervisor` through a `Reply` oneshot.
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<dyn Emit>, outcome_tx: ReplySender<ActorOutcome>) {
+fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<NullEmit>, outcome_tx: ReplySender<ActorOutcome>) {
     use std::panic::AssertUnwindSafe;
 
     let mut ctx = ActorContext { address, generation, emit: emit.clone() };
@@ -788,7 +799,7 @@ struct SupervisorSlot<M: Send + 'static> {
     address: Address<M>,
     generation: GenerationId,
     outcome_rx: ReplyReceiver<ActorOutcome>,
-    handle: Option<Box<dyn JoinHandleLike>>,
+    handle: Option<Box<StdJoinHandle>>,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
@@ -796,7 +807,7 @@ pub struct Supervisor<A: Actor> {
     strategy: RestartStrategy,
     capacities: MailboxCapacities,
     spawner: Arc<dyn ThreadSpawner>,
-    emit: Arc<dyn Emit>,
+    emit: Arc<NullEmit>,
     factory: Box<dyn Fn() -> A + Send + Sync>,
     slots: Mutex<Vec<SupervisorSlot<A::Message>>>,
 }
@@ -805,7 +816,7 @@ pub struct Supervisor<A: Actor> {
 impl<A: Actor> Supervisor<A> {
     /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
-    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<dyn Emit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
+    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
         let supervisor = Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
         let mut slots = Vec::with_capacity(children);
         for _ in 0..children {

@@ -5,7 +5,7 @@
 
 use crate::fem3d_engine::Fem3dError;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
-use crate::model::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
+use crate::model::{Bar3, Dof, Element, Elements, Frame3, MemberUdl, NodalLoad, Node, Support};
 use std::collections::HashMap;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
@@ -31,7 +31,7 @@ pub struct MeshedSolid {
 }
 
 /// 🧩️ `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.
-pub type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedSolid>, Vec<Support>);
+pub type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<MeshedSolid>, Vec<Support>);
 
 /// 🌉️ Resolves a `Fem3dSnapshot`'s nodes/elements/supports (materials/sections looked up by id) plus
 /// every `FemSolid` meshed into `Tet4` elements (footprint triangulated via `crate::mesh::triangulate`,
@@ -43,7 +43,7 @@ pub type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedSolid>,
 pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dError> {
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
-    let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());
+    let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
         match element {
             FemElement::Bar { id, start, end, material_id, section_id } => {
@@ -55,7 +55,7 @@ pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, F
                 if !node_exists(end) {
                     return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
-                elements.push(Box::new(Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }));
+                elements.push(Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into());
             }
             FemElement::Frame { id, start, end, material_id, section_id, roll } => {
                 let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
@@ -66,7 +66,7 @@ pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, F
                 if !node_exists(end) {
                     return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
-                elements.push(Box::new(Frame3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, g: material.g, a: section.area, iy: section.iy, iz: section.iz, j: section.j, roll: *roll, density: material.rho }));
+                elements.push(Frame3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, g: material.g, a: section.area, iy: section.iy, iz: section.iz, j: section.j, roll: *roll, density: material.rho }.into());
             }
         }
     }
@@ -98,7 +98,7 @@ pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, F
         for (cell_index, cell) in tet_mesh.cells.iter().enumerate() {
             let crate::mesh::Cell::Tet4(t) = cell else { continue };
             let tet_nodes = [node_ids[t[0] as usize].clone(), node_ids[t[1] as usize].clone(), node_ids[t[2] as usize].clone(), node_ids[t[3] as usize].clone()];
-            elements.push(Box::new(crate::elements3d::Tet4 { id: format!("{}_c{}", solid.id, cell_index), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }));
+            elements.push(crate::elements3d::Tet4 { id: format!("{}_c{}", solid.id, cell_index), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }.into());
         }
 
         // The LAST extrusion layer's points are the top surface — `extrude_tri_mesh` numbers points

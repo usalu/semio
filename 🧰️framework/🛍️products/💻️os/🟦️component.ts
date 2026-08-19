@@ -12,8 +12,8 @@
  */
 // #endregion Header
 
-import type { Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
-import { conflictResolutionAsU8, fetchWithTimeout, mergePolicyAsU8, retryWithJitteredBackoff } from "@semio-tech/framework";
+import type { Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, TurnOutcome, UtilityLeaf } from "@semio-tech/framework";
+import { conflictResolutionAsU8, createTurnOutcomeBroadcast, fetchWithTimeout, mergePolicyAsU8, retryWithJitteredBackoff } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
@@ -1077,7 +1077,7 @@ export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
  * 📡️ TS mirror of the `protocol_channel` crate's `AppCommand`/`AppFrame` binary frame protocol
  * (`tag u8 | fields`, built on `protocol_core`'s varint/string/bytes primitives — the same ones
  * {@link encodeClientFrame}/{@link decodeClientFrame} above use). Channel v12
- * (`📓️design-abi.md` §2 "`exchange` collapse") retired the `Hello`/`Bye`/`AttachBackbone`/
+ * (`📓️design-abi.md` §2's handshake-collapse section) retired the `Hello`/`Bye`/`AttachBackbone`/
  * `DetachBackbone`/`RefreshUi` commands and the `Welcome`/`UiSection`/`Effects`/`Events` frames —
  * the reactor ABI wakes guests on events/timers/`next-wake` and carries lifecycle through
  * `Event::InstanceOpen`/`InstanceClose` instead of a wire handshake, and UI updates are now a
@@ -1858,23 +1858,34 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
 const APP_CHANNEL_VERSION = 12;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
- * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
+ * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
  * double, ...) without importing the rest of `@semio-tech/framework`'s plugin-loading surface. */
-export type AppChannelHandle = Pick<PluginWasmHandle, "exchange">;
+export type AppChannelHandle = Pick<PluginWasmHandle, "enqueue" | "outcomes">;
 
 /**
- * 📡️ Typed facade over one plugin instance's `exchange` channel — encodes an {@link AppCommandValue},
- * sends it through {@link PluginWasmHandle.exchange} as the sole batched frame, and decodes every
- * {@link AppFrameValue} the call returns. This is the ONLY place `AppCommand`/`AppFrame` framing
- * happens on the host side; callers (a React renderer's dispatch/refresh loop, a headless workflow
- * runner) work with decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a
- * per-client monotonic counter — the host has no other way to correlate a `Command`/
- * `ConfigCommand`/`LoadDocument`/`ReadDocument`/`LoadConfig`/`ReadConfig` with the `Invocation`/
- * `Document` frame(s) it produced (`AppFrame.*.in_reply_to`). Channel v12 retired the
- * `hello()`/`refreshUi()`/`attachBackbone()`/`detachBackbone()`/`drain()` surface this class used
- * to expose — the handshake, cache-probed UI refresh, and empty-batch drain all disappeared with
- * the reactor ABI (lifecycle now arrives via `Event::InstanceOpen`/`InstanceClose`, UI updates are
- * a `UiPatch` push, and guests wake on events/timers/`next-wake` rather than a poll).
+ * 📡️ Typed facade over one plugin instance's app channel — encodes an {@link AppCommandValue}, queues
+ * it via {@link PluginWasmHandle.enqueue}, and decodes every {@link AppFrameValue} the matching
+ * {@link TurnOutcome} carries. This is the ONLY place `AppCommand`/`AppFrame` framing happens on the
+ * host side; callers (a React renderer's dispatch/refresh loop, a headless workflow runner) work with
+ * decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a per-client monotonic
+ * counter — the host has no other way to correlate a `Command`/`ConfigCommand`/`LoadDocument`/
+ * `ReadDocument`/`LoadConfig`/`ReadConfig` with the `Invocation`/`Document` frame(s) it produced
+ * (`AppFrame.*.in_reply_to`). Channel v12 retired the `hello()`/`refreshUi()`/`attachBackbone()`/
+ * `detachBackbone()`/`drain()` surface this class used to expose — the handshake, cache-probed UI
+ * refresh, and empty-batch drain all disappeared with the reactor ABI (lifecycle now arrives via
+ * `Event::InstanceOpen`/`InstanceClose`, UI updates are a `UiPatch` push, and guests wake on
+ * events/timers/`next-wake` rather than a poll).
+ *
+ * `📌️important.md`'s "Replace, never wrap" list: the old handle's synchronous
+ * per-call method used to hand this class its reply directly; the handle is now fire-and-forget
+ * ({@link PluginWasmHandle.enqueue}) and replies arrive on the handle-wide {@link
+ * PluginWasmHandle.outcomes} stream instead, so THIS class is what turns that stream back into the
+ * one-reply-per-call shape every method below still returns. One background loop
+ * ({@link pumpOutcomes}) owns the handle's async iterator for this instance's whole lifetime, matching
+ * each incoming {@link TurnOutcome} to the OLDEST still-unresolved {@link sendCommand} call — sound
+ * because every real call site here still awaits one command before sending the next, and
+ * `PluginRuntime`'s own turn scheduler serializes one actor's turns in submission order (never
+ * reordered within a lane), so outcomes for this instance can never arrive out of send order.
  */
 export class AppChannelClient {
   private seq = 0;
@@ -1882,13 +1893,15 @@ export class AppChannelClient {
   private readonly instanceId: number;
   private readonly appId: string;
   private readonly actor: string;
+  private readonly outcomeIterator: AsyncIterator<TurnOutcome>;
+  private readonly pending: { readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
   /** 📦️ Per-instance document-pack cache (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4: "the
    * browser host keeps NO document pack per instance today"). Populated from BOTH directions —
    * {@link loadDocument}'s own arguments (no round trip needed to know what we just sent) and every
-   * `AppFrame::Document` reply any `exchange` call returns (`ReadDocument`, `LoadDocument`'s own
-   * echo, or any future command that happens to include one) — so a transaction coordinator can ask
-   * "what does this instance's document look like right now" without a dedicated round trip. */
+   * `AppFrame::Document` reply any sent command's outcome carries (`ReadDocument`, `LoadDocument`'s
+   * own echo, or any future command that happens to include one) — so a transaction coordinator can
+   * ask "what does this instance's document look like right now" without a dedicated round trip. */
   private cachedPack: Uint8Array | null = null;
   private cachedSpr: Uint8Array | null = null;
 
@@ -1897,6 +1910,40 @@ export class AppChannelClient {
     this.instanceId = instanceId;
     this.appId = appId;
     this.actor = actor;
+    this.outcomeIterator = handle.outcomes[Symbol.asyncIterator]();
+    void this.pumpOutcomes();
+  }
+
+  /** 🔁️ Owns this client's subscription against the handle-wide {@link PluginWasmHandle.outcomes}
+   * stream for its whole lifetime — runs until {@link dispose} calls the iterator's own `return()`
+   * (what breaks this loop) or the handle itself completes it. Every outcome for a DIFFERENT
+   * `instanceId` is silently skipped (it belongs to a sibling `AppChannelClient` on the same handle);
+   * an outcome with no pending {@link sendCommand} waiter (should not happen given the FIFO guarantee
+   * this class's own header doc argues for, but a defensive drop rather than a throw if it ever does)
+   * is also skipped. */
+  private async pumpOutcomes(): Promise<void> {
+    for (;;) {
+      const step = await this.outcomeIterator.next();
+      if (step.done) return;
+      const outcome = step.value;
+      if (outcome.instanceId !== this.instanceId) continue;
+      const waiter = this.pending.shift();
+      if (!waiter) continue;
+      if ("error" in outcome) {
+        waiter.reject(outcome.error);
+        continue;
+      }
+      const frames = outcome.frames.map(decodeAppFrame);
+      this.captureDocumentFrames(frames);
+      waiter.resolve(frames);
+    }
+  }
+
+  /** 🔌️ Ends this client's background {@link pumpOutcomes} subscription — call once from
+   * `destroyApp` (`PluginRuntime/🟦️component.tsx`) so a torn-down instance doesn't leak a live
+   * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
+  dispose(): void {
+    void this.outcomeIterator.return?.();
   }
 
   private nextSeq(): number {
@@ -1904,8 +1951,8 @@ export class AppChannelClient {
     return this.seq;
   }
 
-  /** 📦️ Scans every frame from one `exchange` call for `AppFrame::Document` and refreshes the pack
-   * cache — the "every `AppFrame::Document` reply" half of the cache-population contract. */
+  /** 📦️ Scans every frame one sent command's outcome carried for `AppFrame::Document` and refreshes
+   * the pack cache — the "every `AppFrame::Document` reply" half of the cache-population contract. */
   private captureDocumentFrames(frames: readonly AppFrameValue[]): void {
     for (const frame of frames) {
       if ("Document" in frame) {
@@ -1924,29 +1971,30 @@ export class AppChannelClient {
     return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack, spr: this.cachedSpr } : null;
   }
 
-  /** 🔀️ Sends one encoded command, decodes every frame the batched `exchange` call returns. */
-  private async exchangeOne(command: AppCommandValue): Promise<AppFrameValue[]> {
-    const replies = await this.handle.exchange(this.instanceId, [encodeAppCommand(command)]);
-    const frames = replies.map(decodeAppFrame);
-    this.captureDocumentFrames(frames);
-    return frames;
+  /** 🔀️ Queues one encoded command and resolves with every frame its matching {@link TurnOutcome}
+   * carries — see this class's own header doc for how the reply gets correlated back to this call. */
+  private sendCommand(command: AppCommandValue): Promise<AppFrameValue[]> {
+    return new Promise<AppFrameValue[]>((resolve, reject) => {
+      this.pending.push({ resolve, reject });
+      this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]);
+    });
   }
 
   /** 🎛️ Forwards one opaque app-specific command (already encoded by the caller's own command
    * grammar) plus the current view state; may return several frames (`Invocation` + any dirtied
    * `UiPatch`es) — routing them is the caller's job. */
   async command(commandBytes: Uint8Array, viewState: unknown): Promise<AppFrameValue[]> {
-    return this.exchangeOne({
+    return this.sendCommand({
       Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewState)) },
     });
   }
 
   async configure(config: unknown): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ ConfigCommand: { seq: this.nextSeq(), command: Array.from(encodePackValue(config)) } });
+    return this.sendCommand({ ConfigCommand: { seq: this.nextSeq(), command: Array.from(encodePackValue(config)) } });
   }
 
   async readDocument(): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ ReadDocument: { seq: this.nextSeq() } });
+    return this.sendCommand({ ReadDocument: { seq: this.nextSeq() } });
   }
 
   async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
@@ -1955,12 +2003,12 @@ export class AppChannelClient {
     // just loaded (and `plugin_exchange`'s `LoadDocument` handling is not guaranteed to echo one).
     this.cachedPack = pack;
     this.cachedSpr = spr;
-    return this.exchangeOne({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+    return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
   }
 
   /** 🧾️ Retrieves the complete history projection for initial load or cursor-gap recovery. */
   async readHistory(): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ ReadHistory: { seq: this.nextSeq() } });
+    return this.sendCommand({ ReadHistory: { seq: this.nextSeq() } });
   }
 
   /** 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface —
@@ -1969,26 +2017,26 @@ export class AppChannelClient {
    * `pluginId`/`appId` means "resolve via the `OpeningResolver`". `role` is `0` Viewer, `1`
    * Editor — declaration order of `AppRole` (kernel `🔖️AppRouter` region). */
   async openArtifact(artifactRef: string, role: number, pluginId = "", appId = ""): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ openArtifact: { seq: this.nextSeq(), artifact_ref: artifactRef, role, plugin_id: pluginId, app_id: appId } });
+    return this.sendCommand({ openArtifact: { seq: this.nextSeq(), artifact_ref: artifactRef, role, plugin_id: pluginId, app_id: appId } });
   }
 
   /** 🎚️ Pins a viewer/editor default for one `(artifactKind, standard, subset, role)` coordinate,
    * persisted event-sourced in the OS `os.config.opening` facet — `os.set-default-viewer`/
    * `os.set-default-editor`. */
   async setDefaultApp(artifactKind: string, standard: string, subset: string, role: number, pluginId: string, appId: string): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ setDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role, plugin_id: pluginId, app_id: appId } });
+    return this.sendCommand({ setDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role, plugin_id: pluginId, app_id: appId } });
   }
 
   /** 🎚️ Clears a previously pinned default, falling back to the `OpeningResolver`'s owner/router
    * order — `os.clear-default-app`. */
   async clearDefaultApp(artifactKind: string, standard: string, subset: string, role: number): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ clearDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role } });
+    return this.sendCommand({ clearDefaultApp: { seq: this.nextSeq(), artifact_kind: artifactKind, standard, subset, role } });
   }
 
   /** 🖱️ On-demand context menu — one `ContextMenu` reply whose `in_reply_to` matches this call's `seq`. */
   async contextMenu(request: unknown): Promise<unknown> {
     const seq = this.nextSeq();
-    const frames = await this.exchangeOne({
+    const frames = await this.sendCommand({
       ContextMenu: { seq, request: Array.from(encodePackValue(request)) },
     });
     const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
@@ -2007,14 +2055,14 @@ export class AppChannelClient {
 
   /** @emoji 📥️ Force-applies remote `MutationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
   async applyEnvelopes(envelopes: readonly MutationEnvelope[]): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ ApplyEnvelopes: { seq: this.nextSeq(), envelopes } });
+    return this.sendCommand({ ApplyEnvelopes: { seq: this.nextSeq(), envelopes } });
   }
 
   //#region 🔖️Merge
   /** ⚖️ Sets this instance's local merge-policy authority (`os.set-merge-policy`, C6/C9) — a `Done`
    * reply, never a `MergeReport`/`Conflicts` (those only follow an ingest). */
   async setMergePolicy(policy: MergePolicy): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ setMergePolicy: { seq: this.nextSeq(), policy: mergePolicyAsU8(policy) } });
+    return this.sendCommand({ setMergePolicy: { seq: this.nextSeq(), policy: mergePolicyAsU8(policy) } });
   }
 
   /** ⚔️ Accepts or discards an `Open` {@link Conflict} (`os.resolve-conflict`) — replays it under
@@ -2023,12 +2071,12 @@ export class AppChannelClient {
    * conflict it is rejected (never rewrites shared history, C6 §`resolve_conflict`). Returns the
    * authoritative `MergeReport` + `Conflicts` frames. */
   async resolveConflict(conflictId: string, resolution: ConflictResolution): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ resolveConflict: { seq: this.nextSeq(), conflict_id: conflictId, resolution: conflictResolutionAsU8(resolution) } });
+    return this.sendCommand({ resolveConflict: { seq: this.nextSeq(), conflict_id: conflictId, resolution: conflictResolutionAsU8(resolution) } });
   }
 
   /** 📖️ Reads the open-conflict projection (`os.read-conflicts`) — one `Conflicts` reply frame. */
   async readConflicts(): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ readConflicts: { seq: this.nextSeq() } });
+    return this.sendCommand({ readConflicts: { seq: this.nextSeq() } });
   }
   //#endregion 🔖️Merge
 
@@ -2039,7 +2087,7 @@ export class AppChannelClient {
    * calling this (`ownColor` carries this actor's own hub-assigned palette index separately, `null`
    * for a folder-only session with no hub). A plain `Done` reply, never decoded further here. */
   async pushPresence(ownColor: number | null, peers: readonly ArtifactPresencePeer[]): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ presence: { seq: this.nextSeq(), own_color: ownColor, peers: peers.map((peer) => encodePresencePeer(peer)) } });
+    return this.sendCommand({ presence: { seq: this.nextSeq(), own_color: ownColor, peers: peers.map((peer) => encodePresencePeer(peer)) } });
   }
   //#endregion 🔖️Presence
 
@@ -2048,7 +2096,7 @@ export class AppChannelClient {
    * `payload` set, `preparedOps` empty. Sent when `ArtifactMutationRouter` resolves the mutation to
    * its OWNING plugin. */
   async transactionPrepareOwner(txnId: string, mutationId: string, payload: Uint8Array): Promise<AppFrameValue[]> {
-    return this.exchangeOne({
+    return this.sendCommand({
       transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], label: "", origin: [] },
     });
   }
@@ -2058,7 +2106,7 @@ export class AppChannelClient {
    * `contributor.artifact-mutation-plan`) or to any member the coordinator is re-batching several
    * already-known ops onto in one call — see `PluginRuntime/🟦️component.tsx`'s `TransactionCoordinator`. */
   async transactionPreparePlanned(txnId: string, preparedOps: readonly Uint8Array[], label: string, origin: Uint8Array): Promise<AppFrameValue[]> {
-    return this.exchangeOne({
+    return this.sendCommand({
       transactionPrepare: {
         seq: this.nextSeq(),
         txn_id: txnId,
@@ -2072,21 +2120,21 @@ export class AppChannelClient {
   }
 
   async transactionCommit(txnId: string): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ transactionCommit: { seq: this.nextSeq(), txn_id: txnId } });
+    return this.sendCommand({ transactionCommit: { seq: this.nextSeq(), txn_id: txnId } });
   }
 
   async transactionRollback(txnId: string): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ transactionRollback: { seq: this.nextSeq(), txn_id: txnId } });
+    return this.sendCommand({ transactionRollback: { seq: this.nextSeq(), txn_id: txnId } });
   }
 
   /** 🎁️ Group undo — fans out to every member of `groupId` (contract freeze §5.7); this call is one
    * member's half, the coordinator drives the fan-out. */
   async transactionUndo(groupId: string): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ transactionUndo: { seq: this.nextSeq(), group_id: groupId } });
+    return this.sendCommand({ transactionUndo: { seq: this.nextSeq(), group_id: groupId } });
   }
 
   async transactionRedo(groupId: string): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ transactionRedo: { seq: this.nextSeq(), group_id: groupId } });
+    return this.sendCommand({ transactionRedo: { seq: this.nextSeq(), group_id: groupId } });
   }
   //#endregion 🔖️Transaction
 }
@@ -2661,15 +2709,19 @@ if (import.meta.vitest) {
   });
 
   describe("@semio-tech/framework-os AppChannelClient", () => {
-    /** 🧪️ A fake `exchange` that decodes whatever {@link AppChannelClient} encoded and replies with
-     * caller-supplied frames — enough to assert the client frames/unframes correctly without a real
-     * plugin instance. */
+    /** 🧪️ A fake handle that decodes whatever {@link AppChannelClient} `enqueue`d and pushes
+     * caller-supplied frames back as this SAME instance's next outcome — enough to assert the client
+     * frames/unframes correctly (and correlates replies through the real `outcomes` broadcast) without
+     * a real plugin instance. */
     function fakeHandle(reply: (instanceId: number, commands: AppCommandValue[]) => AppFrameValue[]): AppChannelHandle {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       return {
-        exchange: async (instanceId, frames) => {
-          const commands = frames.map(decodeAppCommand);
-          return reply(instanceId, commands).map(encodeAppFrame);
+        enqueue: (instanceId, events) => {
+          const commands = events.map(decodeAppCommand);
+          const frames = reply(instanceId, commands).map(encodeAppFrame);
+          broadcast.push({ instanceId, frames });
         },
+        outcomes: broadcast.stream,
       };
     }
 

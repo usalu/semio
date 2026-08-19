@@ -1,0 +1,68 @@
+{
+  "crate": "semio-framework",
+  "history": [],
+  "residual_errors": 205,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1336",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1340",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1397",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1408",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1868",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1013",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:398",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1822",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:253",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1956",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:791",
+      "code": "E0271",
+      "msg": "expected `create_workflow_parameter_id` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:955",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

@@ -1,0 +1,601 @@
+{
+  "crate": "semio-framework",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 179,
+      "edits": 24,
+      "ambiguous": 0,
+      "other": 85
+    },
+    {
+      "pass": 2,
+      "errors": 172,
+      "edits": 5,
+      "ambiguous": 0,
+      "other": 94
+    },
+    {
+      "pass": 3,
+      "errors": 178,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 104
+    },
+    {
+      "pass": 4,
+      "errors": 180,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 106
+    },
+    {
+      "pass": 5,
+      "errors": 182,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 108
+    },
+    {
+      "pass": 6,
+      "errors": 183,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 110
+    }
+  ],
+  "residual_errors": 183,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1455",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1479",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1685",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1696",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1706",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1709",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1715",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1719",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1725",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1729",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1825",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1871",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1874",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2094",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2218",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1828",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2097",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2244",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2256",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2105",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2275",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2114",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2119",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2127",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2379",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2390",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1959",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2400",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2403",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2409",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2413",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2419",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2423",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1962",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1319",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1443",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1016",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1025",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1102",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1105",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1113",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1122",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1127",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:401",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1135",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:404",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:256",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:259",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:642",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:646",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:655",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:663",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:669",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:678",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:415",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:985",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:977",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:985",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1012",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1004",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1012",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1131",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 4] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1127",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 4] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1136",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 4] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1141",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 3] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1137",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 3] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1145",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 3] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1159",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1154",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1162",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1168",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1163",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1171",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 2] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1214",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1206",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1214",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2602",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2598",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2602",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = ActionArgDef>; 1] as IntoIterator>::Item == ActionArgDef`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2125",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2220",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2223",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1324",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1329",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1133",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1334",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:480",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:481",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1336",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:675",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1338",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1340",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1342",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1347",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1353",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1358",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1363",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1367",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1372",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1375",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1380",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1385",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1390",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1395",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1397",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1399",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1404",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1408",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1410",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1415",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    }
+  ]
+}

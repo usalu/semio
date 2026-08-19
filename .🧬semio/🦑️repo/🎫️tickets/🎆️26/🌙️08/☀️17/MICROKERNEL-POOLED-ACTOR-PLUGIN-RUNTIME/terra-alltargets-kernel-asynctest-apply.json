@@ -1,0 +1,15 @@
+{
+  "mode": "apply",
+  "roots": {
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules": {
+      "files_with_sites": 13,
+      "sites": 271
+    }
+  },
+  "total_files_with_sites": 13,
+  "total_sites": 271,
+  "manifests_needing_dev_dependency": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "manifests_touched": []
+}

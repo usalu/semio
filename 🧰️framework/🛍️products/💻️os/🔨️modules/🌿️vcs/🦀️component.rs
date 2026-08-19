@@ -509,27 +509,27 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_diff_from_op_projects_each_variant() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } });
-        assert_eq!(added.added.len(), 1);
-        assert!(added.removed.is_empty() && added.modified.is_empty());
+        assert_eq!(added.await.added.len(), 1);
+        assert!(added.await.removed.is_empty() && added.await.modified.is_empty());
 
         let removed = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Remove { id: "a".into() });
-        assert_eq!(removed.removed, vec!["a".to_string()]);
+        assert_eq!(removed.await.removed, vec!["a".to_string()]);
 
         let patched = collection_diff_from_mutation(&items, &CollectionMutation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } });
-        assert_eq!(patched.modified.len(), 1);
-        assert_eq!(patched.modified[0].id, "b");
+        assert_eq!(patched.await.modified.len(), 1);
+        assert_eq!(patched.await.modified[0].id, "b");
 
         let moved = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Move { id: "a".into(), to_index: 1 });
-        assert_eq!(moved.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
-        assert_eq!(moved.added.len(), 1);
-        assert_eq!(moved.added[0].id, "a");
+        assert_eq!(moved.await.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
+        assert_eq!(moved.await.added.len(), 1);
+        assert_eq!(moved.await.added[0].id, "a");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_op_add_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Add { index: 1, item: DemoItem { id: "b".into(), value: 2 } };
@@ -542,7 +542,7 @@ mod tests {
         assert_eq!(applied, items);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_op_move_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }, DemoItem { id: "c".into(), value: 3 }];
         let operation = CollectionMutation::Move { id: "a".into(), to_index: 2 };
@@ -554,7 +554,7 @@ mod tests {
         assert_eq!(applied, items);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_op_patch_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Patch { id: "a".into(), patch: DemoItemPatch { value: Some(9) } };
@@ -566,7 +566,7 @@ mod tests {
         assert_eq!(applied, items);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_op_remove_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let operation = CollectionMutation::Remove { id: "a".into() };
@@ -581,7 +581,7 @@ mod tests {
     //#endregion 🔖️ReconcileAlternative
 
     //#region 🔖️ContentAddressedCheckpointAndMergeBase
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
         let changes = vec![root_change];
@@ -591,7 +591,7 @@ mod tests {
         let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
         let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
         assert_eq!(id_a, id_b, "identical inputs converge on the identical id");
-        assert!(id_a.starts_with("ck-"), "got {id_a}");
+        assert!(id_a.await.starts_with("ck-"), "got {id_a}");
 
         let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z", &[]);
         assert_ne!(id_a, id_different_message, "a different message must change the id");
@@ -608,7 +608,7 @@ mod tests {
     /// pins-in-identical-order converge, and (critically) an EMPTY pin list must hash to the exact
     /// same bytes `content_addressed_checkpoint_id` produced before this field existed, so every
     /// checkpoint id ever minted for a non-composite artifact stays valid.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
         let changes = vec![root_change];
@@ -643,8 +643,8 @@ mod tests {
         assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
         // (2) A non-empty pin set changes the id relative to no pins at all.
-        let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
-        let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
+        let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").await.expect("valid test fixture uri");
+        let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").await.expect("valid test fixture uri");
         let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
         let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
         assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");
@@ -674,20 +674,20 @@ mod tests {
     }
 
     //#region 🆔️Ids
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
         assert_eq!(content_addressed_entity_id("x", b"payload"), content_addressed_entity_id("x", b"payload"));
         assert_ne!(content_addressed_entity_id("x", b"a"), content_addressed_entity_id("x", b"b"));
         assert_eq!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 0));
         assert_ne!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 1));
-        assert!(edit_scoped_id("edit-1", 0).starts_with("scoped-"));
+        assert!(edit_scoped_id("edit-1", 0).await.starts_with("scoped-"));
         assert_eq!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("alice"), 3, b"fwd"));
         assert_ne!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("bob"), 3, b"fwd"));
         assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")), mint_change_id(&["e1".into(), "e2".into()], Some("msg")));
         assert_eq!(mint_alternative_id("main", &["ck1".into()]), mint_alternative_id("main", &["ck1".into()]));
         assert_eq!(mint_mutation_id(b"op-bytes"), mint_mutation_id(b"op-bytes"));
         assert_eq!(create_document_vcs_id("draft"), create_document_vcs_id("draft"));
-        assert!(create_document_vcs_id("draft").starts_with("draft-"));
+        assert!(create_document_vcs_id("draft").await.starts_with("draft-"));
     }
     //#endregion 🆔️Ids
 }

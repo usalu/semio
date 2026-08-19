@@ -1,0 +1,230 @@
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:152:20
+    |
+ 98 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+ 99 |         platform.await.add_app(AppDefinition {
+    |                  ----- `platform` moved due to this await
+...
+152 |         assert_eq!(platform.await.active_app_id, "draw-play");
+    |                    ^^^^^^^^ value used here after move
+    |
+note: `into_future` takes ownership of the receiver `self`, which moves `platform`
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+    |
+134 |     fn into_future(self) -> Self::IntoFuture;
+    |                    ^^^^
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:215:33
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+214 |         platform.await.add_app(minimal_app("draw").await);
+    |                  ----- `platform` moved due to this await
+215 |         let generation_before = platform.await.chrome_generation;
+    |                                 ^^^^^^^^ value used here after move
+    |
+note: `into_future` takes ownership of the receiver `self`, which moves `platform`
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+    |
+134 |     fn into_future(self) -> Self::IntoFuture;
+    |                    ^^^^
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:216:9
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+214 |         platform.await.add_app(minimal_app("draw").await);
+215 |         let generation_before = platform.await.chrome_generation;
+    |                                          ----- `platform` moved due to this await
+216 |         platform.await.set_active_app_id("draw".into());
+    |         ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:217:20
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+216 |         platform.await.set_active_app_id("draw".into());
+    |                  ----- `platform` moved due to this await
+217 |         assert_eq!(platform.await.chrome_generation, generation_before, "same id must not bump chrome_generation");
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:218:9
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+217 |         assert_eq!(platform.await.chrome_generation, generation_before, "same id must not bump chrome_generation");
+    |                             ----- `platform` moved due to this await
+218 |         platform.await.set_active_app_id("other".into());
+    |         ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:219:20
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+218 |         platform.await.set_active_app_id("other".into());
+    |                  ----- `platform` moved due to this await
+219 |         assert_eq!(platform.await.chrome_generation, generation_before + 1);
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:220:20
+    |
+213 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+219 |         assert_eq!(platform.await.chrome_generation, generation_before + 1);
+    |                             ----- `platform` moved due to this await
+220 |         assert_eq!(platform.await.active_app_id, "other");
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:227:9
+    |
+225 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+226 |         platform.await.add_app(minimal_app("draw").await);
+    |                  ----- `platform` moved due to this await
+227 |         platform.await.active_app_id = "missing".into();
+    |         ^^^^^^^^ value used here after move
+    |
+note: `into_future` takes ownership of the receiver `self`, which moves `platform`
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+    |
+134 |     fn into_future(self) -> Self::IntoFuture;
+    |                    ^^^^
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:228:20
+    |
+225 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+226 |         platform.await.add_app(minimal_app("draw").await);
+227 |         platform.await.active_app_id = "missing".into();
+    |                  ----- `platform` moved due to this await
+228 |         assert_eq!(platform.await.get_active_app().await.unwrap().id, "draw");
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:235:9
+    |
+233 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+234 |         let generation_before = platform.await.chrome_generation;
+    |                                          ----- `platform` moved due to this await
+235 |         platform.await.set_panel_visibility(PanelVisibility::default());
+    |         ^^^^^^^^ value used here after move
+    |
+note: `into_future` takes ownership of the receiver `self`, which moves `platform`
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+    |
+134 |     fn into_future(self) -> Self::IntoFuture;
+    |                    ^^^^
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:236:20
+    |
+233 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+234 |         let generation_before = platform.await.chrome_generation;
+235 |         platform.await.set_panel_visibility(PanelVisibility::default());
+    |                  ----- `platform` moved due to this await
+236 |         assert_eq!(platform.await.chrome_generation, generation_before, "same visibility must not bump generation");
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:237:9
+    |
+233 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+236 |         assert_eq!(platform.await.chrome_generation, generation_before, "same visibility must not bump generation");
+    |                             ----- `platform` moved due to this await
+237 |         platform.await.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+    |         ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:238:20
+    |
+233 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+237 |         platform.await.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+    |                  ----- `platform` moved due to this await
+238 |         assert_eq!(platform.await.chrome_generation, generation_before + 1);
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:245:9
+    |
+243 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+244 |         platform.await.notify();
+    |                  ----- `platform` moved due to this await
+245 |         platform.await.notify();
+    |         ^^^^^^^^ value used here after move
+    |
+note: `into_future` takes ownership of the receiver `self`, which moves `platform`
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+    |
+134 |     fn into_future(self) -> Self::IntoFuture;
+    |                    ^^^^
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:246:9
+    |
+243 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+244 |         platform.await.notify();
+245 |         platform.await.notify();
+    |                  ----- `platform` moved due to this await
+246 |         platform.await.notify_chrome();
+    |         ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:247:20
+    |
+243 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+246 |         platform.await.notify_chrome();
+    |                  ----- `platform` moved due to this await
+247 |         assert_eq!(platform.await.generation, 2);
+    |                    ^^^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `platform`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:248:20
+    |
+243 |         let mut platform = Platform::new(None);
+    |             ------------ move occurs because `platform` has type `impl Future<Output = platform::Platform>`, which does not implement the `Copy` trait
+...
+247 |         assert_eq!(platform.await.generation, 2);
+    |                             ----- `platform` moved due to this await
+248 |         assert_eq!(platform.await.chrome_generation, 1);
+    |                    ^^^^^^^^ value used here after move
+
+

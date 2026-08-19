@@ -1,0 +1,676 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 2853,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 132
+    }
+  ],
+  "residual_errors": 2853,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9854",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11457",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12325",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9854",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11457",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12325",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1447",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1458",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2078",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2095",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2107",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2135",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2165",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2253",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2277",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2289",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2302",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2330",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2340",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2351",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2365",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2373",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2799",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2817",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2834",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2848",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2863",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2879",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2894",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2931",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10538",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11198",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11457",
+      "code": "(no code)",
+      "msg": "expected `,`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12325",
+      "code": "(no code)",
+      "msg": "expected `,`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:784",
+      "code": "E0053",
+      "msg": "method `parse` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:788",
+      "code": "E0053",
+      "msg": "method `print` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:792",
+      "code": "E0053",
+      "msg": "method `classify` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:845",
+      "code": "E0053",
+      "msg": "method `id` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:375",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:376",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:377",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:378",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:437",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:438",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:439",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = std::collections::BTreeMap<<WeightSum as os_inference::component::InferredField<DagSnapshot>>::Key, <Wei"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:285",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:291",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:294",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:908",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<(token::TokenClass, protocol::TextSpan)>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:909",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<(token::TokenClass, protocol::TextSpan)>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:954",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:955",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:956",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:957",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:958",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:959",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:960",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:961",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:962",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:963",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:964",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:965",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:966",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:967",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:968",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:969",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12105",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12118",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:215",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<notation::EdgeValue>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:699",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:699",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:569",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:663",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:663",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:719",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:719",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:685",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:685",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:769",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:770",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:771",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:772",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:773",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:774",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1163",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1165",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1271",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<command::tests::MiniMutation>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1275",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = &'static [command::SemanticDescriptor]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1131",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1385",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = &'static [command::InferenceFieldSpec]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1133",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1530",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<protocol::ForeignStep>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1531",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<protocol::ForeignStep>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1389",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = &'static [command::InferenceFieldSpec]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:338",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:334",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:335",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:338",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:339",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:345",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:346",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:352",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:353",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:356",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:357",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:368",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:369",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:370",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:371",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:372",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:384",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:385",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:386",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:397",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:398",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:405",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Value>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:515",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:517",
+      "code": "E0382",
+      "msg": "use of moved value: `added`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:517",
+      "code": "E0382",
+      "msg": "use of moved value: `added`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:519",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:522",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:524",
+      "code": "E0382",
+      "msg": "use of moved value: `patched`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:526",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:528",
+      "code": "E0382",
+      "msg": "use of moved value: `moved`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:529",
+      "code": "E0382",
+      "msg": "use of moved value: `moved`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1101",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1101",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1114",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1063",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1063",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1578",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1578",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    }
+  ]
+}

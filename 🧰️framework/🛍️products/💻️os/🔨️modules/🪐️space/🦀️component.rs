@@ -1322,7 +1322,7 @@ pub enum SpaceError {
 /// crate needs (`store::MemoryBackbonePort`, `store::LocalStorageBackbonePort`, the host file/folder
 /// ports) is already `store::BackbonePort`-shaped (string payloads) — the blanket impl below bridges
 /// bytes<->base64 text exactly like os-core's own bridge, so any `Arc<dyn store::BackbonePort>`-backed
-/// concrete port a caller already holds satisfies `Arc<dyn SpaceBackbonePort>` for free, and (crucially
+/// concrete port a caller already holds satisfies `Arc<store::BackbonePorts>` for free, and (crucially
 /// for `draft_catalog_for`'s per-port keying below) preserves the SAME underlying `Arc` data pointer
 /// across both trait-object views since unsizing coercion never reallocates.
 pub trait SpaceBackbonePort: Send + Sync {
@@ -1375,7 +1375,7 @@ pub struct DraftEntry {
 /// dependency would cycle), it just now offers the SAME per-port-identity registry SHAPE os-core's
 /// `list_os_space_catalog_entries`/`create_os_space` already use, so a caller (os-core, or an app like
 /// `home`) wires it in by simply calling `draft_catalog_for(&port)` with whatever
-/// `Arc<dyn SpaceBackbonePort>` it already holds.
+/// `Arc<store::BackbonePorts>` it already holds.
 #[derive(Default)]
 pub struct DraftCatalog {
     drafts: Mutex<HashMap<String, DraftEntry>>,
@@ -1409,7 +1409,7 @@ impl DraftCatalog {
     /// convention as os-core's `delete_os_space`) so an expired draft doesn't leak backbone storage —
     /// bookkeeping removal is still the source of truth (a tombstone write failure doesn't undo it).
     /// Returns the expired ids.
-    pub fn expire_drafts(&self, now_ms: u64, port: &Arc<dyn SpaceBackbonePort>) -> Vec<String> {
+    pub fn expire_drafts(&self, now_ms: u64, port: &Arc<store::BackbonePorts>) -> Vec<String> {
         let expired: Vec<String> = {
             let mut drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let expired: Vec<String> = drafts.values().filter(|entry| entry.expires_at_ms.is_some_and(|expires_at| expires_at <= now_ms)).map(|entry| entry.artifact_id.clone()).collect();
@@ -1427,14 +1427,14 @@ impl DraftCatalog {
     /// 📚️ `list_drafts` preceded by a real `expire_drafts` sweep — the natural "sweep before listing"
     /// call site (mirrors the spirit of os-core's catalog-listing entry points): any caller that lists
     /// drafts for display should always see a freshly-swept set rather than stale expired entries.
-    pub fn list_drafts_sweeping_expired(&self, now_ms: u64, port: &Arc<dyn SpaceBackbonePort>) -> Vec<DraftEntry> {
+    pub fn list_drafts_sweeping_expired(&self, now_ms: u64, port: &Arc<store::BackbonePorts>) -> Vec<DraftEntry> {
         self.expire_drafts(now_ms, port);
         self.list_drafts()
     }
 
     /// 🗑️ Discards a draft outright (never promoted) — removes its bookkeeping and best-effort
     /// tombstones its `draft_uri` bytes via `port`. Returns the removed bookkeeping, if any existed.
-    pub fn discard_draft(&self, port: &Arc<dyn SpaceBackbonePort>, draft_id: &str) -> Option<DraftEntry> {
+    pub fn discard_draft(&self, port: &Arc<store::BackbonePorts>, draft_id: &str) -> Option<DraftEntry> {
         let removed = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(draft_id);
         if removed.is_some() {
             let _ = port.write(&draft_uri(draft_id), &[]);
@@ -1457,7 +1457,7 @@ impl DraftCatalog {
     /// their `store::SpaceHost` (`register_member`/`register_space_documents`) — this catalog stays
     /// type-erased on purpose (same reasoning as `ArtifactBody`'s hand-written `DslVariants`) and never
     /// touches `P`/`Mutation` itself, so it never calls `SpaceHost` directly.
-    pub fn promote_draft(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionMutation), SpaceError> {
+    pub fn promote_draft(&self, port: &Arc<store::BackbonePorts>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionMutation), SpaceError> {
         let draft = {
             let drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             drafts.get(draft_id).cloned().ok_or_else(|| SpaceError::UnknownDraft(draft_id.to_string()))?
@@ -1494,7 +1494,7 @@ impl DraftCatalog {
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
     /// in-hand `CreateEntry`).
-    pub fn demote_asset(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
+    pub fn demote_asset(&self, port: &Arc<store::BackbonePorts>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
         let source_uri = artifact_backbone_uri(space_id, &entry.id);
         let target_uri = draft_uri(&entry.id);
         let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
@@ -1515,14 +1515,14 @@ impl DraftCatalog {
 /// identity, shared by every caller holding (a clone of) that port.
 static DRAFT_CATALOG_REGISTRY: LazyLock<Mutex<HashMap<usize, Arc<DraftCatalog>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-fn draft_catalog_port_key(port: &Arc<dyn SpaceBackbonePort>) -> usize {
+fn draft_catalog_port_key(port: &Arc<store::BackbonePorts>) -> usize {
     Arc::as_ptr(port) as *const () as usize
 }
 
 /// 🔎️ Gets (or lazily creates) the `DraftCatalog` for `port`'s identity. Returns a cheap `Arc` clone —
 /// every caller sharing the same port shares the same draft bookkeeping, exactly the way
 /// `list_os_space_catalog_entries`/`create_os_space` share `SPACE_CATALOG_URIS` per port in os-core.
-pub fn draft_catalog_for(port: &Arc<dyn SpaceBackbonePort>) -> Arc<DraftCatalog> {
+pub fn draft_catalog_for(port: &Arc<store::BackbonePorts>) -> Arc<DraftCatalog> {
     DRAFT_CATALOG_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(draft_catalog_port_key(port)).or_insert_with(|| Arc::new(DraftCatalog::new())).clone()
 }
 //#endregion 🔖️DraftRegistry
@@ -2094,8 +2094,8 @@ mod tests {
     //#endregion 🧪️PathResolverLaws
 
     //#region 🧪️DraftLaws
-    fn memory_draft_port() -> Arc<dyn SpaceBackbonePort> {
-        Arc::new(store::MemoryBackbonePort::new())
+    fn memory_draft_port() -> Arc<store::BackbonePorts> {
+        Arc::new(store::BackbonePorts::Memory(store::MemoryBackbonePort::new()))
     }
 
     #[test]
@@ -2205,7 +2205,7 @@ mod tests {
         assert_eq!(catalog.promote_draft(&port, "space-1", "nope", None), Err(SpaceError::UnknownDraft("nope".into())));
     }
 
-    /// 🧪️ `draft_catalog_for` is the port-keyed global registry: the SAME `Arc<dyn SpaceBackbonePort>`
+    /// 🧪️ `draft_catalog_for` is the port-keyed global registry: the SAME `Arc<store::BackbonePorts>`
     /// identity always resolves to the SAME `DraftCatalog` instance (so callers sharing a port share
     /// draft bookkeeping), while two DISTINCT port identities never share one.
     #[test]

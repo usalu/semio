@@ -1,0 +1,109 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript
+
+stdout | 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > disposes a fully-released key immediately
+[DEBUG] resource evicted url-v1
+
+stdout | 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > skips (does not throw) a key with an active lease, matching a reload that hasn't released the old handle yet
+[DEBUG] resource evicted url-v1
+
+stderr | 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > skips (does not throw) a key with an active lease, matching a reload that hasn't released the old handle yet
+[DEBUG] resource evictNow(url-v1) skipped — 1 active lease(s)
+
+stdout | 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > treats two cache-busted URLs of the same pluginId as independent keys
+[DEBUG] resource evicted note.js?v=1
+[DEBUG] resource evicted note.js?v=2
+
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > returns null when nothing persisted 2ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > app layer wins over os layer when both are set 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > falls back to os layer when app layer absent 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > save(null) removes the app-layer key 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > reset() clears both layers 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > returns null on corrupt JSON rather than throwing 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > discards a stale version-1 (corners) blob instead of migrating it 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockLayoutStore > discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > returns null when nothing persisted 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > app layer wins over os layer when both are set 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > falls back to os layer when app layer absent 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > save(null) removes the app-layer key 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > reset() clears both layers 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > returns null on corrupt JSON rather than throwing 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > discards a stale version-1 (corners) blob instead of migrating it 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > DockUiStateStore > keeps dock layout and dock ui as distinct projections for an app literally named "ui" 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > returns null when nothing persisted 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > app layer wins over os layer when both are set 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > falls back to os layer when app layer absent 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > save(null) removes the app-layer key 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > reset() clears both layers 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > returns null on corrupt JSON rather than throwing 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > WindowPaneStateStore > discards a foreign-version blob instead of migrating it 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > OsShellConfig > consolidates all four persisted shell projections into one config document 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PlaygroundResolution > resolves host config from the injected catalog 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PlaygroundResolution > resolves playground aliases to registry plugin ids 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PlaygroundResolution > rebuilds program rows when the generated session variant is stale 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > effectiveActionArgs > keeps a seeded arg that is not a declared form field, alongside the form's own staged fields (26/08/16 HUB-SPACES shareSpace regression: spaceId must reach the dispatched descriptor) 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > effectiveActionArgs > a seed value for a declared field pre-fills it until the form stages its own value (renameSpace's current-name prefill) 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > effectiveActionArgs > a zero-declared-field confirm dialog passes seed+staged through wholesale (deleteSpace's confirm/cancel shape) 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > effectiveActionArgs > missingRequiredArgs is unaffected by extra seed keys 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > organizeContextMenu > keeps a flat within-budget menu as-is, with groups sorted after leaves 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > organizeContextMenu > shares the Rust fixture's grouped structure for a flat 12-item over-budget menu 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > list() returns the registry it was created with 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > moduleUrl() passes through unbusted without rebuiltAt 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > moduleUrl() cache-busts with a rebuiltAt query param 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > moduleUrl() throws for an unknown pluginId 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > subscribe() is a harmless no-op without a global EventSource (node/vitest) 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > PluginSource > multiplexPluginSources() merges list() and resolves moduleUrl from the matching child 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a function-typed init as the current value (not as a lazy factory) 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a no-op function init without invoking it 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > is owned by an isolatable, resettable OsTransient lane 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > disposes a fully-released key immediately 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > skips (does not throw) a key with an active lease, matching a reload that hasn't released the old handle yet 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > LeasePool evictNow (hot-swap reload eviction) > treats two cache-busted URLs of the same pluginId as independent keys 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: TestHost > advance fires due timers only 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: TestHost > cancelTimer removes pending 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: TestHost > records effects and task lifecycle 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: TraceInspector > records one microstep per transition 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > flat machine toggles and counts 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > guard blocks transition when false 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > hierarchical machine enters default descendant 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > hierarchical machine transitions into compound default 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > shallow history restores last active child 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > parallel regions enter together 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: kernel > parallel done bubbles only once every region finishes 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: persist/restore > persist then restore round-trips active state 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: persist/restore > restore rejects fingerprint mismatch without migration 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: persist/restore > restore applies migration chain until fingerprint matches 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: ActorSystem > drains sent events through one macrostep each 3ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: testing (Model/Coverage/Invariant/Conformance) > explore reaches both toggle states 2ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: testing (Model/Coverage/Invariant/Conformance) > conformance fixture passes for matching sequence 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: testing (Model/Coverage/Invariant/Conformance) > conformance fixture fails with a descriptive message 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: testing (Model/Coverage/Invariant/Conformance) > invariant reports violation by name 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: BitSet > set/clear/contains 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: BitSet > iterOnes ascends regardless of insertion order 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: BitSet > clearAll and isEmpty 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > walks cart to receipt 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > cancel/resume round-trips via shallow history 3ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > model coverage reaches every declared state 4ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > start produces a persistable initial configuration 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > step round-trips through persisted state only 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > step reports entered and exited states 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > step with a blocked guard leaves the configuration untouched 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > machine: checkout DSL twin (integration) > step rejects a persisted snapshot from another machine shape 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > retryWithJitteredBackoff > keeps every backoff delay within [minMs, maxMs] and varies it across attempts 11ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > retryWithJitteredBackoff > rejects promptly on abort mid-wait and makes no further attempt 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > retryWithJitteredBackoff > throws immediately for an already-aborted signal without calling fn 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > latestWins > collapses N concurrent calls during an in-flight run into exactly one trailing run, and every caller sees the latest result 2ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > latestWins > starts a fresh run when called again after everything has settled 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > fetchWithTimeout > aborts the underlying fetch when the timeout elapses first 1ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > fetchWithTimeout > aborts the underlying fetch when the external signal aborts 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > fetchWithTimeout > clears the timer and removes the abort listener on the success path 3ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > waitForEvent > resolves with the first delivered value and unsubscribes 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > waitForEvent > rejects on abort and unsubscribes without ever having received a value 0ms
+ ✓ |@semio-tech/framework| 🟦️glue.ts > waitForEvent > rejects immediately for an already-aborted signal, never subscribing 0ms
+
+ Test Files  1 passed (1)
+      Tests  87 passed (87)
+   Start at  21:23:46
+   Duration  463ms (transform 253ms, setup 0ms, import 299ms, tests 51ms, environment 0ms)
+

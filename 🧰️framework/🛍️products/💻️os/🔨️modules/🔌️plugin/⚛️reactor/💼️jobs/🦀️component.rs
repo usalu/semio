@@ -119,7 +119,9 @@ thread_local! {
 /// 🧬️ `semio.io-run`/`semio.io-sniff` are registered unconditionally for every plugin, the same
 /// "for free" behaviour the old hard-coded `match` gave every plugin — no `PluginBuilder::job(...)`
 /// call is required to get them.
-async fn builtin_registry() -> HashMap<&'static str, JobFn> {
+// 🚫️async: E4-adjacent — consumed by a `thread_local!` static initializer, which is a fixed
+// sync-only language context (cannot await); the body is a pure `HashMap` of fn-pointer inserts.
+fn builtin_registry() -> HashMap<&'static str, JobFn> {
     let mut map: HashMap<&'static str, JobFn> = HashMap::new();
     map.insert(JOB_KIND_IO_RUN, job_io_run as JobFn);
     map.insert(JOB_KIND_IO_SNIFF, job_io_sniff as JobFn);
@@ -274,7 +276,9 @@ struct JobSlot {
 thread_local! {
     static JOBS: RefCell<HashMap<u64, JobSlot>> = RefCell::new(HashMap::new());
     /// 🧵️ A SEPARATE `LocalExecutor` instance from the reactor turn loop's own — see module doc.
-    static JOBS_EXECUTOR: super::executor::LocalExecutor = super::executor::LocalExecutor::new();
+    // 🌉️ `thread_local!` initializer runs in a plain non-async context — bridged via `resolve_ready`
+    // since `LocalExecutor::new()` is a pure `Self::default()`.
+    static JOBS_EXECUTOR: super::executor::LocalExecutor = semio_framework::io::resolve_ready(super::executor::LocalExecutor::new());
 }
 
 /// ▶️ Same bound the reactor turn loop's own `EXECUTOR.run_until_idle` uses — a defensive cap
@@ -322,11 +326,14 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
     };
     let future = run(ctx, input.to_vec(), restored);
     let outcome_state = state.clone();
+    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`. `spawn` itself only
+    // registers the task and hands back its id; the real awaiting happens later when
+    // `JOBS_EXECUTOR` polls the parked future, not here.
     let task = JOBS_EXECUTOR.with(|executor| {
-        executor.spawn(async move {
+        semio_framework::io::resolve_ready(executor.spawn(async move {
             let result = future.await;
             outcome_state.borrow_mut().outcome = Some(result);
-        })
+        }))
     });
     JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::Running { task, state } }));
 }
@@ -450,11 +457,14 @@ pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
 
 //#region 🔖️Fault
 
-async fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
+// 🚫️async: E1 pure constructor consumed by sync error-mapping closures (`.map_err(|error| fault(...))`,
+// `.ok_or_else(|| fault(...))`) pervasively across this module — see R9. `Fault::new` itself is sync.
+fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
     semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new(code), message.into())
 }
 
-async fn fault_bytes(code: &str, message: String) -> Vec<u8> {
+// 🚫️async: E1 — see `fault`'s own comment above; `dsl::encode_fault_bytes` is sync too.
+fn fault_bytes(code: &str, message: String) -> Vec<u8> {
     dsl::encode_fault_bytes(&fault(code, message))
 }
 
@@ -477,19 +487,21 @@ async fn fault_bytes(code: &str, message: String) -> Vec<u8> {
 /// correct without a second, richer checkpoint payload.
 const PHASE_DECODED: &[u8] = b"phase.decoded";
 
-async fn run_two_phase<D, E>(ctx: JobCtx, restored: Option<Vec<u8>>, decode: D, execute: E) -> Result<Vec<u8>, semio_framework::Fault>
+async fn run_two_phase<D, DFut, E, EFut>(ctx: JobCtx, restored: Option<Vec<u8>>, decode: D, execute: E) -> Result<Vec<u8>, semio_framework::Fault>
 where
-    D: FnOnce() -> Result<Vec<u8>, semio_framework::Fault>,
-    E: FnOnce() -> Result<Vec<u8>, semio_framework::Fault>,
+    D: FnOnce() -> DFut,
+    DFut: Future<Output = Result<Vec<u8>, semio_framework::Fault>>,
+    E: FnOnce() -> EFut,
+    EFut: Future<Output = Result<Vec<u8>, semio_framework::Fault>>,
 {
     if restored.as_deref() != Some(PHASE_DECODED) {
         ctx.tick().await;
-        let progress = decode()?;
+        let progress = decode().await?;
         ctx.progress(progress);
         ctx.checkpoint(PHASE_DECODED.to_vec());
     }
     ctx.tick().await;
-    let result = execute()?;
+    let result = execute().await?;
     ctx.progress(b"phase.executed".to_vec());
     Ok(result)
 }
@@ -507,12 +519,16 @@ struct IoRunInput {
     payload: semio_framework::io_schema::IoPayload,
 }
 
-async fn job_io_run(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move { run_io_run(&input) })
+// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
+// module for the full explanation; same `JobFn` registry shape.
+fn job_io_run(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move { run_io_run(&input).await })
 }
 
-async fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move { run_io_sniff(&input) })
+// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
+// module for the full explanation; same `JobFn` registry shape.
+fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move { run_io_sniff(&input).await })
 }
 
 /// 🌉️ Body unchanged from the pre-rewrite `run_io_run` — only the return type moved from
@@ -520,15 +536,15 @@ async fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) 
 /// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
 async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
-    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
-    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
-    let descriptor = semio_framework::io::io_mechanism::io_entries()
-        .into_iter()
-        .find(|entry| entry.from == source && entry.into == target)
-        .ok_or_else(|| fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate())))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).await.map_err(|message| fault("job.io-run", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).await.map_err(|message| fault("job.io-run", message))?;
+    let descriptor = match semio_framework::io::io_mechanism::io_entries().await.into_iter().find(|entry| entry.from == source && entry.into == target) {
+        Some(descriptor) => descriptor,
+        None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate().await, target.to_coordinate().await))),
+    };
     let fidelity = descriptor.fidelity;
     let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).map_err(|error| fault("job.io-run", error.message))?;
+    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.message))?;
     serde_json::to_vec(&outcome.value).map_err(|error| fault("job.io-run", error.to_string()))
 }
 
@@ -536,17 +552,17 @@ async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 /// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
 async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
-    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
-    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).await.map_err(|message| fault("job.io-sniff", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).await.map_err(|message| fault("job.io-sniff", message))?;
     let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
         semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
         semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
     });
     if source != carrier {
-        return Ok(vec![semio_framework::io_schema::Confidence::None.rank()]);
+        return Ok(vec![semio_framework::io_schema::Confidence::None.rank().await]);
     }
-    let confidence = semio_framework::io::io_mechanism::io_identify(&payload).into_iter().find(|(dialect, _)| *dialect == target).map(|(_, confidence)| confidence).unwrap_or(semio_framework::io_schema::Confidence::None);
-    Ok(vec![confidence.rank()])
+    let confidence = semio_framework::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map(|(_, confidence)| confidence).unwrap_or(semio_framework::io_schema::Confidence::None);
+    Ok(vec![confidence.rank().await])
 }
 
 //#endregion

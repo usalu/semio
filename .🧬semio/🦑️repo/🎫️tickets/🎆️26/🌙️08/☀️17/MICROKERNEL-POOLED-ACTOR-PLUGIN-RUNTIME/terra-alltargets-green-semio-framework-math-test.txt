@@ -1,0 +1,230 @@
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 12.14s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/semio_framework_math-3c3acb500751ff28)
+
+running 191 tests
+test sampling::tests::all_processor_spec_variants_round_trip_through_json ... ok
+test sampling::tests::aho_corasick_matches_and_reports_hold_back_on_partial_prefix ... ok
+test sampling::tests::apply_inpaint_mask_blends_by_mask_weight ... ok
+test sampling::tests::adaptive_truncation_targeting_effective_count_shrinks_a_near_uniform_distribution ... ok
+test sampling::tests::all_noise_schedules_are_non_increasing ... ok
+test sampling::tests::all_presets_validate ... ok
+test sampling::tests::bad_words_masks_the_completion_token_after_its_prefix ... ok
+test sampling::tests::allow_tokens_restricts_mask_to_exactly_the_allowed_set ... ok
+test sampling::tests::aho_corasick_handles_overlapping_patterns_via_fail_links ... ok
+test sampling::tests::best_of_n_selects_the_candidate_with_highest_mean_logprob ... ok
+test sampling::tests::beam_search_hypotheses_have_independent_state ... ok
+test sampling::tests::beam_search_finds_the_highest_probability_short_sequence ... ok
+test sampling::tests::bitset_and_or_and_not_operations ... ok
+test sampling::tests::bitset_first_set_and_is_all_zero ... ok
+test sampling::tests::bitset_iter_ones_skips_zero_words_across_boundaries ... ok
+test sampling::tests::bitset_new_full_has_exactly_len_bits_set ... ok
+test sampling::tests::bitset_set_get_round_trip ... ok
+test sampling::tests::builder_produces_a_validated_config ... ok
+test sampling::tests::build_constraint_covers_every_constraint_spec_variant ... ok
+test sampling::tests::by_position_schedule_clamps_past_its_length ... ok
+test sampling::tests::callback_schedule_serializes_but_refuses_to_deserialize ... ok
+test sampling::tests::cdf_binary_search_finds_first_index_at_or_above_u ... ok
+test sampling::tests::confidence_controller_uses_low_temp_under_low_entropy ... ok
+test sampling::tests::config_json_rejects_unknown_version ... ok
+test sampling::tests::config_json_round_trips_core_fields ... ok
+test sampling::tests::constant_schedule_ignores_input ... ok
+test sampling::tests::config_fingerprint_is_stable_and_sensitive_to_changes ... ok
+test sampling::tests::continuous_batcher_add_remove_and_step ... ok
+test sampling::tests::cosine_schedule_starts_and_ends_at_bounds ... ok
+test sampling::tests::continuous_batcher_step_reports_error_for_unknown_sequence ... ok
+test sampling::tests::counter_rng_different_seeds_diverge ... ok
+test sampling::tests::counter_rng_is_deterministic_for_same_seed ... ok
+test sampling::tests::counter_rng_snapshot_restore_resumes_identically ... ok
+test sampling::tests::counter_rng_split_differs_by_purpose ... ok
+test sampling::tests::custom_schedule_returns_its_values_verbatim ... ok
+test sampling::tests::counter_rng_split_is_independent_of_call_order ... ok
+test sampling::tests::default_limits_validate ... ok
+test sampling::tests::decaying_penalty_weighs_recent_occurrences_more_than_distant_ones ... ok
+test sampling::tests::default_config_validates ... ok
+test sampling::tests::ddim_eta_zero_is_deterministic_regardless_of_seed ... ok
+test sampling::tests::continuous_batcher_per_sequence_output_is_independent_of_processing_order ... ok
+test sampling::tests::dfa_budget_is_enforced_for_pathologically_wide_patterns ... ok
+test sampling::tests::dfa_alive_flag_marks_dead_ends_as_unreachable_to_accept ... ok
+test sampling::tests::dfa_handles_escaped_bytes_and_unbounded_repeat ... ok
+test sampling::tests::dfa_handles_alternation_class_and_bounded_repeat ... ok
+test sampling::tests::dfa_rejects_unbalanced_parens_with_parse_error ... ok
+test sampling::tests::dfa_matches_a_star_b_pattern ... ok
+test sampling::tests::dfa_token_cache_evicts_all_entries_once_max_entries_is_reached ... ok
+test sampling::tests::dfa_token_cache_computes_allowed_tokens_and_next_states ... ok
+test sampling::tests::ebnf_constraint_compiles_a_simple_recursive_ish_grammar_and_masks_correctly ... ok
+test sampling::tests::ebnf_constraint_rejects_unbounded_left_recursion ... ok
+test sampling::tests::effective_candidate_count_matches_perplexity_of_uniform ... ok
+test sampling::tests::entropy_of_deterministic_distribution_is_zero ... ok
+test sampling::tests::entropy_of_uniform_distribution_is_ln_n ... ok
+test sampling::tests::entropy_pid_sharpens_the_distribution_when_entropy_exceeds_target ... ok
+test sampling::tests::dfa_supports_plus_optional_and_negated_class_quantifiers ... ok
+test sampling::tests::entropy_scaled_schedule_clamps_to_range ... ok
+test sampling::tests::epsilon_cutoff_drops_near_zero_probability_tokens ... ok
+test sampling::tests::eta_cutoff_never_empties_live_set ... ok
+test sampling::tests::fallback_ladder_prefers_forced_over_eos_over_argmax_over_error ... ok
+test sampling::tests::euler_ancestral_and_ddim_with_eta_differ_across_seeds ... ok
+test sampling::tests::forbid_tokens_removes_exactly_the_forbidden_set ... ok
+test sampling::tests::euler_solver_converges_exactly_to_a_constant_target_when_schedule_reaches_zero ... ok
+test sampling::tests::every_error_variant_has_nonempty_display ... ok
+test sampling::tests::forced_tokens_forces_bos_then_prefix_then_at_position ... ok
+test sampling::tests::frequency_penalty_scales_with_occurrence_count ... ok
+test sampling::tests::greedy_sampler_errors_on_empty_distribution ... ok
+test sampling::tests::greedy_sampler_highest_token_id_picks_last_of_a_tie ... ok
+test sampling::tests::greedy_sampler_lowest_token_id_picks_first_of_a_tie ... ok
+test sampling::tests::guidance_combine_extrapolates_away_from_unconditional ... ok
+test sampling::tests::ids_display_show_raw_value ... ok
+test sampling::tests::json_mode_constraint_accepts_valid_json_and_rejects_invalid ... ok
+test sampling::tests::gumbel_top_k_returns_k_distinct_tokens ... ok
+test sampling::tests::heun_solver_uses_two_evaluations_per_non_final_step ... ok
+test sampling::tests::img2img_start_index_boundaries ... ok
+test sampling::tests::json_depth_cap_is_enforced ... ok
+test sampling::tests::json_parses_empty_array_and_object_and_unicode_escape ... ok
+test sampling::tests::json_round_trips_basic_values ... ok
+test sampling::tests::json_schema_validator_checks_type_enum_and_bounds ... ok
+test sampling::tests::kahan_sum_matches_naive_sum_for_short_sequences ... ok
+test sampling::tests::logsumexp_handles_all_neg_infinity ... ok
+test sampling::tests::json_rejects_malformed_arrays_and_objects ... ok
+test sampling::tests::json_rejects_trailing_garbage ... ok
+test sampling::tests::json_rejects_malformed_literals_strings_and_numbers ... ok
+test sampling::tests::json_value_accessors_return_none_for_mismatched_variants ... ok
+test sampling::tests::json_schema_constraint_flags_a_schema_violation_once_json_completes ... ok
+test sampling::tests::linear_schedule_interpolates_and_clamps_at_bound ... ok
+test sampling::tests::logit_bias_sparse_and_dense_add_expected_deltas ... ok
+test sampling::tests::logsumexp_matches_naive_for_moderate_values ... ok
+test sampling::tests::max_length_force_eos_restricts_to_eos_at_the_cap ... ok
+test sampling::tests::min_keep_guarantee_is_honored_by_every_truncation_warper ... ok
+test sampling::tests::min_length_eos_suppression_allows_eos_once_floor_reached ... ok
+test sampling::tests::min_p_drops_tokens_far_below_the_maximum ... ok
+test sampling::tests::min_length_eos_suppression_masks_eos_before_the_floor ... ok
+test sampling::tests::mirostat_commit_updates_mu_toward_target ... ok
+test sampling::tests::mirostat_rollback_restores_mu ... ok
+test sampling::tests::must_include_constraint_is_trivially_satisfied_with_no_alternatives_and_supports_rollback ... ok
+test sampling::tests::no_repeat_ngram_rollback_un_forbids ... ok
+test sampling::tests::next_range_stays_within_bounds ... ok
+test sampling::tests::mirostat_v2_truncates_to_tokens_within_the_surprise_budget ... ok
+test sampling::tests::must_include_constraint_is_satisfied_once_an_alternative_appears ... ok
+test sampling::tests::no_repeat_ngram_forbids_recreating_a_seen_bigram ... ok
+test sampling::tests::next_f64_open01_is_never_zero ... ok
+test sampling::tests::partial_select_top_k_is_noop_when_k_covers_everything ... ok
+test sampling::tests::partial_select_top_k_selects_highest_k_by_logit_with_tie_break ... ok
+test sampling::tests::phrase_penalty_penalizes_only_after_the_proper_prefix ... ok
+test sampling::tests::piecewise_schedule_holds_at_last_breakpoint ... ok
+test sampling::tests::prediction_type_conversions_round_trip_through_denoised ... ok
+test sampling::tests::presence_penalty_applies_flat_penalty_regardless_of_count ... ok
+test sampling::tests::rank_truncation_keeps_exactly_max_rank_entries ... ok
+test sampling::tests::regex_constraint_masks_to_only_valid_continuations ... ok
+test sampling::tests::regex_constraint_rollback_restores_dfa_state ... ok
+test sampling::tests::regex_parse_errors_on_unclosed_class_and_dangling_escapes ... ok
+test sampling::tests::rejection_sampler_errors_after_max_attempts_when_never_accepted ... ok
+test sampling::tests::rejection_sampler_retries_until_accept_returns_true ... ok
+test sampling::tests::repetition_controller_flattens_after_crossing_the_threshold ... ok
+test sampling::tests::rng_snapshot_rejects_kind_mismatch_on_restore ... ok
+test sampling::tests::repetition_penalty_pushes_down_a_seen_positive_logit ... ok
+test sampling::tests::repetition_penalty_rollback_restores_exact_prior_state ... ok
+test sampling::tests::run_diffusion_cancellation_stops_the_run_and_errors ... ok
+test sampling::tests::rng_snapshot_text_round_trips ... ok
+test sampling::tests::run_diffusion_with_guidance_evaluates_both_branches_every_step ... ok
+test sampling::tests::sanitize_logits_error_policy_rejects_any_non_finite ... ok
+test sampling::tests::sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram ... ok
+test sampling::tests::sample_step_errors_when_sequence_already_finished ... ok
+test sampling::tests::sample_step_honors_forced_bos_at_step_zero ... ok
+test sampling::tests::sample_step_with_regex_constraint_only_ever_emits_matching_text ... ok
+test sampling::tests::sanitize_logits_clamp_inf_policy_clamps_positive_infinity ... ok
+test sampling::tests::sanitize_logits_neg_inf_nan_policy_masks_nan_and_rejects_pos_inf ... ok
+test sampling::tests::sequence_encouragement_biases_the_completion_token_after_its_prefix ... ok
+test sampling::tests::schedule_json_round_trips_every_non_callback_variant ... ok
+test sampling::tests::sequence_state_new_rejects_an_invalid_regex_constraint ... ok
+test sampling::tests::sequence_state_checkpoint_restore_round_trips ... ok
+test sampling::tests::sequence_state_new_builds_configured_constraints ... ok
+test sampling::tests::sequence_state_fork_diverges_independently ... ok
+test sampling::tests::sharded_top_k_matches_unsharded_top_k ... ok
+test sampling::tests::sequence_state_rollback_then_readvance_matches_direct_run ... ok
+test sampling::tests::sharded_softmax_matches_unsharded_softmax ... ok
+test sampling::tests::slice_text_adapter_returns_bytes_and_stable_fingerprint ... ok
+test sampling::tests::softmax_live_f32_and_f64_accum_agree_closely ... ok
+test sampling::tests::sequence_state_to_text_round_trips_and_rejects_fingerprint_mismatch ... ok
+test sampling::tests::softmax_live_is_invariant_to_constant_shift ... ok
+test sampling::tests::softmax_live_sums_to_one_and_matches_hand_computed ... ok
+test sampling::tests::speculative_decode_accepts_when_draft_matches_target_distribution ... ok
+test sampling::tests::speculative_decode_rejects_and_resamples_when_draft_disagrees_with_target ... ok
+test sampling::tests::stateless_step_greedy_precise_always_picks_the_argmax ... ok
+test sampling::tests::stateless_step_is_deterministic_for_same_seed_and_config ... ok
+test sampling::tests::stateless_step_probabilities_sum_to_approximately_one ... ok
+test sampling::tests::stateless_step_rejects_mismatched_logits_length ... ok
+test sampling::tests::stateless_step_reports_eos_finish_reason ... ok
+test sampling::tests::stateless_step_reports_max_tokens_finish_reason ... ok
+test sampling::tests::multinomial_cdf_binary_search_matches_expected_frequencies ... ok
+test sampling::tests::step_index_checked_next_overflows_to_none ... ok
+test sampling::tests::suppress_special_removes_flagged_tokens ... ok
+test sampling::tests::tail_free_keeps_at_least_min_keep_on_short_live_sets ... ok
+test sampling::tests::temperature_scales_processed_logits ... ok
+test sampling::tests::temperature_zero_collapses_to_greedy ... ok
+test sampling::tests::text_stop_condition_matches_a_multi_token_stop_sequence ... ok
+test sampling::tests::text_stop_condition_without_adapter_never_matches ... ok
+test sampling::tests::token_class_penalty_scales_only_classified_tokens ... ok
+test sampling::tests::token_stop_condition_fires_on_configured_token ... ok
+test sampling::tests::top_a_drops_low_probability_tokens_relative_to_max ... ok
+test sampling::tests::top_k_keeps_exactly_k_highest_probability_tokens ... ok
+test sampling::tests::top_p_min_keep_overrides_a_too_small_cutoff ... ok
+test sampling::tests::top_p_retains_smallest_prefix_covering_cumulative_mass ... ok
+test sampling::tests::trie_constraint_only_allows_configured_phrase_tokens ... ok
+test sampling::tests::typical_and_locally_typical_agree_on_the_same_input ... ok
+test sampling::tests::utf8_status_classifies_complete_partial_invalid ... ok
+test sampling::tests::validate_rejects_candidate_count_above_limit ... ok
+test sampling::tests::validate_rejects_min_tokens_above_max_tokens ... ok
+test sampling::tests::validate_rejects_mismatched_token_class_penalty_lengths ... ok
+test sampling::tests::validate_rejects_too_many_stop_sequences ... ok
+test sampling::tests::validate_rejects_zero_candidate_count ... ok
+test sampling::tests::validate_rejects_zero_no_repeat_ngram_order ... ok
+test sampling::tests::validates_json_schema_checks_object_required_properties_and_enum ... ok
+test sampling::tests::validates_json_schema_checks_integer_string_and_array_bounds ... ok
+test sampling::tests::vocabulary_is_eos_reflects_configured_set ... ok
+test sampling::tests::vocabulary_validates_logits_length ... ok
+test sampling::tests::workspace_collapse_live_to_argmax_leaves_single_best_entry ... ok
+test sampling::tests::workspace_pool_reuses_released_workspace ... ok
+test sampling::tests::workspace_reset_for_step_initializes_live_to_full_vocab_and_argmax ... ok
+test sampling::tests::workspace_sort_live_by_prob_desc_orders_by_probability_then_token_id ... ok
+test sampling::tests::workspace_sync_live_with_mask_removes_masked_entries ... ok
+test sampling::tests::workspace_truncate_live_to_respects_min_keep ... ok
+test sampling::tests::write_json_escapes_control_characters_and_formats_non_integral_numbers ... ok
+test sampling::tests::xoshiro_source_matches_underlying_rng_sequence ... ok
+test sampling::tests::zero_limit_fails_validation ... ok
+test sampling::tests::gumbel_max_sampler_matches_multinomial_marginals ... ok
+test sampling::tests::sharded_sample_marginal_distribution_matches_unsharded ... ok
+test sampling::tests::multinomial_strategies_agree_statistically ... ok
+test sampling::tests::speculative_decode_matches_direct_target_sampling_distribution ... ok
+
+test result: ok. 191 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests semio_framework_math
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

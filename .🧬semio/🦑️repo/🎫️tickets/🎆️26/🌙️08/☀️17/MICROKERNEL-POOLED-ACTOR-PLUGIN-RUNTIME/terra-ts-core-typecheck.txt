@@ -1,0 +1,134 @@
+🧰️framework/📦️packages/🟦️typescript/📜️script.ts(12,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
+🧰️framework/📦️packages/🟦️typescript/🧪️vitest.config.ts(19,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'mode' does not exist in type 'InlineConfig'.
+🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📜️script.ts(12,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️vitest.config.ts(33,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'mode' does not exist in type 'InlineConfig'.
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(114,47): error TS2339: Property 'contributions' does not exist on type 'PluginManifest'.
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(115,48): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📜️script.ts(12,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧪️vitest.config.ts(19,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'mode' does not exist in type 'InlineConfig'.
+🧰️framework/🔨️modules/🎭️actor/🤖️generated/🟦️actor.ts(167,115): error TS2322: Type 'bigint' is not assignable to type 'string | number | symbol'.
+🧰️framework/🔨️modules/📡️replication/🟦️component.ts(35,54): error TS2304: Cannot find name 'encodePackValue'.
+🧰️framework/🔨️modules/📡️replication/🟦️component.ts(41,45): error TS2322: Type 'unknown[]' is not assignable to type 'readonly number[]'.
+  Type 'unknown' is not assignable to type 'number'.
+🧰️framework/🔨️modules/📡️replication/🟦️component.ts(42,63): error TS2322: Type 'unknown[]' is not assignable to type 'readonly number[]'.
+  Type 'unknown' is not assignable to type 'number'.
+🧰️framework/🔨️modules/📡️replication/🟦️component.ts(49,55): error TS2304: Cannot find name 'decodePackValue'.
+🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts(633,43): error TS2304: Cannot find name 'PluginContextMenuRequest'.
+🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts(273,35): error TS2345: Argument of type 'HoverSpec' is not assignable to parameter of type 'SelectionSpec'.
+  Type 'HoverSpec' is missing the following properties from type 'SelectionSpec': modes, methods, merges
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(70,28): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(73,46): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(73,59): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(78,52): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(84,113): error TS2304: Cannot find name 'UiStatus'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(91,35): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(129,149): error TS2304: Cannot find name 'WindowLayoutWindowNode'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(752,33): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(752,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(230,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(231,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(594,54): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(916,33): error TS2339: Property 'glob' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(280,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(325,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(348,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(369,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(384,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(394,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(408,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(420,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(432,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(443,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(453,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(463,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(474,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(494,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(502,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(517,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(528,77): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(535,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(556,5): error TS2304: Cannot find name 'UiComponentSceneNode'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(557,5): error TS2304: Cannot find name 'UiExternalSlotNode'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1222,53): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1309,40): error TS2304: Cannot find name 'Effect'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1349,18): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1356,28): error TS2304: Cannot find name 'ContextMenuItemSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(189,9): error TS2304: Cannot find name 'ConfigSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(194,17): error TS2304: Cannot find name 'CommandGrammar'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(213,100): error TS2552: Cannot find name 'ArtifactPresentation'. Did you mean 'ArgPresentation'?
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,117): error TS2304: Cannot find name 'FileTypeContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,233): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,442): error TS2304: Cannot find name 'IoEntryDescriptor'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,485): error TS2552: Cannot find name 'ComposerEntryDescriptor'. Did you mean 'PropertyDescriptor'?
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(801,27): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(834,79): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,68): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,109): error TS2304: Cannot find name 'StyleSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,150): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1149,42): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1149,55): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1151,136): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1153,161): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1155,60): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1155,97): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1157,89): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1157,231): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1159,40): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1161,95): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1163,183): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1203,124): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1205,52): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1207,99): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1207,164): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1209,63): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1211,170): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1226,35): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1226,140): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1228,67): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1228,132): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1230,60): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1230,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1232,51): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1242,8): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1244,125): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1253,55): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1317,9): error TS2304: Cannot find name 'Locale'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1321,14): error TS2304: Cannot find name 'Terminology'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1400,143): error TS2304: Cannot find name 'WindowStackCorner'.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts(474,11): error TS2339: Property 'on' does not exist on type 'ChildProcessByStdio<null, Readable, Readable>'.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts(474,24): error TS7006: Parameter 'error' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts(475,11): error TS2339: Property 'on' does not exist on type 'ChildProcessByStdio<null, Readable, Readable>'.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts(475,24): error TS7006: Parameter 'code' implicitly has an 'any' type.
+🧰️framework/🛍️products/💻️os/🟦️component.ts(20,33): error TS2300: Duplicate identifier 'DirectoryEvent'.
+🧰️framework/🛍️products/💻️os/🟦️component.ts(217,76): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+🧰️framework/🛍️products/💻️os/🟦️component.ts(226,74): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+🧰️framework/🛍️products/💻️os/🟦️component.ts(3092,15): error TS2300: Duplicate identifier 'DirectoryEvent'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1120,11): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1121,11): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1121,23): error TS7006: Parameter 'exitCode' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1121,33): error TS7006: Parameter 'exitSignal' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1484,81): error TS2339: Property 'toString' does not exist on type 'never'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1485,81): error TS2339: Property 'toString' does not exist on type 'never'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1512,9): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1853,11): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1853,23): error TS7006: Parameter 'code' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1857,11): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1857,24): error TS7006: Parameter 'error' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1868,9): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1868,21): error TS7006: Parameter 'code' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1869,9): error TS2339: Property 'on' does not exist on type 'ChildProcess'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1869,22): error TS7006: Parameter 'error' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(5703,12): error TS2339: Property 'on' does not exist on type 'ChildProcessWithoutNullStreams'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(5703,25): error TS7006: Parameter 'code' implicitly has an 'any' type.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(5707,12): error TS2339: Property 'on' does not exist on type 'ChildProcessWithoutNullStreams'.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts(1388,7): error TS2322: Type '"packaging-violation"' is not assignable to type '"ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role"'.

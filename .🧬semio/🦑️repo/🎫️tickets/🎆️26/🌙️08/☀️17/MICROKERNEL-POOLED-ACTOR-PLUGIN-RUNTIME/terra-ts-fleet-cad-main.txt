@@ -1,0 +1,19 @@
+
+> nx run @semio-tech/cad-js:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+[0m[31mSyntaxError[0m[2m:[0m [1mExport named 'join' not found in module '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts'.[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test --reporter=verbose" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/cad-js failed
+
+Failed tasks:
+
+- @semio-tech/cad-js:test
+
+Hint: run the command with --verbose for more details.
+

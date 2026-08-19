@@ -108,7 +108,7 @@ pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, PatchOp, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{GuestRuntime, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use std::collections::HashMap;
     use std::future::Future;
     use std::path::PathBuf;
@@ -282,7 +282,7 @@ pub(crate) mod kernel_runtime {
     }
 
     struct KernelThreadState {
-        guest_runtime: Arc<dyn GuestRuntime>,
+        guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
         /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Thread, K, 2,
         /// 64)` (`exclusive_reserve: 2` — item 3 of the packet brief — makes `request_exclusive`
@@ -313,7 +313,7 @@ pub(crate) mod kernel_runtime {
 
     impl KernelThreadState {
         fn new() -> Self {
-            let guest_runtime: Arc<dyn GuestRuntime> = Arc::new(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds"));
+            let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds")));
             let runtime = crate::parallel_runtime::ParallelRuntime::new(guest_runtime.clone(), native_shard_count(), 2, 64);
             Self { guest_runtime, runtime, now_ms: 0, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
         }
@@ -600,7 +600,7 @@ pub mod scale_bench {
     };
     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use serde::Deserialize;
     use serde_json::json;
     use std::collections::HashMap;
@@ -734,7 +734,7 @@ pub mod scale_bench {
     }
 
     impl Env {
-        fn new(runtime: Arc<dyn GuestRuntime>, shard_count: u16) -> Self {
+        fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
             let runtime = super::parallel_runtime::ParallelRuntime::new(runtime, shard_count.max(1), 0, 64);
             Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
         }
@@ -943,7 +943,7 @@ pub mod scale_bench {
     }
 
     //#region 🔖️Budget2ColdBoot
-    fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
+    fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
         let startup: Vec<&RegistryRecord> = records.iter().filter(|r| is_startup(r)).collect();
         if startup.is_empty() {
             return skipped(2, "cold boot to first interactive frame, only on-startup-finished actors live", "registry carries no on-startup-finished record");
@@ -978,7 +978,7 @@ pub mod scale_bench {
     //#endregion 🔖️Budget2ColdBoot
 
     //#region 🔖️Budget3Activate100
-    fn budget_3_activate_100(runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
+    fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
         let plugin_records: Vec<&RegistryRecord> = records.iter().filter(|r| r.kind == "plugin").take(50).collect();
         if plugin_records.is_empty() {
             return skipped(3, "activate 50 plugins + 50 extensions of one plugin", "registry carries no plugin-kind record");
@@ -1030,7 +1030,7 @@ pub mod scale_bench {
     /// 🏋️ Budgets 4 (memory) and 5 (interactive p95 under 40-cpu-actor load) share one fully-activated
     /// registry ("the" 50x50 scale claim) so budget 5 measures real contention against the same live
     /// fleet budget 4 just measured RSS for, instead of paying for a second 2550-instance activation.
-    fn budget_4_and_5(runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
+    fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
         let mut env = Env::new(runtime.clone(), shard_count);
         let mut activated: Vec<(ActorId, String)> = Vec::with_capacity(records.len());
         let mut instance_id = 1u32;
@@ -1138,7 +1138,7 @@ pub mod scale_bench {
     //#endregion 🔖️Budget4And5FullScale
 
     //#region 🔖️Budget6Hang
-    fn budget_6_hang(runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry");
         };
@@ -1227,7 +1227,7 @@ pub mod scale_bench {
     /// checkpoint wire path K1 unblocked.
     const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> identical state hash";
 
-    fn budget_7_stateful(runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
             return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
         };
@@ -1297,7 +1297,7 @@ pub mod scale_bench {
     //#endregion 🔖️Budget7Stateful
 
     //#region 🔖️Budget8CapabilityRevoke
-    fn budget_8_capability_revoke(runtime: &Arc<dyn GuestRuntime>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "io") else {
             return skipped(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "no io-profile record in registry");
         };
@@ -1371,8 +1371,8 @@ pub mod scale_bench {
                 return 1;
             }
         };
-        let runtime: Arc<dyn GuestRuntime> = match WasmtimeRuntime::new(SharedEngineConfig::default()) {
-            Ok(rt) => Arc::new(rt),
+        let runtime: Arc<GuestRuntimes> = match WasmtimeRuntime::new(SharedEngineConfig::default()) {
+            Ok(rt) => Arc::new(GuestRuntimes::Wasmtime(rt)),
             Err(error) => {
                 eprintln!("scale-bench: engine build failed: {error}");
                 return 1;

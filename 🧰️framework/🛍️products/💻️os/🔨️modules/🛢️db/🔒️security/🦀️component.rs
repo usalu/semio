@@ -503,9 +503,11 @@ fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &
 
 //#region 🔖️Audit
 /// @emoji 📣️ Emits a `security.authz_allowed`/`security.authz_denied` `EmitEvent` for
-/// one policy decision, via the family's shared `Emit` seam (see `Emit`'s doc for why
-/// this crate takes `&dyn Emit` rather than depending on `db_observe` directly).
-pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
+/// one policy decision, via the family's shared `Emit` seam (see `Emit`'s doc for why this crate
+/// stays generic over `E: Emit` rather than depending on `db_observe` directly — dedyn-emit-runtime,
+/// O1/R11(a): a caller-supplied, stored implementation is trivially generic, exactly like
+/// `db_artifact::ArtifactEngineConfig`'s own `A: AuthzHook`/`V: VersionGraph` params).
+pub fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
     let mut event = EmitEvent::new(name)
         .field("actor", EmitField::Text(principal.actor.0.clone()))
@@ -524,7 +526,7 @@ pub fn audit_decision(emit: &dyn Emit, principal: &Principal, scope: &AuthzScope
 /// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
-pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
+pub fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
     emit.emit(
         EmitEvent::new("security.replay_rejected")
             .with_document(ArtifactId::from(document.0.clone()))
@@ -535,7 +537,7 @@ pub fn audit_replay_rejected(emit: &dyn Emit, actor: &protocol::ActorId, mutatio
 
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
 /// when `BudgetRegistry` rejects a submission.
-pub fn audit_budget_exceeded(emit: &dyn Emit, key: &str, document: &protocol::ArtifactId) {
+pub fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::ArtifactId) {
     emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string())));
 }
 //#endregion 🔖️Audit
@@ -552,15 +554,20 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 /// its "admit → dedupe → ... → authz" stages, bundled behind one type. Every piece
 /// (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, `Emit`) is independently usable —
 /// `SecurityGate` is a convenience, not the only entry point.
-pub struct SecurityGate {
+///
+/// 🔀️ dedyn-emit-runtime, O1/R11(a): generic over `E: Emit` (default `NullEmit`) rather than
+/// `Arc<dyn Emit>` — this crate's own tests supply `RecordingEmit` to assert audit events fire,
+/// while every production wiring (`db_artifact`, `db_engine`, `🌎️hub`) uses the default `NullEmit`
+/// and never writes the type parameter out, so this is source-compatible everywhere unparameterized.
+pub struct SecurityGate<E: Emit + 'static = NullEmit> {
     policy: RoleBasedPolicy,
     replay: std::sync::Mutex<ReplayGuard>,
     budgets: std::sync::Mutex<BudgetRegistry>,
-    emit: std::sync::Arc<dyn Emit>,
+    emit: std::sync::Arc<E>,
 }
 
-impl SecurityGate {
-    pub fn new(policy: RoleBasedPolicy, replay: ReplayGuard, budgets: BudgetRegistry, emit: std::sync::Arc<dyn Emit>) -> Self {
+impl<E: Emit + 'static> SecurityGate<E> {
+    pub fn new(policy: RoleBasedPolicy, replay: ReplayGuard, budgets: BudgetRegistry, emit: std::sync::Arc<E>) -> Self {
         Self { policy, replay: std::sync::Mutex::new(replay), budgets: std::sync::Mutex::new(budgets), emit }
     }
 

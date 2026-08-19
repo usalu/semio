@@ -3,7 +3,7 @@
 //! Discrete Kirchhoff Triangle thin-plate bending element.
 
 use crate::formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
-use crate::model::{Dof, Element, ElementContext, ElementResult, MemberUdl, PlaneStress, PlateMoments};
+use crate::model::{Dof, Element, ElementContext, ElementResult, Elements, MemberUdl, PlaneStress, PlateMoments};
 use crate::algebra::{MatD, VecD};
 
 // #region 🔖️Geometry
@@ -915,7 +915,7 @@ mod tests {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = Model {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 })],
+            elements: vec![Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 }.into()],
             // A single bar only resists motion along its own axis, so `b`'s transverse (Ty) DOF must
             // also be restrained here — otherwise it's a mechanism (zero stiffness, singular system).
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "b".into(), fixed: vec![Dof::Ty] }],
@@ -937,7 +937,7 @@ mod tests {
         let (e, iy, area, l, p) = (200e9, 1e-5, 0.01, 2.0, 1000.0);
         let model = Model {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
             nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: -p }],
             member_loads: vec![],
@@ -1252,10 +1252,10 @@ mod continuum_tests {
                 nodes.push(Node { id: node_id(i, j), pos: [x, y, 0.0] });
             }
         }
-        let mut elements: Vec<Box<dyn Element>> = Vec::new();
+        let mut elements: Vec<Elements> = Vec::new();
         for i in 0..n {
             for j in 0..n {
-                elements.push(Box::new(Quad4 { id: format!("e{i}_{j}"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e: 1.0, nu: 1.0 / 3.0, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
+                elements.push(Quad4 { id: format!("e{i}_{j}"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e: 1.0, nu: 1.0 / 3.0, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }.into());
             }
         }
         let supports = (0..=n).map(|j| Support { node_id: node_id(0, j), fixed: vec![Dof::Tx, Dof::Ty] }).collect();
@@ -1415,15 +1415,16 @@ mod continuum_tests {
         }
     }
 
-    /// 🔌️ `Tri3Cst`/`Tri6Lst`/`Quad8` used as `Box<dyn Element>` inside a solved `Model` — unlike every
-    /// other test in this module (which calls their methods directly), this exercises `id`/`node_ids`/
-    /// `dofs_per_node` via the SAME dynamic-dispatch assembly path `solve_linear_static` uses for every
-    /// element kind, on three disjoint single-element-type patches sharing one solve.
+    /// 🔌️ `Tri3Cst`/`Tri6Lst`/`Quad8` used as `crate::model::Elements` variants inside a solved `Model`
+    /// — unlike every other test in this module (which calls their methods directly), this exercises
+    /// `id`/`node_ids`/`dofs_per_node` via the SAME `#[dyn_enum]`-generated dispatch path
+    /// `solve_linear_static` uses for every element kind, on three disjoint single-element-type patches
+    /// sharing one solve.
     #[semio_framework_async_macros::async_test]
-    async fn continuum_elements_solve_correctly_via_dyn_dispatch() {
+    async fn continuum_elements_solve_correctly_via_enum_dispatch() {
         let p = 1000.0;
         let mut nodes = vec![Node { id: "t3_a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "t3_b".into(), pos: [2.0, 0.0, 0.0] }, Node { id: "t3_c".into(), pos: [0.0, 2.0, 0.0] }];
-        let mut elements: Vec<Box<dyn Element>> = vec![Box::new(Tri3Cst { id: "t3".into(), nodes: ["t3_a".into(), "t3_b".into(), "t3_c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 })];
+        let mut elements: Vec<Elements> = vec![Tri3Cst { id: "t3".into(), nodes: ["t3_a".into(), "t3_b".into(), "t3_c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }.into()];
         let mut supports = vec![Support { node_id: "t3_a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "t3_b".into(), fixed: vec![Dof::Tx, Dof::Ty] }];
         let mut nodal_loads = vec![NodalLoad { node_id: "t3_c".into(), dof: Dof::Tx, value: p }];
 
@@ -1432,7 +1433,7 @@ mod continuum_tests {
         for i in 0..6 {
             nodes.push(Node { id: tri6_ids[i].into(), pos: [tri6_coords[i][0], tri6_coords[i][1], 0.0] });
         }
-        elements.push(Box::new(Tri6Lst { id: "t6".into(), nodes: std::array::from_fn(|i| tri6_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
+        elements.push(Tri6Lst { id: "t6".into(), nodes: std::array::from_fn(|i| tri6_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }.into());
         for &id in &tri6_ids[..5] {
             supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
         }
@@ -1443,7 +1444,7 @@ mod continuum_tests {
         for i in 0..8 {
             nodes.push(Node { id: quad8_ids[i].into(), pos: [quad8_coords[i][0], quad8_coords[i][1], 0.0] });
         }
-        elements.push(Box::new(Quad8 { id: "q8".into(), nodes: std::array::from_fn(|i| quad8_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
+        elements.push(Quad8 { id: "q8".into(), nodes: std::array::from_fn(|i| quad8_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }.into());
         for &id in &quad8_ids[..7] {
             supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
         }
@@ -1574,12 +1575,12 @@ mod plate_tests {
             }
         }
 
-        let mut elements: Vec<Box<dyn Element>> = Vec::new();
+        let mut elements: Vec<Elements> = Vec::new();
         for i in 0..n {
             for j in 0..n {
                 // Each grid cell split into 2 triangles along the (i,j)-(i+1,j+1) diagonal.
-                elements.push(Box::new(PlateDkt { id: format!("t{i}_{j}a"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)], e, nu, thickness: t, density: 0.0 }));
-                elements.push(Box::new(PlateDkt { id: format!("t{i}_{j}b"), nodes: [node_id(i, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e, nu, thickness: t, density: 0.0 }));
+                elements.push(PlateDkt { id: format!("t{i}_{j}a"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)], e, nu, thickness: t, density: 0.0 }.into());
+                elements.push(PlateDkt { id: format!("t{i}_{j}b"), nodes: [node_id(i, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e, nu, thickness: t, density: 0.0 }.into());
             }
         }
 

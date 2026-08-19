@@ -29,7 +29,13 @@ Usage:
 """
 import os, re, sys, json
 
-SKIP_DIRS = ('/target', '/node_modules', '/.git', '/vendor', '/storybook-static')
+SKIP_DIRS = ('/target', '/node_modules', '/.git', '/vendor', '/storybook-static', '/🤖️generated')
+# 🤖️ NEVER codemod machine-written output. The generators emit correct sync code; rewriting
+# their OUTPUT is undone by the next regeneration, and it silently breaks builds in the meantime.
+# Measured 2026-08-19: 22 generated .rs files had been asyncified, and the last 3 errors blocking
+# the entire guest SDK were `IconName::as_str`/`from_str` in one of them — while the generator that
+# writes that file was correct all along.
+
 
 FN_RE = re.compile(
     r'^(?P<indent>\s*)'

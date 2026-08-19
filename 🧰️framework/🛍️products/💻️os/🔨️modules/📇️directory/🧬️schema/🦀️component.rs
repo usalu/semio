@@ -257,7 +257,7 @@ pub enum DirectoryStreamMessage {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn event_body_kind_is_the_dotted_wire_string() {
         let body = DirectoryEventBody::SpaceCreated {
             space_id: "sp-1".into(),
@@ -274,7 +274,7 @@ mod tests {
         assert_eq!(round, body);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_kind_is_kebab_case() {
         let command = DirectoryCommand::CreateSpace { name: "Atelier".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private };
         let json = serde_json::to_value(&command).expect("serialize");
@@ -282,7 +282,7 @@ mod tests {
         assert_eq!(json["spaceKind"], "atelier");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stream_message_kinds_round_trip() {
         let heartbeat = DirectoryStreamMessage::Heartbeat { head_seq: 42 };
         let json = serde_json::to_value(&heartbeat).expect("serialize");

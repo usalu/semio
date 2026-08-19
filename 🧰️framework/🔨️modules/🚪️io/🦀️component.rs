@@ -1443,7 +1443,7 @@ impl IoFidelityDeclaration {
 mod io_fidelity_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_fidelity_class_parse_and_rank() {
         assert_eq!(IoFidelityClass::parse("exact").await.unwrap(), IoFidelityClass::Exact);
         assert_eq!(IoFidelityClass::parse("lossy").await.unwrap(), IoFidelityClass::Lossy);
@@ -1454,7 +1454,7 @@ mod io_fidelity_tests {
         assert_eq!(IoFidelityClass::Exact.as_str().await, "exact");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_fidelity_declaration_validate() {
         IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec![] }.validate().await.unwrap();
         assert!(IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec!["x".into()] }.validate().await.is_err());
@@ -1979,7 +1979,7 @@ pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAs
     for (key, descriptor) in proposed_formats {
         formats.entry(key).or_insert(descriptor);
     }
-    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
+    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations).await;
     Ok(())
 }
 
@@ -2074,7 +2074,7 @@ mod tests {
     /// 🌉️🌉️ hub = HOP1_INTO (resolved directly from the seed source), target = HOP2_INTO
     /// (resolved from hub's own composed output alone) — the exact 2-hop shape `io_compose_via`'s
     /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_compose_via_chains_two_registered_hops() {
         let _ = register_composer_entries(&ENTRIES).await.expect("register two-hop test entries");
         let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import).await;
@@ -2091,7 +2091,7 @@ mod tests {
 
     /// ⚠️ The hub hop itself failing (no registered entry) must surface as the hub's own
     /// `ComposeError`, never silently attempt the target hop with stale/absent data.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_compose_via_surfaces_hub_resolve_failure() {
         let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import).await;
         let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import).await;
@@ -2103,7 +2103,7 @@ mod tests {
         assert!(err.message.contains("no composer registered"), "{}", err.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
         let _ = register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).await.expect("first owner registers");
         assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]).await, Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
@@ -2131,7 +2131,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format_registry_allows_an_unregistered_mime_and_rejects_duplicate_claims() {
         let txt = format_descriptor_fixture("test.format.txt", "txt", &["text/plain"], &[".txt"]).await;
         let epw = format_descriptor_fixture("test.format.epw", "epw", &[], &[".epw"]).await;
@@ -2161,7 +2161,7 @@ mod tests {
         assert!(matches!(register_format_descriptors(vec![second]).await, Err(FormatRegistryError::Conflict(FormatRegistryConflict::Mime { mime, .. })) if mime == "application/x-wave0-conflict"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_budget_enforces_limits_and_shared_cancellation() {
         let cancellation = CancellationToken::new();
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 2, max_allocations: 1, max_recursion_depth: 1 }, cancellation: cancellation.clone() };
@@ -2249,7 +2249,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_context_bounds_streaming_random_access_recursion_and_resolved_resources() {
         let limits = CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 16, max_allocations: 4, max_recursion_depth: 1 };
         let resolver = std::sync::Arc::new(TestResolver);
@@ -2273,7 +2273,7 @@ mod tests {
         assert!(sink.write_chunk(b"x").await.is_err(), "writes cannot bypass the output budget");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolved_resources_cannot_outlive_their_cancellation_budget() {
         let cancellation = CancellationToken::new();
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits::default(), cancellation: cancellation.clone() };
@@ -2285,7 +2285,7 @@ mod tests {
         assert!(source.read_chunk(&mut [0u8; 1]).await.is_err(), "the resolved source must be cancellable after resolution");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() {
         assert!(matches!(wire_decode_composed_artifact(&vec![b' '; MAX_IO_WIRE_BYTES + 1]).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
         let wire = WireComposedArtifact {
@@ -2298,7 +2298,7 @@ mod tests {
         assert!(matches!(wire_decode_composed_artifact(&bytes).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order() {
         let invalid = SourceSpan { resource: String::new(), byte_start: 3, byte_end: 2, line: Some(1), column: None };
         assert!(invalid.validate().await.is_err());
@@ -2326,7 +2326,7 @@ mod tests {
 
     /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three
     /// dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_id_accepts_canonical_grammar() {
         for kind in ["s.stdio.stl", "s.stdio.semio"] {
             assert!(is_canonical_artifact_kind(kind).await, "{kind:?} should be canonical");
@@ -2336,7 +2336,7 @@ mod tests {
 
     /// ⚠️ Reject table covering: missing `s.` prefix, non-canonical vocabulary, uppercase, emoji,
     /// too few/too many segments, empty segment, leading hyphen.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_id_rejects_non_canonical_grammar() {
         for kind in ["stdio.stl", "3d.cad", "data.🏛️program", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
             assert!(!is_canonical_artifact_kind(kind).await, "{kind:?} should be rejected");
@@ -2347,7 +2347,7 @@ mod tests {
     /// 🔁️ `ArtifactRef::to_uri`/`parse_uri` round-trip, including an artifact id containing dots
     /// and dashes (must not be mistaken for dialect-coordinate delimiters since only the FIRST
     /// `!` is significant).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_ref_uri_round_trips() {
         let cases = [
             ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.stl".to_string(), standard: "1".to_string(), subset: "*".to_string() } },
@@ -2361,7 +2361,7 @@ mod tests {
     }
 
     /// 🔁️ Exact expected shape of `to_uri`, pinned so the format doesn't silently drift.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_ref_to_uri_matches_expected_shape() {
         let artifact_ref = ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
         assert_eq!(artifact_ref.to_uri().await, "abc123!s.stdio.gif@87a/*");
@@ -2369,7 +2369,7 @@ mod tests {
 
     /// ⚠️ `parse_uri` rejects a missing `!` and an empty artifact id, mirroring
     /// `parse_coordinate`'s own empty-component rejection.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_ref_parse_uri_rejects_malformed_input() {
         assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").await.is_err(), "missing '!' should fail");
         assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").await.is_err(), "empty artifact id should fail");
@@ -2795,7 +2795,7 @@ pub mod io_mechanism {
             (ArtifactDialect::from(from), ArtifactDialect::from(into))
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn route_is_deterministic() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
@@ -2813,7 +2813,7 @@ pub mod io_mechanism {
             assert_eq!(route1.value, route2.value, "route must not depend on registration order");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn route_respects_max_hops() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
@@ -2830,7 +2830,7 @@ pub mod io_mechanism {
             assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(E), 10).await.is_err(), "4 hops must fail even when the caller asks for 10 — max_hops is hard-clamped to 3");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn route_never_cycles() {
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
@@ -2844,7 +2844,7 @@ pub mod io_mechanism {
             assert_eq!(route.value.hops.len(), 2, "the cycle edge B->A must never appear in the winning route");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn route_prefers_higher_minimum_fidelity() {
             static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
             static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
@@ -2859,7 +2859,7 @@ pub mod io_mechanism {
             assert_eq!(route.hops.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn identify_only_sniffs_carriers() {
             // 🚫️async: E4 fn-pointer slot
             fn always_high(_: &IoPayload) -> Confidence {
@@ -2875,7 +2875,7 @@ pub mod io_mechanism {
             assert_eq!(found, vec![(ArtifactDialect::from(A), Confidence::High)], "only the carrier-origin entry may be sniffed");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn duplicate_entry_is_a_typed_error() {
             static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
@@ -2890,7 +2890,7 @@ pub mod io_mechanism {
             assert!(matches!(validate_against(&existing, &different).await, Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn registration_is_all_or_nothing() {
             static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
             static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
@@ -2927,7 +2927,7 @@ pub mod io_mechanism {
             if value.is_object() { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")] }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conformance_runs_after_deserialize() {
             let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A).await;
 

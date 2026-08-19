@@ -413,12 +413,25 @@ impl AuthzHook for AllowAll {
 /// this wave (see module doc): `db_engine` constructs this as a 4-field struct literal with no
 /// `..Default::default()` spread, so a new required field here would be a breaking change to a
 /// sibling crate this session does not own.
-pub struct ArtifactEngineConfig {
+// 🔀️ `A` is the pluggable `AuthzHook` implementation (open extension point per the module doc: "a
+// caller may still hand-roll one") — dedyn-fw-os-misc, R11(a): a stored, caller-supplied
+// implementation is trivially generic, so `Arc<dyn AuthzHook>` becomes `Arc<A>` with `AllowAll` as
+// the default so every existing `ArtifactEngineConfig`/`::default()` call site keeps compiling
+// unparameterized.
+// 🔀️ `V` is the pluggable `VersionGraph` backend, generic for the same reason as `A` (R11a). Unlike
+// `AuthzHook`, `VersionGraph`'s own closed 2-implementor set (`NullVersionGraph` here, the
+// `vcs`-feature-gated `VcsVersionGraph`) is closed with `dyn_enum_close!` into `db_engine`'s
+// `VersionGraphs` enum instead — but that enum lives in `db_engine`, one layer above this crate, and
+// the hard dependency rule ("only `db_engine` may depend on `vcs`") means `db_artifact` must stay
+// ignorant of it. Staying generic here (rather than naming `VersionGraphs` directly) preserves
+// exactly the erasure `Arc<dyn VersionGraph>` used to give this crate; `db_engine` is the one layer
+// that instantiates `V = VersionGraphs` concretely (see its `Database::document_engine_config`).
+pub struct ArtifactEngineConfig<A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
     pub limits: DbLimits,
     /// @emoji 🛂️ Deprecated-in-spirit extension seam, kept defined (see module doc): `submit` now
     /// authorizes through `security` instead. A caller with an existing `AuthzHook` impl can still
     /// call it manually; `ArtifactEngine` itself no longer does.
-    pub authz: Arc<dyn AuthzHook>,
+    pub authz: Arc<A>,
     /// @emoji 🔐️ The real authz/dedupe/DoS-budget gate `submit` calls once per envelope — see
     /// `db_security::SecurityGate::admit_command`'s doc. Keyed per-envelope by a `Principal`
     /// synthesized from that envelope's own `actor` (a permissive `"member"` role, `"default"`
@@ -428,19 +441,31 @@ pub struct ArtifactEngineConfig {
     /// @emoji 🌿️ The `vcs` seam (see `VersionGraph`'s doc) — `NullVersionGraph`
     /// (the default) answers every call `Unimplemented` rather than requiring an `Option` layer;
     /// only `db_engine` behind the `vcs` feature wires a real implementation in.
-    pub version_graph: Arc<dyn VersionGraph>,
-    pub emit: Arc<dyn Emit>,
+    pub version_graph: Arc<V>,
+    // 🔀️ dedyn-emit-runtime, O1/R11(c): every real call site (this crate's own `default()`,
+    // `db_engine::document_engine_config`'s `other_defaults.emit` spread) constructs `NullEmit` and
+    // nothing else — the field is stored but never actually called (`grep '.emit(' this crate: zero
+    // hits). Unlike `db_security::SecurityGate` (which genuinely needs `E: Emit` generic so its own
+    // tests can inject a `RecordingEmit`), there is no second implementor anywhere in this crate's
+    // call graph, so O1 takes the "exactly one impl" branch: concrete `NullEmit`, no `dyn`, no
+    // generic param added to this already-two-deep (`A`, `V`) config type.
+    pub emit: Arc<NullEmit>,
     pub preview_ttl_ms: u64,
     /// @emoji 🧬️ Projection factory: `submit`'s project step registers a fresh
     /// `db_projection::ProjectionEngine` from this on every call it needs one (see `🔖️Engine`'s doc
     /// for why a factory rather than a stored, already-built engine — `db_projection::
-    /// ProjectionEngine::new`'s borrowed-`IndexStorage` + owned-`Vec<Box<dyn ErasedProjection>>`
-    /// shape does not semio_compose_rs with `ArtifactEngine` owning its storage as `Arc<dyn DbStorage>`
-    /// without becoming self-referential). Defaults to no projections registered.
-    pub projections: Arc<dyn Fn() -> Vec<Box<dyn db_projection::ErasedProjection>> + Send + Sync>,
+    /// ProjectionEngine::new`'s borrowed-`IndexStorage` + owned-`Vec<E>` shape does not
+    /// semio_compose_rs with `ArtifactEngine` owning its storage as `Arc<dyn DbStorage>` without
+    /// becoming self-referential). Defaults to no projections registered — `db_projection::
+    /// NoProjections` (dedyn-fw-os-guestruntime, O1/R1: no first-party `dyn ErasedProjection`
+    /// trait object) is uninhabited, so this factory can never actually return anything today; not
+    /// one call site repo-wide overrides it with anything else. The day a real caller wants to
+    /// register a projection here, it swaps `NoProjections` for its own closed `ErasedProjection`
+    /// enum (R11) — this field's own `dyn Fn` closure stays (`dyn Fn` is R1-legal, a std trait).
+    pub projections: Arc<dyn Fn() -> Vec<db_projection::NoProjections> + Send + Sync>,
 }
 
-impl Default for ArtifactEngineConfig {
+impl Default for ArtifactEngineConfig<AllowAll, NullVersionGraph> {
     fn default() -> Self {
         let limits = DbLimits::default();
         let policy = db_security::RoleBasedPolicy::new().with_grant(db_security::Grant::allow("member", &["**"], &[db_security::Action::Read, db_security::Action::Write]));
@@ -462,7 +487,7 @@ impl Default for ArtifactEngineConfig {
 /// thread. Deliberately NOT `Send` (see `ArtifactAuthority`'s doc for why: `DocumentState` embeds
 /// `db_state::PMap`, which is `Rc`-based) — usable directly, single-threaded, wherever a mailbox
 /// isn't needed (e.g. this crate's own tests).
-pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime> {
+pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
     storage: Arc<db_storage::DbBackend<R>>,
@@ -479,18 +504,18 @@ pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime> {
     recent_touches: VecDeque<db_conflict::CommandTouch>,
     live_queries: HashMap<u64, db_query::LiveQuery>,
     next_live_query_id: u64,
-    config: ArtifactEngineConfig,
+    config: ArtifactEngineConfig<A, V>,
 }
 
 const MAX_RECENT_TOUCHES: usize = 256;
 
-impl<R: semio_framework_async::HostAsyncRuntime> ArtifactEngine<R> {
+impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<R, A, V> {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     // 🚫️async: E5 executor bridge — `ArtifactEngine`'s methods run only on `ArtifactAuthority`'s
     // own dedicated actor thread (R4 clause 2/4: the thread IS the executor for this bridge), so
     // they stay plain sync fns and drive their async storage calls via `db_actor::block_on`.
-    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine<R>, DbError> {
+    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<R, A, V>, DbError> {
         let core_id = to_core_document_id(&document);
         let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config))
@@ -503,7 +528,7 @@ impl<R: semio_framework_async::HostAsyncRuntime> ArtifactEngine<R> {
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
     // 🚫️async: E5 executor bridge — see `create`'s doc; same actor-thread bridge.
-    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine<R>, MaterializeReport), DbError> {
+    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<R, A, V>, MaterializeReport), DbError> {
         let core_id = to_core_document_id(&document);
         let mut report = MaterializeReport::default();
 
@@ -574,7 +599,7 @@ impl<R: semio_framework_async::HostAsyncRuntime> ArtifactEngine<R> {
         Ok((engine, report))
     }
 
-    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine<R> {
+    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<R, A, V> {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -1137,7 +1162,7 @@ impl ArtifactAuthority {
     /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
     /// that construction succeeds or fails — a caller never holds a `ArtifactAuthority` whose
     /// engine failed to open.
-    pub fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
+    pub fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static, A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R, A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let handle = std::thread::Builder::new()

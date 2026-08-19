@@ -275,7 +275,7 @@ pub async fn infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option
                 None => {
                     let parent_values: Vec<F::Value> = step.parents.iter().filter_map(|p| values.get(p).cloned()).collect();
                     let computed = F::compute(snapshot, &step.key, &parent_values).await;
-                    cache.insert(dep_hash, encode(&computed).await);
+                    cache.insert(dep_hash, encode(&computed).await).await;
                     computed
                 }
             }
@@ -368,7 +368,7 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️PlanShape
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn infer_field_computes_expected_values_over_the_dag() {
         let snapshot = base_snapshot();
         let values = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
@@ -380,7 +380,7 @@ mod tests {
     //#endregion 🧪️PlanShape
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = base_snapshot();
         let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
@@ -390,7 +390,7 @@ mod tests {
         assert_eq!(pure, via_disabled_cache);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cold_and_warm_cache_match_pure_recompute() {
         let snapshot = base_snapshot();
         let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
@@ -398,15 +398,15 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let cold = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache));
         assert_eq!(pure, cold);
-        assert_eq!(cache.stats().hits, 0);
-        assert!(cache.stats().misses > 0);
+        assert_eq!(cache.await.stats().await.hits, 0);
+        assert!(cache.await.stats().await.misses > 0);
 
         let warm = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache));
         assert_eq!(pure, warm);
-        assert!(cache.stats().hits > 0, "second run over the same snapshot must hit the warm cache");
+        assert!(cache.await.stats().await.hits > 0, "second run over the same snapshot must hit the warm cache");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tiny_budget_eviction_storm_still_matches_pure_recompute() {
         let snapshot = base_snapshot();
         let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
@@ -417,7 +417,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_a_leaf_weight_only_recomputes_that_leaf_and_its_descendants() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = base_snapshot();
@@ -425,21 +425,21 @@ mod tests {
 
         let mut changed = base.clone();
         changed.weights.insert("leaf_a", 99);
-        let before = cache.stats();
+        let before = cache.await.stats();
         let values = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.await.stats();
 
         // root is untouched by leaf_a's weight change (identical dep chain) => cache hit.
         // leaf_a changed directly => miss. leaf_b's own dep chain (root's hash) is unchanged => hit.
         // leaf_both depends on leaf_a's NEW value => its dep_input is unaffected but its parent
         // chain folds leaf_a's (changed) hash, so it also misses.
-        assert_eq!(after.misses - before.misses, 2, "only leaf_a and leaf_both (its descendant) may miss");
+        assert_eq!(after.await.misses - before.await.misses, 2, "only leaf_a and leaf_both (its descendant) may miss");
         assert_eq!(values["leaf_a"], 99 + 1);
         assert_eq!(values["leaf_b"], 3 + 1, "leaf_b must be unaffected by leaf_a's weight change");
         assert_eq!(values["root"], 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_the_root_weight_recomputes_the_entire_subtree() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = base_snapshot();
@@ -447,23 +447,23 @@ mod tests {
 
         let mut changed = base.clone();
         changed.weights.insert("root", 999);
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.await.stats();
 
-        assert_eq!(after.misses - before.misses, 4, "changing the root must miss for every entity in the DAG (all four are its descendants, root included)");
+        assert_eq!(after.await.misses - before.await.misses, 4, "changing the root must miss for every entity in the DAG (all four are its descendants, root included)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_all_cache_hits() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = base_snapshot();
         let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.hits - before.hits, 4);
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.await.hits - before.await.hits, 4);
     }
     //#endregion 🧪️IncrementalityLaw
 
@@ -475,34 +475,34 @@ mod tests {
         const FIELD_ID: &'static str = "test.dag.weight-sum";
         const SCHEMA_VERSION: u32 = 2;
         async fn reads() -> &'static [&'static str] {
-            WeightSum::reads()
+            WeightSum::reads().await
         }
         async fn plan(snapshot: &DagSnapshot) -> Vec<InferenceStep<Self::Key>> {
             WeightSum::plan(snapshot)
         }
         async fn dep_input(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8> {
-            WeightSum::dep_input(snapshot, key, parents)
+            WeightSum::dep_input(snapshot, key, parents).await
         }
         async fn compute(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
             WeightSum::compute(snapshot, key, parents)
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_version_bump_yields_zero_hits_on_an_otherwise_warm_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = base_snapshot();
         let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = infer_field::<DagSnapshot, WeightSumV2>(&base, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.hits, before.hits, "a version-salted key must never collide with the prior version's entries");
-        assert_eq!(after.misses - before.misses, 4);
+        let after = cache.await.stats();
+        assert_eq!(after.await.hits, before.await.hits, "a version-salted key must never collide with the prior version's entries");
+        assert_eq!(after.await.misses - before.await.misses, 4);
     }
     //#endregion 🧪️VersionSaltLaw
 
     //#region 🧪️DepHash
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dep_hash_root_is_deterministic_and_input_sensitive() {
         let a = DepHash::root("field", 1, b"input-a");
         let b = DepHash::root("field", 1, b"input-a");
@@ -511,37 +511,37 @@ mod tests {
         assert_ne!(a, c);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dep_hash_chain_is_order_independent_over_parent_set() {
         let p1 = DepHash::root("f", 1, b"p1");
         let p2 = DepHash::root("f", 1, b"p2");
-        let forward = DepHash::chain("f", 1, b"self", &[p1, p2]);
-        let backward = DepHash::chain("f", 1, b"self", &[p2, p1]);
+        let forward = DepHash::chain("f", 1, b"self", &[p1.await, p2.await]);
+        let backward = DepHash::chain("f", 1, b"self", &[p2.await, p1.await]);
         assert_eq!(forward, backward, "two entities with the same parent SET in different orders must hash identically");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dep_hash_chain_differs_from_root_for_the_same_input() {
         let root = DepHash::root("f", 1, b"same");
-        let chained = DepHash::chain("f", 1, b"same", &[DepHash::root("f", 1, b"parent")]);
+        let chained = DepHash::chain("f", 1, b"same", &[DepHash::root("f", 1, b"parent").await]);
         assert_ne!(root, chained);
     }
     //#endregion 🧪️DepHash
 
     //#region 🧪️Config
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_config_is_disabled() {
         assert!(!InferenceCacheConfig::default().enabled);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_drops_every_entry_and_resets_used_bytes() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() });
         let _ = infer_field::<DagSnapshot, WeightSum>(&base_snapshot(), Some(&mut cache));
-        assert!(!cache.entries.is_empty());
-        cache.clear();
-        assert!(cache.entries.is_empty());
-        assert_eq!(cache.used_bytes, 0);
+        assert!(!cache.await.entries.is_empty());
+        cache.await.clear();
+        assert!(cache.await.entries.is_empty());
+        assert_eq!(cache.await.used_bytes, 0);
     }
     //#endregion 🧪️Config
 }

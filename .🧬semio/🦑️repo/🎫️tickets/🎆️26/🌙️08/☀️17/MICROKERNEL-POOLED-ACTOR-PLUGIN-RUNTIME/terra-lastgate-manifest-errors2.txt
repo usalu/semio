@@ -1,0 +1,625 @@
+error[E0599]: no method named `as_object_mut` found for opaque type `impl Future<Output = serde_json::Value>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:407:35
+    |
+407 |         if let Some(map) = schema.as_object_mut() {
+    |                                   ^^^^^^^^^^^^^ method not found in `impl Future<Output = serde_json::Value>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+407 |         if let Some(map) = schema.await.as_object_mut() {
+    |                                   ++++++
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:893:44
+     |
+ 893 |         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind)).await
+     |         ---------                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `ActionDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:876:111
+     |
+ 876 | ...ind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+     |                                   ^^^^^^^^^^^^^^ required by this bound in `ActionDefinition::new`
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:893:9
+     |
+ 893 |         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind)).await
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `ActionDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:876:111
+     |
+ 876 | ...ind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+     |                                   ^^^^^^^^^^^^^^ required by this bound in `ActionDefinition::new`
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:893:79
+     |
+ 893 |         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind)).await
+     |                                                                               ^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `ActionDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:876:111
+     |
+ 876 | ...ind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+     |                                   ^^^^^^^^^^^^^^ required by this bound in `ActionDefinition::new`
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:985:98
+    |
+985 |         .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
+    |                                                                                                  ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+985 |         .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required()]),
+    |                                                                                                  ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1012:91
+     |
+1012 |     .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).default_value(serde_json::json!...
+     |                 -------------------- arguments to this function are incorrect             ^^^^^^^ expected `Vec<ActionArgOption>`, found `Vec<impl Future<Output = ...>>`
+     |
+     = note: expected struct `Vec<ActionArgOption>`
+                found struct `Vec<impl Future<Output = ActionArgOption>>`
+note: associated function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:334:18
+     |
+ 334 |     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+     |                  ^^^^^^                                                          -----------------------------
+
+
+error[E0599]: no method named `default_value` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1012:100
+     |
+1012 | ...ilter", "Filter"), options).default_value(serde_json::json!("all"))])
+     |                                ^^^^^^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1012 |     .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all"))])
+     |                                                                                                    ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1034:86
+     |
+1034 |         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
+     |                                                                                      ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1034 |         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required(),
+     |                                                                                      ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1035:85
+     |
+1035 |         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
+     |                                                                                     ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1035 |         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required(),
+     |                                                                                     ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1068:96
+     |
+1068 |             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options)
+     |             -------------------- arguments to this function are incorrect                      ^^^^^^^^^^^^^^^^^ expected `Vec<ActionArgOption>`, found `Vec<impl Future<Output = ...>>`
+     |
+     = note: expected struct `Vec<ActionArgOption>`
+                found struct `Vec<impl Future<Output = ActionArgOption>>`
+note: associated function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:334:18
+     |
+ 334 |     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+     |                  ^^^^^^                                                          -----------------------------
+
+
+error[E0599]: no method named `default_value` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1069:18
+     |
+1068 | /             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options)
+1069 | |                 .default_value(serde_json::json!("original")),
+     | |                 -^^^^^^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     | |_________________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1069 |                 .await.default_value(serde_json::json!("original")),
+     |                  ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1132:88
+     |
+1132 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+     |                                                                                        ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1132 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required(),
+     |                                                                                        ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1133:87
+     |
+1133 |             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+     |                                                                                       ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1133 |             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required(),
+     |                                                                                       ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1134:94
+     |
+1134 |             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
+     |             -------------------- arguments to this function are incorrect                    ^^^^^^^^^^^^^ expected `Vec<ActionArgOption>`, found `Vec<impl Future<Output = ...>>`
+     |
+     = note: expected struct `Vec<ActionArgOption>`
+                found struct `Vec<impl Future<Output = ActionArgOption>>`
+note: associated function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:334:18
+     |
+ 334 |     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+     |                  ^^^^^^                                                          -----------------------------
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1134:109
+     |
+1134 |             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
+     |                                                                                                             ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1134 |             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).await.required(),
+     |                                                                                                             ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1135:89
+     |
+1135 |             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
+     |             -------------------- arguments to this function are incorrect               ^^^^^^^^^^^^^^ expected `Vec<ActionArgOption>`, found `Vec<impl Future<Output = ...>>`
+     |
+     = note: expected struct `Vec<ActionArgOption>`
+                found struct `Vec<impl Future<Output = ActionArgOption>>`
+note: associated function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:334:18
+     |
+ 334 |     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+     |                  ^^^^^^                                                          -----------------------------
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1135:105
+     |
+1135 |             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
+     |                                                                                                         ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1135 |             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required(),
+     |                                                                                                         ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1142:88
+     |
+1142 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+     |                                                                                        ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1142 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required(),
+     |                                                                                        ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1143:87
+     |
+1143 |             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
+     |                                                                                       ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1143 |             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required(),
+     |                                                                                       ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1144:87
+     |
+1144 |             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+     |                                                                                       ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1144 |             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required(),
+     |                                                                                       ++++++
+
+
+error[E0599]: no method named `with_args` found for opaque type `impl Future<Output = ActionDefinition>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1159:10
+     |
+1154 | /         ActionDefinition::new_catalog(
+1155 | |             SET_SELECTION_MODE_ACTION_ID,
+1156 | |             LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"),
+1157 | |             ActionKind::Interaction,
+1158 | |         )
+1159 | |         .with_args([
+     | |         -^^^^^^^^^ method not found in `impl Future<Output = ActionDefinition>`
+     | |_________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1159 |         .await.with_args([
+     |          ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1160:88
+     |
+1160 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+     |                                                                                        ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1160 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required(),
+     |                                                                                        ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1161:83
+     |
+1161 |             ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required(),
+     |             -------------------- arguments to this function are incorrect         ^^^^^^^^^^^^ expected `Vec<ActionArgOption>`, found `Vec<impl Future<Output = ...>>`
+     |
+     = note: expected struct `Vec<ActionArgOption>`
+                found struct `Vec<impl Future<Output = ActionArgOption>>`
+note: associated function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:334:18
+     |
+ 334 |     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+     |                  ^^^^^^                                                          -----------------------------
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1161:97
+     |
+1161 |             ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required(),
+     |                                                                                                 ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1161 |             ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required(),
+     |                                                                                                 ++++++
+
+
+error[E0599]: no method named `with_args` found for opaque type `impl Future<Output = ActionDefinition>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1168:10
+     |
+1163 | /         ActionDefinition::new_catalog(
+1164 | |             SET_INTERACTION_GRANULARITY_ACTION_ID,
+1165 | |             LocalizedLabel::native("Set Granularity", "Granularität festlegen"),
+1166 | |             ActionKind::Interaction,
+1167 | |         )
+1168 | |         .with_args([
+     | |         -^^^^^^^^^ method not found in `impl Future<Output = ActionDefinition>`
+     | |_________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1168 |         .await.with_args([
+     |          ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1169:88
+     |
+1169 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+     |                                                                                        ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1169 |             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required(),
+     |                                                                                        ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1170:104
+     |
+1170 |             ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required(),
+     |                                                                                                        ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1170 |             ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required(),
+     |                                                                                                        ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1193:91
+     |
+1193 |         ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(),
+     |                                                                                           ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1193 |         ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required(),
+     |                                                                                           ++++++
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1214:90
+     |
+1214 |     .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).required()])
+     |                                                                                          ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1214 |     .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required()])
+     |                                                                                          ++++++
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1417:48
+     |
+1417 |         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind).await
+     |         ---------                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `CommandDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1398:23
+     |
+1394 |     pub async fn new(
+     |                  --- required by a bound in this associated function
+...
+1398 |         icon_id: impl Into<IconName>,
+     |                       ^^^^^^^^^^^^^^ required by this bound in `CommandDefinition::new`
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1417:9
+     |
+1417 |         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind).await
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `CommandDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1398:23
+     |
+1394 |     pub async fn new(
+     |                  --- required by a bound in this associated function
+...
+1398 |         icon_id: impl Into<IconName>,
+     |                       ^^^^^^^^^^^^^^ required by this bound in `CommandDefinition::new`
+
+
+error[E0277]: the trait bound `IconName: From<impl Future<Output = IconName>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1417:84
+     |
+1417 |         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind).await
+     |                                                                                    ^^^^^ the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+     |
+help: the trait `From<impl Future<Output = IconName>>` is not implemented for `IconName`
+      but trait `From<&str>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs:1529:1
+     |
+1529 | impl From<&str> for IconName {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `&str`, found `impl Future<Output = IconName>`
+     = note: required for `impl Future<Output = IconName>` to implement `Into<IconName>`
+note: required by a bound in `CommandDefinition::new`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1398:23
+     |
+1394 |     pub async fn new(
+     |                  --- required by a bound in this associated function
+...
+1398 |         icon_id: impl Into<IconName>,
+     |                       ^^^^^^^^^^^^^^ required by this bound in `CommandDefinition::new`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1614:21
+     |
+1614 |         id.push_str(&element_id_segment(segment));
+     |            -------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |            |
+     |            arguments to this method are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/string.rs:1106:12
+     |
+1106 |     pub fn push_str(&mut self, string: &str) {
+     |            ^^^^^^^^
+
+
+error[E0277]: a value of type `Vec<ActionArgOption>` cannot be built from an iterator over elements of type `impl Future<Output = ActionArgOption>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2597:97
+     |
+2597 |     let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
+     |                                                                                                 ^^^^^^^ value of type `Vec<ActionArgOption>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = ActionArgOption>>`
+     |
+help: the trait `FromIterator<impl Future<Output = ActionArgOption>>` is not implemented for `Vec<ActionArgOption>`
+      but trait `FromIterator<ActionArgOption>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:3938:1
+     |
+3938 | impl<T> FromIterator<T> for Vec<T> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `ActionArgOption`, found `impl Future<Output = ActionArgOption>`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2597:36
+     |
+2596 | pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
+     |                                               --------- this expression has type `&[TutorialDefinition]`
+2597 |     let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
+     |                             ------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `impl Future<Output = ActionArgOption>` here
+     |                             |
+     |                             `Iterator::Item` is `&TutorialDefinition` here
+note: required by a bound in `collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+
+error[E0599]: no method named `required` found for opaque type `impl Future<Output = ActionArgDef>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2602:109
+     |
+2602 |     .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).required()])
+     |                                                                                                             ^^^^^^^^ method not found in `impl Future<Output = ActionArgDef>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2602 |     .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required()])
+     |                                                                                                             ++++++
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3243:22
+     |
+3243 |     format!("{}#{}", dialect.to_coordinate(), role.as_str())
+     |              --      ^^^^^^^^^^^^^^^^^^^^^^^ `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+     |              |
+     |              required by this formatting parameter
+     |
+     = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = std::string::String>`
+     = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3243:47
+     |
+3243 |     format!("{}#{}", dialect.to_coordinate(), role.as_str())
+     |                 --                            ^^^^^^^^^^^^^ `impl Future<Output = &'static str>` cannot be formatted with the default formatter
+     |                 |
+     |                 required by this formatting parameter
+     |
+     = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = &'static str>`
+     = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3440:48
+     |
+3440 |     window_kind.actions.iter().filter(|action| action_is_panel_eligible(action)).collect()
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `bool`, found future
+
+
+error[E0277]: can't compare `std::string::String` with `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:66
+     |
+3454 |         if let Some(tool) = app.tools.iter().find(|tool| tool.id == tool_ref.as_str()) {
+     |                                                                  ^^ no implementation for `std::string::String == impl Future<Output = &str>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = &str>>` is not implemented for `std::string::String`
+     = help: `std::string::String` implements trait `PartialEq<Rhs>`:
+               PartialEq<&str>
+               PartialEq<ByteStr>
+               PartialEq<ByteString>
+               PartialEq<Cow<'_, str>>
+               PartialEq<Path>
+               PartialEq<PathBuf>
+               PartialEq<serde_json::Value>
+               PartialEq<str>
+               PartialEq
+
+
+error[E0599]: no method named `to_vec` found for opaque type `impl Future<Output = &[std::string::String]>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3477:67
+     |
+3477 |     let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
+     |                                                                   ^^^^^^ method not found in `impl Future<Output = &[std::string::String]>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+3477 |     let mut breadcrumb = resolve_app_breadcrumb(app, terminology).await.to_vec();
+     |                                                                   ++++++
+
+
+error[E0599]: no method named `unwrap_or_default` found for opaque type `impl Future<Output = std::option::Option<Terminology>>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3479:76
+     |
+3479 |     let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
+     |                                                                            ^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = std::option::Option<Terminology>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+3479 |     let normalized_app = app.label.resolve(Terminology::parse(terminology).await.unwrap_or_default(), locale).trim().to_lowercase();
+     |                                                                            ++++++
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4952:55
+     |
+4952 |         let mut ports = vec![self.document_in_port(), self.document_out_port()];
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^ expected future, found a different future
+     |
+     = help: consider `await`ing on both `Future`s
+     = note: distinct uses of `impl Trait` result in different opaque types
+
+

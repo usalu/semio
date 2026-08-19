@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+        "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+        "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
       }
@@ -24,7 +24,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+        "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
       }
@@ -33,7 +33,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+        "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }

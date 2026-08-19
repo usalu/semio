@@ -33,12 +33,29 @@ use dsl::{from_dsl_value, to_dsl_value};
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PackageDescriptor, PluginManifest, PortMultiplicity};
+// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the reactor-ABI event/
+// effect vocabulary `WasmtimeNodeHost::open`/`run_turn`/`exchange` now speak — the same family of
+// names `🎯️targets/🧊️wgpu/📦️glue.rs`'s `kernel_runtime` module imports from this same path, for the
+// same reason (driving a real turn through `semio_framework_actor::Kernel`); this crate uses
+// `Effect::Respond`/`RequestOutcome` (per-command reply correlation) rather than that consumer's
+// `Effect::SendMessage`/`MessageEndpoint` (UI-surface push messaging, which `run` has no use for).
+use semio_framework::kernel::{AppInstanceId, Effect, Event, PluginInstanceId, QuotaSchema, RequestOutcome};
 use semio_framework_actor::ActorId as RuntimeActorId;
+use semio_framework_actor::{ActivationEvent, ActorKind, Backpressure, Envelope, Lane, Origin, PackageId, Payload};
 use semio_framework_async::{CancelToken, OperationContext, TraceId};
+// 🎛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (dedyn-fw-os-guestruntime): trait import needed for
+// `.compile`/`.instantiate` method-call syntax now that `runtime` below is the concrete
+// `GuestRuntimes` enum, not `dyn GuestRuntime` (a `dyn Trait` receiver resolves its methods without
+// the trait in scope; a concrete enum implementing it does not).
+use semio_framework_plugin_host::GuestRuntime;
+// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the shared
+// kernel-activation facade — see `semio-framework-os`'s own `🎠️activation.rs` module doc for why it
+// lives in the product's host crate rather than in the wgpu target's `ParallelRuntime`.
+use semio_framework_os::activation::{actor_budget_from_turn_budget, NativeKernelRuntime};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
-use store::BlobStore;
+use store::{BlobStore, NoBlobStore};
 use workflow::{MediaContract, PortFingerprint, RunNodeRecord, RunNodeStatus, RunMutation, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
@@ -99,14 +116,20 @@ pub enum RunError {
 // 🔇️ `async fn` in a trait normally warns because it hides a `Send` bound a `dyn` caller might
 // need — irrelevant here: `AppChannelHost` is used only as a generic bound (`SpaceRunner<H:
 // AppChannelHost>`), never as `dyn AppChannelHost` (verified: `grep -rn "dyn AppChannelHost"`
-// across the repo has zero hits), and every await point in this crate runs on one thread via
-// `futures_lite::future::block_on`, never crossing an executor that needs the future to be `Send`.
+// across the repo has zero hits), so no caller can ever demand a `Send` future regardless of what
+// `open`/`exchange` do inside — R3's rule (Send obtained structurally, never a bound) applies to
+// generic call sites too, not only `dyn` ones. MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet
+// `run-kernel-wiring`): `WasmtimeNodeHost`'s own `open`/`exchange` now genuinely cross real OS
+// threads inside one `.await` (`run_turn`'s `Kernel`-dispatched `ShardExecutor` turn) — the "single
+// thread, one `block_on`" claim this comment used to make described the OLD stub bodies, not the
+// real ones; the reasoning above (no `dyn`, so no forced `Send`) is what actually keeps this legal,
+// and it always was.
 #[allow(async_fn_in_trait)]
 pub trait AppChannelHost {
     /// 🗺️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `artifact_ref`
     /// (the node's own `WorkflowNode.artifact_ref`) is threaded through so a real host can populate
     /// its `InstanceDirectory` at instantiate-app time — a fake/test host is free to ignore it.
-    fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError>;
+    async fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError>;
     async fn exchange(&mut self, ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError>;
 }
 //#endregion 🔖️AppChannelHost
@@ -212,7 +235,7 @@ impl BlobStore for InMemoryBlobStore {
 /// payload's bytes never live inline in `Media` (only its content-addressed `blob_hash` does) — this
 /// is the one place that boundary is crossed, resolving them through `blob_store` into the wire's
 /// inline `data`.
-pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(Vec<u8>, Vec<u8>), RunError> {
+pub fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> Result<(Vec<u8>, Vec<u8>), RunError> {
     let (wire, blob_hash, data) = match &media.payload {
         MediaPayload::Structured { schema, json } => (MediaWireFormat::Document { schema: schema.clone() }, None, json.clone().into_bytes()),
         MediaPayload::Binary { format_kind, blob_hash } => {
@@ -229,7 +252,7 @@ pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(V
 /// `blob_store` (content-addressed, idempotent) rather than kept inline, mirroring `Media`'s own
 /// "binary payloads never carry bytes directly" invariant — the freshly computed hash supersedes
 /// whatever `blob_hash` the artifact's own descriptor claimed.
-pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn BlobStore) -> Result<Media, RunError> {
+pub fn media_from_artifact<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
     let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = from_dsl_value(value).map_err(|error| RunError::Host(error))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
@@ -923,9 +946,17 @@ pub fn plan(
 /// see `node_parameter_overlay_bytes`). A clean node is never opened at all; its cached output
 /// fingerprints feed straight into its consumers. `run()` is READONLY over `documents`/`configs` — see
 /// this crate's module doc — every byte it produces lands in the caller-supplied `RunSink` instead.
-pub struct SpaceRunner<H: AppChannelHost> {
+// 🔀️ `B` is the pluggable `BlobStore` backend — dedyn-fw-os-misc, R11(a): `BlobStore` has 5 impls
+// spread across independently-owned modules/crates (`🏪️store::NoBlobStore`/`FolderSqliteStorage`,
+// `🪐️space::TestBlobStore`, this crate's own `FileBlobStore`/`InMemoryBlobStore`) — a genuinely open,
+// cross-crate extension point (`🏃️run` cannot name a `🪐️space`/`🏪️store::sync` type without a reverse
+// dependency), so `dyn_enum_close!` cannot close it; every caller already supplies a concrete value
+// explicitly (`SpaceRunner::new`'s own `blob_store` parameter), so `B` is inferred at every call
+// site and the `NoBlobStore` default only matters for a bare `SpaceRunner<H>` mention (none exist
+// outside doc comments, verified).
+pub struct SpaceRunner<H: AppChannelHost, B: BlobStore + 'static = NoBlobStore> {
     host: H,
-    blob_store: Arc<dyn BlobStore>,
+    blob_store: Arc<B>,
     /// ⚖️ This run's local/authority `MergePolicy` (contract-freeze.md §C3) — sent as
     /// `AppCommand::SetMergePolicy` right after every node's `Hello`, in the same batched exchange
     /// (see `compute_node`'s doc). `--policy`/config default: `Normal`.
@@ -942,8 +973,8 @@ pub struct SpaceRunner<H: AppChannelHost> {
     deadline_ms: Option<u64>,
 }
 
-impl<H: AppChannelHost> SpaceRunner<H> {
-    pub fn new(host: H, blob_store: Arc<dyn BlobStore>, merge_policy: protocol::MergePolicy) -> Self {
+impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
+    pub fn new(host: H, blob_store: Arc<B>, merge_policy: protocol::MergePolicy) -> Self {
         Self { host, blob_store, merge_policy, cancel: CancelToken::root(), deadline_ms: None }
     }
 
@@ -977,11 +1008,11 @@ impl<H: AppChannelHost> SpaceRunner<H> {
     /// and caching the handle in `live` on first use. Lazy by construction (unlike a plain
     /// `HashMap::entry(..).or_insert(expr)`, which would evaluate `expr` — and so call `host.open` —
     /// unconditionally even when the entry already exists).
-    fn open_node(&mut self, live: &mut HashMap<String, u32>, node: &WorkflowNode) -> Result<u32, RunError> {
+    async fn open_node(&mut self, live: &mut HashMap<String, u32>, node: &WorkflowNode) -> Result<u32, RunError> {
         if let Some(handle) = live.get(&node.id) {
             return Ok(*handle);
         }
-        let handle = self.host.open(&node.plugin_id, &node.app_id, &node.artifact_ref)?;
+        let handle = self.host.open(&node.plugin_id, &node.app_id, &node.artifact_ref).await?;
         live.insert(node.id.clone(), handle);
         Ok(handle)
     }
@@ -1009,7 +1040,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         if self.cancel.is_cancelled() {
             return Err(RunError::Cancelled);
         }
-        let handle = self.open_node(live, node)?;
+        let handle = self.open_node(live, node).await?;
         let ctx = self.node_ctx(handle);
 
         let mut seq: u64 = 0;
@@ -1271,8 +1302,23 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 /// belongs with the kernel/scheduler (H1-H4/T1), not this packet — they compile and are correctly
 /// typed, but always return a clearly-worded `TransactionError` today.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct WasmtimeNodeHost {
-    runtime: Arc<dyn semio_framework_plugin_host::GuestRuntime>,
+// 🔀️ `B: BlobStore + 'static = NoBlobStore` — same open-extension-point reasoning as `SpaceRunner`'s
+// own `B` (see its doc comment). `blob_store` here is `#[allow(dead_code)]` (reserved, unused) but
+// still a real caller-supplied `new()` parameter, so the same generic treatment applies.
+pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
+    /// 🧬️ Compiles components and (for `load_runtime_recursive`'s own plugin-service instance only)
+    /// instantiates them directly — see `kernel`'s own doc for why that ONE call site does not go
+    /// through the full kernel-activation facade.
+    guest_runtime: Arc<semio_framework_plugin_host::GuestRuntimes>,
+    /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real kernel this
+    /// host now drives instead of minting `RuntimeActorId`s ad hoc — see `semio-framework-os`'s
+    /// `🎠️activation.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
+    /// (mints the id, pins a shard, hands the `GuestInstance` to that shard's own `ShardExecutor`
+    /// thread); `load_runtime_recursive`'s per-plugin router-registration instance uses only
+    /// `kernel.kernel_mut().activate` (id-minting/bookkeeping, no shard handoff) because
+    /// `PluginInstanceHandle` still calls `GuestRuntime::execute_turn` directly on its own
+    /// `GuestInstance` — see that field's own doc for why those are genuinely two different shapes.
+    kernel: NativeKernelRuntime,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
     /// 📦️ `plugin_id -> its committed 🛂️descriptor.semio path` (registry `cratePath`-derived, see
     /// `📦️bin.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
@@ -1290,7 +1336,7 @@ pub struct WasmtimeNodeHost {
     /// OLD synchronous `register_host_blob_store`/`HostState.blob_store` wiring is gone with
     /// `HostState` itself; nothing calls into this yet.
     #[allow(dead_code)]
-    blob_store: Arc<dyn BlobStore>,
+    blob_store: Arc<B>,
     /// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): shared
     /// across every plugin this host lazily loads, so any loaded plugin's routed `io-run`/`io-sniff`
     /// job dispatch can reach any OTHER loaded plugin's registry — see `IoRouter`'s own doc comment.
@@ -1319,37 +1365,68 @@ pub struct WasmtimeNodeHost {
     /// `set_default_app`'s doc); a real multi-session deployment would fold this from a durable op
     /// log at boot instead of starting empty every run.
     opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences,
-    /// 🧬️ Not read yet — `open`'s real body (its own doc comment) mints the returned handle from
-    /// this counter, same as the deleted `WasmPluginRuntime`-backed version did.
-    #[allow(dead_code)]
+    /// 🧬️ `open`'s real body mints the returned handle from this counter — see that method.
     next_handle: u32,
-    /// ✅️ R1-native-manifest: `load_runtime_recursive` mints each loaded plugin's OWN
-    /// `RuntimeActorId` (`ActorId::new(0, 0, ordinal, 0)`) from this counter, one per plugin, for the
-    /// `PluginInstanceHandle` registered with `io_router`/`inference_router` (post-turn job dispatch
-    /// — see `PluginInstanceHandle`'s own doc). `open`'s own per-app-instance actor minting (its doc
-    /// comment) is a SEPARATE, still-unwired concern.
-    next_actor_ordinal: u64,
+    /// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `Kernel::activate`
+    /// takes a caller-supplied `plugin_ordinal: u16`, one per DISTINCT plugin id (not one per
+    /// activation — the SAME convention `🎯️targets/🧊️wgpu/📦️glue.rs`'s own `kernel_runtime::
+    /// plugin_ordinal` uses), so both `load_runtime_recursive`'s plugin-service actor and `open`'s
+    /// per-app-instance actors for the SAME plugin share one ordinal. Replaces the old raw
+    /// `next_actor_ordinal: u64` counter, which minted every actor id ad hoc outside the kernel.
+    plugin_ordinals: HashMap<String, u16>,
     /// 🗺️ `handle -> (plugin_id, instance_id)` — the SAME addressing scheme `WasmPluginRuntime` used
     /// (one runtime hosting many `create_app`-minted instance ids); the live `GuestInstance` for
     /// `(plugin_id, instance_id)` lives in `guest_instances` below, since `design-abi.md §4`'s actor
     /// model gives each app instance its OWN `GuestInstance`/`RuntimeActorId` now, not a shared store.
     instances: HashMap<u32, (String, u32)>,
-    /// 🧬️ Not populated yet — see `instances`' own doc and `open`'s doc comment.
+    /// ✅️ `handle -> ActorId` for every instance `open` has activated through `kernel` — `run_turn`'s
+    /// own lookup key for `Kernel::submit`/`tick_and_dispatch`/`complete`.
+    instance_actors: HashMap<u32, RuntimeActorId>,
+    /// 🧬️ Not populated yet — `open`'s own `GuestInstance` is owned by its pinned `ShardExecutor`
+    /// thread now (see `kernel`'s own doc), not held here; this map is reserved for a future
+    /// suspend/resume/checkpoint path that needs to read a live instance's state back out.
     #[allow(dead_code)]
     guest_instances: HashMap<(String, u32), semio_framework_plugin_host::GuestInstance>,
+    /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — same
+    /// purity-respecting clock source as `🎯️targets/🧊️wgpu/📦️glue.rs`'s `KernelThreadState::now_ms`
+    /// (`Kernel` itself takes no clock, per `🎭️actor`'s own rule), incremented once per `run_turn`.
+    now_ms: u64,
+    /// 🔢️ `Envelope.seq` / `Event::AppCommandEvent.seq` source for this host's own turns — distinct
+    /// from `SpaceRunner::compute_node`'s own per-node `next_seq` closure (that one numbers
+    /// `AppCommand`s within a single batched `exchange` call; this one numbers kernel envelopes).
+    next_turn_seq: u64,
 }
 
+/// ⛽️ One generous constant turn/instantiate budget, shared by `load_runtime_recursive`'s
+/// plugin-service instantiate call and `run_turn`'s real per-node turns — until the DRR scheduler
+/// threads a real per-lane one through (same honestly-flagged gap `🎯️targets/🧊️wgpu/📦️glue.rs`'s own
+/// `kernel_runtime::TURN_BUDGET` already documents on that consumer).
 #[cfg(not(target_arch = "wasm32"))]
-impl WasmtimeNodeHost {
+const NODE_TURN_BUDGET: semio_framework::kernel::Budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// 🗺️ `plugin_path_for_plugin` maps a plugin id (`WorkflowNode::plugin_id`, the same id
     /// `PLUGIN_WASM_ARTIFACTS`' first tuple element names) to the compiled `.wasm` component path the
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
     /// `descriptor_path_for_plugin` maps the SAME plugin id to its committed `🛂️descriptor.semio`
     /// (registry `cratePath`-derived — see `📦️bin.rs`'s `resolve_descriptor_paths`); absent entries
     /// simply have no committed descriptor yet (this struct's own doc).
-    pub fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<dyn BlobStore>) -> Self {
+    /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `async` now — it
+    /// builds `kernel` (`NativeKernelRuntime::new`, itself `async` since `Kernel::new`/`Kernel::
+    /// activate` are, per the crate-wide universal-async decree, O1). `shard_count: 1`: this host's
+    /// own contract is strictly sequential, one node/turn at a time (`AppChannelHost`'s own doc:
+    /// "the guest contract is still exactly one turn at a time per instance ... a caller that wants
+    /// concurrency must open distinct instances, never overlap two turns on one" — and
+    /// `SpaceRunner::run`'s node loop never opens two instances concurrently either), so a second
+    /// shard thread would sit idle. The type stays general (same `shard_count` parameter
+    /// `ParallelRuntime::new` takes) for a future caller that does want more.
+    pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>) -> Self {
+        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).expect("shared wasmtime engine builds")));
+        let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64).await;
         Self {
-            runtime: Arc::new(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).expect("shared wasmtime engine builds")),
+            guest_runtime,
+            kernel,
             plugin_path_for_plugin,
             descriptor_path_for_plugin,
             compiled_for_plugin: HashMap::new(),
@@ -1364,9 +1441,100 @@ impl WasmtimeNodeHost {
             app_router: Arc::new(semio_framework_plugin_host::AppRouter::new()),
             opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences::default(),
             next_handle: 1,
-            next_actor_ordinal: 1,
+            plugin_ordinals: HashMap::new(),
             instances: HashMap::new(),
+            instance_actors: HashMap::new(),
             guest_instances: HashMap::new(),
+            now_ms: 0,
+            next_turn_seq: 1,
+        }
+    }
+
+    /// 🔢️ One ordinal per DISTINCT plugin id — see `plugin_ordinals`' own doc.
+    fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
+        let next = self.plugin_ordinals.len() as u16;
+        *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
+    }
+
+    /// 🎬️ `Envelope`/`Event::AppCommandEvent` sequence source — see `next_turn_seq`'s own field doc.
+    fn take_turn_seq(&mut self) -> u64 {
+        let seq = self.next_turn_seq;
+        self.next_turn_seq += 1;
+        seq
+    }
+
+    /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): drives one batch of
+    /// `events` for `actor`/`instance` genuinely through the kernel — `Kernel::submit` → tick-and-
+    /// dispatch to `actor`'s own pinned shard → wait for its `ShardOutcome` → `Kernel::complete` —
+    /// mirroring `🎯️targets/🧊️wgpu/📦️glue.rs`'s own `KernelThreadState::run_turn` almost line for
+    /// line (that file's own doc explains each step; this is the same mechanism, minus UI-surface
+    /// reconciliation, which `run` has no use for). `RUN_TURN_OUTCOME_TIMEOUT`/`NODE_TURN_BUDGET` are
+    /// this host's own constants, same values `load_runtime_recursive` already used for its own
+    /// plugin-service instantiate budget, now shared with the real per-node turn path too.
+    async fn run_turn(&mut self, actor: RuntimeActorId, events: Vec<Event>) -> Result<Vec<Effect>, RunError> {
+        const RUN_TURN_OUTCOME_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+        let node_budget = actor_budget_from_turn_budget(NODE_TURN_BUDGET, Lane::Background).await;
+        let mut envelopes = Vec::with_capacity(events.len().max(1));
+        for event in &events {
+            let seq = self.take_turn_seq();
+            envelopes.push(Envelope {
+                to: actor,
+                from: Origin::Kernel,
+                lane: Lane::Background,
+                seq,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(RunError::Serde)? },
+            });
+        }
+        for envelope in &envelopes {
+            if !matches!(self.kernel.submit(envelope).await, Backpressure::Accept) {
+                return Err(RunError::Host(format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure) — a single sequential run should never see this", actor.0)));
+            }
+        }
+        let mut turn_result: Option<semio_framework::kernel::TurnResult> = None;
+        let mut fault: Option<String> = None;
+        loop {
+            self.now_ms += 1;
+            let decision = self.kernel.tick_and_dispatch(self.now_ms, move |_actor| node_budget).await;
+            if decision.run.is_empty() {
+                break;
+            }
+            let outcomes = self.kernel.wait_for_outcomes(decision.run.len(), RUN_TURN_OUTCOME_TIMEOUT);
+            if outcomes.len() < decision.run.len() {
+                return Err(RunError::Host("kernel: shard produced no outcome for this turn (timed out)".to_string()));
+            }
+            for outcome in &outcomes {
+                match outcome {
+                    semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result } => {
+                        let _ = self.kernel.complete(RuntimeActorId(*reported), result, 0, 0, self.now_ms).await;
+                        if *reported == actor.0 {
+                            turn_result = Some(result.clone());
+                        }
+                    }
+                    semio_framework_plugin_host::shard::ShardOutcome::Fault { actor: reported, message } => {
+                        let faulted = semio_framework::kernel::TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+                        let _ = self.kernel.complete(RuntimeActorId(*reported), &faulted, 0, 0, self.now_ms).await;
+                        if *reported == actor.0 {
+                            fault = Some(message.clone());
+                        }
+                    }
+                    // 🚧️ `run`'s own turns never send `Suspend`/`Resume`/`Cancel` payloads — any
+                    // other `ShardOutcome` variant reaching here belongs to a DIFFERENT actor `Kernel::
+                    // tick` happened to grant in the same call (DRR is global even with one shard),
+                    // same "silently ignored, never aborts an otherwise-successful turn" policy the
+                    // wgpu target's own `run_turn` documents for the identical reason.
+                    _ => {}
+                }
+            }
+        }
+        if let Some(message) = fault {
+            return Err(RunError::Host(message));
+        }
+        match turn_result {
+            Some(result) => Ok(result.effects),
+            None => Err(RunError::Host("kernel: shard produced no outcome for this turn".to_string())),
         }
     }
 
@@ -1398,9 +1566,9 @@ impl WasmtimeNodeHost {
         &self.app_router
     }
 
-    fn manifest_for(&mut self, plugin_id: &str) -> Result<&PluginManifest, RunError> {
+    async fn manifest_for(&mut self, plugin_id: &str) -> Result<&PluginManifest, RunError> {
         let mut loading = Vec::new();
-        self.load_runtime_recursive(plugin_id, &mut loading)?;
+        self.load_runtime_recursive(plugin_id, &mut loading).await?;
         Ok(self.manifests.get(plugin_id).expect("just loaded or already present"))
     }
 
@@ -1442,7 +1610,7 @@ impl WasmtimeNodeHost {
     /// post-turn job dispatch (`PluginInstanceHandle`'s own doc — `io-run`/`io-sniff`/`infer`, never
     /// this turn's own `execute_turn`), register with every router in the SAME order the OLD
     /// `WasmPluginRuntime`-backed version did, then the SAME `owned_surface_gaps` hard-gate.
-    fn load_runtime_recursive(&mut self, plugin_id: &str, loading: &mut Vec<String>) -> Result<(), RunError> {
+    async fn load_runtime_recursive(&mut self, plugin_id: &str, loading: &mut Vec<String>) -> Result<(), RunError> {
         if self.manifests.contains_key(plugin_id) {
             return Ok(());
         }
@@ -1455,7 +1623,7 @@ impl WasmtimeNodeHost {
         if !self.compiled_for_plugin.contains_key(plugin_id) {
             let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
             let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])) };
-            let compiled = self.runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
+            let compiled = self.guest_runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }
 
@@ -1463,12 +1631,24 @@ impl WasmtimeNodeHost {
         let manifest = descriptor.manifest;
 
         for dependency in &manifest.dependencies {
-            self.load_runtime_recursive(&dependency.plugin_id, loading)?;
+            Box::pin(self.load_runtime_recursive(&dependency.plugin_id, loading)).await?;
         }
 
         let compiled = self.compiled_for_plugin.get(plugin_id).cloned().expect("just compiled or already present above");
-        let actor = RuntimeActorId::new(0, 0, self.next_actor_ordinal as u32, 0);
-        self.next_actor_ordinal += 1;
+        // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the ad hoc
+        // `RuntimeActorId::new(0, 0, self.next_actor_ordinal as u32, 0)` counter this used to mint
+        // from is GONE — `Kernel::activate` mints the id and pins a shard for real now (this is the
+        // literal "🏃️run ... mints its own RuntimeActorIds" bypass this packet's brief names).
+        // `kernel.kernel_mut().activate` (NOT the full `kernel.activate` facade below) deliberately:
+        // this instance's `GuestInstance` stays HELD BY `PluginInstanceHandle`, which calls
+        // `GuestRuntime::execute_turn` on it directly for post-turn job dispatch
+        // (`io_router`/`inference_router`) — routing that through `ShardExecutor` ownership (what the
+        // full facade does) would take the instance away from `PluginInstanceHandle` entirely, a much
+        // bigger change than this packet's own `path_scope` (`🔌️plugin/🖥️host/**`'s `io_router`
+        // internals are not owned here) — see `kernel`'s own struct-field doc.
+        let plugin_ordinal = self.plugin_ordinal(plugin_id);
+        let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: "<plugin-runtime>".to_string(), instance_id: 0 };
+        let actor = self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual).await;
         // ⚖️ `GuestRuntime::instantiate`'s `Budget` is `semio_framework::kernel::Budget` (the
         // `reactor::poll`-shaped one — fuel/deadline_ms/max_effects/max_patch_bytes/max_frames), NOT
         // `semio_framework_actor::Budget` (a different, later-wave shape by the same name — see
@@ -1476,9 +1656,8 @@ impl WasmtimeNodeHost {
         // mirrors the sibling MCP gateway's own one-off-instantiate budget
         // (`🌉️mcp/🏠️workspace/🦀️component.rs`'s `activate_plugin_instance`), the closest real
         // precedent for "compile once, instantiate once, no live turn loop yet".
-        let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
-        let instance = self.runtime.instantiate(&compiled, actor, &[], &budget).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
-        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.runtime), instance));
+        let instance = self.guest_runtime.instantiate(&compiled, actor, &[], &NODE_TURN_BUDGET).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
+        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance));
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
         // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/
@@ -1707,19 +1886,43 @@ fn opening_role_from_wire(role_wire: u8) -> Result<semio_framework::AppRole, sem
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl AppChannelHost for WasmtimeNodeHost {
-    /// 🚧️ Real body once a manifest exists (see `WasmtimeNodeHost`'s own doc comment and
-    /// `load_runtime_recursive`): `self.runtime.instantiate(&compiled, ActorId(fresh), &[], &budget)`
-    /// to get a `GuestInstance`, `self.runtime.execute_turn(&mut instance, &[Event::InstanceOpen {
-    /// instance, app_id, actor, config: manifest-declared defaults, assets, capabilities, quotas }],
-    /// budget)` to prime it (channel v12's own doc: "lifecycle now arrives through ... `Event::
-    /// InstanceOpen`"), bind `artifact_ref` into `instance_directory` off the manifest's own app
-    /// entry's `io.document_schema` (exactly the OLD lookup below, unchanged), then store the
-    /// `GuestInstance` in `guest_instances` keyed `(plugin_id, instance_id)`. `manifest_for` is the
-    /// single gate every one of those steps sits behind today.
-    fn open(&mut self, plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
-        self.manifest_for(plugin_id)?;
-        unreachable!("manifest_for always errors today — see WasmtimeNodeHost's own doc comment; app_id {app_id} would open a real instance once it doesn't")
+impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
+    /// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real body —
+    /// `manifest_for` (real for any plugin with a committed descriptor since R1-native-manifest;
+    /// this method's own doc used to say "manifest_for always errors today", which stopped being
+    /// true once that packet landed), `kernel.activate` (mints the `ActorId`, pins a shard,
+    /// instantiates, hands the `GuestInstance` to that shard's own `ShardExecutor` thread), then
+    /// `run_turn` submits `Event::InstanceOpen` through the kernel (channel v12's own doc:
+    /// "lifecycle now arrives through ... `Event::InstanceOpen`") and drives it to completion exactly
+    /// like a real per-node turn — this is the SAME `run_turn` `exchange` uses below, not a separate
+    /// path. `artifact_ref` binding into `instance_directory` (this struct's own field doc) is a
+    /// SEPARATE, still-unwired concern this packet does not touch (out of scope: it needs the
+    /// manifest's own app entry's `io.document_schema`, not anything kernel-shaped).
+    async fn open(&mut self, plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
+        self.manifest_for(plugin_id).await?;
+        let compiled = self.compiled_for_plugin.get(plugin_id).cloned().expect("manifest_for just compiled or already present");
+        let plugin_ordinal = self.plugin_ordinal(plugin_id);
+        let instance_handle = self.next_handle;
+        self.next_handle += 1;
+        let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: app_id.to_string(), instance_id: instance_handle };
+        let actor = self
+            .kernel
+            .activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET)
+            .await
+            .map_err(RunError::Host)?;
+        self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
+        self.instance_actors.insert(instance_handle, actor);
+        let open_event = Event::InstanceOpen {
+            instance: PluginInstanceId(instance_handle.to_string()),
+            app_id: AppInstanceId(app_id.to_string()),
+            actor: "local".to_string(),
+            config: Vec::new(),
+            assets: Vec::new(),
+            capabilities: Vec::new(),
+            quotas: QuotaSchema::default(),
+        };
+        self.run_turn(actor, vec![open_event]).await?;
+        Ok(instance_handle)
     }
 
     /// 🚪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A) contract §3: intercepts the
@@ -1761,19 +1964,80 @@ impl AppChannelHost for WasmtimeNodeHost {
             }
         }
         if !passthrough.is_empty() {
-            // 🚧️ `node` can never resolve — `open` (above) can never succeed today either (same
-            // manifest-decode gap), so `self.instances`/`self.guest_instances` are always empty. Real
-            // body once unblocked: encode each passthrough `AppCommand` as `Event::AppCommandEvent
-            // {instance, seq, command}`, `self.runtime.execute_turn(&mut instance, &events, budget)`
-            // in ONE batched call (preserves this method's "single batched, synchronous duplex round
-            // trip" contract), then scan `TurnResult.effects` for `Effect::Respond{req, result}`
-            // where `req.0 == seq`, decoding `RequestOutcome::Ok(bytes)` as a `protocol::AppFrame`
-            // (the guest's per-command reply, same wire shape `exchange` always returned, now
-            // delivered via an effect instead of a direct return) and `Err(bytes)` as `AppFrame::Error`.
-            let (plugin_id, _instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-            return Err(RunError::Host(format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — needs a post-turn effect-dispatch loop over GuestRuntime::execute_turn, not built in this packet (see 📓️terra-B1b-host-complete-report.md)")));
+            // ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real body
+            // this comment used to describe as future work — `node` now DOES resolve, since `open`
+            // (above) genuinely activates an instance through the kernel. Each passthrough
+            // `AppCommand` becomes one `Event::AppCommandEvent{instance, seq, command}` (`seq` reused
+            // AS the kernel envelope's own seq — see `app_command_seq`'s own doc for why that is
+            // sound here, not merely convenient), submitted as ONE batched `run_turn` call (preserves
+            // this method's "single batched, synchronous duplex round trip" contract — `run_turn`
+            // itself may loop several `Kernel::tick`s, but this call site only sees the final
+            // effects). `TurnResult.effects` is then scanned for `Effect::Respond{req, result}`,
+            // decoding `RequestOutcome::Ok(bytes)` as the guest's own `protocol::AppFrame` reply and
+            // `Err(bytes)` as `AppFrame::Error` — exactly the shape this comment always described.
+            let actor = *self.instance_actors.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
+            let mut events = Vec::with_capacity(passthrough.len());
+            for command in &passthrough {
+                let seq = app_command_seq(command);
+                let command_bytes = protocol::encode_app_command(command).await;
+                events.push(Event::AppCommandEvent { instance: PluginInstanceId(node.to_string()), seq, command: command_bytes });
+            }
+            let effects = self.run_turn(actor, events).await?;
+            for effect in effects {
+                if let Effect::Respond { req, result } = effect {
+                    match result {
+                        RequestOutcome::Ok(bytes) => match protocol::decode_app_frame(&bytes).await {
+                            Ok(frame) => frames.push(frame),
+                            Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(req.0), fault: dsl::encode_fault_bytes(&semio_framework::Fault::from(error.to_string())), report: Vec::new() }),
+                        },
+                        RequestOutcome::Err(bytes) => frames.push(AppFrame::Error { in_reply_to: Some(req.0), fault: bytes, report: Vec::new() }),
+                    }
+                }
+            }
         }
         Ok(frames)
+    }
+}
+
+/// 🔢️ Every `AppCommand` variant's leading `seq: u64` field, used verbatim as the kernel envelope's
+/// own `Event::AppCommandEvent.seq` (see `exchange`'s own passthrough doc for why reusing it — rather
+/// than minting a fresh kernel-side sequence and maintaining a translation table back to it — is
+/// sound: one `exchange` batch's commands already carry distinct seqs, minted by `SpaceRunner::
+/// compute_node`'s own local `next_seq` closure, and `Effect::Respond{req}` correlates directly
+/// against whichever seq the `Event::AppCommandEvent` carried). An exhaustive match, deliberately —
+/// a future `AppCommand` variant missing here is a compile error, not a silent seq-of-zero.
+#[cfg(not(target_arch = "wasm32"))]
+fn app_command_seq(command: &AppCommand) -> u64 {
+    match command {
+        AppCommand::ConfigCommand { seq, .. }
+        | AppCommand::Command { seq, .. }
+        | AppCommand::CommandText { seq, .. }
+        | AppCommand::ContextMenu { seq, .. }
+        | AppCommand::ArtifactCommand { seq, .. }
+        | AppCommand::ApplyEnvelopes { seq, .. }
+        | AppCommand::LoadDocument { seq, .. }
+        | AppCommand::ReadDocument { seq }
+        | AppCommand::LoadConfig { seq, .. }
+        | AppCommand::ReadConfig { seq }
+        | AppCommand::MediaIn { seq, .. }
+        | AppCommand::MediaOut { seq, .. }
+        | AppCommand::MediaFingerprint { seq, .. }
+        | AppCommand::PureCommand { seq, .. }
+        | AppCommand::LoadChildren { seq, .. }
+        | AppCommand::ReadChildren { seq }
+        | AppCommand::ReadHistory { seq }
+        | AppCommand::TransactionPrepare { seq, .. }
+        | AppCommand::TransactionCommit { seq, .. }
+        | AppCommand::TransactionRollback { seq, .. }
+        | AppCommand::TransactionUndo { seq, .. }
+        | AppCommand::TransactionRedo { seq, .. }
+        | AppCommand::OpenArtifact { seq, .. }
+        | AppCommand::SetDefaultApp { seq, .. }
+        | AppCommand::ClearDefaultApp { seq, .. }
+        | AppCommand::SetMergePolicy { seq, .. }
+        | AppCommand::ResolveConflict { seq, .. }
+        | AppCommand::ReadConflicts { seq }
+        | AppCommand::Presence { seq, .. } => *seq,
     }
 }
 //#endregion 🔖️WasmtimeNodeHost
@@ -1832,7 +2096,7 @@ mod tests {
     }
 
     impl AppChannelHost for FakeHost {
-        fn open(&mut self, _plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
+        async fn open(&mut self, _plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
             self.next += 1;
             self.handle_app.insert(self.next, app_id.to_string());
             Ok(self.next)
@@ -2136,7 +2400,7 @@ mod tests {
     }
 
     impl AppChannelHost for RecorderHost {
-        fn open(&mut self, _plugin_id: &str, _app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
+        async fn open(&mut self, _plugin_id: &str, _app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
             let mut state = self.0.borrow_mut();
             state.next_handle += 1;
             Ok(state.next_handle)
@@ -2386,9 +2650,15 @@ mod tests {
         plugin_paths.insert("note".to_string(), wasm_path);
         let mut descriptor_paths = HashMap::new();
         descriptor_paths.insert("note".to_string(), descriptor_path);
-        let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default()));
+        // 🚫️async: this `#[test] fn` body is a sanctioned executor entry point (R4 clause 5) — the
+        // one thread root driving `WasmtimeNodeHost::new`/`manifest_for`, both `async fn` now that
+        // they build/drive the real `NativeKernelRuntime` (packet `run-kernel-wiring`). Same
+        // `futures_lite::future::block_on` convention every other test in this module already uses
+        // (see this crate's own `Cargo.toml` doc comment on why: a plain single-poll executor, not
+        // tokio).
+        let mut host = futures_lite::future::block_on(WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())));
 
-        let manifest = host.manifest_for("note").expect("note must load natively from its committed descriptor, zero live describe() calls");
+        let manifest = futures_lite::future::block_on(host.manifest_for("note")).expect("note must load natively from its committed descriptor, zero live describe() calls");
         assert_eq!(manifest.plugin_id, "note");
         assert!(!manifest.apps.is_empty(), "note's real manifest declares at least one app");
         assert!(manifest.dependencies.is_empty(), "note's committed descriptor declares zero PluginManifest.dependencies");

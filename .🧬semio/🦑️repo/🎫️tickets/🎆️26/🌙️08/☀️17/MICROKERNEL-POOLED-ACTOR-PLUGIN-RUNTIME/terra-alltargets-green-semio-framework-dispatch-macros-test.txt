@@ -1,0 +1,110 @@
+   Compiling unicode-ident v1.0.24
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+   Compiling proc-macro2 v1.0.106
+warning: `semio-framework-dispatch-macros` (lib test) generated 2 warnings (2 duplicates)
+   Compiling quote v1.0.45
+   Compiling syn v2.0.117
+warning: unnecessary qualification
+  --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/tests/uninhabited.rs:39:13
+   |
+39 |     let _ = std::mem::size_of::<NoWidgets>();
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+39 -     let _ = std::mem::size_of::<NoWidgets>();
+39 +     let _ = size_of::<NoWidgets>();
+   |
+
+warning: `semio-framework-dispatch-macros` (test "uninhabited") generated 1 warning (run `cargo fix --test "uninhabited" -p semio-framework-dispatch-macros` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 5.93s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/semio_framework_dispatch_macros-7c3d81a9fdbaa433)
+
+running 22 tests
+test component::tests::build_delegate_method_arc_self_clones_the_variant ... ok
+test component::tests::analyze_rejects_associated_type ... ok
+test component::tests::analyze_rejects_destructuring_parameter_pattern ... ok
+test component::tests::analyze_combines_multiple_errors ... ok
+test component::tests::build_delegate_method_awaits_only_async_methods ... ok
+test component::tests::analyze_rejects_unsupported_explicit_self_type ... ok
+test component::tests::analyze_rejects_associated_const ... ok
+test component::tests::analyze_rejects_arc_self_mixed_with_mut_self ... ok
+test component::tests::analyze_rejects_method_without_receiver ... ok
+test component::tests::build_delegate_method_preserves_generics_and_where_clause ... ok
+test component::tests::build_delegate_method_strips_mut_from_forwarded_params ... ok
+test component::tests::build_supertrait_assertions_covers_real_supertraits ... ok
+test component::tests::build_supertrait_assertions_skips_auto_traits ... ok
+test component::tests::dyn_enum_attribute_rejects_extra_attribute_args ... ok
+test component::tests::dyn_enum_call_qualified_trait_path_still_uses_the_trait_last_segment_for_the_dispatch_macro_name ... ok
+test component::tests::dyn_enum_call_rejects_malformed_variant ... ok
+test component::tests::dyn_enum_call_supports_zero_variants ... ok
+test component::tests::dyn_enum_call_two_invocations_for_the_same_trait_in_one_module_both_resolve ... ok
+test component::tests::dyn_enum_call_expands_enum_from_impls_and_dispatch_invocation ... ok
+test component::tests::dyn_enum_attribute_reemits_trait_and_emits_dispatch_macro ... ok
+test component::tests::end_to_end_mixed_receivers_default_body_generic_method_parses_as_valid_rust ... ok
+test component::tests::end_to_end_forty_plus_methods_does_not_blow_up ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mixed_receivers.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/mixed_receivers-2fbfbeff75177e95)
+
+running 3 tests
+test from_impls_are_generated_for_each_variant ... ok
+test delegates_read_and_write_to_the_text_variant ... ok
+test delegates_to_the_kv_variant_and_uses_default_bodied_methods ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mut_receiver.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/mut_receiver-44f01ade8bbbedbd)
+
+running 1 test
+test mut_self_delegates_and_mutates_the_right_variant ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/scale.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/scale-3c49249e4b46a093)
+
+running 1 test
+test every_one_of_the_45_methods_delegates_correctly_on_both_variants ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/uninhabited.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/uninhabited-d2ef0122a1d55b6e)
+
+running 1 test
+test no_widgets_type_checks_and_has_a_well_defined_size ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_dispatch_macros
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

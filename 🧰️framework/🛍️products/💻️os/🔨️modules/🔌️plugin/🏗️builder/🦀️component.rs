@@ -236,7 +236,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// 🎲️ Declares local backbone read+write at plugin scope.
     pub async fn local_backbone_storage(self) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).await.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin }).await
     }
 
     /// 🎮️ Declares a plugin-owned command and its program-level handler.
@@ -275,7 +275,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
 
     /// 🗂️ Declares an app-owned codec under a foreign document schema for the aggregate codec commit.
     pub async fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self {
-        self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema));
+        self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema).await);
         self
     }
 
@@ -283,7 +283,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// Repeatable; order matters only for extensions (`ExtensionBundle::extends` must equal
     /// `dependencies[0].plugin_id`), which plain plugins have no equivalent constraint for.
     pub async fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
-        self.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
+        self.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version).await);
         self
     }
 
@@ -317,7 +317,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         // the registry from `def` inside the fn body instead of capturing it, same trick
         // `crate::app::declarations::editor_surface`'s inner `factory` uses.
         fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def)))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
         }
         let definition = app.definition.clone();
         self.app_defs.push((app, (definition, factory::<A, PA>)));
@@ -340,11 +340,14 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         /// table — `try_build()` commits these into the process-wide owner mutation roster
         /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
         /// `contributor.list-artifact-mutations`.
-        async fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        // 🚫️async: E4 fn-pointer slot — `owner_mutation_rosters: Vec<fn() -> ...>` is a bare fn
+        // pointer table; `kinds()` is a pure static-table accessor (io-async-signatures), bridged
+        // via `resolve_ready`.
+        fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             A::Mutation: protocol::SemanticMutation<A::Snapshot>,
         {
-            (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds())
+            (A::DOCUMENT_SCHEMA, resolve_ready(<A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds()))
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
@@ -370,7 +373,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<V: crate::app::ArtifactViewer, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def)))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -395,11 +398,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         V::Mutation: protocol::SemanticMutation<V::Snapshot>,
     {
-        async fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
+        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
         {
-            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
+            (V::DOCUMENT_SCHEMA, resolve_ready(<V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds()))
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<V>);
         self
@@ -419,7 +423,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def)))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -439,11 +443,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         E::Mutation: protocol::SemanticMutation<E::Snapshot>,
     {
-        async fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        // 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
+        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
         {
-            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
+            (E::DOCUMENT_SCHEMA, resolve_ready(<E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds()))
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
         self
@@ -484,7 +489,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// `schema`'s `Some` fields override; repeated calls layer without clobbering fields a previous
     /// call already set (see `merge_quota_schema`).
     pub async fn quota(mut self, schema: QuotaSchema) -> Self {
-        self.quotas = merge_quota_schema(self.quotas, schema);
+        self.quotas = merge_quota_schema(self.quotas, schema).await;
         self
     }
 
@@ -551,12 +556,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         app_defs.extend(declared_registration.app_defs);
         app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
         capabilities.extend(declared_registration.capabilities);
-        let mut definitions = ArtifactDefinitionRegistry::new();
+        let mut definitions = ArtifactDefinitionRegistry::new().await;
         for definition in artifact_definitions {
-            definitions.register(definition).map_err(PluginAssemblyError::definition)?;
+            definitions.register(definition).await.map_err(PluginAssemblyError::definition)?;
         }
         for declaration in &artifacts {
-            declaration.preflight(&plugin_id, &mut definitions)?;
+            declaration.preflight(&plugin_id, &mut definitions).await?;
         }
         let mut declared_media_kinds = BTreeMap::new();
         for spec in artifact_kinds.iter().chain(app_defs.iter().flat_map(|(app, _)| app.definition.artifact_kinds.iter())) {
@@ -572,14 +577,14 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             }
         }
         for declaration in &host_media_handlers {
-            declaration.preflight(&plugin_id, &declared_media_kinds)?;
+            declaration.preflight(&plugin_id, &declared_media_kinds).await?;
         }
         for declaration in &flow_extensions {
-            declaration.preflight(&plugin_id)?;
+            declaration.preflight(&plugin_id).await?;
         }
         let document_app_ids: BTreeSet<_> = document_app_ids.into_iter().collect();
         for codec in &foreign_document_codecs {
-            codec.preflight_foreign(&document_app_ids)?;
+            codec.preflight_foreign(&document_app_ids).await?;
         }
         let mut app_schemas = Vec::new();
         for get_schema in app_schema_descriptors {
@@ -587,8 +592,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions);
-        let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions).await;
+        let (mut runtime, registry_plan) = plan.into_runtime(definitions).await?;
 
         // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
         // no registry side effects — then gate-check the WHOLE candidate set (contract freeze §4)
@@ -899,7 +904,7 @@ mod schema_stamping_tests {
         }
 
         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
-            crate::ui_text(crate::Label::data("schema-stamp-editor"))
+            crate::ui_text(crate::Label::data("schema-stamp-editor").await)
         }
     }
 
@@ -928,7 +933,7 @@ mod schema_stamping_tests {
         }
 
         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
-            crate::ui_text(crate::Label::data("schema-stamp-viewer"))
+            crate::ui_text(crate::Label::data("schema-stamp-viewer").await)
         }
     }
 
@@ -946,7 +951,7 @@ mod schema_stamping_tests {
     }
 
     async fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
-        let label = LocalizedLabel::data("Surface");
+        let label = LocalizedLabel::data("Surface").await;
         match role {
             AppRole::Editor => Editor::builder(dialect).document(["semio", "schema-stamp-editor"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition(),
             AppRole::Viewer => Viewer::builder(dialect).document(["semio", "schema-stamp-viewer"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition(),

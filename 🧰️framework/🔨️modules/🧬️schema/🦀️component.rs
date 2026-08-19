@@ -38,11 +38,16 @@ impl Default for SchemaCatalog {
 }
 
 impl SchemaCatalog {
-    pub async fn new() -> Self {
+    // 🚫️async: R9 pure constructor — no I/O (two `HashMap::new()`); every real consumer reaches
+    // it through a synchronous `FnOnce` visit closure (this crate's `with_*_catalog` helpers below,
+    // whose closures are handed to `semio-framework-replication`'s `with_kernel_*_catalog`, itself
+    // a fixed sync-closure signature outside this packet's writable scope) and cannot itself be made async.
+    pub fn new() -> Self {
         Self { schemas: HashMap::new(), validators: HashMap::new() }
     }
 
-    pub async fn register<T: JsonSchema>(&mut self, id: &str) -> Result<(), SchemaError> {
+    // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumers as `new()`.
+    pub fn register<T: JsonSchema>(&mut self, id: &str) -> Result<(), SchemaError> {
         let schema = schema_for!(T);
         let value = serde_json::to_value(schema).map_err(|error| SchemaError::Serialize(error.to_string()))?;
         let validator = Validator::new(&value).map_err(|error| SchemaError::Validation(error.to_string()))?;
@@ -51,7 +56,8 @@ impl SchemaCatalog {
         Ok(())
     }
 
-    pub async fn register_json(&mut self, id: &str, schema: Value) -> Result<(), SchemaError> {
+    // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumers as `new()`.
+    pub fn register_json(&mut self, id: &str, schema: Value) -> Result<(), SchemaError> {
         let validator = Validator::new(&schema).map_err(|error| SchemaError::Validation(error.to_string()))?;
         self.schemas.insert(id.to_string(), schema);
         self.validators.insert(id.to_string(), validator);
@@ -59,15 +65,20 @@ impl SchemaCatalog {
     }
 
     /// 📥 Stores a handcrafted JSON Schema document without compiling a validator (catalog registration of normative leaves).
-    pub async fn load_json(&mut self, id: &str, schema: Value) {
+    // 🚫️async: R9 pure mutation — no I/O; called from inside the `with_kernel_*_catalog(|entries| ...)`
+    // sync closures in `with_json_schema_catalog`/`with_inference_json_schema_catalog`/`with_app_json_schema_catalog` below.
+    pub fn load_json(&mut self, id: &str, schema: Value) {
         self.schemas.insert(id.to_string(), schema);
     }
 
-    pub async fn schema(&self, id: &str) -> Option<&Value> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumers as `new()`.
+    pub fn schema(&self, id: &str) -> Option<&Value> {
         self.schemas.get(id)
     }
 
-    pub async fn validate(&self, id: &str, value: &Value) -> Result<(), SchemaError> {
+    // 🚫️async: R9 pure accessor — no I/O (in-memory `jsonschema::Validator::validate`); same
+    // visit-closure consumers as `new()`.
+    pub fn validate(&self, id: &str, value: &Value) -> Result<(), SchemaError> {
         let validator = self.validators.get(id).ok_or_else(|| SchemaError::UnknownSchema(id.to_string()))?;
         validator.validate(value).map_err(|error| SchemaError::Validation(error.to_string()))
     }
@@ -189,27 +200,37 @@ impl Default for ArtifactSchemaRegistry {
 
 impl ArtifactSchemaRegistry {
     /// 🏗️ Empty registry.
-    pub async fn new() -> Self {
+    // 🚫️async: R9 pure constructor — no I/O; every consumer is a synchronous `FnOnce` visit
+    // closure (`with_artifact_schema_registry` below, whose own body loops via the wire crate's
+    // fixed-signature `with_kernel_artifact_schema_catalog`, and the `semio-framework-plugin`
+    // call site `with_artifact_schema_registry(|registry| registry.len())`, outside this packet's scope).
+    pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
     /// 📎 Insert or replace a descriptor by id.
-    pub async fn register(&mut self, descriptor: ArtifactSchemaDescriptor) {
+    // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumers as `new()`.
+    pub fn register(&mut self, descriptor: ArtifactSchemaDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
     /// 🔎 Lookup by artifact schema id.
-    pub async fn get(&self, id: &str) -> Option<&ArtifactSchemaDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumers as `new()`.
+    pub fn get(&self, id: &str) -> Option<&ArtifactSchemaDescriptor> {
         self.by_id.get(id)
     }
 
     /// 🚶 Walk every registered descriptor.
-    pub async fn iter(&self) -> impl Iterator<Item = &ArtifactSchemaDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumers as `new()`.
+    pub fn iter(&self) -> impl Iterator<Item = &ArtifactSchemaDescriptor> {
         self.by_id.values()
     }
 
     /// 🔢 Count of registered artifact schema ids.
-    pub async fn len(&self) -> usize {
+    // 🚫️async: R9 pure accessor — no I/O; the `semio-framework-plugin` call site
+    // `with_artifact_schema_registry(|registry| registry.len())` reads the `usize` directly out of
+    // a synchronous `FnOnce`, so this cannot become async without editing that crate (outside this packet's scope).
+    pub fn len(&self) -> usize {
         self.by_id.len()
     }
 }
@@ -247,7 +268,9 @@ fn facet_leaves_to_kernel(leaves: FacetLeaves) -> KernelFacetLeaves {
     }
 }
 
-async fn facet_leaves_from_kernel(leaves: &KernelFacetLeaves) -> FacetLeaves {
+// 🚫️async: R9 pure conversion — no I/O; only consumer is `descriptor_from_kernel` below, itself
+// forced sync by the wire crate's fixed-signature `with_kernel_artifact_schema_catalog` closure.
+fn facet_leaves_from_kernel(leaves: &KernelFacetLeaves) -> FacetLeaves {
     FacetLeaves {
         rust: leaves.rust,
         typescript: leaves.typescript,
@@ -267,7 +290,10 @@ async fn descriptor_to_kernel(descriptor: ArtifactSchemaDescriptor) -> KernelArt
     }
 }
 
-async fn descriptor_from_kernel(kernel: &KernelArtifactSchemaDescriptor) -> ArtifactSchemaDescriptor {
+// 🚫️async: R9 pure conversion — no I/O; called from inside the synchronous `FnOnce` closure
+// `with_artifact_schema_registry` hands to `semio-framework-replication`'s
+// `with_kernel_artifact_schema_catalog` (fixed signature outside this packet's scope).
+fn descriptor_from_kernel(kernel: &KernelArtifactSchemaDescriptor) -> ArtifactSchemaDescriptor {
     ArtifactSchemaDescriptor {
         id: kernel.id,
         artifact: facet_leaves_from_kernel(&kernel.artifact),
@@ -277,12 +303,16 @@ async fn descriptor_from_kernel(kernel: &KernelArtifactSchemaDescriptor) -> Arti
     }
 }
 
-async fn parse_normative_json_leaf(descriptor_id: &str, facet: &str, body: &str) -> Value {
+// 🚫️async: R9 pure parse — no I/O (`serde_json::from_str` over an already-loaded `&str`); called
+// from inside the same sync `with_kernel_*_catalog` visit closures as `descriptor_from_kernel`.
+fn parse_normative_json_leaf(descriptor_id: &str, facet: &str, body: &str) -> Value {
     serde_json::from_str(body)
         .unwrap_or_else(|error| panic!("{descriptor_id}: {facet} json_schema parse: {error}"))
 }
 
-async fn graphql_leaf_with_preamble(body: &str) -> String {
+// 🚫️async: R9 pure formatting — no I/O; called from inside the sync `with_kernel_*_catalog` visit
+// closures in `artifact_schema_graphql_sdl`/`artifact_inference_graphql_sdl`/`app_schema_graphql_sdl` below.
+fn graphql_leaf_with_preamble(body: &str) -> String {
     let trimmed = body.trim();
     if trimmed.is_empty() {
         return GRAPHQL_STATE_PREAMBLE.to_string();
@@ -292,7 +322,7 @@ async fn graphql_leaf_with_preamble(body: &str) -> String {
 
 /// 📎 Registers one artifact's handcrafted descriptor into the OS-wide catalog (kernel descriptors + normative JSON + GraphQL SDL).
 pub async fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor) {
-    register_kernel_artifact_schema_descriptor(descriptor_to_kernel(descriptor));
+    register_kernel_artifact_schema_descriptor(descriptor_to_kernel(descriptor).await).await;
 }
 
 /// 🔬️ Verifies artifact schema descriptors against the established catalog without mutation.
@@ -315,16 +345,16 @@ pub async fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchema
             }
         }
         Ok(())
-    })
+    }).await
 }
 
 /// 📌️ Registers an atomically prevalidated artifact schema batch.
 #[must_use]
 pub async fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
-    preflight_artifact_schema_descriptors(&descriptors)?;
+    preflight_artifact_schema_descriptors(&descriptors).await?;
     for descriptor in descriptors {
-        if !artifact_schema_descriptor_registered(descriptor.id) {
-            register_artifact_schema_descriptor(descriptor);
+        if !artifact_schema_descriptor_registered(descriptor.id).await {
+            register_artifact_schema_descriptor(descriptor).await;
         }
     }
     Ok(())
@@ -332,7 +362,7 @@ pub async fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchem
 
 /// 🔎 Whether `id` is present in the OS-wide descriptor registry.
 pub async fn artifact_schema_descriptor_registered(id: &str) -> bool {
-    semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(id)
+    semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(id).await
 }
 
 /// 📚 Invokes `visit` with the OS-wide [`ArtifactSchemaRegistry`] snapshot.
@@ -342,7 +372,8 @@ pub async fn with_artifact_schema_registry<R>(visit: impl FnOnce(&ArtifactSchema
         for entry in entries {
             registry.register(descriptor_from_kernel(entry));
         }
-    });
+    })
+    .await;
     visit(&registry)
 }
 
@@ -356,7 +387,8 @@ pub async fn with_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCatalog) -> R
                 parse_normative_json_leaf(entry.id, "artifact", entry.artifact.json_schema),
             );
         }
-    });
+    })
+    .await;
     visit(&catalog)
 }
 
@@ -378,6 +410,7 @@ pub async fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
         }
         None
     })
+    .await
 }
 //#endregion 🔖️GlobalArtifactSchemaCatalog
 
@@ -395,7 +428,10 @@ async fn inference_descriptor_to_kernel(descriptor: ArtifactInferenceDescriptor)
     KernelArtifactInferenceDescriptor { id: descriptor.id, inference: facet_leaves_to_kernel(descriptor.inference) }
 }
 
-async fn inference_descriptor_from_kernel(kernel: &KernelArtifactInferenceDescriptor) -> ArtifactInferenceDescriptor {
+// 🚫️async: R9 pure conversion — no I/O; called from inside the synchronous `FnOnce` closure
+// `with_artifact_inference_registry` hands to `with_kernel_artifact_inference_catalog` (fixed
+// signature outside this packet's scope).
+fn inference_descriptor_from_kernel(kernel: &KernelArtifactInferenceDescriptor) -> ArtifactInferenceDescriptor {
     ArtifactInferenceDescriptor { id: kernel.id, inference: facet_leaves_from_kernel(&kernel.inference) }
 }
 
@@ -411,27 +447,34 @@ impl Default for ArtifactInferenceRegistry {
 }
 
 impl ArtifactInferenceRegistry {
-    pub async fn new() -> Self {
+    // 🚫️async: R9 pure constructor — no I/O; consumed only through the synchronous `FnOnce`
+    // visit closure `with_artifact_inference_registry` below.
+    pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
-    pub async fn register(&mut self, descriptor: ArtifactInferenceDescriptor) {
+    // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumer as `new()`.
+    pub fn register(&mut self, descriptor: ArtifactInferenceDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
-    pub async fn get(&self, id: &str) -> Option<&ArtifactInferenceDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn get(&self, id: &str) -> Option<&ArtifactInferenceDescriptor> {
         self.by_id.get(id)
     }
 
-    pub async fn iter(&self) -> impl Iterator<Item = &ArtifactInferenceDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn iter(&self) -> impl Iterator<Item = &ArtifactInferenceDescriptor> {
         self.by_id.values()
     }
 
-    pub async fn len(&self) -> usize {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn len(&self) -> usize {
         self.by_id.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
     }
 }
@@ -439,7 +482,7 @@ impl ArtifactInferenceRegistry {
 /// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog. `id` on
 /// the descriptor must be `"{artifact_id}.inference"`, matching its owning `ArtifactSchemaDescriptor`'s id.
 pub async fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) {
-    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(descriptor));
+    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(descriptor).await).await;
 }
 
 /// 🔬️ Verifies inference schema descriptors against the established catalog without mutation.
@@ -462,16 +505,16 @@ pub async fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInf
             }
         }
         Ok(())
-    })
+    }).await
 }
 
 /// 📌️ Registers an atomically prevalidated inference schema batch.
 #[must_use]
 pub async fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactInferenceDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
-    preflight_artifact_inference_descriptors(&descriptors)?;
+    preflight_artifact_inference_descriptors(&descriptors).await?;
     for descriptor in descriptors {
-        if !artifact_inference_descriptor_registered(descriptor.id) {
-            register_artifact_inference_descriptor(descriptor);
+        if !artifact_inference_descriptor_registered(descriptor.id).await {
+            register_artifact_inference_descriptor(descriptor).await;
         }
     }
     Ok(())
@@ -479,7 +522,7 @@ pub async fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactIn
 
 /// 🔎 Whether `id` (the inference schema id) is present in the OS-wide inference descriptor registry.
 pub async fn artifact_inference_descriptor_registered(id: &str) -> bool {
-    semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(id)
+    semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(id).await
 }
 
 /// 📚 Invokes `visit` with the OS-wide [`ArtifactInferenceRegistry`] snapshot.
@@ -489,7 +532,8 @@ pub async fn with_artifact_inference_registry<R>(visit: impl FnOnce(&ArtifactInf
         for entry in entries {
             registry.register(inference_descriptor_from_kernel(entry));
         }
-    });
+    })
+    .await;
     visit(&registry)
 }
 
@@ -501,7 +545,8 @@ pub async fn with_inference_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCat
         for entry in entries {
             catalog.load_json(entry.id, parse_normative_json_leaf(entry.id, "inference", entry.inference.json_schema));
         }
-    });
+    })
+    .await;
     visit(&catalog)
 }
 
@@ -511,6 +556,7 @@ pub async fn artifact_inference_graphql_sdl(key: &str) -> Option<String> {
     with_kernel_artifact_inference_catalog(|entries| {
         entries.iter().find(|entry| entry.id == key).map(|entry| graphql_leaf_with_preamble(entry.inference.graphql))
     })
+    .await
 }
 //#endregion 🔖️ArtifactInferenceDescriptor
 
@@ -538,32 +584,39 @@ impl Default for AppSchemaRegistry {
 
 impl AppSchemaRegistry {
     /// 🏗️ Empty registry.
-    pub async fn new() -> Self {
+    // 🚫️async: R9 pure constructor — no I/O; consumed only through the synchronous `FnOnce`
+    // visit closure `with_app_schema_registry` below.
+    pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
     /// 📎 Insert or replace a descriptor by owner id.
-    pub async fn register(&mut self, descriptor: AppSchemaDescriptor) {
+    // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumer as `new()`.
+    pub fn register(&mut self, descriptor: AppSchemaDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
     /// 🔎 Lookup by app schema owner id.
-    pub async fn get(&self, id: &str) -> Option<&AppSchemaDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn get(&self, id: &str) -> Option<&AppSchemaDescriptor> {
         self.by_id.get(id)
     }
 
     /// 🚶 Walk every registered descriptor.
-    pub async fn iter(&self) -> impl Iterator<Item = &AppSchemaDescriptor> {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn iter(&self) -> impl Iterator<Item = &AppSchemaDescriptor> {
         self.by_id.values()
     }
 
     /// 🔢 Count of registered app schema owner ids.
-    pub async fn len(&self) -> usize {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn len(&self) -> usize {
         self.by_id.len()
     }
 
     /// 📭 Whether no owners are registered yet (A6 fills the catalog).
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: R9 pure accessor — no I/O; same visit-closure consumer as `new()`.
+    pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
     }
 }
@@ -578,7 +631,10 @@ async fn app_descriptor_to_kernel(descriptor: AppSchemaDescriptor) -> KernelAppS
     }
 }
 
-async fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDescriptor {
+// 🚫️async: R9 pure conversion — no I/O; called from inside the synchronous `FnOnce` closure
+// `with_app_schema_registry` hands to `with_kernel_app_schema_catalog` (fixed signature outside
+// this packet's scope).
+fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDescriptor {
     AppSchemaDescriptor {
         id: kernel.id,
         config: facet_leaves_from_kernel(&kernel.config),
@@ -595,7 +651,7 @@ async fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSc
 /// - 🔗 [`app_schema_graphql_sdl`] resolves composed GraphQL SDL for an owner or `{id}.presence` key.
 /// - ✅ [`validate_registered_app_descriptor`] validates a descriptor's JSON Schema leaves and `x-semio-state` tagging before registering.
 pub async fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
-    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor));
+    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor).await).await;
 }
 
 /// 🔬️ Verifies app schema descriptors against the established catalog without mutation.
@@ -618,16 +674,16 @@ pub async fn preflight_app_schema_descriptors(descriptors: &[AppSchemaDescriptor
             }
         }
         Ok(())
-    })
+    }).await
 }
 
 /// 📌️ Registers an atomically prevalidated app schema batch.
 #[must_use]
 pub async fn register_app_schema_descriptors(descriptors: Vec<AppSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
-    preflight_app_schema_descriptors(&descriptors)?;
+    preflight_app_schema_descriptors(&descriptors).await?;
     for descriptor in descriptors {
-        if !app_schema_descriptor_registered(descriptor.id) {
-            register_app_schema_descriptor(descriptor);
+        if !app_schema_descriptor_registered(descriptor.id).await {
+            register_app_schema_descriptor(descriptor).await;
         }
     }
     Ok(())
@@ -635,7 +691,7 @@ pub async fn register_app_schema_descriptors(descriptors: Vec<AppSchemaDescripto
 
 /// 🔎 Whether `id` is present in the OS-wide app descriptor registry.
 pub async fn app_schema_descriptor_registered(id: &str) -> bool {
-    semio_framework_os_kernel::kernel_app_schema_descriptor_registered(id)
+    semio_framework_os_kernel::kernel_app_schema_descriptor_registered(id).await
 }
 
 /// 📚 Invokes `visit` with the OS-wide [`AppSchemaRegistry`] snapshot.
@@ -645,7 +701,8 @@ pub async fn with_app_schema_registry<R>(visit: impl FnOnce(&AppSchemaRegistry) 
         for entry in entries {
             registry.register(app_descriptor_from_kernel(entry));
         }
-    });
+    })
+    .await;
     visit(&registry)
 }
 
@@ -663,7 +720,8 @@ pub async fn with_app_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCatalog) 
                 parse_normative_json_leaf(entry.id, "presence", entry.presence.json_schema),
             );
         }
-    });
+    })
+    .await;
     visit(&catalog)
 }
 
@@ -681,6 +739,7 @@ pub async fn app_schema_graphql_sdl(key: &str) -> Option<String> {
         }
         None
     })
+    .await
 }
 
 /// ✅ Validates a descriptor's JSON Schema leaves: each non-empty facet must be an object schema whose properties all carry a valid `x-semio-state` matching the facet's expected [`StateClass`] (`config` for config, `presence` for presence). Panics with a descriptor-id-prefixed message on the first violation — call this from a plugin's own tests before [`register_app_schema_descriptor`].
@@ -724,7 +783,10 @@ pub async fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor
 ///
 /// Lives here (not a second enum) so JSON Schema leaves can be checked against the kernel enum
 /// without inventing a parallel source of truth. The kernel already owns [`StateClass`].
-pub async fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
+// 🚫️async: R9 pure parse — no I/O; `✏️s/🔌️plugins/💠️lowpoly` calls this synchronously inside an
+// `Iterator::map` closure (`parse_state_class_kebab(raw).expect("parse")`), a language-barred
+// consumer outside this packet's writable scope.
+pub fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
     match value {
         "artifact" => Some(StateClass::Artifact),
         "config" => Some(StateClass::Config),
@@ -844,29 +906,29 @@ mod tests {
     }
     //#endregion 🔖️ArtifactCompositionFixture
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_composition_fields_derive_emits_expected_slot_tables() {
-        let children = CompositeArtifact::child_slots();
+        let children = CompositeArtifact::child_slots().await;
         assert_eq!(children.len(), 2, "single child + Vec child must both be captured, plain field must not");
         assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false });
         assert_eq!(children[1], ChildSlotSpec { name: "textures", kind: "s.stdio.image", many: true });
 
-        let links = CompositeArtifact::link_slots();
+        let links = CompositeArtifact::link_slots().await;
         assert_eq!(links.len(), 1, "only the ArtifactLink field must be captured");
         assert_eq!(links[0], LinkSlotSpec { name: "baseMaterial", roles: &["base", "material"], many: false });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_composition_fields_default_to_empty_for_leaf_artifacts() {
-        assert!(SyntheticSnapshot::child_slots().is_empty());
-        assert!(SyntheticSnapshot::link_slots().is_empty());
-        assert_eq!(SyntheticSnapshot::artifact_schema_id(), "s.wave3.synthetic");
+        assert!(SyntheticSnapshot::child_slots().await.is_empty());
+        assert!(SyntheticSnapshot::link_slots().await.is_empty());
+        assert_eq!(SyntheticSnapshot::artifact_schema_id().await, "s.wave3.synthetic");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_descriptors_carry_valid_snapshot_state_and_match_field_states() {
         let mut registry = ArtifactSchemaRegistry::new();
-        registry.register(synthetic_descriptor());
+        registry.register(synthetic_descriptor().await);
 
         let mut walked = 0usize;
         for descriptor in registry.iter() {
@@ -876,7 +938,7 @@ mod tests {
             let title = schema.get("title").and_then(Value::as_str).unwrap_or("");
             assert_eq!(
                 title,
-                expected_snapshot_title(descriptor.id),
+                expected_snapshot_title(descriptor.id).await,
                 "{}: snapshot title must be XSnapshot for id",
                 descriptor.id
             );
@@ -899,6 +961,7 @@ mod tests {
             json_states.sort_by(|a, b| a.0.cmp(&b.0));
 
             let mut derived: Vec<(String, StateClass)> = SyntheticSnapshot::field_states()
+                .await
                 .iter()
                 .map(|(name, class)| ((*name).to_string(), *class))
                 .collect();
@@ -908,33 +971,33 @@ mod tests {
                 "{}: field_states() must agree with snapshot JSON x-semio-state",
                 descriptor.id
             );
-            assert_eq!(SyntheticSnapshot::artifact_schema_id(), descriptor.id);
-            assert_eq!(SyntheticArtifact::artifact_schema_id(), descriptor.id);
+            assert_eq!(SyntheticSnapshot::artifact_schema_id().await, descriptor.id);
+            assert_eq!(SyntheticArtifact::artifact_schema_id().await, descriptor.id);
         }
         assert_eq!(walked, 1, "registry must be walked for the synthetic descriptor");
         assert!(registry.get("s.wave3.synthetic").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graphql_state_preamble_matches_normative_sdl() {
         assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }"));
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state(class: StateClass!) on FIELD_DEFINITION"));
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @derived on FIELD_DEFINITION"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn state_class_kebab_round_trips_exactly_the_four_lanes() {
         for class in [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient] {
-            let kebab = state_class_kebab(class);
+            let kebab = state_class_kebab(class).await;
             assert_eq!(parse_state_class_kebab(kebab), Some(class));
         }
-        assert_eq!(state_class_kebab(StateClass::Artifact), "artifact");
-        assert_eq!(state_class_kebab(StateClass::Config), "config");
-        assert_eq!(state_class_kebab(StateClass::Presence), "presence");
-        assert_eq!(state_class_kebab(StateClass::Transient), "transient");
+        assert_eq!(state_class_kebab(StateClass::Artifact).await, "artifact");
+        assert_eq!(state_class_kebab(StateClass::Config).await, "config");
+        assert_eq!(state_class_kebab(StateClass::Presence).await, "presence");
+        assert_eq!(state_class_kebab(StateClass::Transient).await, "transient");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retired_state_vocabulary_no_longer_parses() {
         for retired in ["persistent", "shared-ui", "local-ui", "preview", "effect", "inferred", "identity"] {
             assert_eq!(parse_state_class_kebab(retired), None, "`{retired}` must not resolve to a state lane");
@@ -953,17 +1016,17 @@ mod tests {
         depth: u32,
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derived_fields_leave_the_state_class_axis_entirely() {
-        assert!(SyntheticInference::field_states().is_empty(), "a #[derived] field is not state");
-        assert_eq!(SyntheticInference::derived_fields(), &["topology", "depth"]);
-        assert_eq!(SyntheticInference::artifact_schema_id(), "s.wave3.synthetic.inference");
-        assert!(SyntheticSnapshot::derived_fields().is_empty(), "state-only structs derive an empty derived table");
+        assert!(SyntheticInference::field_states().await.is_empty(), "a #[derived] field is not state");
+        assert_eq!(SyntheticInference::derived_fields().await, &["topology", "depth"]);
+        assert_eq!(SyntheticInference::artifact_schema_id().await, "s.wave3.synthetic.inference");
+        assert!(SyntheticSnapshot::derived_fields().await.is_empty(), "state-only structs derive an empty derived table");
         assert_eq!(JSON_SCHEMA_DERIVED_KEY, "x-semio-derived");
     }
     //#endregion 🔖️DerivedAxis
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_catalog_still_registers_json() {
         let mut catalog = SchemaCatalog::new();
         catalog
@@ -979,7 +1042,7 @@ mod tests {
     }
 
     //#region 🔖️ArtifactInferenceDescriptorParity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_inference_registry_registers_independently_of_the_snapshot_diff_mutations_descriptor() {
         let mut registry = ArtifactInferenceRegistry::new();
         let empty = FacetLeaves { rust: "", typescript: "", graphql: "component { id }", json_schema: "", proto: "" };
@@ -996,17 +1059,18 @@ mod tests {
         assert_eq!(walked, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_inference_graphql_sdl_composes_shared_preamble_with_facet_leaf() {
         register_artifact_inference_descriptor(ArtifactInferenceDescriptor {
             id: "s.wave3.synthetic.sdl-probe.inference",
             inference: FacetLeaves { rust: "", typescript: "", graphql: "type SdlProbeInference { flag: Boolean }", json_schema: "", proto: "" },
-        });
-        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference"));
-        let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").expect("registered inference sdl");
+        })
+        .await;
+        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference").await);
+        let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").await.expect("registered inference sdl");
         assert!(sdl.contains("INFERRED"), "composed SDL must carry the shared @state preamble");
         assert!(sdl.contains("type SdlProbeInference"));
-        assert!(artifact_inference_graphql_sdl("s.wave3.synthetic.unregistered.inference").is_none());
+        assert!(artifact_inference_graphql_sdl("s.wave3.synthetic.unregistered.inference").await.is_none());
     }
     //#endregion 🔖️ArtifactInferenceDescriptorParity
 
@@ -1028,10 +1092,10 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {
         let mut registry = AppSchemaRegistry::new();
-        let empty = empty_app_facet_leaves();
+        let empty = empty_app_facet_leaves().await;
         registry.register(AppSchemaDescriptor {
             id: "s.wave.a3.placeholder",
             config: empty.clone(),
@@ -1047,7 +1111,7 @@ mod tests {
             },
         });
         assert_eq!(registry.len(), 1);
-        validate_registered_app_descriptor(registry.get("s.wave.a3.placeholder").expect("placeholder"));
+        validate_registered_app_descriptor(registry.get("s.wave.a3.placeholder").expect("placeholder")).await;
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state"));
     }
     //#endregion 🔖️AppSchemaRegistryParity

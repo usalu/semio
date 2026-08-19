@@ -1,0 +1,52 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio
+
+stderr | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime shard-loss wiring (real restore, not just a console.error) > handlePluginShardLost delegates to ActivationRegistry.handleShardLost for EXACTLY the affected actorIds
+[DEBUG] PluginRuntime: shard 2 lost, restoring actors: plugin-a#1, plugin-b#7
+
+stderr | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > fetchDescriptorManifest AbortSignal > still falls back to an empty manifest on a genuine (non-abort) fetch failure — the existing E1-describe/W3 gap, unchanged
+[DEBUG] fetchDescriptorManifest: https://x/🔣️descriptor.json unreachable — using an empty manifest Error: network down
+    at globalThis.fetch (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/ð¦ï¸component.tsx:2124:15)
+    at fetchDescriptorManifest (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/ð¦ï¸component.tsx:797:28)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/ð¦ï¸component.tsx:2127:32
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+[DEBUG] fetchDescriptorManifest: no descriptor for p yet (E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation
+
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > runs proposal -> prepare x2 -> commit, committing in reverse discovery order 5ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > undoGroup fans TransactionUndo out to every member of a completed transaction 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > rolls back a commit-failed transaction: undoes what already committed, rolls back the rest 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-target when the initiator plugin has no registered handle 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-target when InstanceDirectory has no entry for the foreign target 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.unknown-mutation when the router has no entry for a foreign step 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.contribution-not-permitted when a contributed mutation has no planner wired 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > plans and prepares a contributed mutation using the target's cached document pack 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.cycle when the same (artifact, mutation, payload) step repeats 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > reaches transaction.depth-exceeded when a foreign-step chain runs past MAX_TRANSACTION_DEPTH 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime TransactionCoordinator > passes a member's TransactionPrepared.rejection code straight through — instance-busy, generation-mismatch, and the member-rejected default all reachable 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime documentPack/transaction wire adapter > adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient 2ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime documentPack/transaction wire adapter > documentPack() reflects the cache after loadAppDocumentPack() — the adapter reads the SAME live channel it just loaded through 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue) > dispatches a queued Interactive-lane turn before an already-queued UserVisible-lane turn for the SAME actor, regardless of arrival order 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue) > collapses a 200-call coalescing burst to a single dispatched turn, resolving EVERY waiter (not just the last) with the winning result 2ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue) > surfaces Rejected once an actor's mailbox is genuinely full of distinct turns, instead of growing without bound 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue) > never dispatches a second turn for an actor before the first settles, even while a DIFFERENT actor's turns run concurrently 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime shard-loss wiring (real restore, not just a console.error) > handlePluginShardLost delegates to ActivationRegistry.handleShardLost for EXACTLY the affected actorIds 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > PluginRuntime shard-loss wiring (real restore, not just a console.error) > buildShardClientOptions wires onShardLost to handlePluginShardLost (not a bare console.error) and sizes shardCount via poolConcurrency 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > fetchDescriptorManifest AbortSignal > propagates an aborted signal's fetch rejection instead of silently falling back to an empty manifest 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > fetchDescriptorManifest AbortSignal > still falls back to an empty manifest on a genuine (non-abort) fetch failure — the existing E1-describe/W3 gap, unchanged 5ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > loadPluginModulesInDependencyOrder — level-parallel boot > runs independent siblings in parallel within a level, holding a dependent until its dependency's WHOLE level finishes 1ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > loadPluginModulesInDependencyOrder — level-parallel boot > bounds within-level concurrency to the given limit — a third independent sibling waits for a free slot 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > loadPluginModulesInDependencyOrder — level-parallel boot > cascades a runtime load failure to skip dependents, while unrelated siblings still load — a distinct PluginLoadFailure, not a PluginGraphError 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > loadPluginModulesInDependencyOrder — level-parallel boot > defaults its concurrency bound to poolConcurrency() when the caller doesn't override it 0ms
+ ✓ |terra-web-plugin-runtime-after| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx > loadPluginModulesInDependencyOrder — level-parallel boot > aborts cleanly: aborting mid-boot stops starting new loads without throwing, while an already-started load still settles normally 0ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  21:50:08
+   Duration  500ms (transform 299ms, setup 0ms, import 346ms, tests 23ms, environment 0ms)
+

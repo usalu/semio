@@ -29,7 +29,7 @@ use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, Appl
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::error::DirectoryError;
 use semio_hub::directory::model::{InviteRecord, SpaceRole, SyncSessionRecord};
-use semio_hub::directory::{CommandResult, DirectoryService, HubDirectory};
+use semio_hub::directory::{CommandResult, DirectoryService, HubDirectories, HubDirectory};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -105,7 +105,7 @@ struct SpaceColors {
 #[derive(Clone)]
 struct HubState {
     db: Arc<db::Database>,
-    directory: Arc<dyn HubDirectory>,
+    directory: Arc<HubDirectories>,
     /// @emoji 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
     /// dense event `seq`) built once over `directory` at startup — see `semio_hub::directory::
     /// DirectoryService`'s own doc. `/directory/commands` and `/directory/invites/{token}/redeem`
@@ -1587,8 +1587,15 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             if let Some(parent) = std::path::Path::new(&path).parent() {
                 std::fs::create_dir_all(parent)?;
             }
+            // 🔀️ R11/os-hostasync: `HostAsyncRuntime` is an open extension point (every host binds
+            // its own bridge — `db::storage::InlineRuntime`, `🛎️services::TokioHostRuntime`, this
+            // crate's own `HubDbRuntime`), so it de-dyns to a GENERIC parameter at the consumer, not
+            // an enum — `SqliteStorage<R: HostAsyncRuntime>`/`FsStorage<R: HostAsyncRuntime>` already
+            // take `R` generically (see `🛢️db/🗄️storage/…`). The `use … as _` import stays: it is
+            // what brings `open_scope` into method-call scope for the concrete `HubDbRuntime` below,
+            // nothing to do with `dyn` — a trait method call still needs its trait imported.
             use db::semio_framework_async::HostAsyncRuntime as _;
-            let runtime: std::sync::Arc<dyn db::semio_framework_async::HostAsyncRuntime> = std::sync::Arc::new(HubDbRuntime);
+            let runtime: std::sync::Arc<HubDbRuntime> = std::sync::Arc::new(HubDbRuntime);
             let scope = runtime.open_scope(db::semio_framework_async::ScopeOwner::Service("hub_db_sqlite"), None);
             let storage = db::storage_sqlite::SqliteStorage::open(runtime, scope, std::path::Path::new(&path))?;
             Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
@@ -1621,7 +1628,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
 // goes genuinely unused (whether or not another backend feature is on), so the allow is scoped to
 // exactly that condition rather than blanket-silencing the lint for every feature set.
 #[cfg_attr(not(feature = "sqlite"), allow(unused_variables))]
-async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDirectory>, HubError> {
+async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirectories>, HubError> {
     let backend = std::env::var("OS_HUB_DIRECTORY_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {
         #[cfg(feature = "sqlite")]
@@ -1632,14 +1639,14 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDire
             }
             let directory = SqliteDirectory::connect(&path.to_string_lossy()).await?;
             directory.seed().await?;
-            Ok(Arc::new(directory))
+            Ok(Arc::new(directory.into()))
         }
         #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DIRECTORY_DATABASE_URL").map_err(|_| HubError::UnknownDirectoryBackend("postgres requires OS_HUB_DIRECTORY_DATABASE_URL".into()))?;
             let directory = semio_hub::directory::postgres::PostgresDirectory::connect(&database_url).await?;
             directory.seed().await?;
-            Ok(Arc::new(directory))
+            Ok(Arc::new(directory.into()))
         }
         #[cfg(feature = "neo4j")]
         "neo4j" => {
@@ -1648,7 +1655,7 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDire
             let password = std::env::var("OS_HUB_DIRECTORY_NEO4J_PASSWORD").unwrap_or_default();
             let directory = semio_hub::directory::neo4j::Neo4jDirectory::connect(&uri, &user, &password).await?;
             directory.seed().await?;
-            Ok(Arc::new(directory))
+            Ok(Arc::new(directory.into()))
         }
         other => Err(HubError::UnknownDirectoryBackend(other.to_string())),
     }
@@ -1730,7 +1737,7 @@ mod tests {
         let database = db::Database::open_at(&dir, db::Profile::Test).expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
-        let directory: Arc<dyn HubDirectory> = Arc::new(directory);
+        let directory: Arc<HubDirectories> = Arc::new(directory.into());
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
         HubState {
             db: Arc::new(database),

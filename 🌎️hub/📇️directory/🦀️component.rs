@@ -288,7 +288,7 @@ fn single(clock: &mut HubClock, actor: &DirectoryActor, space_id: Option<String>
     Decision { events: vec![new_event(clock, actor, space_id, user_id, body)], result: None }
 }
 
-async fn require_space(dir: &dyn HubDirectory, space_id: &str) -> DirectoryResult<SpaceRecord> {
+async fn require_space(dir: &HubDirectories, space_id: &str) -> DirectoryResult<SpaceRecord> {
     dir.get_space(space_id).await?.ok_or_else(|| DirectoryError::NotFound(format!("space '{space_id}' not found")))
 }
 
@@ -320,7 +320,7 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 /// - Any command naming a missing/deleted space ⇒ `DirectoryError::NotFound`.
 /// - `upsert-member` with an email that has no `UserRecord` yet emits `user.created` first, using
 ///   a freshly minted user id the following `member.upserted` also uses.
-pub async fn decide(dir: &dyn HubDirectory, actor: &DirectoryActor, command: DirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
+pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: DirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
     match command {
         DirectoryCommand::CreateSpace { name, space_kind, visibility } => {
             let owner_user_id = actor_user_id(actor)?.to_string();
@@ -415,7 +415,7 @@ pub async fn decide(dir: &dyn HubDirectory, actor: &DirectoryActor, command: Dir
 /// messages the caller publishes directly) fans out on one `broadcast` channel every
 /// `/directory/ws` connection subscribes to (contract C2).
 pub struct DirectoryService {
-    dir: Arc<dyn HubDirectory>,
+    dir: Arc<HubDirectories>,
     write: tokio::sync::Mutex<HubClock>,
     tx: tokio::sync::broadcast::Sender<DirectoryStreamMessage>,
 }
@@ -424,7 +424,7 @@ impl DirectoryService {
     /// @emoji 🏗️ `channel_capacity` sizes the broadcast buffer; a subscriber that falls more than
     /// this many messages behind sees `RecvError::Lagged` and must resync via `events_since`
     /// (`?since=` replay, contract C2) — handled by `bin.rs`'s WS handler, not here.
-    pub fn new(dir: Arc<dyn HubDirectory>, channel_capacity: usize) -> Self {
+    pub fn new(dir: Arc<HubDirectories>, channel_capacity: usize) -> Self {
         let (tx, _rx) = tokio::sync::broadcast::channel(channel_capacity);
         Self { dir, write: tokio::sync::Mutex::new(HubClock::new()), tx }
     }
@@ -501,10 +501,10 @@ impl DirectoryService {
 
 //#region 🔖️Trait
 /// @emoji 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend
-/// (sqlite/postgres/neo4j); `HubState` holds an `Arc<dyn HubDirectory>` so the directory backend is
-/// a deploy-time choice, not a compile-time one — independent of `db::Database`'s own storage
-/// backend choice (see `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs `OS_HUB_STORAGE_BACKEND`).
-#[async_trait::async_trait]
+/// (sqlite/postgres/neo4j); `HubState` holds an `Arc<HubDirectories>` (see `//#region 🔖️Dispatch`
+/// below) so the directory backend is a deploy-time choice, not a compile-time one — independent of
+/// `db::Database`'s own storage backend choice (see `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs
+/// `OS_HUB_STORAGE_BACKEND`).
 pub trait HubDirectory: Send + Sync + 'static {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String>;
@@ -605,6 +605,356 @@ pub mod postgres;
 pub mod neo4j;
 //#endregion 🔖️Backends
 
+//#region 🔖️Dispatch
+/// 🗄️ Closed-set dispatch enum over every `HubDirectory` backend this crate can compile in.
+/// Hand-written, not `dyn_enum_close!`-generated: the macro's DSL has no per-variant `#[cfg]`
+/// support (verified against its parser — `DynEnumVariant::parse` never calls
+/// `Attribute::parse_outer`), and each variant here is gated on its own Cargo feature — see
+/// `📓️terra-dedyn-fw-hub-repo-report.md`. The shape (one `From<Backend>` impl per variant plus a
+/// match-delegating `impl HubDirectory`) is otherwise identical to what the macro emits for every
+/// other closed-set family in this program (R11). `bin.rs`'s `connect_directory` builds exactly
+/// one variant at process startup, chosen by `OS_HUB_DIRECTORY_BACKEND`.
+pub enum HubDirectories {
+    #[cfg(feature = "sqlite")]
+    Sqlite(sqlite::SqliteDirectory),
+    #[cfg(feature = "postgres")]
+    Postgres(postgres::PostgresDirectory),
+    #[cfg(feature = "neo4j")]
+    Neo4j(neo4j::Neo4jDirectory),
+}
+
+#[cfg(feature = "sqlite")]
+impl ::core::convert::From<sqlite::SqliteDirectory> for HubDirectories {
+    fn from(value: sqlite::SqliteDirectory) -> Self {
+        Self::Sqlite(value)
+    }
+}
+
+#[cfg(feature = "postgres")]
+impl ::core::convert::From<postgres::PostgresDirectory> for HubDirectories {
+    fn from(value: postgres::PostgresDirectory) -> Self {
+        Self::Postgres(value)
+    }
+}
+
+#[cfg(feature = "neo4j")]
+impl ::core::convert::From<neo4j::Neo4jDirectory> for HubDirectories {
+    fn from(value: neo4j::Neo4jDirectory) -> Self {
+        Self::Neo4j(value)
+    }
+}
+
+impl HubDirectory for HubDirectories {
+    async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.create_share_token(document_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.create_share_token(document_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.create_share_token(document_id).await,
+        }
+    }
+
+    async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> DirectoryResult<bool> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.authorized_by_token(document_id, token).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.authorized_by_token(document_id, token).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.authorized_by_token(document_id, token).await,
+        }
+    }
+
+    async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> DirectoryResult<UserRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.create_user(email, display_name, password_hash, sso_subject, sso_provider).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.create_user(email, display_name, password_hash, sso_subject, sso_provider).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.create_user(email, display_name, password_hash, sso_subject, sso_provider).await,
+        }
+    }
+
+    async fn get_user(&self, user_id: &str) -> DirectoryResult<Option<UserRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_user(user_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_user(user_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_user(user_id).await,
+        }
+    }
+
+    async fn get_user_by_email(&self, email: &str) -> DirectoryResult<Option<UserRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_user_by_email(email).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_user_by_email(email).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_user_by_email(email).await,
+        }
+    }
+
+    async fn get_user_by_sso_subject(&self, provider: &str, subject: &str) -> DirectoryResult<Option<UserRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_user_by_sso_subject(provider, subject).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_user_by_sso_subject(provider, subject).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_user_by_sso_subject(provider, subject).await,
+        }
+    }
+
+    async fn list_users(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<UserRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_users(limit, offset).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_users(limit, offset).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_users(limit, offset).await,
+        }
+    }
+
+    async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_space(space_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_space(space_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_space(space_id).await,
+        }
+    }
+
+    async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_spaces_for_user(user_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_spaces_for_user(user_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_spaces_for_user(user_id).await,
+        }
+    }
+
+    async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_spaces(limit, offset).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_spaces(limit, offset).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_spaces(limit, offset).await,
+        }
+    }
+
+    async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_members(space_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_members(space_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_members(space_id).await,
+        }
+    }
+
+    async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_role(space_id, user_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_role(space_id, user_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_role(space_id, user_id).await,
+        }
+    }
+
+    async fn create_auth_session(&self, user_id: &str, ttl_secs: i64, sso_provider: Option<&str>) -> DirectoryResult<AuthSessionRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.create_auth_session(user_id, ttl_secs, sso_provider).await,
+        }
+    }
+
+    async fn get_auth_session(&self, id: &str) -> DirectoryResult<Option<AuthSessionRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_auth_session(id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_auth_session(id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_auth_session(id).await,
+        }
+    }
+
+    async fn revoke_auth_session(&self, id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_auth_session(id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_auth_session(id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_auth_session(id).await,
+        }
+    }
+
+    async fn create_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64) -> DirectoryResult<InviteRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.create_invite(space_id, role, ttl_secs).await,
+        }
+    }
+
+    async fn get_invite_by_token(&self, token: &str) -> DirectoryResult<Option<InviteRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.get_invite_by_token(token).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.get_invite_by_token(token).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.get_invite_by_token(token).await,
+        }
+    }
+
+    async fn revoke_invite(&self, invite_id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_invite(invite_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_invite(invite_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_invite(invite_id).await,
+        }
+    }
+
+    async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_invites(space_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_invites(space_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_invites(space_id).await,
+        }
+    }
+
+    async fn record_sync_session_open(&self, space_id: &str, document_id: &str, surface: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.record_sync_session_open(space_id, document_id, surface, user_id, space_role, client_label).await,
+        }
+    }
+
+    async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.record_sync_session_close(sync_session_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.record_sync_session_close(sync_session_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.record_sync_session_close(sync_session_id).await,
+        }
+    }
+
+    async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_sync_sessions_for_document(document_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_sync_sessions_for_document(document_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_sync_sessions_for_document(document_id).await,
+        }
+    }
+
+    async fn list_active_sync_sessions(&self, space_id: Option<&str>) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_active_sync_sessions(space_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_active_sync_sessions(space_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_active_sync_sessions(space_id).await,
+        }
+    }
+
+    async fn close_all_sync_sessions(&self) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.close_all_sync_sessions().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.close_all_sync_sessions().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.close_all_sync_sessions().await,
+        }
+    }
+
+    async fn append_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_events(events).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_events(events).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_events(events).await,
+        }
+    }
+
+    async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.events_since(since_seq, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.events_since(since_seq, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.events_since(since_seq, limit).await,
+        }
+    }
+
+    async fn head_seq(&self) -> DirectoryResult<u64> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.head_seq().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.head_seq().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.head_seq().await,
+        }
+    }
+
+    async fn rebuild_projections(&self) -> DirectoryResult<u64> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.rebuild_projections().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.rebuild_projections().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.rebuild_projections().await,
+        }
+    }
+}
+//#endregion 🔖️Dispatch
+
 //#region 🧪️Tests
 // 🔬️ Exercises `decide`/`DirectoryService` against the sqlite backend (the only one the default
 // feature set — Amendment 2 — actually compiles/runs here); postgres/neo4j get the same coverage
@@ -628,13 +978,13 @@ mod tests {
     // `HubDirectory::create_user`/`get_user_by_email`). This fixture reproduces that precondition by
     // appending a bare `user.created` event for `"u-owner"` under a `System` actor, mirroring
     // `SqliteDirectory::seed`'s own pattern one file over.
-    async fn fresh_dir() -> Arc<SqliteDirectory> {
-        let dir = Arc::new(SqliteDirectory::connect(":memory:").await.expect("connect"));
+    async fn fresh_dir() -> Arc<HubDirectories> {
+        let dir = SqliteDirectory::connect(":memory:").await.expect("connect");
         let seed_actor = DirectoryActor { kind: DirectoryActorKind::System, id: "system:test-seed".into() };
         let mut clock = HubClock::new();
         let events = vec![new_event(&mut clock, &seed_actor, None, Some("u-owner".into()), DirectoryEventBody::UserCreated { user_id: "u-owner".into(), email: "u-owner@example.com".into(), display_name: "Owner".into() })];
         dir.append_events(&events).await.expect("seed owner user");
-        dir
+        Arc::new(HubDirectories::from(dir))
     }
 
     async fn create_space(service: &DirectoryService, owner: &DirectoryActor, kind: DirectorySpaceKind) -> String {

@@ -72,8 +72,9 @@ pub async fn block2d_io() -> AppIo {
 //#region 🔌️Registration
 // 🗂️ `Block2dSnapshot`'s pack↔dsl codec, `block2d`'s artifact schema/inference descriptors, its
 // composer table and its pilot-language grammars now register declaratively via
-// `crate::artifacts::block2d::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-// M1/W1d), consumed by `.artifact(crate::artifacts::block2d::declaration())` in the plugin root
+// `crate::artifacts::block2d::artifact()` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
+// `descriptor-prep`; previously `declaration()`, ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+// M1/W1d), consumed by `.declare_artifact(crate::artifacts::block2d::artifact())` in the plugin root
 // (`🧱️block/🦀️component.rs`) — replacing this app's former side-effecting `register()`. Nothing
 // app-scope-only remains here: `Block2dPlayApp::app_schema()` now returns
 // `crate::editor::block2d::config::schema::app_schema_descriptor()` directly (ticket W1c), so the

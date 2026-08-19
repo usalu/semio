@@ -1,0 +1,74 @@
+   Compiling smallvec v1.15.1
+   Compiling polycool v0.4.0
+   Compiling kurbo v0.13.1
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 4.68s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/semio_framework_geometry-d54d18329cb991f2)
+
+running 57 tests
+test engine::algebra_tests::mat4_from_quat_identity_is_identity ... ok
+test engine::algebra_tests::mat4_inverse_of_singular_matrix_returns_identity ... ok
+test engine::algebra_tests::mat4_inverse_round_trips_translation ... ok
+test engine::algebra_tests::mat4_mul_composes_transforms_in_matrix_order ... ok
+test engine::algebra_tests::mat4_perspective_maps_near_and_far_planes_to_depth_zero_and_one ... ok
+test engine::algebra_tests::mat4_scale_vec_scales_each_axis ... ok
+test engine::algebra_tests::mat4_to_cols_array_matches_column_major_layout ... ok
+test engine::algebra_tests::mat4_identity_transforms_point_unchanged ... ok
+test engine::algebra_tests::mat4_look_at_places_target_along_negative_z ... ok
+test engine::algebra_tests::mat4_from_quat_90_degrees_about_z_rotates_x_to_y ... ok
+test engine::algebra_tests::mat4_transform_direction_ignores_translation_and_normalizes ... ok
+test engine::algebra_tests::vec3_add_sub_scale_dot_length_match_hand_computation ... ok
+test engine::algebra_tests::vec3_array_round_trip ... ok
+test engine::algebra_tests::vec3_normalize_zero_stays_zero ... ok
+test engine::algebra_tests::vec3_cross_is_perpendicular ... ok
+test engine::tests::point_in_polygon_detects_interior_and_exterior ... ok
+test engine::tests::polygon_area_of_unit_square_is_one ... ok
+test engine::tests::bounding_box_covers_all_points ... ok
+test engine::tests::circle_line_intersections_finds_two_points_through_center ... ok
+test engine::tests::cubic_nearest_t_finds_endpoint_for_endpoint_query ... ok
+test engine::tests::segment_intersection_none_for_parallel_lines ... ok
+test random::tests::alias_table_empty_weights_always_samples_index_zero ... ok
+test engine::tests::convex_hull_of_square_with_interior_point_drops_interior ... ok
+test random::tests::alias_table_all_zero_weights_always_samples_index_zero ... ok
+test engine::tests::cubic_split_endpoints_match_source_and_split_point ... ok
+test random::tests::alias_table_single_weight_always_samples_it ... ok
+test engine::tests::distance_between_matches_pythagoras ... ok
+test engine::tests::normalize_or_zero_handles_zero_vector ... ok
+test random::tests::choose_returns_none_for_empty_slice ... ok
+test engine::tests::segment_intersection_finds_crossing_point ... ok
+test engine::tests::polygon_centroid_of_square_is_center ... ok
+test random::tests::choose_always_returns_an_element_from_the_slice ... ok
+test random::tests::cumulative_distribution_ends_at_one_and_is_nondecreasing ... ok
+test random::tests::cumulative_distribution_of_empty_weights_is_empty ... ok
+test random::tests::discrete_sequence_draws_only_from_nonzero_weight_indices ... ok
+test random::tests::geometric_p_one_always_returns_one ... ok
+test random::tests::geometric_is_always_at_least_one ... ok
+test random::tests::next_bool_respects_extremes ... ok
+test random::tests::next_range_degenerate_empty_range_returns_lo ... ok
+test random::tests::rng_different_seeds_diverge ... ok
+test random::tests::rng_next_f64_is_deterministic_for_same_seed ... ok
+test random::tests::poisson_lambda_zero_always_returns_zero ... ok
+test random::tests::powerlaw_sequence_values_are_positive_and_at_least_one ... ok
+test random::tests::rng_next_u64_is_deterministic_for_same_seed ... ok
+test random::tests::next_f64_stays_within_unit_interval ... ok
+test random::tests::rng_state_round_trip_resumes_identically ... ok
+test random::tests::shuffle_preserves_multiset ... ok
+test random::tests::sample_without_replacement_returns_k_distinct_indices_in_range ... ok
+test random::tests::split_mix64_differs_across_seeds ... ok
+test random::tests::split_mix64_is_deterministic_for_same_seed ... ok
+test random::tests::normal_stays_within_six_std_devs_of_mean ... ok
+test random::tests::rng_has_no_obvious_short_cycle ... ok
+test random::tests::zipf_ranks_are_within_bounds ... ok
+test random::tests::poisson_mean_is_roughly_lambda ... ok
+test random::tests::zipf_favors_low_ranks ... ok
+test random::tests::next_range_stays_within_bounds_and_is_roughly_uniform ... ok
+test random::tests::alias_table_sampling_frequency_matches_weights ... ok
+
+test result: ok. 57 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests semio_framework_geometry
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

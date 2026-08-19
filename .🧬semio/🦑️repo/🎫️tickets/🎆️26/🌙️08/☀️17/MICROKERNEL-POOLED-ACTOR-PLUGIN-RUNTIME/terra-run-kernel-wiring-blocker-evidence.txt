@@ -1,0 +1,20 @@
+     = note: required for the cast from `&impl Future<Output = u32>` to `&dyn Debug`
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0369, E0529, E0599, E0600, E0605.
+For more information about an error, try `rustc --explain E0271`.
+error: could not compile `semio-framework-actor` (lib) due to 266 previous errors
+---
+     |     ^^
+
+Some errors have detailed explanations: E0053, E0277, E0282, E0308, E0369, E0599, E0600, E0605, E0609.
+For more information about an error, try `rustc --explain E0053`.
+error: could not compile `semio-framework-number` (lib) due to 620 previous errors
+---
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+285 -     async fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+285 +     fn diff_patch(&self, other: &Self) -> impl std::future::Future<Output = Option<TPatch>> + Send;
+    |
+
+warning: `semio-framework-os-kernel` (lib) generated 57 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 40.98s

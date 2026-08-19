@@ -21,5 +21,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/module/replication"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
 }

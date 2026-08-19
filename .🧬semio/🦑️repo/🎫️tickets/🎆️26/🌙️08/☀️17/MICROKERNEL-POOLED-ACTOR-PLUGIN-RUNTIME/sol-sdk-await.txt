@@ -1,0 +1,8 @@
+[pass 1] errors=1941 await-edits=1311 ambiguous=0 other=42
+  applied 1244
+[pass 2] errors=890 await-edits=69 ambiguous=0 other=122
+  ⛔ ABORT: 31 × E0728 (`await` outside an async fn).
+  The enclosing functions are still SYNC, so inserting `.await` only trades one
+  error for another. Run the asyncify codemod over this scope FIRST, then re-run:
+    python3 asyncify-universal.py --apply <paths under 🔌️plugin>
+report -> .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/sol-sdk-await.json

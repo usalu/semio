@@ -142,7 +142,14 @@ impl Ui {
     /// already knows (via `scene_host.is_some()`) whether to paint its own placeholder chrome for
     /// `ComponentScene`/`Image` leaves this tick or leave that rect for the host to fill in below —
     /// see `paint`'s own doc comment on that gate.
-    pub async fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut dyn SceneHost>) -> Option<&DrawList> {
+    // 🧬️ A former `Option<&mut dyn SceneHost>` — `SceneHost` is a genuine OPEN extension point (its own
+    // doc comment: "the only place vello/world3d/raster-decode-specific code may live"; two real
+    // implementors already exist, `RecordingSceneHost` here in tests and `FrameworkSceneHost` in
+    // `os/renderer/engine/Interpreter`, which is outside this crate). Per R11 this is the trivially-
+    // generic argument-position case (R11(a)): each call site already hands `frame` ONE concrete host
+    // reference, so `H: SceneHost` loses no expressiveness versus `dyn` and every existing caller's
+    // call syntax (`Some(&mut concrete_host)`) is unchanged — `H` is inferred from the argument.
+    pub async fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> Option<&DrawList> {
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
         window.viewport = (viewport_width, viewport_height);
@@ -152,10 +159,10 @@ impl Ui {
         }
         window.layout.compute(&mut window.tree, root, atlas, &self.theme, viewport_width, viewport_height);
         window.draw.clear();
-        paint_tree(&mut window.tree, root, &self.theme, atlas, icons, scene_host.is_some(), &mut window.draw);
+        paint_tree(&mut window.tree, root, &self.theme, atlas, icons, scene_host.is_some(), &mut window.draw).await;
         if let Some(host) = scene_host.as_deref_mut() {
-            for slot in collect_scene_slots(&window.tree, root) {
-                host.paint_slot(&slot, &mut window.draw, atlas, icons);
+            for slot in collect_scene_slots(&window.tree, root).await {
+                host.paint_slot(&slot, &mut window.draw, atlas, icons).await;
             }
         }
         Some(&window.draw)
@@ -278,7 +285,7 @@ mod tests {
         ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
-        let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
+        let draw = ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
         let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(total > 0, "expected the text node to emit at least one glyph instance");
     }
@@ -287,7 +294,7 @@ mod tests {
     async fn frame_before_any_apply_tree_returns_none() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        assert!(ui.frame("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
+        assert!(ui.frame::<RecordingSceneHost>("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
     }
 
     #[test]
@@ -296,7 +303,7 @@ mod tests {
         let mut atlas = FontAtlas::builtin();
         let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
         ui.apply_tree("main", &ui_node);
-        ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
+        ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
 
         ui.apply_tree("main", &ui_node);
@@ -308,7 +315,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
-        ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
+        ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None);
 
         ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
         let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
@@ -377,7 +384,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
-        let draw = ui.frame("w", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list");
+        let draw = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list");
         let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(instances > 0, "with no scene host registered, paint_component_scene's placeholder chrome should still paint");
     }
@@ -571,7 +578,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("golden", node);
-        let draw = ui.frame("golden", 400.0, 400.0, &mut atlas, None, None).expect("apply_tree then frame must produce a draw list");
+        let draw = ui.frame::<RecordingSceneHost>("golden", 400.0, 400.0, &mut atlas, None, None).expect("apply_tree then frame must produce a draw list");
         stats(draw)
     }
 

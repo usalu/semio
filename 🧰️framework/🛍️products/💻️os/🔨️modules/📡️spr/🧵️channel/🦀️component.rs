@@ -365,9 +365,9 @@ fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::Pr
 
 //#region 🔖️Combinators
 async fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
-    crate::os_spr::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some()).await;
     if let Some(v) = value {
-        crate::os_spr::write_varint_u64(out, *v);
+        crate::os_spr::write_varint_u64(out, *v).await;
     }
 }
 
@@ -382,7 +382,7 @@ async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crat
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
 /// presence-byte convention as {@link write_opt_u64} above.
 async fn write_opt_u8(out: &mut Vec<u8>, value: &Option<u8>) {
-    crate::os_spr::write_bool(out, value.is_some());
+    crate::os_spr::write_bool(out, value.is_some()).await;
     if let Some(v) = value {
         out.push(*v);
     }
@@ -399,9 +399,9 @@ async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate:
 }
 
 async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        crate::os_spr::write_bytes(out, value);
+        crate::os_spr::write_bytes(out, value).await;
     }
 }
 
@@ -417,9 +417,9 @@ async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, c
 }
 
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64);
+    crate::os_spr::write_varint_u64(out, values.len() as u64).await;
     for value in values {
-        crate::os_spr::causal::encode_envelope(value, out);
+        crate::os_spr::causal::encode_envelope(value, out).await;
     }
 }
 
@@ -441,173 +441,173 @@ pub async fn encode_app_command(command: &AppCommand) -> Vec<u8> {
     match command {
         AppCommand::ConfigCommand { seq, command } => {
             out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, command).await;
         }
         AppCommand::Command { seq, command, view_state } => {
             out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
-            crate::os_spr::write_bytes(&mut out, view_state);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, command).await;
+            crate::os_spr::write_bytes(&mut out, view_state).await;
         }
         AppCommand::CommandText { seq, line } => {
             out.push(2);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, line);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, line).await;
         }
         AppCommand::ContextMenu { seq, request } => {
             out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, request);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, request).await;
         }
         AppCommand::ArtifactCommand { seq, command } => {
             out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, command).await;
         }
         AppCommand::ApplyEnvelopes { seq, envelopes } => {
             out.push(5);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_vec_envelope(&mut out, envelopes);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            write_vec_envelope(&mut out, envelopes).await;
         }
         AppCommand::LoadDocument { seq, pack, spr } => {
             out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, pack).await;
+            crate::os_spr::write_bytes(&mut out, spr).await;
         }
         AppCommand::ReadDocument { seq } => {
             out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
         }
         AppCommand::LoadConfig { seq, pack, spr } => {
             out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, pack).await;
+            crate::os_spr::write_bytes(&mut out, spr).await;
         }
         AppCommand::ReadConfig { seq } => {
             out.push(9);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
         }
         AppCommand::MediaIn { seq, port, descriptor, data } => {
             out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, descriptor);
-            crate::os_spr::write_bytes(&mut out, data);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, port).await;
+            crate::os_spr::write_bytes(&mut out, descriptor).await;
+            crate::os_spr::write_bytes(&mut out, data).await;
         }
         AppCommand::MediaOut { seq, port, request } => {
             out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, request);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, port).await;
+            crate::os_spr::write_bytes(&mut out, request).await;
         }
         AppCommand::MediaFingerprint { seq, port } => {
             out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, port).await;
         }
         AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
             out.push(13);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
-            crate::os_spr::write_bytes(&mut out, document);
-            crate::os_spr::write_bytes(&mut out, document_spr);
-            crate::os_spr::write_bytes(&mut out, config);
-            crate::os_spr::write_bytes(&mut out, config_spr);
-            crate::os_spr::write_bytes(&mut out, draft);
-            crate::os_spr::write_bytes(&mut out, draft_spr);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_bytes(&mut out, command).await;
+            crate::os_spr::write_bytes(&mut out, document).await;
+            crate::os_spr::write_bytes(&mut out, document_spr).await;
+            crate::os_spr::write_bytes(&mut out, config).await;
+            crate::os_spr::write_bytes(&mut out, config_spr).await;
+            crate::os_spr::write_bytes(&mut out, draft).await;
+            crate::os_spr::write_bytes(&mut out, draft_spr).await;
         }
         AppCommand::LoadChildren { seq, entries } => {
             out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_vec_child_pack(&mut out, entries);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            write_vec_child_pack(&mut out, entries).await;
         }
         AppCommand::ReadChildren { seq } => {
             out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
         }
         AppCommand::ReadHistory { seq } => {
             out.push(16);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
         }
         AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
             out.push(17);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
-            crate::os_spr::write_str(&mut out, mutation_id);
-            crate::os_spr::write_bytes(&mut out, payload);
-            write_vec_bytes(&mut out, prepared_ops);
-            crate::os_spr::write_str(&mut out, label);
-            crate::os_spr::write_bytes(&mut out, origin);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_str(&mut out, mutation_id).await;
+            crate::os_spr::write_bytes(&mut out, payload).await;
+            write_vec_bytes(&mut out, prepared_ops).await;
+            crate::os_spr::write_str(&mut out, label).await;
+            crate::os_spr::write_bytes(&mut out, origin).await;
         }
         AppCommand::TransactionCommit { seq, txn_id } => {
             out.push(18);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, txn_id).await;
         }
         AppCommand::TransactionRollback { seq, txn_id } => {
             out.push(19);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, txn_id).await;
         }
         AppCommand::TransactionUndo { seq, group_id } => {
             out.push(20);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, group_id);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, group_id).await;
         }
         AppCommand::TransactionRedo { seq, group_id } => {
             out.push(21);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, group_id);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, group_id).await;
         }
         AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
             out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_ref);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, artifact_ref).await;
             out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id);
-            crate::os_spr::write_str(&mut out, app_id);
+            crate::os_spr::write_str(&mut out, plugin_id).await;
+            crate::os_spr::write_str(&mut out, app_id).await;
         }
         AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
             out.push(23);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_kind);
-            crate::os_spr::write_str(&mut out, standard);
-            crate::os_spr::write_str(&mut out, subset);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, artifact_kind).await;
+            crate::os_spr::write_str(&mut out, standard).await;
+            crate::os_spr::write_str(&mut out, subset).await;
             out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id);
-            crate::os_spr::write_str(&mut out, app_id);
+            crate::os_spr::write_str(&mut out, plugin_id).await;
+            crate::os_spr::write_str(&mut out, app_id).await;
         }
         AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
             out.push(24);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_kind);
-            crate::os_spr::write_str(&mut out, standard);
-            crate::os_spr::write_str(&mut out, subset);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, artifact_kind).await;
+            crate::os_spr::write_str(&mut out, standard).await;
+            crate::os_spr::write_str(&mut out, subset).await;
             out.push(*role);
         }
         AppCommand::SetMergePolicy { seq, policy } => {
             out.push(25);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
             out.push(*policy);
         }
         AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
             out.push(26);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, conflict_id);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_str(&mut out, conflict_id).await;
             out.push(*resolution);
         }
         AppCommand::ReadConflicts { seq } => {
             out.push(27);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
         }
         AppCommand::Presence { seq, own_color, peers } => {
             out.push(28);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_opt_u8(&mut out, own_color);
-            write_vec_bytes(&mut out, peers);
+            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            write_opt_u8(&mut out, own_color).await;
+            write_vec_bytes(&mut out, peers).await;
         }
     }
     out
@@ -616,12 +616,12 @@ pub async fn encode_app_command(command: &AppCommand) -> Vec<u8> {
 /// @emoji 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
 /// both `AppCommand::LoadChildren` and `AppFrame::Children`.
 async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
-    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    crate::os_spr::write_varint_u64(out, entries.len() as u64).await;
     for entry in entries {
-        crate::os_spr::write_str(out, &entry.slot);
-        crate::os_spr::write_str(out, &entry.child_id);
-        crate::os_spr::write_str(out, &entry.dialect);
-        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+        crate::os_spr::write_str(out, &entry.slot).await;
+        crate::os_spr::write_str(out, &entry.child_id).await;
+        crate::os_spr::write_str(out, &entry.dialect).await;
+        crate::os_spr::write_bytes(out, &entry.envelope_pack).await;
     }
 }
 
@@ -741,144 +741,144 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
     match frame {
         AppFrame::Done { in_reply_to } => {
             out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
         }
         AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } => {
             out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, output);
-            crate::os_spr::write_bytes(&mut out, diagnostics);
-            crate::os_spr::write_bytes(&mut out, ui_scope);
-            crate::os_spr::write_bytes(&mut out, history_patch);
-            crate::os_spr::write_bytes(&mut out, messages);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, output).await;
+            crate::os_spr::write_bytes(&mut out, diagnostics).await;
+            crate::os_spr::write_bytes(&mut out, ui_scope).await;
+            crate::os_spr::write_bytes(&mut out, history_patch).await;
+            crate::os_spr::write_bytes(&mut out, messages).await;
         }
         AppFrame::DocumentChanged { envelopes, origin } => {
             out.push(2);
-            write_vec_envelope(&mut out, envelopes);
-            crate::os_spr::write_str(&mut out, origin);
+            write_vec_envelope(&mut out, envelopes).await;
+            crate::os_spr::write_str(&mut out, origin).await;
         }
         AppFrame::Document { in_reply_to, pack, spr, ops } => {
             out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, pack).await;
+            crate::os_spr::write_bytes(&mut out, spr).await;
+            crate::os_spr::write_str(&mut out, ops).await;
         }
         AppFrame::Config { in_reply_to, pack, spr, ops } => {
             out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, pack).await;
+            crate::os_spr::write_bytes(&mut out, spr).await;
+            crate::os_spr::write_str(&mut out, ops).await;
         }
         AppFrame::ConfigChanged { envelopes, origin } => {
             out.push(5);
-            write_vec_envelope(&mut out, envelopes);
-            crate::os_spr::write_str(&mut out, origin);
+            write_vec_envelope(&mut out, envelopes).await;
+            crate::os_spr::write_str(&mut out, origin).await;
         }
         AppFrame::ContextMenu { in_reply_to, items } => {
             out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, items);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, items).await;
         }
         AppFrame::Media { in_reply_to, port, descriptor, data } => {
             out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, descriptor);
-            crate::os_spr::write_bytes(&mut out, data);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_str(&mut out, port).await;
+            crate::os_spr::write_bytes(&mut out, descriptor).await;
+            crate::os_spr::write_bytes(&mut out, data).await;
         }
         AppFrame::MediaFingerprint { in_reply_to, port, fingerprint } => {
             out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, fingerprint);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_str(&mut out, port).await;
+            crate::os_spr::write_bytes(&mut out, fingerprint).await;
         }
         AppFrame::Error { in_reply_to, fault, report } => {
             out.push(9);
-            write_opt_u64(&mut out, in_reply_to);
-            crate::os_spr::write_bytes(&mut out, fault);
-            crate::os_spr::write_bytes(&mut out, report);
+            write_opt_u64(&mut out, in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, fault).await;
+            crate::os_spr::write_bytes(&mut out, report).await;
         }
         AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
             out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, document_ops);
-            crate::os_spr::write_bytes(&mut out, config_ops);
-            crate::os_spr::write_bytes(&mut out, draft_ops);
-            crate::os_spr::write_bytes(&mut out, output);
-            crate::os_spr::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, document_ops).await;
+            crate::os_spr::write_bytes(&mut out, config_ops).await;
+            crate::os_spr::write_bytes(&mut out, draft_ops).await;
+            crate::os_spr::write_bytes(&mut out, output).await;
+            crate::os_spr::write_bytes(&mut out, diagnostics).await;
         }
         AppFrame::Draft { in_reply_to, pack, spr, ops } => {
             out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, pack).await;
+            crate::os_spr::write_bytes(&mut out, spr).await;
+            crate::os_spr::write_str(&mut out, ops).await;
         }
         AppFrame::Children { in_reply_to, entries } => {
             out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            write_vec_child_pack(&mut out, entries);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            write_vec_child_pack(&mut out, entries).await;
         }
         AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction } => {
             out.push(13);
-            crate::os_spr::write_bytes(&mut out, presence);
-            crate::os_spr::write_varint_u64(&mut out, *presence_generation);
-            crate::os_spr::write_varint_u64(&mut out, *transient_generation);
-            crate::os_spr::write_bytes(&mut out, interaction);
+            crate::os_spr::write_bytes(&mut out, presence).await;
+            crate::os_spr::write_varint_u64(&mut out, *presence_generation).await;
+            crate::os_spr::write_varint_u64(&mut out, *transient_generation).await;
+            crate::os_spr::write_bytes(&mut out, interaction).await;
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, history_patch);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, history_patch).await;
         }
         AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } => {
             out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, proposal_id);
-            write_vec_bytes(&mut out, local_ops);
-            crate::os_spr::write_str(&mut out, description);
-            crate::os_spr::write_str(&mut out, coalesce_key);
-            write_vec_bytes(&mut out, foreign);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_str(&mut out, proposal_id).await;
+            write_vec_bytes(&mut out, local_ops).await;
+            crate::os_spr::write_str(&mut out, description).await;
+            crate::os_spr::write_str(&mut out, coalesce_key).await;
+            write_vec_bytes(&mut out, foreign).await;
         }
         AppFrame::TransactionPrepared { txn_id, foreign, rejection } => {
             out.push(16);
-            crate::os_spr::write_str(&mut out, txn_id);
-            write_vec_bytes(&mut out, foreign);
-            crate::os_spr::write_bytes(&mut out, rejection);
+            crate::os_spr::write_str(&mut out, txn_id).await;
+            write_vec_bytes(&mut out, foreign).await;
+            crate::os_spr::write_bytes(&mut out, rejection).await;
         }
         AppFrame::TransactionCommitted { txn_id, edit_id } => {
             out.push(17);
-            crate::os_spr::write_str(&mut out, txn_id);
-            crate::os_spr::write_str(&mut out, edit_id);
+            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_str(&mut out, edit_id).await;
         }
         AppFrame::TransactionRolledBack { txn_id } => {
             out.push(18);
-            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_str(&mut out, txn_id).await;
         }
         AppFrame::MergeReport { in_reply_to, report } => {
             out.push(19);
-            write_opt_u64(&mut out, in_reply_to);
-            crate::os_spr::write_bytes(&mut out, report);
+            write_opt_u64(&mut out, in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, report).await;
         }
         AppFrame::Conflicts { in_reply_to, conflicts } => {
             out.push(20);
-            write_opt_u64(&mut out, in_reply_to);
-            crate::os_spr::write_bytes(&mut out, conflicts);
+            write_opt_u64(&mut out, in_reply_to).await;
+            crate::os_spr::write_bytes(&mut out, conflicts).await;
         }
         AppFrame::UiPatch { in_reply_to, surface, kind, revision, base_revision, ops } => {
             out.push(21);
-            write_opt_u64(&mut out, in_reply_to);
-            crate::os_spr::write_str(&mut out, surface);
-            crate::os_spr::write_str(&mut out, kind);
-            crate::os_spr::write_varint_u64(&mut out, *revision);
-            crate::os_spr::write_varint_u64(&mut out, *base_revision);
-            crate::os_spr::write_bytes(&mut out, ops);
+            write_opt_u64(&mut out, in_reply_to).await;
+            crate::os_spr::write_str(&mut out, surface).await;
+            crate::os_spr::write_str(&mut out, kind).await;
+            crate::os_spr::write_varint_u64(&mut out, *revision).await;
+            crate::os_spr::write_varint_u64(&mut out, *base_revision).await;
+            crate::os_spr::write_bytes(&mut out, ops).await;
         }
         AppFrame::UiSnapshotEnd { revision } => {
             out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *revision);
+            crate::os_spr::write_varint_u64(&mut out, *revision).await;
         }
     }
     out
@@ -977,7 +977,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: crate::os_spr::causal::ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
             inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
+            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0).await,
         }
     }
 
@@ -997,7 +997,7 @@ mod tests {
     //#region 🔖️AppCommand
     async fn assert_command_round_trips(command: &AppCommand) {
         let bytes = encode_app_command(command);
-        let decoded = decode_app_command(&bytes).expect("decode must succeed");
+        let decoded = decode_app_command(&bytes).await.expect("decode must succeed");
         assert_eq!(&decoded, command);
     }
 
@@ -1028,7 +1028,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_apply_envelopes_round_trips() {
-        assert_command_round_trips(&AppCommand::ApplyEnvelopes { seq: 7, envelopes: vec![sample_envelope("op-1"), sample_envelope("op-2")] });
+        assert_command_round_trips(&AppCommand::ApplyEnvelopes { seq: 7, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1165,7 +1165,7 @@ mod tests {
     //#region 🔖️AppFrame
     async fn assert_frame_round_trips(frame: &AppFrame) {
         let bytes = encode_app_frame(frame);
-        let decoded = decode_app_frame(&bytes).expect("decode must succeed");
+        let decoded = decode_app_frame(&bytes).await.expect("decode must succeed");
         assert_eq!(&decoded, frame);
     }
 
@@ -1182,7 +1182,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_document_changed_round_trips() {
-        assert_frame_round_trips(&AppFrame::DocumentChanged { envelopes: vec![sample_envelope("op-1")], origin: "peer-1".to_string() });
+        assert_frame_round_trips(&AppFrame::DocumentChanged { envelopes: vec![sample_envelope("op-1").await], origin: "peer-1".to_string() });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1197,7 +1197,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_config_changed_round_trips() {
-        assert_frame_round_trips(&AppFrame::ConfigChanged { envelopes: vec![sample_envelope("cfg-1")], origin: "peer-1".to_string() });
+        assert_frame_round_trips(&AppFrame::ConfigChanged { envelopes: vec![sample_envelope("cfg-1").await], origin: "peer-1".to_string() });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1236,7 +1236,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn app_frame_draft_round_trips() {
         assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
-        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries() });
+        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries().await });
         assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() });
         assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9] });
         assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new() });
@@ -1254,7 +1254,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn child_pack_commands_round_trip() {
-        assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries() });
+        assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries().await });
         assert_command_round_trips(&AppCommand::LoadChildren { seq: 20, entries: Vec::new() });
         assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 });
         assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 });
@@ -1345,40 +1345,40 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_command_rejects_empty_bytes() {
-        let err = decode_app_command(&[]).unwrap_err();
+        let err = decode_app_command(&[]).await.unwrap_err();
         assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_frame_rejects_empty_bytes() {
-        let err = decode_app_frame(&[]).unwrap_err();
+        let err = decode_app_frame(&[]).await.unwrap_err();
         assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_command_rejects_unknown_tag() {
-        let err = decode_app_command(&[0xFF]).unwrap_err();
+        let err = decode_app_command(&[0xFF]).await.unwrap_err();
         assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_frame_rejects_unknown_tag() {
-        let err = decode_app_frame(&[0xFF]).unwrap_err();
+        let err = decode_app_frame(&[0xFF]).await.unwrap_err();
         assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_command_rejects_truncated_field() {
         let bytes = encode_app_command(&AppCommand::CommandText { seq: 1, line: "hello".to_string() });
-        let truncated = &bytes[..bytes.len() - 2];
-        assert!(decode_app_command(truncated).is_err());
+        let truncated = &bytes[..bytes.await.len() - 2];
+        assert!(decode_app_command(truncated).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_frame_rejects_truncated_field() {
         let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec(), report: Vec::new() });
-        let truncated = &bytes[..bytes.len() - 2];
-        assert!(decode_app_frame(truncated).is_err());
+        let truncated = &bytes[..bytes.await.len() - 2];
+        assert!(decode_app_frame(truncated).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1587,7 +1587,7 @@ mod tests {
         for (label, value) in channel_command_fixture_corpus() {
             let actual = hex_encode(&encode_app_command(&value));
             assert_eq!(actual, channel_command_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
-            let decoded = decode_app_command(&encode_app_command(&value)).unwrap();
+            let decoded = decode_app_command(&encode_app_command(&value)).await.unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
     }
@@ -1597,7 +1597,7 @@ mod tests {
         for (label, value) in channel_frame_fixture_corpus() {
             let actual = hex_encode(&encode_app_frame(&value));
             assert_eq!(actual, channel_frame_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
-            let decoded = decode_app_frame(&encode_app_frame(&value)).unwrap();
+            let decoded = decode_app_frame(&encode_app_frame(&value)).await.unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
     }

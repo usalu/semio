@@ -3305,8 +3305,14 @@ type ParityMismatchAxis = "topology" | "text" | "rect" | "color" | "bg" | "fontS
 type ParityMismatch = { readonly path: string; readonly axis: ParityMismatchAxis; readonly react: unknown; readonly wgpu: unknown };
 type StructuralResult = { readonly status: "PASS" | "FAIL"; readonly nodeCount: number; readonly mismatches: readonly ParityMismatch[] };
 
-/** 🪜️Boot-triage ladder status — evaluated before any structural/pixel comparison, never conflated with a mismatch. */
-type BootStatus = "PASS" | "SERVER-FAIL" | "BOOT-TIMEOUT" | "ENV-FAIL" | "DUMP-EMPTY" | "BLANK-PAINT";
+/** 🪜️Boot-triage ladder status — evaluated before any structural/pixel comparison, never conflated with a mismatch.
+ * `STALE-BRIDGE` (terra-parity-rebaseline): a variant activation failing because its on-disk jco bridge
+ * (`🔌️plugin-modules/<variant>/semio_s_plugin_*.js`) is still the pre-H2 `runSerialized` shape and has no
+ * `createActorApi` export — see `🔖️Triage`'s `parityClassifyStaleBridge`. Distinct from every other rung:
+ * those are architecture/runtime defects, this is "the fleet hasn't regenerated this bridge yet", which is
+ * the EXPECTED state for most of the 58 variants until `sdk-green` lands (📌️important.md, §"48 materialised
+ * plugin bridges"). A sweep that reports this as a bare FAIL is not measuring anything real. */
+type BootStatus = "PASS" | "SERVER-FAIL" | "BOOT-TIMEOUT" | "ENV-FAIL" | "DUMP-EMPTY" | "BLANK-PAINT" | "STALE-BRIDGE";
 
 type PixelRegionResult = { readonly path: string; readonly ratio: number; readonly threshold: number; readonly diffPng?: string };
 
@@ -3509,8 +3515,24 @@ function compareParityRegion(reactPng: PNG, wgpuPng: PNG, node: ParityNode, outD
 //#region 🔖️Triage
 const PARITY_BOOT_TIMEOUT_MS = Number(process.env.PARITY_RUNTIME_BOOT_TIMEOUT_MS ?? 180_000);
 
+/** 🧬️terra-parity-rebaseline: the exact TypeError `🌐plugin-web-materialize.ts`'s `loadActor` throws —
+ * `const api = await bridge.createActorApi(actorId);` on a module whose export is `undefined` — once it
+ * crosses `ShardClient.activate`'s reject (`🧵️shard-client.ts` `entry.reject(graftWorkerStack(...))`) and
+ * surfaces as an unhandled rejection on the page. Matched on BOTH the property-access phrasing V8 uses
+ * (`bridge.createActorApi is not a function` / `undefined is not an object (evaluating
+ * 'bridge.createActorApi')`) and the bare symbol, so a wording change in one engine doesn't silently stop
+ * matching in the other. Deliberately narrow — this must not catch unrelated "X is not a function" defects,
+ * which are real regressions, not stale fixtures. */
+const PARITY_STALE_BRIDGE_RE = /createActorApi/;
+
 /** 🪜️Boot-triage ladder — each rung is a distinct terminal status, never conflated with a structural/pixel mismatch. */
 async function triageParityBoot(page: import("playwright").Page, renderer: ParityRenderer, url: string): Promise<{ readonly status: BootStatus; readonly detail?: string }> {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (e) => pageErrors.push(String(e)));
+  page.on("console", (m) => {
+    if (m.type() === "error") pageErrors.push(m.text());
+  });
+  const staleBridgeHit = (): string | undefined => pageErrors.find((e) => PARITY_STALE_BRIDGE_RE.test(e));
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
   } catch (e) {
@@ -3520,29 +3542,42 @@ async function triageParityBoot(page: import("playwright").Page, renderer: Parit
     try {
       await page.waitForFunction(() => document.querySelectorAll("#root *").length > 20, { timeout: PARITY_BOOT_TIMEOUT_MS });
     } catch {
-      return { status: "BOOT-TIMEOUT", detail: "react #root never populated" };
+      const stale = staleBridgeHit();
+      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "react #root never populated" };
     }
     const nodeCount = await page.evaluate(() => document.querySelectorAll("[data-ui-path]").length);
-    return nodeCount === 0 ? { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" } : { status: "PASS" };
+    if (nodeCount === 0) {
+      const stale = staleBridgeHit();
+      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" };
+    }
+    // 🩹️ The shell itself can mount (>20 root nodes, non-empty dump) while ONE plugin/extension actor
+    // inside it fails to activate — that failure never blocks `#root`, so it must be checked even on an
+    // otherwise-PASSing boot, or a stale-bridge variant silently reports PASS.
+    const stale = staleBridgeHit();
+    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
   }
-  const consoleErrors: string[] = [];
-  page.on("pageerror", (e) => consoleErrors.push(String(e)));
   try {
     await page.waitForFunction(() => document.querySelector("#semio-wgpu-canvas") != null, { timeout: PARITY_BOOT_TIMEOUT_MS });
   } catch {
-    return { status: "BOOT-TIMEOUT", detail: "wgpu canvas never mounted" };
+    const stale = staleBridgeHit();
+    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu canvas never mounted" };
   }
-  if (consoleErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: consoleErrors.join(" | ") };
+  if (pageErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: pageErrors.join(" | ") };
   try {
     await page.waitForFunction(() => typeof (window as unknown as { wasmBindings?: { dumpStructure?: unknown } }).wasmBindings?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
   } catch {
-    return { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
+    const stale = staleBridgeHit();
+    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
   }
   const dump = await dumpWgpuStructure(page);
-  if (dump.nodes.length === 0) return { status: "DUMP-EMPTY", detail: "wgpu structural dump empty (plugin-bridge/kernel wiring)" };
+  if (dump.nodes.length === 0) {
+    const stale = staleBridgeHit();
+    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "wgpu structural dump empty (plugin-bridge/kernel wiring)" };
+  }
   const stats = await dumpWgpuFrameStats(page);
   if (stats && stats.drawCalls === 0) return { status: "BLANK-PAINT", detail: "zero draw calls (paint pipeline)" };
-  return { status: "PASS" };
+  const stale = staleBridgeHit();
+  return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
 }
 //#endregion 🔖️Triage
 
@@ -4050,6 +4085,14 @@ function parityOutDir(): string {
   return dir;
 }
 
+/** 🪜️terra-parity-rebaseline: a playground is `STALE-BRIDGE` if EITHER renderer's boot rung landed
+ * there — the point is "not a real regression, don't count it against the architecture", and either
+ * side hitting it is sufficient to know that. Checked before the generic `failed` filter below so a
+ * stale-bridge variant is never double-counted as both. */
+function isParityStaleBridge(r: ParityPlaygroundReport): boolean {
+  return r.boot.react === "STALE-BRIDGE" || r.boot.wgpu === "STALE-BRIDGE";
+}
+
 function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
   const outDir = parityOutDir();
   writeFileSync(join(outDir, "parity-report-v2.json"), JSON.stringify(reports, null, 2), "utf8");
@@ -4058,24 +4101,41 @@ function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
     const evidence = r.behavioral?.steps.find((step) => step.state)?.state;
     lines.push(`| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} | ${r.behavioral?.status ?? "-"} | ${evidence ? `\`${evidence.actionKind}\` \`${evidence.actionPath}\`` : "-"} | ${evidence?.react.changedPaths.length ?? "-"} | ${evidence?.wgpu.changedPaths.length ?? "-"} |`);
   }
-  const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
-  lines.push("", `**${reports.length - failed.length}/${reports.length} PASS**`);
+  // 🪜️terra-parity-rebaseline: STALE-BRIDGE split OUT of `failed` — see `isParityStaleBridge`'s doc. A
+  // blended "X/Y PASS" line conflates "the architecture regressed" with "the fleet hasn't regenerated
+  // this bridge yet", which is exactly the false-regression risk 📌️important.md's re-baseline task
+  // called out; the three-way split below is what makes a re-run after `sdk-green` lands legible.
+  const staleBridge = reports.filter(isParityStaleBridge);
+  const failed = reports.filter((r) => !isParityStaleBridge(r) && (r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL"));
+  const passed = reports.length - failed.length - staleBridge.length;
+  lines.push("", `**${passed}/${reports.length} PASS · ${staleBridge.length}/${reports.length} STALE-BRIDGE (excluded from the architecture verdict) · ${failed.length}/${reports.length} FAIL**`);
+  if (staleBridge.length > 0) lines.push("", `Stale-bridge variants (expected until the fleet's own bridge regenerates — 📌️important.md): ${staleBridge.map((r) => r.variant).join(", ")}`);
   writeFileSync(join(outDir, "parity-report-v2.md"), lines.join("\n"), "utf8");
 }
 //#endregion 🔖️Report
 
 //#region 🔖️Sweep
+/** 🎭️ Points playwright at the repo-local browser cache that `📜️script.ts setup` actually populates
+ * (`bunx playwright install --with-deps chromium` → `node_modules/.cache/ms-playwright`). Without
+ * this, `chromium.launch()` falls back to the user-global `~/Library/Caches/ms-playwright`, which
+ * holds whatever an unrelated project installed — here a stale `chromium_headless_shell-1223`
+ * against the required `-1234` — and every parity run dies with "Executable doesn't exist"
+ * suggesting `npx playwright install`, i.e. a download, for a browser the repo had already
+ * installed. The storybook runner (root `📜️script.ts`, `🔖️TestScript`) already sets this.
+ *
+ * terra-parity-rebaseline: hoisted out of `verifyParityVariant` (the only call site that set this
+ * before today) into a shared helper, and now ALSO called from `ParityTriageScript`/`ParityProbeScript`
+ * — both launch `chromium` directly without going through `verifyParityVariant` and were dying on the
+ * exact same stale-global-cache error, which is what made even a single `parity triage <variant>`
+ * unrunnable (measured: `Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1234/...`,
+ * exit 1) before this fix — never mind a 58-variant sweep. */
+function ensureParityPlaywrightBrowsersPath(): void {
+  process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+}
+
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
   const start = Date.now();
-  // 🎭️ Point playwright at the repo-local browser cache that `📜️script.ts setup` actually populates
-  // (`bunx playwright install --with-deps chromium` → `node_modules/.cache/ms-playwright`). Without
-  // this, `chromium.launch()` falls back to the user-global `~/Library/Caches/ms-playwright`, which
-  // holds whatever an unrelated project installed — here a stale `chromium_headless_shell-1223`
-  // against the required `-1234` — and every parity run dies with "Executable doesn't exist"
-  // suggesting `npx playwright install`, i.e. a download, for a browser the repo had already
-  // installed. The storybook runner (root `📜️script.ts`, `🔖️TestScript`) already sets this; the
-  // parity harness did not, which is what made the whole 58-variant gate unrunnable on a clean box.
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+  ensureParityPlaywrightBrowsersPath();
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
   let reactServer: ParityServerHandle | undefined;
@@ -4147,11 +4207,20 @@ class ParityTriageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const ports = findFreeParityPortPair();
+    ensureParityPlaywrightBrowsersPath();
     const { chromium } = await import("playwright");
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    const reactServer = await startParityDevServer("react", variant, ports.react);
-    const wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
+    // 🩹️terra-parity-rebaseline: `reactServer`/`wgpuServer` used to be `const`, ASSIGNED BEFORE this
+    // `try`, so a throw from the SECOND `startParityDevServer` call (e.g. wgpu's cold cargo build
+    // exceeding `PARITY_BOOT_BUDGET_MS`) left the first server's process running with nothing left
+    // holding a reference to stop it — confirmed leaked in practice (a react `vite` + a wgpu `trunk`
+    // process both still bound to their ports well after the command had exited). `let` + assignment
+    // INSIDE the try, guarded in `finally`, is the same safe shape `verifyParityVariant` already uses.
+    let reactServer: ParityServerHandle | undefined;
+    let wgpuServer: ParityServerHandle | undefined;
     try {
+      reactServer = await startParityDevServer("react", variant, ports.react);
+      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
       const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
@@ -4160,8 +4229,8 @@ class ParityTriageScript extends BundleScript {
       console.log(`triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
     } finally {
       await browser.close();
-      stopParityDevServer(reactServer);
-      stopParityDevServer(wgpuServer);
+      if (reactServer) stopParityDevServer(reactServer);
+      if (wgpuServer) stopParityDevServer(wgpuServer);
     }
   }
 }
@@ -4177,11 +4246,15 @@ class ParityProbeScript extends BundleScript {
     const suite = PARITY_PROBE_CATALOG[suiteName];
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
     const ports = findFreeParityPortPair();
+    ensureParityPlaywrightBrowsersPath();
     const { chromium } = await import("playwright");
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    const reactServer = await startParityDevServer("react", variant, ports.react);
-    const wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
+    // 🩹️terra-parity-rebaseline: same leak fix as `ParityTriageScript` above — see its comment.
+    let reactServer: ParityServerHandle | undefined;
+    let wgpuServer: ParityServerHandle | undefined;
     try {
+      reactServer = await startParityDevServer("react", variant, ports.react);
+      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
       const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
@@ -4195,8 +4268,8 @@ class ParityProbeScript extends BundleScript {
       if (result.status !== "PASS") throw new Error(`parity probe ${variant}/${suiteName} FAILED`);
     } finally {
       await browser.close();
-      stopParityDevServer(reactServer);
-      stopParityDevServer(wgpuServer);
+      if (reactServer) stopParityDevServer(reactServer);
+      if (wgpuServer) stopParityDevServer(wgpuServer);
     }
   }
 }
@@ -4214,7 +4287,10 @@ class ParityVerifyScript extends BundleScript {
       console.log(`${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
-    const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
+    // 🪜️terra-parity-rebaseline: STALE-BRIDGE excluded — see `isParityStaleBridge`'s doc on `writeParityReport`.
+    const staleBridge = reports.filter(isParityStaleBridge);
+    const failed = reports.filter((r) => !isParityStaleBridge(r) && (r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL"));
+    if (staleBridge.length > 0) console.log(`parity verify: ${staleBridge.length}/${reports.length} STALE-BRIDGE, excluded from the pass/fail verdict: ${staleBridge.map((r) => r.variant).join(", ")}`);
     if (failed.length > 0) throw new Error(`parity verify: ${failed.length}/${reports.length} playground(s) failed`);
   }
 }
@@ -4236,8 +4312,12 @@ class ParitySweepScript extends BundleScript {
       console.log(`sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
-    const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
-    console.log(`parity sweep complete: ${reports.length - failed.length}/${reports.length} PASS`);
+    // 🪜️terra-parity-rebaseline: STALE-BRIDGE excluded — see `isParityStaleBridge`'s doc on `writeParityReport`.
+    const staleBridge = reports.filter(isParityStaleBridge);
+    const failed = reports.filter((r) => !isParityStaleBridge(r) && (r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL"));
+    const passed = reports.length - failed.length - staleBridge.length;
+    console.log(`parity sweep complete: ${passed}/${reports.length} PASS · ${staleBridge.length}/${reports.length} STALE-BRIDGE · ${failed.length}/${reports.length} FAIL`);
+    if (staleBridge.length > 0) console.log(`stale-bridge (excluded from verdict): ${staleBridge.map((r) => r.variant).join(", ")}`);
     if (failed.length > 0) throw new Error(`parity sweep: ${failed.length}/${reports.length} playground(s) failed`);
   }
 }
@@ -4492,11 +4572,18 @@ class ScaleFixtureCheckScript extends BundleScript {
  * drives `semio-wgpu-native --scale/--scale-wasm/--shards/--report`
  * (`📺️renderer/…/🧊️wgpu/📦️glue.rs`'s `scale_bench` module — real `Kernel`/`ShardLoop`/
  * `WasmtimeRuntime`, real scale-fixture wasm component, see that module's own doc for its honest
- * single-physical-ShardLoop scope note); `react`/`wgpu` (web) are NOT run by this packet — they would
- * reuse `//#region 🔬️ParityScript`'s `🔖️ServerPool` machinery (`findFreeParityPortPair`,
- * `startParityDevServer`) rather than a second server pool, but that wiring was not exercised this
- * session, so those rows report `"skipped"` with a reason, never a fabricated pass.
+ * single-physical-ShardLoop scope note); `react`/`wgpu` (web) drive `//#region 🧪️BenchWebRows` below —
+ * NOT `🔬️ParityScript`'s `🔖️ServerPool` (that machinery boots the FULL app against one real plugin
+ * variant, a different app than the scale fixture, and needs real fleet wasm this session doesn't have
+ * either) — instead the real `ShardClient` runs inside a real headless-Chromium page
+ * (`🧪️bench-web-harness.ts`, bundled with `Bun.build`) against real browser `Worker`s running a protocol
+ * STUB in place of the not-yet-compiled guest SDK's real worker. Budgets 3/4/6/7/8 are genuine passes of
+ * `ShardClient`'s own sharding/heartbeat-trap/checkpoint logic at 100-actor scale; budgets 2/5 are
+ * stub-worker timings reported as `pass-stub-worker`/`fail-stub-worker`, never plain `pass`/`fail`,
+ * because they exclude real wasm instantiation and guest compute. Any harness failure (no Chromium, bundle
+ * error, page timeout) falls every row back to `"skipped"` with the real error — never a fabricated pass.
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-workforce.md §4
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
 const BENCH_TICKET_DIR_DEFAULT = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME";
 
@@ -4557,16 +4644,99 @@ function benchRegistryRow(registryPath: string, expectedRecordCount: number): Re
   };
 }
 
-function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string): Record<string, unknown> {
+function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string, reason: string): Record<string, unknown> {
   return {
     id: budget.id,
     description: budget.description,
     status: "skipped",
     measured: null,
     threshold: budget.webThreshold ?? null,
-    note: `${renderer} web-renderer bench not run this session — the harness would reuse 🔬️ParityScript's 🔖️ServerPool (findFreeParityPortPair/startParityDevServer), not a second server pool, but that wiring was not exercised here. --renderer native is the verified path.`,
+    note: `${renderer} web-renderer bench row ${budget.id} could not be measured this run: ${reason}`,
   };
 }
+
+//#region 🧪️BenchWebRows
+/** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (bench-web-rows): bundles `🧪️bench-web-harness.ts` for
+ * the BROWSER with Bun's own bundler (no external bundler dependency), runs it inside a real headless
+ * Chromium page via `playwright` (already a repo dependency — the SAME dynamic-import pattern this file's
+ * own collab/studio-e2e scripts already use), and merges the raw per-budget measurements back onto
+ * `BENCH_BUDGETS`'s id/description/threshold. See that file's own header doc for exactly what is REAL
+ * (driven through the genuine `ShardClient`, real browser `Worker`s, real postMessage round trips) versus
+ * STUB (no real fleet wasm exists yet — `semio-framework-plugin` does not compile this session — so each
+ * worker runs a tiny protocol stub instead of the real generated `shardWorkerSource()`). `renderer` is
+ * accepted for parity with the native row's `--renderer` flag and threaded into the report's metadata,
+ * but the harness itself is renderer-agnostic: it measures the `ShardClient` transport layer, which react
+ * and wgpu(web) share — it does NOT exercise either renderer's own paint/patch path. That gap is stated
+ * here rather than silently implied by a `react`/`wgpu`-labelled row. */
+async function buildBenchWebHarnessBundle(): Promise<string> {
+  const entry = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🧪️bench-web-harness.ts");
+  const result = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm" });
+  if (!result.success) throw new Error(`bench-web harness bundle failed: ${result.logs.map((log) => log.message).join("; ")}`);
+  const output = result.outputs[0];
+  if (!output) throw new Error("bench-web harness bundle produced no output file");
+  return await output.text();
+}
+
+async function runWebBenchViaHeadlessChromium(pluginIds: readonly string[], firstPluginExtensionIds: readonly string[], shardCount: number): Promise<Record<string, unknown>[]> {
+  const bundleJs = await buildBenchWebHarnessBundle();
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>bench-web</title></head><body><script type="module">
+${bundleJs}
+window.__BENCH_WEB__ = { done: false, rows: null, error: null };
+runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardCount })})
+  .then((rows) => { window.__BENCH_WEB__.rows = rows; window.__BENCH_WEB__.done = true; })
+  .catch((error) => { window.__BENCH_WEB__.error = String((error && error.stack) || error); window.__BENCH_WEB__.done = true; });
+</script></body></html>`;
+  // 🎭️ Matches `StudioE2eScript`'s own install location note above — same repo-scoped Playwright cache.
+  process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "load" });
+    await page.waitForFunction(() => (window as unknown as { __BENCH_WEB__: { done: boolean } }).__BENCH_WEB__.done === true, { timeout: 60_000 });
+    const state = await page.evaluate(() => (window as unknown as { __BENCH_WEB__: { rows: Record<string, unknown>[] | null; error: string | null } }).__BENCH_WEB__);
+    if (state.error) throw new Error(`bench-web harness page error: ${state.error}`);
+    if (!state.rows) throw new Error("bench-web harness produced no rows");
+    return state.rows;
+  } finally {
+    await browser.close();
+  }
+}
+
+const BENCH_WEB_STUB_STATUS: Readonly<Record<number, { readonly passLabel: string; readonly failLabel: string }>> = {
+  2: { passLabel: "pass-stub-worker", failLabel: "fail-stub-worker" },
+  5: { passLabel: "pass-stub-worker", failLabel: "fail-stub-worker" },
+};
+
+function benchWebMeasuredRow(budget: BenchBudgetDefinition, renderer: string, raw: { readonly id: number; readonly ok: boolean; readonly measured: unknown; readonly note: string }): Record<string, unknown> {
+  const stubLabels = BENCH_WEB_STUB_STATUS[budget.id];
+  const status = stubLabels ? (raw.ok ? stubLabels.passLabel : stubLabels.failLabel) : raw.ok ? "pass" : "fail";
+  return { id: budget.id, description: budget.description, status, measured: raw.measured, threshold: budget.webThreshold ?? null, note: `[${renderer}, harness-driven, see 🧪️bench-web-harness.ts header] ${raw.note}` };
+}
+
+/** ▶️ Runs budgets 2-8 for `react`/`wgpu` through the real `ShardClient` + headless-Chromium harness.
+ * `registry` supplies the actor id vocabulary (`buildScaleFixtureRegistry`'s own deterministic ids —
+ * never invented ones) budget 3 needs: 50 plugin ids + the 50 extension ids belonging to plugin[0]. On
+ * ANY harness failure (no Chromium installed, bundle error, page timeout, …) every row falls back to
+ * `benchWebSkippedRow` with the real error message — never a silently fabricated pass. */
+async function benchWebRows(budgets: readonly BenchBudgetDefinition[], renderer: string, registry: ScaleFixtureRegistry, shardCount: number): Promise<Record<string, unknown>[]> {
+  const plugins = registry.records.filter((record) => record.kind === "plugin").map((record) => record.id);
+  const firstPluginId = plugins[0];
+  if (!firstPluginId) return budgets.map((budget) => benchWebSkippedRow(budget, renderer, "scale-fixture registry has no plugin records"));
+  const firstPluginExtensions = registry.records.filter((record) => record.kind === "extension" && record.parentId === firstPluginId).map((record) => record.id);
+  try {
+    const raw = await runWebBenchViaHeadlessChromium(plugins, firstPluginExtensions, shardCount);
+    const byId = new Map(raw.map((row) => [row.id, row]));
+    return budgets.map((budget) => {
+      const row = byId.get(budget.id);
+      return row ? benchWebMeasuredRow(budget, renderer, row) : benchWebSkippedRow(budget, renderer, "harness returned no row for this budget id");
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? (error.stack ?? error.message) : String(error);
+    return budgets.map((budget) => benchWebSkippedRow(budget, renderer, reason));
+  }
+}
+//#endregion 🧪️BenchWebRows
 
 class BenchPluginsScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -4604,7 +4774,8 @@ class BenchPluginsScript extends BundleScript {
       const nativeReport = JSON.parse(readFileSync(nativeReportPath, "utf8")) as { budgets: Record<string, unknown>[] };
       rows.push(...nativeReport.budgets);
     } else if (renderer === "react" || renderer === "wgpu") {
-      for (const budget of BENCH_BUDGETS.slice(1)) rows.push(benchWebSkippedRow(budget, renderer));
+      console.log(`bench: running web scale-bench (renderer=${renderer}, shards=${shardCount}) via headless Chromium — see 🧪️bench-web-harness.ts for real-vs-stub scope`);
+      rows.push(...(await benchWebRows(BENCH_BUDGETS.slice(1), renderer, registry, shardCount)));
     } else {
       throw new Error(`bench plugins: unknown --renderer ${renderer} (expected native|react|wgpu)`);
     }

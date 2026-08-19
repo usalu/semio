@@ -1,0 +1,248 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone capability gating > mirrors backbone_send_is_rejected_without_the_capability: send is rejected without the messaging.backbone:<uri> capability 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone capability gating > mirrors backbone_send_reaches_the_registered_transport_once_granted: send reaches the registered transport once granted 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone capability gating > send against an unregistered uri fails noSuchEndpoint even when granted 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone capability gating > dispatchSendMessage routes a Backbone target through send, and reports a non-Backbone target as the documented no-op gap 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone delta fan-out > mirrors backbone_delta_fanout_coalesces_a_burst_for_the_same_uri: a burst for the same uri collapses to the latest, not queued 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone delta fan-out > fanoutDelta only reaches actors subscribed to that specific uri 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone delta fan-out > fanoutDelta against a uri with no subscribers is an empty, error-free no-op 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone delta fan-out > nextRevision is monotonic per uri and independent across uris 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone queue overflow > a lossless direct-send queue rejects-and-reports once full, rather than silently dropping (consistent with backbone-worker's outbox contract) 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone queue overflow > deliverMessage against a uri actor never subscribed to is noSuchSubscriber, not a crash 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone per-instance isolation > an inbound Event::Message reaches only the subscribed actor, not other actors 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone per-instance isolation > two EffectBackbone instances for the SAME plugin never share endpoints or subscriptions 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > BackboneGuestMessage wire shape > round-trips a send message through base64, matching the Rust doc's {kind,uri,payload} shape 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > BackboneGuestMessage wire shape > round-trips a delta message with its revision, matching the Rust doc's {kind,uri,payload,revision} shape 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > BackboneGuestMessage wire shape > refuses to encode a non-Backbone source 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > createBackboneWorkerTransport / bridgeBackboneWorkerInbound > send lazily opens the document once, then posts publishPreview through the existing send request kind 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > createBackboneWorkerTransport / bridgeBackboneWorkerInbound > send throws if used for a different uri than it was bound to 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > createBackboneWorkerTransport / bridgeBackboneWorkerInbound > bridgeBackboneWorkerInbound turns an inbound preview event into a fanoutDelta reaching a subscribed actor, chaining any prior onmessage 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > createBackboneWorkerTransport / bridgeBackboneWorkerInbound > bridgeBackboneWorkerInbound ignores non-event and non-preview responses without throwing 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone Rust↔TS wire parity > MessageEndpoint variant/field names match the live Rust enum in 🎠️kernel/🦀️component.rs 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone Rust↔TS wire parity > Effect::SendMessage fields match the live Rust variant in 🎠️kernel/🦀️component.rs 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️effect-backbone.ts > EffectBackbone Rust↔TS wire parity > Event::Message fields match the live Rust variant in 🎠️kernel/🦀️component.rs 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > readBackboneEnvelope retries a transient transport failure and then succeeds, with no real sleep 6ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > readBackboneEnvelope does NOT retry a definitive non-404 server response 2ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > readBackboneEnvelope gives up after its retry window instead of hanging forever 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > readBackboneEnvelope returns null on 404 without retrying 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > writeBackboneEnvelope does NOT retry on transport failure (duplicate-write safety) 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > backbone envelope io > writeBackboneEnvelope propagates an external abort promptly with no leaked timer 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > classifies backbone uri kinds 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds and parses backbone uris 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > packs and unpacks document bundles 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > round-trips backbone snapshot messages 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > applies a snapshot backbone message by overwriting the stored bundle 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations without native store 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations before a snapshot exists 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws on an unknown backbone message tag 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds sync utilities reflecting the active backbone kind 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a single delivery across one dirty edge 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a chain in topological order when only the root is dirty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a diamond with one delivery per incoming edge 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing when no instance is dirty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing for a dirty node with no outgoing edges 0ms
+ × |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm 6ms
+   → Cannot find module 'file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%96%A5%EF%B8%8Fhost/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust/pkg/semio_framework_os.js' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for null 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_true 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_false 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_zero 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_negative_one 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_pi 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_whole_number 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_escapes 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_ints 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_mixed 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for nested_deep 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for null 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_true 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_false 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_zero 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_negative_one 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_pi 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_whole_number 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_escapes 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_ints 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_empty 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_mixed 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for nested_deep 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips null through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_true through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_false through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_zero through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_negative_one through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_pi through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_whole_number through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_empty through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_escapes through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_empty through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_ints through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_empty through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_mixed through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips nested_deep through encodePackValue/decodePackValue 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips the app-typed presence pack through the document-presence wire 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ConfigCommand":{"seq":1,"command":[4,5]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"Command":{"seq":2,"command":[1],"view_state":[2,3]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"CommandText":{"seq":3,"line":"move 1 2"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ContextMenu":{"seq":5,"request":[9,9]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ArtifactCommand":{"seq":6,"command":[7]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ApplyEnvelopes":{"seq":7,"envelopes":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadDocument":{"seq":8,"pack":[1,2,3],"spr":[4,5,6]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadDocument":{"seq":9}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadConfig":{"seq":10,"pack":[1],"spr":[2]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadConfig":{"seq":11}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaIn":{"seq":14,"port":"in-1","descriptor":[1],"data":[2,3]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaOut":{"seq":15,"port":"out-1","request":[4]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaFingerprint":{"seq":16,"port":"fp-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"PureCommand":{"seq":17,"command":[1],"document":[2],"document_spr":[3],"config":[4],"config_spr":[5],"draft":[6],"draft_spr":[7]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadChildren":{"seq":18,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadChildren":{"seq":19}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadHistory":{"seq":20}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":21,"txn_id":"txn-1","mutation_id":"s.demo#kind","payload":[1,2],"prepared_ops":[],"label":"","origin":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":22,"txn_id":"txn-1","mutation_id":"","payload":[],"prepared_ops":[[1],[2,2]],"label":"step-1","origin":[9]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionCommit":{"seq":23,"txn_id":"txn-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRollback":{"seq":24,"txn_id":"txn-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionUndo":{"seq":25,"group_id":"grp-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRedo":{"seq":26,"group_id":"grp-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":27,"artifact_ref":"s.cad.cad@1/*#viewer","role":0,"plugin_id":"","app_id":""}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":28,"artifact_ref":"s.cad.cad@1/*#editor","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setDefaultApp":{"seq":29,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"clearDefaultApp":{"seq":30,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":0}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setMergePolicy":{"seq":31,"policy":1}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"resolveConflict":{"seq":32,"conflict_id":"conflict-1","resolution":0}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"readConflicts":{"seq":33}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"presence":{"seq":34,"own_color":3,"peers":[[1,2],[9]]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"presence":{"seq":35,"own_color":null,"peers":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Done":{"in_reply_to":1}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[9]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"DocumentChanged":{"envelopes":[[1,2]],"origin":"remote"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Document":{"in_reply_to":6,"pack":[1,2],"spr":[3,4],"ops":"op-log"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"ContextMenu":{"in_reply_to":7,"items":[1,2,3]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Media":{"in_reply_to":8,"port":"out-1","descriptor":[1],"data":[2]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MediaFingerprint":{"in_reply_to":9,"port":"fp-1","fingerprint":[1,2,3,4]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":10,"fault":[1,2,3],"report":[6]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":null,"fault":[4,5],"report":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Emit":{"in_reply_to":11,"document_ops":[1],"config_ops":[2],"draft_ops":[3],"output":[4],"diagnostics":[5]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Draft":{"in_reply_to":12,"pack":[1],"spr":[2],"ops":"d"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Children":{"in_reply_to":13,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Ephemeral":{"presence":[1,2],"presence_generation":3,"transient_generation":4,"interaction":[7]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Ephemeral":{"presence":[1,2],"presence_generation":3,"transient_generation":4,"interaction":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"HistorySnapshot":{"in_reply_to":14,"history_patch":[1]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionProposal":{"in_reply_to":15,"proposal_id":"prop-1","local_ops":[[1]],"description":"move","coalesce_key":"k-1","foreign":[[2,3]]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[[1]],"rejection":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[],"rejection":[1,2]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionCommitted":{"txn_id":"txn-1","edit_id":"edit-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionRolledBack":{"txn_id":"txn-1"}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":16,"report":[1,2]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":null,"report":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":17,"conflicts":[3]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":null,"conflicts":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiPatch":{"in_reply_to":18,"surface":"1:body","kind":"window","revision":2,"base_revision":1,"ops":[3]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiPatch":{"in_reply_to":null,"surface":"1:body","kind":"window","revision":1,"base_revision":0,"ops":[]}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiSnapshotEnd":{"revision":5}} 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppCommand variant per the agreed contract order (ConfigCommand=0 ... presence=28) 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppFrame variant per the agreed contract order (Done=0 ... UiSnapshotEnd=22) 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches protocol_channel's own golden hex fixture corpus, byte-for-byte 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > pins APP_CHANNEL_VERSION against the shared cross-language channel version 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language transaction fixture vectors, byte-for-byte 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language opening fixture vectors, byte-for-byte 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language merge fixture vectors, byte-for-byte 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command() allocates an incrementing seq and returns every frame the batch produced 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > configure()/readDocument()/loadDocument() frame the right AppCommand variant 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from loadDocument()'s own arguments before any reply arrives 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from every AppFrame::Document reply, most recent wins 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > transactionPrepareOwner()/transactionPreparePlanned()/transactionCommit()/transactionRollback()/transactionUndo()/transactionRedo() frame the right AppCommand variant 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > setMergePolicy()/resolveConflict()/readConflicts() match the shared cross-language merge command vectors, byte-for-byte 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command() surfaces unsolicited MergeReport/Conflicts frames and the extended Invocation.messages/Error.report fields verbatim 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > faultMessages()/decodeDispatchReportFromWire()/decodeMergeReportFromWire()/decodeConflictsFromWire() decode the frozen TS report shapes 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > validates a graph with every dependency present and version-satisfying 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a missing dependency 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a version mismatch 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > resolves a diamond load order deterministically, tie-broken lexicographically 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > names every member of a cycle 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > versionSatisfies matches the frozen grammar (*, =, ^, ~, >=), including caret's leading-zero tiers 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > orderPluginRegistryEntries drops only the blocked entries, dependency-orders the rest 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > pluginGraphErrorMessage renders a real English and a real German message 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > PluginGraph.canUnload refuses while a loaded dependent exists, allows once it's gone 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > InstanceDirectory registers, resolves, and unregisters 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter accepts a byte-identical re-registration, rejects a conflicting one 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter.registerContributed rejects a contributor that doesn't depend on the owner 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter enforces owner === contributor and orders the depends_on DAG 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter.registerContributed rejects owner !== contributor 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > folds the golden fixture into the expected projection (parity with the Rust twin) 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > is idempotent on replay 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > replays then goes live with no gap and no duplicate 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > reconnects resuming from the last seen seq, with jittered backoff within bounds 7ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > never throws into the caller on a malformed frame 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > close() stops the reconnect loop — no further socket is ever opened 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > (a) a drop after sustained health resets the backoff — reconnects near HUB_RECONNECT_MIN_MS, not at an escalated delay 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > (b) rapid accept-then-drop cycling never crosses the health threshold — backoff keeps escalating, never resets 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > (c) close() during a healthy-but-not-yet-reset connection cancels promptly, clears the health timer, and never reconnects 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient http (getJson/postJson timeout + abort) > a hung server rejects at the timeout instead of hanging the caller forever 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient http (getJson/postJson timeout + abort) > an external abort cancels promptly, without ever waiting out the timeout 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient http (getJson/postJson timeout + abort) > still resolves normally when the server answers promptly 0ms
+stderr | ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal
+[backbone-worker] directory command unreachable, queued for retry r1 Error: network unreachable
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸backbone-worker.ts:1349:9
+    at fetchWithTimeout (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/ð¦ï¸glue.ts:355:18)
+    at postJson (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3313:28)
+    at command (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3356:17)
+    at submitDirectoryCommand (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸backbone-worker.ts:848:33)
+    at handleTsRequest (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸backbone-worker.ts:1160:12)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸backbone-worker.ts:1354:9
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native)
+
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > round-trips an MutationEnvelope through toWireEnvelope/fromWireEnvelope 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > rollbackEnvelope synthesizes an undo from the original inverse 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > encodeClientFrame/decodeClientFrame round-trip a Hello frame 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > stampSession fills color/surface from actor state, overwriting whatever the caller set 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > handleHubFrame stores the hub-assigned session color on a Session frame 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > identityActorConfig binds the folder lane under `${dataDir}/os` when given a dataDir, else local-only 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last 54ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal 21ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > poll never overlaps itself: concurrent revalidateFolder() calls collapse into one coalesced follow-up 9ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > poll is suppressed while SSE is healthy and resumes once it drops 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > a post-open SSE drop reconnects with jittered backoff 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > abort on close cancels an in-flight folder fetch 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > queue overflow rejects and reports rather than dropping silently 2ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > a mutation made while offline is queued, then flushed once the hub reconnects (Welcome flushes the outbox) 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > a batch whose socket dies before Ack moves back into the outbox instead of being stranded 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > a hub drop after sustained health resets the backoff, unlike continued accumulation 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > rapid accept-then-drop cycling does NOT reset the hub backoff — it keeps climbing 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > abort cancels the hub reconnect loop promptly, with no leaked timer 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker offline resilience > an SSE drop after sustained health resets ITS backoff too (the same fix applied to connectSseOnce) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+Error: Cannot find module 'file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%96%A5%EF%B8%8Fhost/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust/pkg/semio_framework_os.js' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 206 passed (207)
+   Start at  21:43:18
+   Duration  540ms (transform 880ms, setup 0ms, import 1.01s, tests 187ms, environment 0ms)
+

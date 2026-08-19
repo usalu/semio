@@ -542,32 +542,32 @@ mod tests {
     async fn snapshot_round_trips_embedded_with_checkpoint_anchor() {
         let record = sample_record(Some("cp-1"), 7, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3, 4]));
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).unwrap();
-        assert_eq!(decoded, record);
+        let decoded = decode_snapshot(&bytes).await.unwrap();
+        assert_eq!(decoded, record.await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_round_trips_embedded_dsl_with_ordinal_only_anchor() {
         let record = sample_record(None, 0, SnapshotBodyKind::EmbeddedDsl, Some(b"(doc)".to_vec()));
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).unwrap();
-        assert_eq!(decoded, record);
+        let decoded = decode_snapshot(&bytes).await.unwrap();
+        assert_eq!(decoded, record.await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_round_trips_sidecar_without_body() {
         let record = sample_record(Some("cp-9"), 42, SnapshotBodyKind::SidecarPack, None);
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).unwrap();
+        let decoded = decode_snapshot(&bytes).await.unwrap();
         assert_eq!(decoded.body, None);
-        assert_eq!(decoded, record);
+        assert_eq!(decoded, record.await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_rejects_unknown_format() {
         let mut bytes = encode_snapshot(&sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![9])));
         bytes[0] = 7;
-        assert!(matches!(decode_snapshot(&bytes), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(decode_snapshot(&bytes).await, Err(ProtocolError::Malformed { .. })));
     }
     //#endregion 🔖️Snapshot
 
@@ -593,13 +593,13 @@ mod tests {
             let mut payload = ByteWriter::new().await;
             payload.write_u8(1).await;
             payload.write_varint_u64(*base as u64).await;
-            payload.write_varint_u64(entries.len() as u64).await;
+            payload.write_varint_u64(entries.await.len() as u64).await;
             for entry in entries {
                 payload.write_varint_u64(entry.len() as u64).await;
                 payload.write_bytes(entry.as_bytes()).await;
             }
-            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).unwrap();
-            *base = len;
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await.unwrap();
+            *base = len.await;
         }
     }
 
@@ -608,32 +608,32 @@ mod tests {
     /// index-free reverse-scan fallback and `materialize_with`'s tail replay are exercised against.
     async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
-        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).unwrap();
+        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
         let mut dict = DictBuilder::new();
         let mut dict_base = 0u32;
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict);
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
-        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
         for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
             let _ = i;
-            let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).unwrap().await;
+            let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).await.unwrap();
             flush_dict_delta(&mut writer, &dict, &mut dict_base);
-            writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
+            writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         }
 
         let snapshot = sample_record(None, 1, SnapshotBodyKind::EmbeddedPack, Some(snapshot_body.to_vec()));
-        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot), CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot), CodecId(0)).await.unwrap();
 
         for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
-            let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).unwrap().await;
+            let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).await.unwrap();
             flush_dict_delta(&mut writer, &dict, &mut dict_base);
-            writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
+            writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         }
 
-        writer.commit().unwrap();
-        writer.into_sink()
+        writer.commit().await.unwrap();
+        writer.into_sink().await
     }
 
     type Collected = (Vec<u8>, Vec<String>);
@@ -651,7 +651,7 @@ mod tests {
         let body = vec![0xAA, 0xBB, 0xCC];
         let bytes = build_stream_with_snapshot(&body);
 
-        let plan = resolve_plan(&bytes, &[], MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).unwrap();
+        let plan = resolve_plan(&bytes, &[], MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.base.applied_edits, 2);
         assert_eq!(plan.target_edit_ordinal, None);
         assert_eq!(plan.skipped_corrupt, 0);
@@ -660,7 +660,7 @@ mod tests {
             BaseBytes::Sidecar { .. } => panic!("expected an embedded base"),
         }
 
-        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).unwrap();
+        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
         assert_eq!(result.0, body);
         assert_eq!(result.1, vec!["edit-2".to_string(), "edit-3".to_string()]);
         assert!(!report.genesis_replay);
@@ -675,14 +675,14 @@ mod tests {
         let bytes = build_stream_with_snapshot(&[0xAA, 0xBB, 0xCC]);
         let initial_pack = b"INIT";
 
-        let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtEditOrdinal(0), &ProtocolLimits::default()).unwrap();
+        let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtEditOrdinal(0), &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.base.applied_edits, 0);
         match plan.base.bytes {
             BaseBytes::Borrowed(b) => assert_eq!(b, initial_pack),
             BaseBytes::Sidecar { .. } => panic!("expected the initial pack"),
         }
 
-        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).unwrap();
+        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
         assert_eq!(result.0, initial_pack);
         assert_eq!(result.1, vec!["edit-0".to_string()]);
         assert!(report.genesis_replay);
@@ -695,8 +695,8 @@ mod tests {
         let body = vec![0xAA, 0xBB, 0xCC];
         let bytes = build_stream_with_snapshot(&body);
 
-        let plan = resolve_plan(&bytes, &[], MaterializeTarget::AtEditOrdinal(3), &ProtocolLimits::default()).unwrap();
-        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).unwrap();
+        let plan = resolve_plan(&bytes, &[], MaterializeTarget::AtEditOrdinal(3), &ProtocolLimits::default()).await.unwrap();
+        let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
         assert_eq!(result.1, vec!["edit-2".to_string(), "edit-3".to_string()]);
         assert_eq!(report.edits_replayed, 2);
     }
@@ -704,19 +704,19 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index() {
         let mut log = HistoryLog { doc_id: "doc-2".to_string(), schema: "schema-2".to_string(), ..Default::default() };
-        log.edits.push(sample_edit("edit-0", "op-0"));
-        log.edits.push(sample_edit("edit-1", "op-1"));
+        log.edits.push(sample_edit("edit-0", "op-0").await);
+        log.edits.push(sample_edit("edit-1", "op-1").await);
         log.changes.push(HistoryChange { id: "change-1".to_string(), saved_at: "t-change-1".to_string(), edit_ids: vec!["edit-0".to_string(), "edit-1".to_string()], description: None });
         log.checkpoints.push(HistoryCheckpoint { id: "cp-1".to_string(), timestamp: "t-cp-1".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: Vec::new(), message: None });
 
-        let bytes = crate::os_spr::history::encode_history(&log, &crate::os_spr::history::EncodeOptions::default()).unwrap();
+        let bytes = crate::os_spr::history::encode_history(&log, &crate::os_spr::history::EncodeOptions::default()).await.unwrap();
         let initial_pack = b"BASE";
 
-        let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtCheckpoint("cp-1".to_string()), &ProtocolLimits::default()).unwrap();
+        let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtCheckpoint("cp-1".to_string()), &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.target_edit_ordinal, Some(1));
         assert_eq!(plan.base.applied_edits, 0); // no REC_PROJECTION in this stream at all
 
-        let (result, _report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).unwrap();
+        let (result, _report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
         assert_eq!(result.0, initial_pack);
         assert_eq!(result.1, vec!["edit-0".to_string(), "edit-1".to_string()]);
     }
@@ -724,26 +724,26 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
-        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).unwrap();
+        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
         let mut dict = DictBuilder::new();
         let mut dict_base = 0u32;
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict);
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
-        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).unwrap();
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
         // A snapshot whose stored body_hash does not match its body — must be treated as corrupt.
         let mut bad_record = sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3]));
-        bad_record.body_hash = [0xFFu8; 32];
-        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record), CodecId(0)).unwrap();
+        bad_record.await.body_hash = [0xFFu8; 32];
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record), CodecId(0)).await.unwrap();
 
-        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).unwrap().await;
+        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).await.unwrap();
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
-        writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
-        writer.commit().unwrap();
+        writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
+        writer.commit().await.unwrap();
         let bytes = writer.into_sink();
 
-        let plan = resolve_plan(&bytes, b"INIT", MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).unwrap();
+        let plan = resolve_plan(&bytes, b"INIT", MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.base.applied_edits, 0);
         assert_eq!(plan.skipped_corrupt, 1);
         match plan.base.bytes {

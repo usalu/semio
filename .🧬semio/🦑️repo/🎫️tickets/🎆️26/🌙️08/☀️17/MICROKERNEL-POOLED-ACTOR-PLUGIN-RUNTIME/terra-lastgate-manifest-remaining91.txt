@@ -1,0 +1,1461 @@
+error[E0277]: can't compare `std::string::String` with `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5503:81
+     |
+5503 |                 .filter_map(|action_ref| actions.iter().find(|action| action.id == action_ref.as_str()).cloned())
+     |                                                                                 ^^ no implementation for `std::string::String == impl Future<Output = &str>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = &str>>` is not implemented for `std::string::String`
+     = help: `std::string::String` implements trait `PartialEq<Rhs>`:
+               PartialEq<&str>
+               PartialEq<ByteStr>
+               PartialEq<ByteString>
+               PartialEq<Cow<'_, str>>
+               PartialEq<Path>
+               PartialEq<PathBuf>
+               PartialEq<serde_json::Value>
+               PartialEq<str>
+               PartialEq
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6360:35
+     |
+6360 |         assert!(validate_tutorial(&minimal_tutorial()).await.is_ok());
+     |                 ----------------- ^^^^^^^^^^^^^^^^^^^ expected `&TutorialDefinition`, found `&impl Future<Output = ...>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&TutorialDefinition`
+                found reference `&impl Future<Output = TutorialDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:2632:14
+     |
+2632 | pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
+     |              ^^^^^^^^^^^^^^^^^ ------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6565:48
+     |
+6565 |         assert_eq!(dialog.await.cancel_action, Some(ActionRef::new("closeDialog")));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<ActionRef>`, found `Option<impl Future<Output = ActionRef>>`
+     |
+     = note: expected enum `std::option::Option<ActionRef>`
+                found enum `std::option::Option<impl Future<Output = ActionRef>>`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5933:9
+     |
+5933 |         assert!(is_element_id("framework.navbar"));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5934:9
+     |
+5934 |         assert!(is_element_id("ui.window.main.action.addLayer"));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5935:9
+     |
+5935 |         assert!(is_element_id("brush"));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5936:17
+     |
+5936 |         assert!(!is_element_id(""));
+     |                 ^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5937:17
+     |
+5937 |         assert!(!is_element_id("framework.display.save-label"));
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5938:17
+     |
+5938 |         assert!(!is_element_id("Framework.navbar"));
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5939:17
+     |
+5939 |         assert!(!is_element_id("framework..navbar"));
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5940:17
+     |
+5940 |         assert!(!is_element_id("framework.navbar."));
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5948:71
+     |
+5948 |         assert_eq!(element_id_segment("addLayer"), element_id_segment(&element_id_segment("addLayer")));
+     |                                                    ------------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |                                                    |
+     |                                                    arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1586:14
+     |
+1586 | pub async fn element_id_segment(raw: &str) -> String {
+     |              ^^^^^^^^^^^^^^^^^^ ---------
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5971:30
+     |
+5971 |             .await.introduce(window_element_id("puzzle3d-main"))
+     |                    --------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionStepDefinition::introduce`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1718:55
+     |
+1718 |     pub async fn introduce(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionStepDefinition::introduce`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5970:28
+     |
+5970 |           let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::dat...
+     |  ____________________________^
+5971 | |             .await.introduce(window_element_id("puzzle3d-main"))
+     | |________________________________________________________________^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionStepDefinition::introduce`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1718:55
+     |
+1718 |     pub async fn introduce(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionStepDefinition::introduce`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5972:14
+     |
+5972 |             .await.show(vec![window_element_id("puzzle3d-secondary").await]);
+     |              ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionStepDefinition::introduce`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1718:55
+     |
+1718 |     pub async fn introduce(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionStepDefinition::introduce`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5437:85
+     |
+5437 | ...:data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).await.default_value("author")];
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected future, found a different future
+     |
+     = help: consider `await`ing on both `Future`s
+     = note: distinct uses of `impl Trait` result in different opaque types
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6518:76
+     |
+6518 |         let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial()));
+     |                                                       -------------------- ^^^^^^^^^^^^^^^^^^^ expected `&TutorialDefinition`, found `&impl Future<Output = ...>`
+     |                                                       |
+     |                                                       arguments to this function are incorrect
+     |
+     = note: expected reference `&TutorialDefinition`
+                found reference `&impl Future<Output = TutorialDefinition>`
+note: function defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/slice/raw.rs:203:14
+     |
+ 203 | pub const fn from_ref<T>(s: &T) -> &[T] {
+     |              ^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5478:47
+     |
+5478 |         let effective = effective_action_args(&defs, &empty, None);
+     |                         --------------------- ^^^^^ expected `&[ActionArgDef]`, found `&Vec<impl Future<Output = ActionArgDef>>`
+     |                         |
+     |                         arguments to this function are incorrect
+     |
+     = note: expected reference `&[ActionArgDef]`
+                found reference `&Vec<impl Future<Output = ActionArgDef>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3375:14
+     |
+3375 | pub async fn effective_action_args(
+     |              ^^^^^^^^^^^^^^^^^^^^^
+3376 |     defs: &[ActionArgDef],
+     |     ---------------------
+
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5479:23
+     |
+5479 |         let missing = missing_required_args(&defs, &effective);
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `&[ActionArgDef]`, found `&Vec<impl Future<Output = ActionArgDef>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5479:45
+     |
+5479 |         let missing = missing_required_args(&defs, &effective);
+     |                                             ^^^^^
+     = note: expected reference `&[ActionArgDef]`
+                found reference `&Vec<impl Future<Output = ActionArgDef>>`
+note: expected `&DslValue`, found `&impl Future<Output = DslValue>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5479:52
+     |
+5479 |         let missing = missing_required_args(&defs, &effective);
+     |                                                    ^^^^^^^^^^
+     = note: expected reference `&protocol_core::DslValue`
+                found reference `&impl Future<Output = protocol_core::DslValue>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3415:14
+     |
+3415 | pub async fn missing_required_args(
+     |              ^^^^^^^^^^^^^^^^^^^^^
+3416 |     defs: &[ActionArgDef],
+     |     ---------------------
+3417 |     effective: &DslValue,
+     |     --------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5484:45
+     |
+5484 |         let missing = missing_required_args(&defs, &effective);
+     |                       --------------------- ^^^^^ expected `&[ActionArgDef]`, found `&Vec<impl Future<Output = ActionArgDef>>`
+     |                       |
+     |                       arguments to this function are incorrect
+     |
+     = note: expected reference `&[ActionArgDef]`
+                found reference `&Vec<impl Future<Output = ActionArgDef>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3415:14
+     |
+3415 | pub async fn missing_required_args(
+     |              ^^^^^^^^^^^^^^^^^^^^^
+3416 |     defs: &[ActionArgDef],
+     |     ---------------------
+
+
+error[E0277]: the trait bound `impl Future<Output = CommandDefinition>: serde::Serialize` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6572:42
+     |
+6572 |         let json = serde_json::to_string(&command).unwrap();
+     |                    --------------------- ^^^^^^^^ the trait `io::_::_serde::Serialize` is not implemented for `impl Future<Output = CommandDefinition>`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `impl Future<Output = CommandDefinition>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `io::_::_serde::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 702 others
+note: required by a bound in `serde_json::to_string`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5571:58
+     |
+5571 |         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+     |                                   ---------------------- ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                                   |
+     |                                   arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3443:14
+     |
+3443 | pub async fn resolve_window_actions<'a>(
+     |              ^^^^^^^^^^^^^^^^^^^^^^
+3444 |     _app: &'a AppDefinition,
+     |     -----------------------
+
+
+error[E0277]: the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6188:42
+     |
+6188 |         let json = serde_json::to_string(&with_demos).unwrap();
+     |                    --------------------- ^^^^^^^^^^^ the trait `io::_::_serde::Serialize` is not implemented for `impl Future<Output = IntroductionStepDefinition>`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `impl Future<Output = IntroductionStepDefinition>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `io::_::_serde::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 702 others
+note: required by a bound in `serde_json::to_string`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5586:58
+     |
+5586 |         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+     |                                   ---------------------- ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                                   |
+     |                                   arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3443:14
+     |
+3443 | pub async fn resolve_window_actions<'a>(
+     |              ^^^^^^^^^^^^^^^^^^^^^^
+3444 |     _app: &'a AppDefinition,
+     |     -----------------------
+
+
+error[E0277]: the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5973:42
+     |
+5973 |         let json = serde_json::to_string(&with_targets).unwrap();
+     |                    --------------------- ^^^^^^^^^^^^^ the trait `io::_::_serde::Serialize` is not implemented for `impl Future<Output = IntroductionStepDefinition>`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `impl Future<Output = IntroductionStepDefinition>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `io::_::_serde::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 702 others
+note: required by a bound in `serde_json::to_string`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+
+error[E0277]: the trait bound `impl Future<Output = manifest::AppDefinition>: serde::Serialize` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5682:42
+     |
+5682 |         let json = serde_json::to_string(&app).unwrap();
+     |                    --------------------- ^^^^ the trait `io::_::_serde::Serialize` is not implemented for `impl Future<Output = manifest::AppDefinition>`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `impl Future<Output = manifest::AppDefinition>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `io::_::_serde::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 702 others
+note: required by a bound in `serde_json::to_string`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5396:24
+     |
+5396 |         assert_eq!(text["type"], serde_json::json!("string"));
+     |                        ^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5397:24
+     |
+5397 |         assert_eq!(text["description"], serde_json::json!("a name"));
+     |                        ^^^^^^^^^^^^^^^
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5987:9
+     |
+5987 |         assert!(is_element_id(UI_NAVBAR_ELEMENT_ID));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5401:26
+     |
+5401 |         assert_eq!(select["type"], serde_json::json!("string"));
+     |                          ^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5402:26
+     |
+5402 |         assert_eq!(select["enum"], serde_json::json!(["obj", "stl"]));
+     |                          ^^^^^^^^
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5988:9
+     |
+5988 |         assert!(is_element_id(UI_FOOTER_ELEMENT_ID));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5989:31
+     |
+5989 |         assert!(is_element_id(&window_element_id("puzzle3d-main")));
+     |                 ------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1567:14
+     |
+1567 | pub async fn is_element_id(id: &str) -> bool {
+     |              ^^^^^^^^^^^^^ --------
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5989:9
+     |
+5989 |         assert!(is_element_id(&window_element_id("puzzle3d-main")));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5405:26
+     |
+5405 |         assert_eq!(number["type"], serde_json::json!("number"));
+     |                          ^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5406:26
+     |
+5406 |         assert_eq!(number["minimum"], serde_json::json!(0.0));
+     |                          ^^^^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5407:26
+     |
+5407 |         assert_eq!(number["maximum"], serde_json::json!(4.0));
+     |                          ^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5990:31
+     |
+5990 |         assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue")));
+     |                 ------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1567:14
+     |
+1567 | pub async fn is_element_id(id: &str) -> bool {
+     |              ^^^^^^^^^^^^^ --------
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5990:9
+     |
+5990 |         assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue")));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5410:24
+     |
+5410 |         assert_eq!(vec3["type"], serde_json::json!("array"));
+     |                        ^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5991:31
+     |
+5991 |         assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue")));
+     |                 ------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1567:14
+     |
+1567 | pub async fn is_element_id(id: &str) -> bool {
+     |              ^^^^^^^^^^^^^ --------
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5991:9
+     |
+5991 |         assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue")));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5411:24
+     |
+5411 |         assert_eq!(vec3["minItems"], serde_json::json!(3));
+     |                        ^^^^^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5412:24
+     |
+5412 |         assert_eq!(vec3["maxItems"], serde_json::json!(3));
+     |                        ^^^^^^^^^^^^
+
+
+error[E0608]: cannot index into a value of type `impl Future<Output = serde_json::Value>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5415:26
+     |
+5415 |         assert_eq!(toggle["type"], serde_json::json!("boolean"));
+     |                          ^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5423:13
+     |
+5423 |             ActionArgDef::text("c", LocalizedLabel::data("C")),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected future, found a different future
+     |
+     = help: consider `await`ing on both `Future`s
+     = note: distinct uses of `impl Trait` result in different opaque types
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5740:54
+     |
+5740 |         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
+     |                                   ------------------ ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                                   |
+     |                                   arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:14
+     |
+3454 | pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+     |              ^^^^^^^^^^^^^^^^^^     ----------------------
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6022:99
+     |
+6022 | ...an("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main")).await;
+     |                                     --------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |                                     |
+     |                                     required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionInteraction::celebrate`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1878:55
+     |
+1878 |     pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionInteraction::celebrate`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6022:30
+     |
+6022 | ...ebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main")).await;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionInteraction::celebrate`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1878:55
+     |
+1878 |     pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionInteraction::celebrate`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6022:135
+     |
+6022 | ...main")).await;
+     |            ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionInteraction::celebrate`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1878:55
+     |
+1878 |     pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
+     |                                                       ^^^^^^^^^^^^ required by this bound in `IntroductionInteraction::celebrate`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5767:39
+     |
+5767 |         assert_eq!(resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
+     |                    ------------------ ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:14
+     |
+3454 | pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+     |              ^^^^^^^^^^^^^^^^^^     ----------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5768:36
+     |
+5768 |         assert!(resolve_mode_tools(&app, "view").await.is_empty(), "tools are opt-in per mode, no orphan fallback");
+     |                 ------------------ ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:14
+     |
+3454 | pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+     |              ^^^^^^^^^^^^^^^^^^     ----------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5769:36
+     |
+5769 |         assert!(resolve_mode_tools(&app, "nonexistent").await.is_empty());
+     |                 ------------------ ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:14
+     |
+3454 | pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+     |              ^^^^^^^^^^^^^^^^^^     ----------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5785:54
+     |
+5785 |         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
+     |                                   ------------------ ^^^^ expected `&AppDefinition`, found `&impl Future<Output = AppDefinition>`
+     |                                   |
+     |                                   arguments to this function are incorrect
+     |
+     = note: expected reference `&manifest::AppDefinition`
+                found reference `&impl Future<Output = manifest::AppDefinition>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3454:14
+     |
+3454 | pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+     |              ^^^^^^^^^^^^^^^^^^     ----------------------
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4684:9
+     |
+4684 |         assert!(contributions.promoted_is_subset_of_capabilities());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0277]: the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6042:42
+     |
+6042 |         let json = serde_json::to_string(&with_interactions).unwrap();
+     |                    --------------------- ^^^^^^^^^^^^^^^^^^ the trait `io::_::_serde::Serialize` is not implemented for `impl Future<Output = IntroductionStepDefinition>`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: for local types consider adding `#[derive(serde::Serialize)]` to your `impl Future<Output = IntroductionStepDefinition>` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `io::_::_serde::Serialize`:
+               &'a T
+               &'a mut T
+               ()
+               (T,)
+               (T0, T1)
+               (T0, T1, T2)
+               (T0, T1, T2, T3)
+               (T0, T1, T2, T3, T4)
+             and 702 others
+note: required by a bound in `serde_json::to_string`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/ser.rs:2247:17
+     |
+2245 | pub fn to_string<T>(value: &T) -> Result<String>
+     |        --------- required by a bound in this function
+2246 | where
+2247 |     T: ?Sized + Serialize,
+     |                 ^^^^^^^^^ required by this bound in `to_string`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4690:9
+     |
+4690 |         assert!(ok.promoted_is_subset_of_capabilities());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4692:17
+     |
+4692 |         assert!(!bad.promoted_is_subset_of_capabilities());
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6058:40
+     |
+6058 |             (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0").await, "entity"),
+     |              ------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |              |
+     |              required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1944:41
+     |
+1944 |     pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
+     |                                         ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6058:14
+     |
+6058 |             (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0").await, "entity"),
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1944:41
+     |
+1944 |     pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
+     |                                         ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6058:106
+     |
+6058 |             (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0").await, "entity"),
+     |                                                                                                          ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1944:41
+     |
+1944 |     pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
+     |                                         ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6059:44
+     |
+6059 |             (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await, "entity"),
+     |              ----------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |              |
+     |              required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6059:14
+     |
+6059 |             (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await, "entity"),
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6059:90
+     |
+6059 |             (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await, "entity"),
+     |                                                                                          ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6061:39
+     |
+6061 |             (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5).await, "curve"),
+     |              ------------------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |              |
+     |              required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::curve`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1954:40
+     |
+1954 |     pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
+     |                                        ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::curve`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6061:14
+     |
+6061 |             (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5).await, "curve"),
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::curve`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1954:40
+     |
+1954 |     pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
+     |                                        ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::curve`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6061:100
+     |
+6061 |             (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5).await, "curve"),
+     |                                                                                                    ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::curve`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1954:40
+     |
+1954 |     pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
+     |                                        ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::curve`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6062:46
+     |
+6062 |             (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0).await, "domain"),
+     |              ------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |              |
+     |              required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::domain_value`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1959:47
+     |
+1959 |     pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> S...
+     |                                               ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::domain_value`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6062:14
+     |
+6062 |             (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0).await, "domain"),
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::domain_value`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1959:47
+     |
+1959 |     pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> S...
+     |                                               ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::domain_value`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6062:110
+     |
+6062 |             (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0).await, "domain"),
+     |                                                                                                              ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::domain_value`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1959:47
+     |
+1959 |     pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> S...
+     |                                               ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::domain_value`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6070:54
+     |
+6070 |         let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await;
+     |                        ----------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |                        |
+     |                        required by a bound introduced by this call
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6070:24
+     |
+6070 |         let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await;
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6070:100
+     |
+6070 |         let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await;
+     |                                                                                                    ^^^^^ the trait `From<impl Future<Output = std::string::String>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<char>
+               From<manifest::Version>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = std::string::String>` to implement `Into<std::string::String>`
+note: required by a bound in `IntroductionPoint::any_entity`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1949:45
+     |
+1949 |     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+     |                                             ^^^^^^^^^^^^ required by this bound in `IntroductionPoint::any_entity`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4258:31
+     |
+4258 |         assert_eq!(dependents(&manifests, "a"), vec!["b".to_string(), "c".to_string()]);
+     |                    ---------- ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4054:14
+     |
+4054 | pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+     |              ^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4259:31
+     |
+4259 |         assert_eq!(dependents(&manifests, "b"), vec!["d".to_string()]);
+     |                    ---------- ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4054:14
+     |
+4054 | pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+     |              ^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4260:28
+     |
+4260 |         assert!(dependents(&manifests, "d").await.is_empty());
+     |                 ---------- ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4054:14
+     |
+4054 | pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
+     |              ^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4189:40
+     |
+4189 |         let order = resolve_load_order(&manifests).await.unwrap();
+     |                     ------------------ ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3972:14
+     |
+3972 | pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+     |              ^^^^^^^^^^^^^^^^^^ ----------------------------
+
+
+error[E0599]: the method `clone` exists for struct `Vec<impl Future<Output = manifest::PluginManifest>>`, but its trait bounds were not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4200:36
+     |
+4200 |         let mut shuffled = forward.clone();
+     |                                    ^^^^^ method cannot be called due to unsatisfied trait bounds
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:436:1
+     |
+ 436 | pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
+     | ------------------------------------------------------------------------------------------------ doesn't satisfy `_: Clone`
+     |
+     = note: the following trait bounds were not satisfied:
+             `impl Future<Output = manifest::PluginManifest>: Clone`
+             which is required by `Vec<impl Future<Output = manifest::PluginManifest>>: Clone`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4202:39
+     |
+4202 |         assert_eq!(resolve_load_order(&forward).await.unwrap(), resolve_load_order(&shuffled).await.unwrap());
+     |                    ------------------ ^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3972:14
+     |
+3972 | pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+     |              ^^^^^^^^^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4203:39
+     |
+4203 |         assert_eq!(resolve_load_order(&forward).await.unwrap(), vec!["a", "b", "c"]);
+     |                    ------------------ ^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3972:14
+     |
+3972 | pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+     |              ^^^^^^^^^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4219:40
+     |
+4219 |         let error = resolve_load_order(&manifests).await.unwrap_err();
+     |                     ------------------ ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3972:14
+     |
+3972 | pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+     |              ^^^^^^^^^^^^^^^^^^ ----------------------------
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4233:40
+     |
+4233 |         let error = resolve_load_order(&manifests).await.unwrap_err();
+     |                     ------------------ ^^^^^^^^^^ expected `&[PluginManifest]`, found `&Vec<impl Future<Output = ...>>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&[manifest::PluginManifest]`
+                found reference `&Vec<impl Future<Output = manifest::PluginManifest>>`
+note: function defined here
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:3972:14
+     |
+3972 | pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
+     |              ^^^^^^^^^^^^^^^^^^ ----------------------------
+
+
+error[E0716]: temporary value dropped while borrowed
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6460:25
+     |
+6460 |         let selection = at_400.await.interaction_selection.get("mesh").expect("mesh domain selection");
+     |                         ^^^^^^^^^^^^ creates a temporary value which is freed while still in use      - temporary value is freed at the end of this statement
+6461 |         assert_eq!(selection.granularity, "face");
+     |         ----------------------------------------- borrow later used here
+     |
+help: consider using a `let` binding to create a longer lived value
+     |
+6460 ~         let binding = at_400.await;
+6461 ~         let selection = binding.interaction_selection.get("mesh").expect("mesh domain selection");
+     |
+
+
+error[E0716]: temporary value dropped while borrowed
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5452:55
+     |
+5452 |         let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^              - temporary value is freed at the end of this statement
+     |                                                       |
+     |                                                       creates a temporary value which is freed while still in use
+5453 |         assert_eq!(untouched.await.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
+     |                    --------- borrow later used here
+     |
+help: consider using a `let` binding to create a longer lived value
+     |
+5452 ~         let binding = DslValue::Object(Vec::new());
+5453 ~         let untouched = effective_action_args(&defs, &binding, Some(&seed));
+     |
+
+
+error[E0382]: use of moved value: `arg`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5310:17
+     |
+5305 |         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
+     |             --- move occurs because `arg` has type `impl Future<Output = ActionArgDef>`, which does not implement the `Copy` trait
+...
+5309 |         assert_eq!(arg.await.id, "scale");
+     |                        ----- `arg` moved due to this await
+5310 |         assert!(arg.await.required);
+     |                 ^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `arg`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+
+error[E0382]: use of moved value: `arg`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5311:20
+     |
+5305 |         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
+     |             --- move occurs because `arg` has type `impl Future<Output = ActionArgDef>`, which does not implement the `Copy` trait
+...
+5310 |         assert!(arg.await.required);
+     |                     ----- `arg` moved due to this await
+5311 |         assert_eq!(arg.await.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
+     |                    ^^^ value used here after move
+
+
+error[E0382]: use of moved value: `arg`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5312:20
+     |
+5305 |         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
+     |             --- move occurs because `arg` has type `impl Future<Output = ActionArgDef>`, which does not implement the `Copy` trait
+...
+5311 |         assert_eq!(arg.await.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
+     |                        ----- `arg` moved due to this await
+5312 |         assert_eq!(arg.await.description.as_deref(), Some("scale factor"));
+     |                    ^^^ value used here after move
+
+
+error[E0382]: use of moved value: `arg`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5313:26
+     |
+5305 |         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
+     |             --- move occurs because `arg` has type `impl Future<Output = ActionArgDef>`, which does not implement the `Copy` trait
+...
+5312 |         assert_eq!(arg.await.description.as_deref(), Some("scale factor"));
+     |                        ----- `arg` moved due to this await
+5313 |         assert!(matches!(arg.await.control().await, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+     |                          ^^^ value used here after move
+
+
+error[E0382]: use of moved value: `action`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5386:20
+     |
+5381 |         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
+     |             ------ move occurs because `action` has type `impl Future<Output = ActionDefinition>`, which does not implement the `Copy` trait
+...
+5385 |         assert!(action.await.semantics.effects.destructive);
+     |                        ----- `action` moved due to this await
+5386 |         assert_eq!(action.await.semantics.policy.approval, ApprovalMode::WhenDestructive);
+     |                    ^^^^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `action`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+
+error[E0382]: use of moved value: `action`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5387:20
+     |
+5381 |         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
+     |             ------ move occurs because `action` has type `impl Future<Output = ActionDefinition>`, which does not implement the `Copy` trait
+...
+5386 |         assert_eq!(action.await.semantics.policy.approval, ApprovalMode::WhenDestructive);
+     |                           ----- `action` moved due to this await
+5387 |         assert_eq!(action.await.semantics.use_when, vec!["delete the selected objects".to_string(), "remove selection".to_string()]);
+     |                    ^^^^^^ value used here after move
+
+
+error[E0382]: use of moved value: `action`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5388:20
+     |
+5381 |         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
+     |             ------ move occurs because `action` has type `impl Future<Output = ActionDefinition>`, which does not implement the `Copy` trait
+...
+5387 |         assert_eq!(action.await.semantics.use_when, vec!["delete the selected objects".to_string(), "remove selection".to_string()]);
+     |                           ----- `action` moved due to this await
+5388 |         assert_eq!(action.await.semantics.examples, vec!["deleteSelection removes every currently selected object".to_string()]);
+     |                    ^^^^^^ value used here after move
+
+

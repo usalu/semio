@@ -1,0 +1,835 @@
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:308:5
+    |
+308 |     async fn id(&self) -> CodecId;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+308 -     async fn id(&self) -> CodecId;
+308 +     fn id(&self) -> impl std::future::Future<Output = CodecId> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:310:5
+    |
+310 |     async fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+310 -     async fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError>;
+310 +     fn compress(&self, raw: &[u8]) -> impl std::future::Future<Output = Result<Vec<u8>, PackError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:312:5
+    |
+312 |     async fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+312 -     async fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
+312 +     fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> impl std::future::Future<Output = Result<Vec<u8>, PackError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+ --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:9:5
+  |
+9 |     async fn len(&self) -> u64;
+  |     ^^^^^
+  |
+  = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+  |
+9 -     async fn len(&self) -> u64;
+9 +     fn len(&self) -> impl std::future::Future<Output = u64> + Send;
+  |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:11:5
+   |
+11 |     async fn is_empty(&self) -> bool {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+11 ~     fn is_empty(&self) -> impl std::future::Future<Output = bool> + Send {async {
+12 |         self.len().await == 0
+13 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:15:5
+   |
+15 |     async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+15 -     async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError>;
+15 +     fn read_at(&self, offset: u64, buf: &mut [u8]) -> impl std::future::Future<Output = Result<usize, PackError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:17:5
+   |
+17 |     async fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> Result<(), PackError> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+17 ~     fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> impl std::future::Future<Output = Result<(), PackError>> + Send {async {
+18 |         let mut filled = 0usize;
+...
+26 |         Ok(())
+27 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:61:5
+   |
+61 |     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+61 -     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;
+61 +     fn write_all(&mut self, bytes: &[u8]) -> impl std::future::Future<Output = Result<(), PackError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:63:5
+   |
+63 |     async fn position(&self) -> u64;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+63 -     async fn position(&self) -> u64;
+63 +     fn position(&self) -> impl std::future::Future<Output = u64> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:65:5
+   |
+65 |     async fn flush(&mut self) -> Result<(), PackError> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+65 ~     fn flush(&mut self) -> impl std::future::Future<Output = Result<(), PackError>> + Send {async {
+66 |         Ok(())
+67 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:12:5
+   |
+12 |     async fn hash(&self, bytes: &[u8]) -> [u8; 32];
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+12 -     async fn hash(&self, bytes: &[u8]) -> [u8; 32];
+12 +     fn hash(&self, bytes: &[u8]) -> impl std::future::Future<Output = [u8; 32]> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:17:5
+   |
+17 |     async fn scheme(&self) -> &str;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+17 -     async fn scheme(&self) -> &str;
+17 +     fn scheme(&self) -> impl std::future::Future<Output = &str> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:18:5
+   |
+18 |     async fn key_id(&self) -> &str;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+18 -     async fn key_id(&self) -> &str;
+18 +     fn key_id(&self) -> impl std::future::Future<Output = &str> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:19:5
+   |
+19 |     async fn sign(&self, message: &[u8; 32]) -> Result<Vec<u8>, ProtocolError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+19 -     async fn sign(&self, message: &[u8; 32]) -> Result<Vec<u8>, ProtocolError>;
+19 +     fn sign(&self, message: &[u8; 32]) -> impl std::future::Future<Output = Result<Vec<u8>, ProtocolError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:24:5
+   |
+24 |     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+24 -     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
+24 +     fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> impl std::future::Future<Output = Result<bool, ProtocolError>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:52:5
+   |
+52 |     async fn apply(&self, base: &P) -> MutationApplyResult<P>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+52 -     async fn apply(&self, base: &P) -> MutationApplyResult<P>;
+52 +     fn apply(&self, base: &P) -> impl std::future::Future<Output = MutationApplyResult<P>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:67:5
+   |
+67 |     async fn absorb(&mut self, other: Self);
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+67 -     async fn absorb(&mut self, other: Self);
+67 +     fn absorb(&mut self, other: Self) -> impl std::future::Future<Output = ()> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:81:5
+   |
+81 |     async fn inverse(&self, base: &P) -> Self;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+81 -     async fn inverse(&self, base: &P) -> Self;
+81 +     fn inverse(&self, base: &P) -> impl std::future::Future<Output = Self> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:83:5
+   |
+83 |     async fn between(base: &P, other: &P) -> Self;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 -     async fn between(base: &P, other: &P) -> Self;
+83 +     fn between(base: &P, other: &P) -> impl std::future::Future<Output = Self> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:85:5
+   |
+85 |     async fn is_empty(&self) -> bool;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+85 -     async fn is_empty(&self) -> bool;
+85 +     fn is_empty(&self) -> impl std::future::Future<Output = bool> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:101:5
+    |
+101 |     async fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+101 -     async fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
+101 +     fn diff(&self, base: &P) -> impl std::future::Future<Output = MutationOutcome<Self::Diff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:102:5
+    |
+102 |     async fn inverse(&self, base: &P) -> Vec<Self>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+102 -     async fn inverse(&self, base: &P) -> Vec<Self>;
+102 +     fn inverse(&self, base: &P) -> impl std::future::Future<Output = Vec<Self>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:104:5
+    |
+104 |     async fn mutation_id(&self) -> Option<crate::ids::MutationId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+104 ~     fn mutation_id(&self) -> impl std::future::Future<Output = Option<crate::ids::MutationId>> + Send {async {
+105 |         None
+106 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:107:5
+    |
+107 |     async fn dependencies(&self) -> Vec<crate::ids::MutationId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+107 ~     fn dependencies(&self) -> impl std::future::Future<Output = Vec<crate::ids::MutationId>> + Send {async {
+108 |         Vec::new()
+109 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:110:5
+    |
+110 |     async fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+110 ~     fn base_version(&self) -> impl std::future::Future<Output = Option<crate::ids::ArtifactVersion>> + Send {async {
+111 |         None
+112 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:113:5
+    |
+113 |     async fn author_id(&self) -> Option<crate::ids::ActorId> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+113 ~     fn author_id(&self) -> impl std::future::Future<Output = Option<crate::ids::ActorId>> + Send {async {
+114 |         None
+115 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:116:5
+    |
+116 |     async fn timestamp(&self) -> Option<crate::ids::HybridLogicalTimestamp> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+116 ~     fn timestamp(&self) -> impl std::future::Future<Output = Option<crate::ids::HybridLogicalTimestamp>> + Send {async {
+117 |         None
+118 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:119:5
+    |
+119 |     async fn undo_policy(&self) -> crate::UndoPolicy {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+119 ~     fn undo_policy(&self) -> impl std::future::Future<Output = crate::UndoPolicy> + Send {async {
+120 |         crate::UndoPolicy::ExactBaseOnly
+121 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:123:5
+    |
+123 |     async fn state_class(&self) -> crate::StateClass {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+123 ~     fn state_class(&self) -> impl std::future::Future<Output = crate::StateClass> + Send {async {
+124 |         crate::StateClass::Artifact
+125 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:130:5
+    |
+130 |     async fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+130 ~     fn foreign_steps(&self, _base: &P) -> impl std::future::Future<Output = Vec<ForeignStep>> + Send {async {
+131 |         Vec::new()
+132 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:240:5
+    |
+240 |     async fn transform(&self, against: &Self) -> TransformOutcome<Self>
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+240 -     async fn transform(&self, against: &Self) -> TransformOutcome<Self>
+240 +     fn transform(&self, against: &Self) -> impl std::future::Future<Output = TransformOutcome<Self>> + Send
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:330:5
+    |
+330 |     async fn print_op(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+330 -     async fn print_op(&self) -> String;
+330 +     fn print_op(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:331:5
+    |
+331 |     async fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+331 -     async fn parse_op(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+331 +     fn parse_op(line: &str) -> impl std::future::Future<Output = Result<Self, crate::diagnostic::TextError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:344:5
+    |
+344 |     async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+344 -     async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+344 +     fn encode_op(&self) -> impl std::future::Future<Output = Result<Vec<u8>, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:345:5
+    |
+345 |     async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+345 -     async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+345 +     fn decode_op(bytes: &[u8]) -> impl std::future::Future<Output = Result<Self, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:364:5
+    |
+364 |     async fn print_diff(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+364 -     async fn print_diff(&self) -> String;
+364 +     fn print_diff(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:365:5
+    |
+365 |     async fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+365 -     async fn parse_diff(line: &str) -> Result<Self, crate::diagnostic::TextError>;
+365 +     fn parse_diff(line: &str) -> impl std::future::Future<Output = Result<Self, crate::diagnostic::TextError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:366:5
+    |
+366 |     async fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+366 -     async fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
+366 +     fn encode_diff(&self) -> impl std::future::Future<Output = Result<Vec<u8>, crate::ProtocolError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:367:5
+    |
+367 |     async fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+367 -     async fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
+367 +     fn decode_diff(bytes: &[u8]) -> impl std::future::Future<Output = Result<Self, crate::ProtocolError>> + Send;
+    |
+
+warning: `semio-framework-replication` (lib) generated 59 warnings
+    Finished `test` profile [unoptimized] target(s) in 0.25s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-dedyn-server/debug/deps/server-287e876a3621faa8)
+
+running 73 tests
+test authority::tests::a_decider_rejection_becomes_a_rejected_outcome ... ok
+test authority::tests::a_decider_deferral_becomes_a_pending_outcome ... ok
+test authority::tests::a_command_for_an_unserved_actor_kind_is_rejected_as_unknown ... ok
+test authority::tests::a_policy_denial_rejects_before_the_actor_is_placed ... ok
+test authority::tests::passivation_fences_the_next_activation_with_a_higher_epoch ... ok
+test contract::tests::deny_is_not_allowed ... ok
+test contract::tests::unknown_command_kinds_default_to_authority_required ... ok
+test authority::tests::effects_reach_the_outbox_without_an_event ... ok
+test authority::tests::an_accepted_turn_emits_events_and_bumps_the_revision ... ok
+test authority::tests::a_stale_expected_revision_conflicts_and_reports_the_actual_one ... ok
+test authority::tests::resubmitting_one_idempotency_key_returns_the_identical_receipt_and_no_second_event ... ok
+test contract::tests::command_outcome_variants_are_tagged_by_status ... ok
+test authority::tests::a_matching_expected_revision_passes_the_fence ... ok
+test contract::tests::query_consistency_round_trips_every_variant ... ok
+test authority::tests::the_outbox_drains_exactly_once_across_two_calls ... ok
+test gateway::tests::a_relayed_frame_names_the_session_that_produced_it ... ok
+test gateway::tests::a_bearer_and_the_loopback_fact_are_read_from_the_transport ... ok
+test gateway::tests::a_colour_lease_takes_the_lowest_free_slot ... ok
+test gateway::tests::a_lane_reaches_every_subscriber_and_is_dropped_when_empty ... ok
+test gateway::tests::a_colour_is_freed_only_on_the_last_disconnect ... ok
+test gateway::tests::cors_reflects_the_callers_own_origin ... ok
+test gateway::tests::a_static_host_refuses_traversal ... ok
+test contract::tests::command_envelope_round_trips_through_json ... ok
+test gateway::tests::lane_keys_keep_the_durable_and_ephemeral_lanes_apart ... ok
+test gateway::tests::joining_and_leaving_maintains_the_roster ... ok
+test gateway::tests::a_blob_address_that_does_not_match_its_bytes_is_a_conflict ... ok
+test gateway::tests::a_blob_write_without_a_grant_is_forbidden ... ok
+test gateway::tests::build_collects_every_module_contribution ... ok
+test gateway::tests::the_seam_admits_every_sequence_once ... ok
+test policy::tests::a_configured_gate_admits_only_the_matching_bearer ... ok
+test policy::tests::a_configured_gate_ignores_loopback ... ok
+test gateway::tests::the_clock_never_goes_backwards ... ok
+test policy::tests::a_grant_for_another_action_does_not_match ... ok
+test policy::tests::a_deny_all_action_blocks_every_action_on_the_matched_resource ... ok
+test policy::tests::a_later_rung_answers_what_an_earlier_one_declined ... ok
+test policy::tests::a_matching_grant_at_another_point_does_not_leak ... ok
+test gateway::tests::a_client_route_falls_back_to_index_html ... ok
+test policy::tests::a_scoped_assignment_does_not_answer_instance_wide_requests ... ok
+test policy::tests::a_scoped_deny_only_bites_inside_its_scope ... ok
+test policy::tests::a_scoped_assignment_does_not_leak_into_another_scope ... ok
+test policy::tests::an_anonymous_fallback_is_still_subject_to_policy ... ok
+test policy::tests::an_empty_chain_resolves_everything_to_anonymous ... ok
+test policy::tests::an_explicit_deny_beats_a_matching_allow ... ok
+test policy::tests::an_unconfigured_gate_admits_only_loopback ... ok
+test policy::tests::an_unrecognized_credential_falls_back_to_anonymous ... ok
+test policy::tests::an_unscoped_assignment_answers_scoped_requests ... ok
+test policy::tests::anonymous_gets_its_own_key_and_may_be_granted_like_anyone ... ok
+test policy::tests::assignment_to_an_unregistered_template_grants_nothing ... ok
+test policy::tests::assignments_are_per_principal ... ok
+test policy::tests::bare_star_matches_every_resource_and_every_action ... ok
+test policy::tests::deny_wins_regardless_of_registration_order ... ok
+test policy::tests::empty_engine_denies_every_request ... ok
+test policy::tests::exact_resources_match_only_themselves ... ok
+test policy::tests::principal_key_is_stable_per_variant ... ok
+test policy::tests::rungs_report_their_own_name ... ok
+test policy::tests::several_templates_on_one_principal_are_unioned ... ok
+test policy::tests::the_chain_takes_the_first_rung_that_recognizes_a_credential ... ok
+test policy::tests::trailing_star_is_a_prefix_wildcard ... ok
+test storage::tests::append_events_rejects_a_sequence_gap_and_writes_nothing ... ok
+test storage::tests::blob_put_get_and_has_are_content_addressed ... ok
+test storage::tests::clearing_a_projection_resets_it_for_rebuild ... ok
+test gateway::tests::installs_are_scanned_and_ordered ... ok
+test storage::tests::events_since_returns_only_later_events_of_that_actor ... ok
+test storage::tests::lease_epoch_bump_fences_out_the_previous_holder ... ok
+test storage::tests::outbox_delivers_each_entry_exactly_once ... ok
+test storage::tests::projection_list_is_prefix_scoped_and_key_ordered ... ok
+test storage::tests::receipt_round_trips_and_is_idempotent ... ok
+test storage::tests::revoke_principal_removes_every_session_of_that_principal ... ok
+test storage::tests::snapshots_only_move_forward ... ok
+test gateway::tests::a_kick_fired_before_the_wait_is_still_observed ... ok
+test gateway::tests::an_unroutable_command_is_rejected_and_publishes_nothing ... ok
+test gateway::tests::a_resuming_subscriber_skips_what_it_already_holds ... ok
+test gateway::tests::the_replay_live_seam_has_no_gap_and_no_duplicate ... ok
+
+test result: ok. 73 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+   Doc-tests server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit:0

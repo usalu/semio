@@ -28,17 +28,25 @@ struct MigrateInput {
     pack: Vec<u8>,
 }
 
-pub(super) async fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
+// module for the full explanation; same `JobFn` registry shape.
+pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
-        run_two_phase(ctx, restored, move || decode(&decode_input), move || execute(&execute_input)).await
+        run_two_phase(
+            ctx,
+            restored,
+            move || async move { decode(&decode_input).await },
+            move || async move { execute(&execute_input).await },
+        )
+        .await
     })
 }
 
 async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {
-    let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
-    let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
+    let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).await.map_err(|message| super::fault("job.migrate", message))?;
+    let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).await.map_err(|message| super::fault("job.migrate", message))?;
     Ok((from, to))
 }
 
@@ -46,14 +54,14 @@ async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_sch
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
-    let (from, to) = parse_dialects(&parsed)?;
-    Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
+    let (from, to) = parse_dialects(&parsed).await?;
+    Ok(format!("{}->{}", from.to_coordinate().await, to.to_coordinate().await).into_bytes())
 }
 
 async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
-    let (from, to) = parse_dialects(&parsed)?;
-    store::migrate_document(&from, &to, &parsed.pack).map_err(|error| super::fault("job.migrate", format!("{error:?}")))
+    let (from, to) = parse_dialects(&parsed).await?;
+    store::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
 }
 
 #[cfg(test)]

@@ -1,0 +1,76 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript
+
+ ✓ |@semio-tech/framework-actor| 📬️mailbox.ts > createBoundedMailbox > overflow is rejected (not a silent drop) when nothing lower-priority exists to evict 2ms
+ ✓ |@semio-tech/framework-actor| 📬️mailbox.ts > createBoundedMailbox > coalescing collapses same-key entries latest-wins, preserving queue position 4ms
+ ✓ |@semio-tech/framework-actor| 📬️mailbox.ts > createBoundedMailbox > lane priority beats FIFO order on popNext 0ms
+ ✓ |@semio-tech/framework-actor| 📬️mailbox.ts > createBoundedMailbox > dropped backpressure reports the evicted lane, admitting the higher-priority incomer 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler lane priority > dispatches by lane priority, not arrival order, when a batch lands before the first pick 3ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler per-actor ordering under interleaving > never starts an actor's next turn before its current one settles, even while other actors interleave 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler coalescing > collapses a burst of same-key envelopes to one queued turn, never 200 deep 8ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler backpressure at the cap > rejected surfaces synchronously at the cap instead of the queue growing past it 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler cancellation > cancels only queued turns, leaving an in-flight one to settle on its own 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler cancellation > teardownActor cancels queued work and forgets the actor so a later enqueue starts fresh 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️turn-scheduler.ts > TurnScheduler onTurnError > reports a rejected runTurn instead of throwing out of the pump loop, and keeps draining 3ms
+stderr | 🧵️shard-client.ts > ShardClient failShard clears routing > clears actorShard + slot.actorIds immediately on a worker crash (onerror), before any terminate()/rebuild()
+[DEBUG] shard 0 worker error Error: boom
+    at /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/ð§µï¸shard-client.ts:1149:19
+    at processTicksAndRejections (native)
+
+stderr | 🧵️shard-client.ts > ShardClient worker crash > onerror fails every pending request on that shard
+[DEBUG] shard 0 worker error Error: boom
+    at /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/ð§µï¸shard-client.ts:1178:19
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native)
+
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient activation + turn round-trip > routes activate then turn to the same shard, resolving the reply by requestId 3ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient activation + turn round-trip > rejects turn() for an actor never activated 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient actor-id multiplexing > distinguishes two actors' replies on the same shard even when they resolve out of order 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient actor-id multiplexing > round-robins fresh actors across shards, skipping the reserved exclusive tail 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient heartbeat watchdog (postMessage path) > does not miss while idle (no pending turn) 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient heartbeat watchdog (postMessage path) > terminates + rebuilds after 3 consecutive missed-heartbeat windows on a stuck turn 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient heartbeat watchdog (postMessage path) > a fresh heartbeat resets the miss count 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient SAB heartbeat path > pollHeartbeatSab reads Atomics-stored turnSeq and feeds the same miss-count state machine 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient leaseExclusive > moves an actor onto a reserved exclusive shard and back 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient leaseExclusive > throws once every exclusive shard is leased and force is not set 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient leaseExclusive > is idempotent for the same actor already leased 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.startWatchdog / stopWatchdog > self-ticks checkHeartbeats + pollHeartbeatSab with no external caller, detects a missed heartbeat, and rebuilds 7ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.startWatchdog / stopWatchdog > is idempotent to call twice, and stopWatchdog before ever starting is a no-op 2ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient failShard clears routing > clears actorShard + slot.actorIds immediately on a worker crash (onerror), before any terminate()/rebuild() 10ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient terminate/rebuild > rejects in-flight requests on terminate and spawns a fresh worker on rebuild 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient worker crash > onerror fails every pending request on that shard 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.shardMetricsSamples > reports zero actors/busyRatio and an infinite heartbeat age for a fresh, never-touched shard 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.shardMetricsSamples > counts resident actors and in-flight turns as busyRatio, and ages the heartbeat off the injected clock 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > orderEnvelopesByLane > sorts by Lane priority, not arrival order, stable within a tied lane 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > orderEnvelopesByLane > is a no-op for an already-lane-sorted, single-lane batch 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > GrantedBudgetTracker + interpretShardFrame > a Grant records its budget and hands back envelopes in lane-priority order 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > GrantedBudgetTracker + interpretShardFrame > an Envelope with no prior Grant runs under the Maintenance-lane default, never an invented constant 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > GrantedBudgetTracker + interpretShardFrame > an Envelope AFTER a Grant for the same actor runs under THAT granted budget — proving the old constant no longer influences it 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > GrantedBudgetTracker + interpretShardFrame > Register/Unregister are pure bookkeeping; Unregister forgets a previously granted budget 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > GrantedBudgetTracker + interpretShardFrame > an unknown/future frame variant resolves to 'unknown' instead of throwing (forward-compat) 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.grant / ShardClient.envelope wire adoption > grant() sends a ShardFrame::Grant frame with envelopes pre-sorted by lane, budget carried alongside them 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.grant / ShardClient.envelope wire adoption > envelope() sends a ShardFrame::Envelope frame with NO budget field on the wire at all 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient.grant / ShardClient.envelope wire adoption > turn()/activate() keep working completely unchanged alongside the new frame wire (incremental adoption really is incremental) 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardFrame parity with Rust component.rs > TS ShardFrame variant/field names match the live Rust enum in 🖥️host/🧵️shard/🦀️component.rs 1ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — handler success > resolves an effect-request through onHostEffect and posts an effect-complete frame back to the worker 8ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — handler error > a rejected onHostEffect settles as effect-error, never a hang 2ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — no handler installed > fails FAST with an explicit effect-error, synchronously, never a silent hang 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — backpressure cap > rejects an effect-request beyond maxOutstandingEffectsPerActor with a quota-shaped effect-error, while the earlier one stays pending 0ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — shard-loss settlement > terminate() aborts every outstanding effect for its actors, and a late handler resolution posts no reply to the dead worker 2ms
+ ✓ |@semio-tech/framework-actor| 🧵️shard-client.ts > ShardClient host-effect bridge — shard-loss settlement > dispose(actorId) aborts that actor's outstanding effects without touching a sibling actor's 1ms
+
+ Test Files  3 passed (3)
+      Tests  46 passed (46)
+   Start at  21:23:50
+   Duration  334ms (transform 369ms, setup 0ms, import 434ms, tests 77ms, environment 0ms)
+

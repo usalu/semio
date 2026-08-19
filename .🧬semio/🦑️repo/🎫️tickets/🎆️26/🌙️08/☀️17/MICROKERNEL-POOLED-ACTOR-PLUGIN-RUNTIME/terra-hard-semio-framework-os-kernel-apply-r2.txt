@@ -1,0 +1,6 @@
+[pass 1] errors=1880 await-edits=318 ambiguous=0 other=184
+  ⛔ ABORT: 7 × E0728 (`await` outside an async fn).
+  The enclosing functions are still SYNC, so inserting `.await` only trades one
+  error for another. Run the asyncify codemod over this scope FIRST, then re-run:
+    python3 asyncify-universal.py --apply <paths under 🧰️framework/🛍️products/💻️os/🔨️modules>
+report -> .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-hard-semio-framework-os-kernel-apply-r2.json

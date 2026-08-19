@@ -608,7 +608,8 @@ pub struct HistoryEntry {
     pub count: u32,
 }
 
-async fn history_entry_count() -> u32 {
+// 🚫️async: E4 fn-pointer slot
+fn history_entry_count() -> u32 {
     1
 }
 
@@ -1093,3 +1094,115 @@ pub trait BrokerHooks {
     async fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange);
 }
 //#endregion 🔖️Broker
+
+//#region 🔖️ExtensionActivation
+/// 🧩️ Canonical installed-extension descriptor the host queries at plugin-activation time —
+/// `extension-activation` packet (`📌️important.md`): "on plugin activation, the kernel queries
+/// installed descriptors for `extends == plugin_id` and activates each as `ActorKind::Extension`,
+/// pinned to the parent's shard, capabilities scoped to the parent". Deliberately independent of
+/// the `.sxt` wire-format-specific `ExtensionPackageManifest` (`💻️os/🔨️modules/🧩️extension`, a
+/// different crate's mount set than this file's) and of the guest-side `ExtensionManifest`
+/// (`semio-framework-plugin`) — this shape uses only vocabulary this very file already owns
+/// (`CapabilityId`/`CapabilityRequest`), so `extensions_extending` stays callable from every crate
+/// this file reaches: it is `#[path]`-mounted (as `pub mod kernel`) into `🛂️manifest/🦀️component.rs`
+/// alone, which is itself `#[path]`-mounted into THREE crates — `semio-framework` (root),
+/// `semio-framework-graph`, and `semio-s-plugin-stdio` (verified: `grep -rn '#\[path.*🎠️kernel'`
+/// and `grep -rn '#\[path.*🛂️manifest/🦀️component'`, both over absolute paths) — without pulling in
+/// the `.sxt`/guest-SDK dependency edge. `💻️os/🖥️host`'s own install-region `InstalledExtension` is
+/// the `.sxt`-shaped twin of this — see that type's docstring for why the two are NOT unified (same
+/// dependency-edge-law reason `PackagePluginDependency`'s own docstring gives for its wire-shape
+/// duplication).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ExtensionDescriptor {
+    pub extension_id: String,
+    /// 🔗️ The plugin id this extension extends — contract freeze §4's `extends`.
+    pub extends: String,
+    pub version: String,
+    pub content_hash: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<CapabilityId>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capability_requests: Vec<CapabilityRequest>,
+}
+
+/// 🔍️ Data-driven extends-query: every descriptor whose `extends` names `plugin_id`, order
+/// preserved — the ONE call a plugin activation makes, whether zero, one, or the scale fixture's
+/// 2,500 synthetic extensions are installed. No branch on `installed.len()` anywhere in this
+/// function — the whole point of routing the scale fixture through identical code.
+pub async fn extensions_extending<'a>(plugin_id: &str, installed: &'a [ExtensionDescriptor]) -> Vec<&'a ExtensionDescriptor> {
+    installed.iter().filter(|descriptor| descriptor.extends == plugin_id).collect()
+}
+
+/// 🔒️ "capabilities scoped to the parent" — intersects an extension's own capability asks with
+/// its parent plugin's already-effective set, so an extension actor can never end up holding a
+/// capability its host plugin does not itself hold (`📓️design-abi.md` §5's admission formula,
+/// the same intersection `BrokerHooks`'s own module doc names: "effective permissions = extension
+/// requests ∩ the host plugin's extension-point allowance ∩ ..."). Order follows `requested`.
+pub async fn scope_capabilities_to_parent(parent_effective: &[CapabilityId], requested: &[CapabilityId]) -> Vec<CapabilityId> {
+    requested.iter().filter(|id| parent_effective.contains(id)).cloned().collect()
+}
+
+#[cfg(test)]
+mod extension_activation_tests {
+    use super::*;
+    use std::future::Future;
+    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+
+    /// 🚫️async: E5 executor bridge — `extensions_extending`/`scope_capabilities_to_parent` are
+    /// pure `Vec`/`String` work with zero suspension points, so they complete on the very first
+    /// poll by construction; this hand-rolled poll-once bridge is the sanctioned E5 shape
+    /// (`📌️important.md` R2/R4 clause 5 — a `#[test] fn` body is a sanctioned executor entry
+    /// point) rather than pulling a runtime dependency into three crates for two pure fns. One per
+    /// crate this file is compiled into, as R2 requires.
+    fn block_on<F: Future>(future: F) -> F::Output {
+        fn no_op(_: *const ()) {}
+        fn clone(_: *const ()) -> RawWaker {
+            RawWaker::new(std::ptr::null(), &VTABLE)
+        }
+        static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, no_op, no_op, no_op);
+        let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
+        let mut cx = Context::from_waker(&waker);
+        let mut future = std::pin::pin!(future);
+        match future.as_mut().poll(&mut cx) {
+            Poll::Ready(value) => value,
+            Poll::Pending => panic!("block_on: future was not ready on first poll — this fn is documented I/O-free"),
+        }
+    }
+
+    fn descriptor(extension_id: &str, extends: &str) -> ExtensionDescriptor {
+        ExtensionDescriptor { extension_id: extension_id.into(), extends: extends.into(), version: "0.1.0".into(), content_hash: format!("hash-{extension_id}"), capabilities: Vec::new(), capability_requests: Vec::new() }
+    }
+
+    /// 🧫️ 64 synthetic descriptors, half extending `flow` and half `cad` — a smaller stand-in for
+    /// the scale fixture's 50×50 shape, proving `extensions_extending` is a plain filter with no
+    /// branch on `installed.len()`.
+    #[test]
+    fn extensions_extending_filters_by_extends_at_scale_and_returns_none_for_an_unknown_plugin() {
+        let installed: Vec<ExtensionDescriptor> = (0..64).map(|i| descriptor(&format!("ext-{i}"), if i % 2 == 0 { "flow" } else { "cad" })).collect();
+
+        let matched = block_on(extensions_extending("flow", &installed));
+        assert_eq!(matched.len(), 32, "half of 64 synthetic descriptors extend `flow`");
+        assert!(matched.iter().all(|d| d.extends == "flow"));
+
+        let none = block_on(extensions_extending("nonexistent-plugin", &installed));
+        assert!(none.is_empty());
+    }
+
+    #[test]
+    fn scope_capabilities_to_parent_intersects_and_drops_what_the_parent_lacks() {
+        let parent = vec![CapabilityId("storage.read".into()), CapabilityId("http:example.com".into())];
+        let requested = vec![CapabilityId("storage.read".into()), CapabilityId("storage.write".into())];
+
+        let scoped = block_on(scope_capabilities_to_parent(&parent, &requested));
+        assert_eq!(scoped, vec![CapabilityId("storage.read".into())], "storage.write is not in the parent's effective set, so it must be dropped");
+    }
+
+    #[test]
+    fn scope_capabilities_to_parent_is_empty_when_the_parent_grants_nothing() {
+        let requested = vec![CapabilityId("storage.read".into())];
+        assert!(block_on(scope_capabilities_to_parent(&[], &requested)).is_empty());
+    }
+}
+//#endregion 🔖️ExtensionActivation

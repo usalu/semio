@@ -26,7 +26,8 @@ impl Label {
         &self.0
     }
 
-    pub async fn into_string(self) -> String {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value) — see R9
+    pub fn into_string(self) -> String {
         self.0
     }
 }
@@ -93,7 +94,8 @@ pub struct LocalizedLabel {
 
 impl LocalizedLabel {
     /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
-    pub async fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
+    pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
         let cells = std::array::from_fn(|ti| {
             let terminology = Terminology::ALL[ti];
             std::array::from_fn(|li| Cow::Owned(resolve(terminology, Locale::ALL[li])))
@@ -102,7 +104,8 @@ impl LocalizedLabel {
     }
 
     /// 📊️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
-    pub async fn data(value: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
+    pub fn data(value: impl Into<String>) -> Self {
         let value = value.into();
         Self::from_fn(|_, _| value.clone())
     }
@@ -111,7 +114,8 @@ impl LocalizedLabel {
     /// per-locale translation) — for the framework's own built-in manifest text (history actions,
     /// panel tabs, …), which has no app-declared terminology axis. The exhaustive match on `Locale`
     /// (no catch-all) means adding a locale breaks every call site here until translated.
-    pub async fn native(en: &str, de: &str) -> Self {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
+    pub fn native(en: &str, de: &str) -> Self {
         Self::from_fn(|_terminology, locale| {
             match locale {
                 Locale::En => en,
@@ -121,7 +125,8 @@ impl LocalizedLabel {
         })
     }
 
-    pub async fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
+    pub fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
         &self.cells[terminology.index()][locale.index()]
     }
 }

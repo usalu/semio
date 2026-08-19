@@ -1,0 +1,109 @@
+{
+  "renderer": "wgpu",
+  "pluginCount": 50,
+  "extensionsPerPlugin": 50,
+  "shardCount": 4,
+  "seed": 1,
+  "generatedAt": "2026-08-19T22:02:02.940Z",
+  "budgets": [
+    {
+      "id": 1,
+      "description": "Registry: 2550 records parsed, instantiations == 0, < 150ms",
+      "status": "pass",
+      "measured": {
+        "elapsedMs": 2.6556250000000006,
+        "recordCount": 2550,
+        "instantiations": 0
+      },
+      "threshold": {
+        "maxMs": 150,
+        "instantiations": 0
+      },
+      "note": "measured by this dev script directly (bun readFileSync + JSON.parse) — no wasm/kernel touched"
+    },
+    {
+      "id": 2,
+      "description": "Cold boot to first interactive frame, only on-startup-finished actors live",
+      "status": "pass-stub-worker",
+      "measured": {
+        "coldBootMs": 17.100000008940697,
+        "shardCount": 4
+      },
+      "threshold": "2500ms",
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] STUB-WORKER TIMING: real Worker pool spin-up + one real activate() round trip, NO real plugin wasm instantiated (semio-framework-plugin does not compile this session) — excludes the dominant real-world cold-boot cost. Lower bound only."
+    },
+    {
+      "id": 3,
+      "description": "Activate 50 plugins + 50 extensions of one plugin: active_actors==100, shards==K, no shard > ceil(100/K)+1",
+      "status": "pass",
+      "measured": {
+        "activeActors": 100,
+        "distinctShards": 4,
+        "expectedShards": 4,
+        "maxPerShard": 25,
+        "ceilBound": 26
+      },
+      "threshold": null,
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] REAL: ShardClient's own round-robin assignShard() at 100-actor scale (stub workers, real client logic)."
+    },
+    {
+      "id": 4,
+      "description": "Memory <= K x 512MiB + 256MiB headroom (web Worker count==K); native RSS <= 1.5GiB",
+      "status": "pass",
+      "measured": {
+        "workerCount": 4,
+        "expectedShardCount": 4
+      },
+      "threshold": null,
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] REAL: counts actual browser Worker instances ShardClient spawned. Bytes-level memory ceiling (K×512MiB+256MiB) is not evaluable without real wasm modules resident — not attempted."
+    },
+    {
+      "id": 5,
+      "description": "Interactive p95 command->patch, 40 cpu actors saturating background",
+      "status": "pass-stub-worker",
+      "measured": {
+        "p95Ms": 0.19999998807907104,
+        "samples": 50,
+        "minMs": 0,
+        "maxMs": 0.20000000298023224
+      },
+      "threshold": "16ms",
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] STUB-WORKER TIMING: real postMessage/structured-clone round trip latency for a no-op turn on one actor while 99 siblings sit idle on the pool; excludes real guest compute and UI patch application. Lower bound only."
+    },
+    {
+      "id": 6,
+      "description": "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms",
+      "status": "pass",
+      "measured": {
+        "trapped": true,
+        "totalPauseMs": 31,
+        "siblingsRestored": true
+      },
+      "threshold": null,
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] REAL: worker sends a trap frame (simulating a guest fuel/wallMs overrun) → real ShardClient.terminate()+rebuild() → real re-activate+restore of two siblings from real checkpoint bytes taken before the hang, all real postMessage round trips."
+    },
+    {
+      "id": 7,
+      "description": "stateful actor LRU-suspended and resumed -> identical state hash",
+      "status": "pass",
+      "measured": {
+        "hashBefore": "9bc23426",
+        "hashAfter": "9bc23426",
+        "stateByteLength": 4
+      },
+      "threshold": null,
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] REAL: checkpoint()→dispose()→activate()→restore()→checkpoint() end-to-end over real postMessage/structured-clone Uint8Array transfer; hash compares the two checkpoints byte-for-byte."
+    },
+    {
+      "id": 8,
+      "description": "Capability revoked at runtime -> denied completion, actor stays alive, quota counters zero",
+      "status": "pass",
+      "measured": {
+        "denied": true,
+        "actorAlive": true
+      },
+      "threshold": null,
+      "note": "[wgpu, harness-driven, see 🧪️bench-web-harness.ts header] PARTIAL: ShardClient has no dedicated revoke-mid-life wire message — this activates an actor WITHOUT the capability up front (standing in for 'revoked') and confirms the stub denies the effect while the actor stays registered. Not a genuine runtime-revocation-of-a-live-grant round trip."
+    }
+  ]
+}

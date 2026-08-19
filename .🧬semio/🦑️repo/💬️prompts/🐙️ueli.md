@@ -405,7 +405,9 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 `<name>.<serialization-artifact>...<kind>.<subset>.<standard>.<artifact>(.<seralization-subset>.<serialization-standard>)?`
 
 
-`nakagin-capsule-tower-flat.snapshot.puzzle.v1.semio.cv.2x3.ifc` # uses defined protobuf schema with 2024 version
+`nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.complete.2-0.glb` # semio puzzle5d artifact exported as glb 2.0
+`nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.dtv.x4.ifc` # semio puzzle5d artifact exported as ifc 4x3 design transfer view
+`nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.cv.2x3.ifc` # semio puzzle5d artifact exported as ifc 2x3 coordination view
 `33-projektetage.presentation.v1.semio.a.2-0.pdf` # semio presentation artifact exported as pdf 2.0/a
 `33-projektetage.presentation.v1.semio.h-264.isobmff.mp4` # semio presentation artifact exported as isobmff video h264 codec
 
@@ -429,7 +431,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 Every single mutation must be tested.
 
 ```
-<mutation> e.g. flatten-puzzle5d for puzzle 5d
+<mutation> e.g. `flatten` for puzzle 5d
   fixtures
     <fixture-file> e.g. nakagin-capsule-tower.puzzle5d.diff.semio, nakagin-capsule-tower-flat.puzzle5d.dsl.semio, etc
   tests

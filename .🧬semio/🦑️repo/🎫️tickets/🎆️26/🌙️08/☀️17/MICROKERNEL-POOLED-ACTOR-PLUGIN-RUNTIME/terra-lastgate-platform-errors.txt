@@ -1,0 +1,332 @@
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:205:21
+    |
+205 |             config: crate::ConfigSpec::empty(),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ConfigSpec`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:205:21
+    |
+205 |             config: crate::ConfigSpec::empty(),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+205 |             config: crate::ConfigSpec::empty().await,
+    |                                               ++++++
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:206:30
+    |
+206 |             command_grammar: crate::CommandGrammar::empty(),
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `CommandGrammar`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:206:30
+    |
+206 |             command_grammar: crate::CommandGrammar::empty(),
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+206 |             command_grammar: crate::CommandGrammar::empty().await,
+    |                                                            ++++++
+
+
+error[E0599]: no method named `add_app` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+  --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:99:18
+   |
+99 |         platform.add_app(AppDefinition {
+   |         ---------^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+   |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+   |
+99 |         platform.await.add_app(AppDefinition {
+   |                  ++++++
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:148:21
+    |
+148 |             config: crate::ConfigSpec::empty(),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ConfigSpec`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:148:21
+    |
+148 |             config: crate::ConfigSpec::empty(),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+148 |             config: crate::ConfigSpec::empty().await,
+    |                                               ++++++
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:149:30
+    |
+149 |             command_grammar: crate::CommandGrammar::empty(),
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `CommandGrammar`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:149:30
+    |
+149 |             command_grammar: crate::CommandGrammar::empty(),
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+149 |             command_grammar: crate::CommandGrammar::empty().await,
+    |                                                            ++++++
+
+
+error[E0609]: no field `active_app_id` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:152:29
+    |
+152 |         assert_eq!(platform.active_app_id, "draw-play");
+    |                             ^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+152 |         assert_eq!(platform.await.active_app_id, "draw-play");
+    |                            ++++++
+
+
+error[E0599]: no method named `add_app` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:214:18
+    |
+214 |         platform.add_app(minimal_app("draw"));
+    |                  ^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+214 |         platform.await.add_app(minimal_app("draw"));
+    |                  ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:215:42
+    |
+215 |         let generation_before = platform.chrome_generation;
+    |                                          ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+215 |         let generation_before = platform.await.chrome_generation;
+    |                                         ++++++
+
+
+error[E0599]: no method named `set_active_app_id` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:216:18
+    |
+216 |         platform.set_active_app_id("draw".into());
+    |                  ^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+216 |         platform.await.set_active_app_id("draw".into());
+    |                  ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:217:29
+    |
+217 |         assert_eq!(platform.chrome_generation, generation_before, "same id must not bump chrome_generation");
+    |                             ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+217 |         assert_eq!(platform.await.chrome_generation, generation_before, "same id must not bump chrome_generation");
+    |                            ++++++
+
+
+error[E0599]: no method named `set_active_app_id` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:218:18
+    |
+218 |         platform.set_active_app_id("other".into());
+    |                  ^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+218 |         platform.await.set_active_app_id("other".into());
+    |                  ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:219:29
+    |
+219 |         assert_eq!(platform.chrome_generation, generation_before + 1);
+    |                             ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+219 |         assert_eq!(platform.await.chrome_generation, generation_before + 1);
+    |                            ++++++
+
+
+error[E0609]: no field `active_app_id` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:220:29
+    |
+220 |         assert_eq!(platform.active_app_id, "other");
+    |                             ^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+220 |         assert_eq!(platform.await.active_app_id, "other");
+    |                            ++++++
+
+
+error[E0599]: no method named `add_app` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:226:18
+    |
+226 |         platform.add_app(minimal_app("draw"));
+    |                  ^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+226 |         platform.await.add_app(minimal_app("draw"));
+    |                  ++++++
+
+
+error[E0609]: no field `active_app_id` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:227:18
+    |
+227 |         platform.active_app_id = "missing".into();
+    |                  ^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+227 |         platform.await.active_app_id = "missing".into();
+    |                 ++++++
+
+
+error[E0599]: no method named `get_active_app` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:228:29
+    |
+228 |         assert_eq!(platform.get_active_app().unwrap().id, "draw");
+    |                             ^^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+228 |         assert_eq!(platform.await.get_active_app().unwrap().id, "draw");
+    |                             ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:234:42
+    |
+234 |         let generation_before = platform.chrome_generation;
+    |                                          ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+234 |         let generation_before = platform.await.chrome_generation;
+    |                                         ++++++
+
+
+error[E0599]: no method named `set_panel_visibility` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:235:18
+    |
+235 |         platform.set_panel_visibility(PanelVisibility::default());
+    |                  ^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+235 |         platform.await.set_panel_visibility(PanelVisibility::default());
+    |                  ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:236:29
+    |
+236 |         assert_eq!(platform.chrome_generation, generation_before, "same visibility must not bump generation");
+    |                             ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+236 |         assert_eq!(platform.await.chrome_generation, generation_before, "same visibility must not bump generation");
+    |                            ++++++
+
+
+error[E0599]: no method named `set_panel_visibility` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:237:18
+    |
+237 |         platform.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+    |                  ^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+237 |         platform.await.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+    |                  ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:238:29
+    |
+238 |         assert_eq!(platform.chrome_generation, generation_before + 1);
+    |                             ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+238 |         assert_eq!(platform.await.chrome_generation, generation_before + 1);
+    |                            ++++++
+
+
+error[E0599]: no method named `notify` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:244:18
+    |
+244 |         platform.notify();
+    |                  ^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+244 |         platform.await.notify();
+    |                  ++++++
+
+
+error[E0599]: no method named `notify` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:245:18
+    |
+245 |         platform.notify();
+    |                  ^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+245 |         platform.await.notify();
+    |                  ++++++
+
+
+error[E0599]: no method named `notify_chrome` found for opaque type `impl Future<Output = platform::Platform>` in the current scope
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:246:18
+    |
+246 |         platform.notify_chrome();
+    |                  ^^^^^^^^^^^^^ method not found in `impl Future<Output = platform::Platform>`
+    |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+    |
+246 |         platform.await.notify_chrome();
+    |                  ++++++
+
+
+error[E0609]: no field `generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:247:29
+    |
+247 |         assert_eq!(platform.generation, 2);
+    |                             ^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+247 |         assert_eq!(platform.await.generation, 2);
+    |                            ++++++
+
+
+error[E0609]: no field `chrome_generation` on type `impl Future<Output = platform::Platform>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:248:29
+    |
+248 |         assert_eq!(platform.chrome_generation, 1);
+    |                             ^^^^^^^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+    |
+help: consider `await`ing on the `Future` to access the field
+    |
+248 |         assert_eq!(platform.await.chrome_generation, 1);
+    |                            ++++++
+
+

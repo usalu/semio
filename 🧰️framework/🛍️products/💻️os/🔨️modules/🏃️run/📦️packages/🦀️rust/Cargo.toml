@@ -33,19 +33,22 @@ thiserror = "2.0.12"
 # run's cancellation/deadline propagate rather than being bolted on later (ticket
 # 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet terra-directory-and-run). Pure, no
 # tokio, so unconditional like every other dependency here.
+#
+# 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): also `📦️bin.rs`'s own
+# `block_on` bridge now (was `futures-lite`, moved to `[dev-dependencies]` below — see that crate's
+# own doc for why the canonical bridge, not an incidental external one, belongs in production code).
 semio-framework-async = { workspace = true }
-# 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet
-# terra-directory-and-run): `AppChannelHost::exchange`/`SpaceRunner::run` are now `async fn` — this
-# binary's own `fn main` (and this lib's tests) drive that one top-level future with a plain
-# single-poll executor. NOT tokio: `📦️bin.rs` is a one-shot CLI that awaits exactly one future to
-# completion and exits, the same reason `semio-framework-os-kernel`'s own tests already use this
-# crate for `futures_lite::future::block_on` rather than spinning up a reactor for zero real async
-# I/O today (see `SpaceRunner::run`'s doc: no `.await` point here currently suspends on a socket or
-# a timer — the conversion is a signature/threading change, not new blocking work).
-futures-lite = "2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
+# 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet
+# terra-directory-and-run) — `AppChannelHost::exchange`/`SpaceRunner::run` are `async fn`; this
+# crate's own `#[cfg(test)] mod tests` drives them with a plain single-poll executor (R4 clause 5: a
+# `#[test] fn` body is a sanctioned executor entry point). MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+# (packet `run-kernel-wiring`) moved this from `[dependencies]` to here: `📦️bin.rs`'s own production
+# bridge is now `semio_framework_async::block_on` (above), and a `grep` across this crate found zero
+# remaining non-test `futures_lite` call sites — see that file's own doc comment.
+futures-lite = "2"

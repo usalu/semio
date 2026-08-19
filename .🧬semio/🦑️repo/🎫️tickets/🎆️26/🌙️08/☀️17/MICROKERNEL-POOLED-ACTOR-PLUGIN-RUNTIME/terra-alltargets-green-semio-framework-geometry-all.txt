@@ -1,0 +1,2 @@
+    Checking semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 0.50s

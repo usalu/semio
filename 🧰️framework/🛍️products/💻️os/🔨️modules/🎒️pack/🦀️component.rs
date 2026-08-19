@@ -76,13 +76,13 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️Document
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn facade_encode_document_decode_document_round_trip() {
         let spec = sample_spec();
         let record = sample_record();
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).unwrap();
-        let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).unwrap();
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.unwrap();
+        let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.unwrap();
 
         assert_eq!(decoded.get(1), Some(&FieldValue::Text("Ada Lovelace".to_string())));
         assert_eq!(decoded.get(2), Some(&FieldValue::UInt(42)));
@@ -91,20 +91,20 @@ mod tests {
         assert!(!report.schema_drift);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn facade_content_hash_is_stable_across_two_encodes() {
         let spec = sample_spec();
         let record = sample_record();
         let options = EncodeOptions::default();
 
-        let bytes_a = encode_document(&spec, &record, &options).unwrap();
-        let bytes_b = encode_document(&spec, &record, &options).unwrap();
+        let bytes_a = encode_document(&spec, &record, &options).await.unwrap();
+        let bytes_b = encode_document(&spec, &record, &options).await.unwrap();
 
         // 🔒️ `encode_document` is a pure function of `(spec, record)` — byte-identical output.
         assert_eq!(bytes_a, bytes_b);
 
-        let hash_a = content_hash(&bytes_a).unwrap();
-        let hash_b = content_hash(&bytes_b).unwrap();
+        let hash_a = content_hash(&bytes_a).await.unwrap();
+        let hash_b = content_hash(&bytes_b).await.unwrap();
         assert_eq!(hash_a, hash_b);
     }
     //#endregion 🔖️Document

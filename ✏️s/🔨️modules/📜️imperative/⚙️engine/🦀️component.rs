@@ -97,7 +97,7 @@ impl<'a> Executor<'a> {
     pub async fn run(&self, path: &Path, seed: &Dictionary) -> RunResult {
         let mut scope = seed.clone();
         let mut effects = Vec::new();
-        self.run_steps(&path.steps, &mut scope, &mut effects, 0);
+        self.run_steps(&path.steps, &mut scope, &mut effects, 0).await;
         RunResult { scope, effects }
     }
 
@@ -107,7 +107,7 @@ impl<'a> Executor<'a> {
             return;
         }
         for step in steps {
-            if let Some(halt) = self.run_step(step, scope, effects, depth) {
+            if let Some(halt) = self.run_step(step, scope, effects, depth).await {
                 if halt {
                     break;
                 }
@@ -118,33 +118,33 @@ impl<'a> Executor<'a> {
     async fn run_step(&self, step: &Step, scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) -> Option<bool> {
         match step.kind.as_str() {
             "control.if" => {
-                let key = read_string_param(&step.params, "key").unwrap_or_default();
-                let condition = read_scope_bool(scope, &key);
+                let key = read_string_param(&step.params, "key").await.unwrap_or_default();
+                let condition = read_scope_bool(scope, &key).await;
                 let slot = if condition { "then" } else { "else" };
                 let input = scope.merge(&step.params);
                 effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(Dictionary::new().insert("branch", Value::Atom(Atom::String(slot.into())))), error: None });
                 if let Some(body) = step.bodies.get(slot) {
-                    self.run_steps(&body.steps, scope, effects, depth + 1);
+                    self.run_steps(&body.steps, scope, effects, depth + 1).await;
                 }
                 return None;
             }
             "control.while" => {
-                let key = read_string_param(&step.params, "key").unwrap_or_default();
+                let key = read_string_param(&step.params, "key").await.unwrap_or_default();
                 let mut iterations = 0u64;
-                while read_scope_bool(scope, &key) {
+                while read_scope_bool(scope, &key).await {
                     iterations += 1;
                     if iterations > MAX_LOOP_ITERATIONS {
                         effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input: scope.merge(&step.params), output: None, error: Some(format!("while loop exceeded {MAX_LOOP_ITERATIONS} iterations")) });
                         return Some(true);
                     }
                     if let Some(body) = step.bodies.get("body") {
-                        self.run_steps(&body.steps, scope, effects, depth + 1);
+                        self.run_steps(&body.steps, scope, effects, depth + 1).await;
                     }
                 }
                 return None;
             }
             "control.repeat" => {
-                let count = read_number_param(&step.params, "count").unwrap_or(0.0).max(0.0) as u64;
+                let count = read_number_param(&step.params, "count").await.unwrap_or(0.0).max(0.0) as u64;
                 let capped = count.min(MAX_LOOP_ITERATIONS);
                 if count > MAX_LOOP_ITERATIONS {
                     effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input: scope.merge(&step.params), output: None, error: Some(format!("repeat count capped at {MAX_LOOP_ITERATIONS}")) });
@@ -152,7 +152,7 @@ impl<'a> Executor<'a> {
                 if let Some(body) = step.bodies.get("body") {
                     for index in 0..capped {
                         *scope = scope.clone().insert("index", Value::Atom(Atom::Integer(index as i64)));
-                        self.run_steps(&body.steps, scope, effects, depth + 1);
+                        self.run_steps(&body.steps, scope, effects, depth + 1).await;
                     }
                 }
                 return None;
@@ -162,7 +162,7 @@ impl<'a> Executor<'a> {
         let input = scope.merge(&step.params);
         match self.registry.dispatch(&step.kind, &input) {
             Ok(output) => {
-                *scope = merge_output_into_scope(scope, &output);
+                *scope = merge_output_into_scope(scope, &output).await;
                 effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(output), error: None });
                 None
             }
@@ -219,13 +219,13 @@ mod tests {
     use neural_engine::Atom;
 
     async fn test_registry() -> Registry {
-        crate::registry::imperative_module_registry()
+        crate::registry::imperative_module_registry().await
     }
 
     #[semio_framework_async_macros::async_test]
     async fn executor_runs_steps_in_order() {
-        let registry = test_registry();
-        let executor = Executor::new(&registry);
+        let registry = test_registry().await;
+        let executor = Executor::new(&registry).await;
         let path = Path {
             steps: vec![
                 Step { id: "s1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))), bodies: BTreeMap::new() },
@@ -233,7 +233,7 @@ mod tests {
                 Step { id: "s3".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("done".into()))), bodies: BTreeMap::new() },
             ],
         };
-        let result = executor.run(&path, &Dictionary::new());
+        let result = executor.run(&path, &Dictionary::new()).await;
         assert_eq!(result.effects.len(), 3);
         assert!(result.effects.iter().all(|entry| entry.error.is_none()));
         let counter = result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
@@ -242,8 +242,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn executor_runs_control_if_then_branch() {
-        let registry = test_registry();
-        let executor = Executor::new(&registry);
+        let registry = test_registry().await;
+        let executor = Executor::new(&registry).await;
         let mut bodies = BTreeMap::new();
         bodies.insert(
             "then".into(),
@@ -257,15 +257,15 @@ mod tests {
                 Step { id: "s2".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), bodies },
             ],
         };
-        let result = executor.run(&path, &Dictionary::new());
+        let result = executor.run(&path, &Dictionary::new()).await;
         let value = result.scope.get("result").and_then(|v| v.as_atom()).and_then(|a| a.as_str());
         assert_eq!(value, Some("yes"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn executor_runs_control_repeat() {
-        let registry = test_registry();
-        let executor = Executor::new(&registry);
+        let registry = test_registry().await;
+        let executor = Executor::new(&registry).await;
         let mut bodies = BTreeMap::new();
         bodies.insert(
             "body".into(),
@@ -277,7 +277,7 @@ mod tests {
                 Step { id: "s2".into(), kind: "control.repeat".into(), params: Dictionary::new().insert("count", Value::Atom(Atom::Decimal(3.0))), bodies },
             ],
         };
-        let result = executor.run(&path, &Dictionary::new());
+        let result = executor.run(&path, &Dictionary::new()).await;
         let counter = result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
         assert_eq!(counter, Some(3.0));
     }

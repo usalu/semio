@@ -1,0 +1,11 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/ts-core-check.tsbuildinfo"
+  },
+  "include": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/**/*.ts"
+  ]
+}

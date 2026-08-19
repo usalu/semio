@@ -49,7 +49,10 @@ pub struct DirectoryReadModel {
 /// 🔗️ Upserts `user_id`/`role` into `space.members`, joining `email`/`display_name` from
 /// `model.users` when known (falls back to empty strings for a member added before their own
 /// `user.created` — sequencing hygiene the hub's command handler guarantees never happens live).
-async fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String, user_id: &str, role: DirectorySpaceRole, updated_at_ms: i64) {
+// 🚫️async: E1 pure mutation — I/O-free, and its only caller `fold` (above) is itself E1-tagged
+// (R9 propagates one hop backward: a helper consumed exclusively by a sync-by-necessity caller
+// cannot be async either — there is no suspension point and no legal way to await it here).
+fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String, user_id: &str, role: DirectorySpaceRole, updated_at_ms: i64) {
     match space.members.iter_mut().find(|member| member.user_id == user_id) {
         Some(existing) => existing.role = role,
         None => space.members.push(MemberView { user_id: user_id.to_string(), email, display_name, role }),
@@ -159,15 +162,15 @@ mod tests {
         serde_json::from_str::<Fixture>(raw).expect("fixture decodes").events
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folds_the_golden_fixture_into_the_expected_projection() {
         let model = fold_all(DirectoryReadModel::default(), &fixture_events());
 
-        assert_eq!(model.cursor, 16, "cursor tracks the last folded seq");
-        assert_eq!(model.spaces.len(), 1, "the deleted atelier leaves only the studio");
-        assert!(!model.spaces.contains_key("sp-atelier-amara"), "space.deleted removes the entry entirely");
+        assert_eq!(model.await.cursor, 16, "cursor tracks the last folded seq");
+        assert_eq!(model.await.spaces.len(), 1, "the deleted atelier leaves only the studio");
+        assert!(!model.await.spaces.contains_key("sp-atelier-amara"), "space.deleted removes the entry entirely");
 
-        let studio = model.spaces.get("sp-studio-fabrication").expect("studio survives");
+        let studio = model.await.spaces.get("sp-studio-fabrication").expect("studio survives");
         assert_eq!(studio.view.name, "Fabrication Studio");
         assert_eq!(studio.view.visibility, DirectorySpaceVisibility::Public);
         assert_eq!(studio.view.kind, DirectorySpaceKind::Archive, "space.archived sets kind archive");
@@ -181,7 +184,7 @@ mod tests {
         assert_eq!(devon.email, "devon@semio.dev", "member display data is backfilled from user.created");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folding_is_idempotent_on_replay() {
         let events = fixture_events();
         let once = fold_all(DirectoryReadModel::default(), &events);

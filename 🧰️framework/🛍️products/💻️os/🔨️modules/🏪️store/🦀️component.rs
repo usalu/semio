@@ -3469,20 +3469,30 @@ where
 mod operation_envelope_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-    // 🚫️async: E1 serde `#[serde(with = ...)]` module fn — signature fixed by serde derive, must
-    // stay sync. Blocked pending `crate::os_spr::encode_envelope`/`decode_envelope` (📡️replication,
-    // not this packet's path) going sync per R9 — see lease-request in the packet report.
+    // 🚫️async: E1 serde `#[serde(with = ...)]` module fn — signature fixed by serde derive, must stay
+    // sync. It needs values from the async envelope codec, and the two routes that do NOT work here
+    // were both measured before choosing this one: de-asyncifying `encode_envelope`/`decode_envelope`
+    // cascades through 220 call sites in 📡️replication (and that crate is green), while making the
+    // caller async is impossible because serde owns this signature.
+    //
+    // 🚫️async: E5 executor bridge — `resolve_ready` polls once and requires the future to already be
+    // ready, which holds here by construction: 📡️replication's envelope codec is pure byte work with
+    // ZERO I/O anywhere in its call chain (verified — no fs/tokio/net/time markers), so every future
+    // in it completes on its first poll. This is the same sanctioned boundary `wire_artifact_compose`
+    // and 📡️spr's `EditIter::next` already use. If the codec ever gains a real suspension point this
+    // will panic loudly rather than corrupt data — which is the correct failure mode for a sync ABI.
     pub fn serialize<S: Serializer>(envelope: &crate::os_spr::MutationEnvelope, serializer: S) -> Result<S::Ok, S::Error> {
         let mut bytes = Vec::new();
-        crate::os_spr::encode_envelope(envelope, &mut bytes);
+        crate::os_io::resolve_ready(crate::os_spr::encode_envelope(envelope, &mut bytes));
         bytes.serialize(serializer)
     }
 
-    // 🚫️async: E1 — see `serialize`'s tag above.
+    // 🚫️async: E1 + E5 — see `serialize`'s tags above.
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<crate::os_spr::MutationEnvelope, D::Error> {
         let bytes = Vec::<u8>::deserialize(deserializer)?;
         let mut pos = 0;
-        crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(serde::de::Error::custom)
+        crate::os_io::resolve_ready(crate::os_spr::decode_envelope(&bytes, &mut pos))
+            .map_err(serde::de::Error::custom)
     }
 }
 
@@ -4481,7 +4491,7 @@ where
     }
 
     async fn invalidate_projections(&mut self, cause: ArtifactProjectionCause) -> ArtifactProjectionInvalidation {
-        self.bump();
+        self.bump().await;
         self.last_projection_cause = Some(cause);
         ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp().await }
     }
@@ -4585,7 +4595,7 @@ where
         self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         self.tail_undo_cache = None;
         self.current = current;
-        self.bump();
+        self.bump().await;
         Ok(())
     }
 
@@ -4906,7 +4916,7 @@ where
                     // 🔂️ Removing a MID-history edit has no cheap incremental inverse; cold-path replay.
                     self.tail_undo_cache = None;
                     self.current = self.fold_current().await?;
-                    self.bump();
+                    self.bump().await;
                     Ok(())
                 }
                 UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
@@ -4973,7 +4983,7 @@ where
                     }
                 }
                 self.current_checkpoint_id = Some(checkpoint_id);
-                self.bump();
+                self.bump().await;
                 Ok(())
             }
             ArtifactCommand::CreateAlternative { name } => {
@@ -4989,7 +4999,7 @@ where
                 self.envelope.vcs.alternatives.push(Alternative { id: alt_id.clone(), name, checkpoint_ids: vec![checkpoint_id.clone()] });
                 self.envelope.active_alternative_id = Some(alt_id);
                 self.checkout_checkpoint_internal(checkpoint_id).await?;
-                self.bump();
+                self.bump().await;
                 Ok(())
             }
             ArtifactCommand::SwitchAlternative { alternative_id } => {
@@ -5000,7 +5010,7 @@ where
                 }
                 self.checkout_checkpoint_internal(checkpoint_id).await?;
                 self.envelope.active_alternative_id = Some(alternative_id);
-                self.bump();
+                self.bump().await;
                 Ok(())
             }
             ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
@@ -5009,7 +5019,7 @@ where
                 }
                 self.checkout_checkpoint_internal(checkpoint_id.clone()).await?;
                 self.envelope.active_alternative_id = self.envelope.vcs.alternatives.iter().find(|alt| alt.checkpoint_ids.last() == Some(&checkpoint_id)).map(|alt| alt.id.clone());
-                self.bump();
+                self.bump().await;
                 Ok(())
             }
             ArtifactCommand::Apply { mutations, description } => self.apply_command(mutations, description, HistoryLane::Document).await,
@@ -5020,7 +5030,7 @@ where
             ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => self.amend_command(mutations, coalesce_key, lane).await,
             ArtifactCommand::IngestRemote { envelope } => {
                 let report = self.ingest_remote(envelope).await?;
-                self.absorb_merge_report(&report);
+                self.absorb_merge_report(&report).await;
                 Ok(())
             }
             ArtifactCommand::PruneDrafts => Err(VcsError::ValidationFailed("draft pruning is not implemented by ArtifactStore; no draft history was removed".to_string())),
@@ -5030,7 +5040,7 @@ where
             }
             ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
                 let report = self.resolve_conflict(&conflict_id, resolution).await?;
-                self.absorb_merge_report(&report);
+                self.absorb_merge_report(&report).await;
                 Ok(())
             }
         }
@@ -5078,7 +5088,7 @@ where
                 self.current = self.fold_current().await?;
             }
         }
-        self.bump();
+        self.bump().await;
         Ok(())
     }
 
@@ -5100,7 +5110,7 @@ where
             self.current = folded;
             self.tail_undo_cache = Some((next, pre));
         }
-        self.bump();
+        self.bump().await;
         Ok(())
     }
 
@@ -5132,17 +5142,17 @@ where
             started_at: started_at.await,
             finished_at: Some(now_iso().await),
         };
-        stamp_primary_operation_identity(&mut edit);
+        stamp_primary_operation_identity(&mut edit).await;
         if !lane.is_document().await {
             self.envelope.lanes.insert(edit.id.clone(), lane);
         }
-        self.record_edit_messages(&edit.id, messages);
+        self.record_edit_messages(&edit.id, messages).await;
         self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
         self.applied_edit_ids.push(edit.id.clone());
         self.envelope.vcs.edits.push(edit);
         self.current = post;
         self.redo_edit_ids.clear();
-        self.bump();
+        self.bump().await;
         Ok(())
     }
 
@@ -5170,10 +5180,10 @@ where
                 edit.mutation_meta.extend(new_mutation_meta);
                 edit.finished_at = Some(now_iso().await);
             }
-            self.record_edit_messages(&edit_id, messages);
+            self.record_edit_messages(&edit_id, messages).await;
             self.current = post;
             self.redo_edit_ids.clear();
-            self.bump();
+            self.bump().await;
             Ok(())
         } else {
             let started_at = now_iso();
@@ -5185,17 +5195,17 @@ where
             let forwards_fingerprint = serde_json::to_vec(&forwards).map_err(|error| VcsError::Serialize(error.to_string()))?;
             let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint).await;
             let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at: started_at.await, finished_at: Some(now_iso().await) };
-            stamp_primary_operation_identity(&mut edit);
+            stamp_primary_operation_identity(&mut edit).await;
             if !lane.is_document().await {
                 self.envelope.lanes.insert(edit_id.clone(), lane);
             }
-            self.record_edit_messages(&edit_id, messages);
+            self.record_edit_messages(&edit_id, messages).await;
             self.tail_undo_cache = Some((edit_id.clone(), pre_snapshot));
             self.applied_edit_ids.push(edit.id.clone());
             self.envelope.vcs.edits.push(edit);
             self.current = post;
             self.redo_edit_ids.clear();
-            self.bump();
+            self.bump().await;
             Ok(())
         }
     }
@@ -5349,7 +5359,7 @@ where
         self.backbone = Some(backbone);
         self.pump().await?;
         self.flush_outbound(false).await?;
-        self.bump();
+        self.bump().await;
         Ok(())
     }
 
@@ -5365,7 +5375,7 @@ where
     /// @emoji ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
     pub async fn detach_backbone(&mut self) -> Option<Backbones> {
         self.envelope.backbone = None;
-        self.bump();
+        self.bump().await;
         self.backbone.take()
     }
 
@@ -5550,9 +5560,9 @@ where
             }
             let id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(self.envelope.id.clone()), &quarantine_mutation_ids, &conflict_hlc).await;
             self.envelope.conflicts.push(crate::os_spr::Conflict { id: id.clone(), kind, status: crate::os_spr::ConflictStatus::Open, messages: quarantine_messages, actors: conflict_actors, timestamp: conflict_hlc });
-            self.prune_resolved_conflicts();
+            self.prune_resolved_conflicts().await;
             for quarantined_id in &quarantined_ids {
-                self.replace_edit_messages(quarantined_id, Vec::new());
+                self.replace_edit_messages(quarantined_id, Vec::new()).await;
             }
             quarantine_conflict_id = Some(id);
         }
@@ -5577,7 +5587,7 @@ where
         self.applied_edit_ids = self.applied_edit_ids[..k].iter().cloned().chain(committed_ids.iter().cloned()).collect();
         for edit_messages in &replayed {
             if committed_ids.contains(&edit_messages.edit_id) {
-                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone());
+                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone()).await;
             }
         }
         for (index, edit_id) in self.applied_edit_ids.iter().enumerate() {
@@ -5622,11 +5632,11 @@ where
             }
             let id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(self.envelope.id.clone()), &degraded_mutation_ids, &conflict_hlc).await;
             self.envelope.conflicts.push(crate::os_spr::Conflict { id: id.clone(), kind, status: crate::os_spr::ConflictStatus::Open, messages: degraded_messages, actors: degraded_actors.await, timestamp: conflict_hlc });
-            self.prune_resolved_conflicts();
+            self.prune_resolved_conflicts().await;
             degraded_conflict_id = Some(id);
         }
         self.pending_report.edit_ids = Some(batch.iter().filter(|edit| committed_ids.contains(&edit.id)).map(|edit| edit.id.clone()).collect());
-        self.bump();
+        self.bump().await;
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         let accepted = batch.iter().all(|edit| committed_ids.contains(&edit.id));
         Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted, insertion_index: k as u32, replayed, worst, conflict: quarantine_conflict_id.or(degraded_conflict_id) })
@@ -5754,12 +5764,12 @@ where
                 let accepted_ids: Vec<String> = candidate.applied_edit_ids.iter().filter(|edit_id| !prior_ids.contains(edit_id.as_str())).cloned().collect();
                 self.adopt_resolution_candidate(candidate).await;
                 self.pending_report.edit_ids = Some(accepted_ids);
-                self.bump();
+                self.bump().await;
                 self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 // 🎯️ MEDIUM-3: this conflict just turned `Accepted` — a resolved conflict is
                 // prunable, so give the cap a chance to reclaim it without waiting for the next
                 // `ingest_remote` push.
-                self.prune_resolved_conflicts();
+                self.prune_resolved_conflicts().await;
                 Ok(Self::aggregate_resolution_reports(reports, conflict.id.clone()).await)
             }
             (crate::os_spr::ConflictKind::Quarantined { envelopes, .. }, crate::os_spr::ConflictResolution::Discard) => {
@@ -5768,17 +5778,17 @@ where
                 }
                 self.envelope.conflicts[index].status = crate::os_spr::ConflictStatus::Discarded;
                 self.pending_report.edit_ids = Some(Vec::new());
-                self.bump();
+                self.bump().await;
                 self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
-                self.prune_resolved_conflicts();
+                self.prune_resolved_conflicts().await;
                 Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
             }
             (crate::os_spr::ConflictKind::Degraded { .. }, crate::os_spr::ConflictResolution::Accept) => {
                 self.envelope.conflicts[index].status = crate::os_spr::ConflictStatus::Accepted;
                 self.pending_report.edit_ids = Some(Vec::new());
-                self.bump();
+                self.bump().await;
                 self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
-                self.prune_resolved_conflicts();
+                self.prune_resolved_conflicts().await;
                 Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
             }
             (crate::os_spr::ConflictKind::Degraded { .. }, crate::os_spr::ConflictResolution::Discard) => Err(VcsError::ValidationFailed("a Degraded conflict's batch is already durable history and can never be discarded".to_string())),
@@ -5924,8 +5934,8 @@ where
                 let conflict_id = crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &remote_clock);
                 self.clock = remote_clock;
                 self.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id.await, kind, status: crate::os_spr::ConflictStatus::Open, messages: messages.clone(), actors: conflict_actors, timestamp: self.clock });
-                self.prune_resolved_conflicts();
-                self.bump();
+                self.prune_resolved_conflicts().await;
+                self.bump().await;
                 self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 return Err(VcsError::Rejected { policy: self.merge_policy, messages });
             }
@@ -5943,7 +5953,7 @@ where
             self.tail_undo_cache = None;
             self.current = current;
             self.current_checkpoint_id = current_checkpoint_id;
-            self.bump();
+            self.bump().await;
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(());
         }
@@ -6003,7 +6013,7 @@ where
             self.envelope = candidate_envelope;
             self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
             self.clock = remote_clock;
-            self.bump();
+            self.bump().await;
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Ok(());
         }
@@ -6098,8 +6108,8 @@ where
             let conflict_id = crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &remote_clock);
             self.clock = remote_clock;
             self.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id.await, kind, status: crate::os_spr::ConflictStatus::Open, messages: messages.clone(), actors: conflict_actors, timestamp: self.clock });
-            self.prune_resolved_conflicts();
-            self.bump();
+            self.prune_resolved_conflicts().await;
+            self.bump().await;
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
             return Err(VcsError::Rejected { policy: self.merge_policy, messages });
         }
@@ -6133,7 +6143,7 @@ where
         self.clock = remote_clock;
         for edit_messages in &replayed {
             if !self.envelope.edit_messages.iter().any(|entry| entry.edit_id == edit_messages.edit_id) {
-                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone());
+                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone()).await;
             }
         }
         self.tail_undo_cache = None;
@@ -6143,9 +6153,9 @@ where
             let kind = crate::os_spr::ConflictKind::Degraded { edit_ids };
             let id = crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &self.clock);
             self.envelope.conflicts.push(crate::os_spr::Conflict { id: id.await, kind, status: crate::os_spr::ConflictStatus::Open, messages, actors: actors.await, timestamp: self.clock });
-            self.prune_resolved_conflicts();
+            self.prune_resolved_conflicts().await;
         }
-        self.bump();
+        self.bump().await;
         self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         Ok(())
     }
@@ -6263,7 +6273,7 @@ where
 
     async fn bump(&mut self) {
         self.generation += 1;
-        self.sync_cursor();
+        self.sync_cursor().await;
     }
 }
 
@@ -8960,11 +8970,11 @@ mod tests {
         Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText,
     {
         async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
-            Self(super::ArtifactStore::new(envelope).expect("test fixture history is valid"))
+            Self(super::ArtifactStore::new(envelope).await.expect("test fixture history is valid"))
         }
 
         async fn current_checkpoint_id(&self) -> Option<&str> {
-            self.0.current_checkpoint_id()
+            self.0.current_checkpoint_id().await
         }
     }
 
@@ -9080,7 +9090,7 @@ mod tests {
         Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn create(_kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
-            let seeded = if initial_pack.is_empty() { P::default().encode_pack() } else { initial_pack.to_vec() };
+            let seeded = if initial_pack.is_empty() { P::default().encode_pack().await } else { initial_pack.to_vec() };
             Ok(Self(super::create_member_store("demo/v1", id, dialect, &seeded).await?))
         }
         async fn open(_kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError> {
@@ -9106,20 +9116,20 @@ mod tests {
                 Ok((_, rest)) => rest,
                 Err(_) => text,
             };
-            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
-            Self::__dsl_from_record(&record)
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document }).await?;
+            Self::__dsl_from_record(&record).await
         }
         async fn print_dsl(&self) -> String {
             let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
         }
     }
     /// 📦️ Handcrafted ArtifactPack (P6).
     impl ArtifactPack for DemoSnapshot {
         async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
         async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
@@ -9127,8 +9137,8 @@ mod tests {
             if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
                 return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
             }
-            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-            Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
+            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+            Self::__dsl_from_record(&record).await.map_err(text_error_to_pack_error)
         }
         async fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
             Some(Self::__dsl_spec())
@@ -9190,17 +9200,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
         }
     }
 
@@ -9208,11 +9218,11 @@ mod tests {
     impl OpBinary for DemoMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
-            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let mut out = Vec::with_capacity(body.len() + 3);
             out.push(OP_BINARY_FORMAT);
             crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -9231,8 +9241,9 @@ mod tests {
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
             let spec = spec_fn();
             let body = &bytes[reader.position().await..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position().await as u64, detail: error.to_string() })
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
+            let record_offset = reader.position().await as u64;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
     //#endregion 🔖️OpCodec
@@ -9244,11 +9255,11 @@ mod tests {
             match self {
                 // 🎯️ Verb-family rule (frozen fan-out table): `set` on an absent target ⇒ Error
                 // `mutation.target-missing`, empty diff (LAW 2) — the modify-vs-delete conflict case.
-                DemoMutation::SetN { .. } if snapshot.n == i32::MIN => crate::os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]),
-                DemoMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
-                DemoMutation::DeleteN => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(i32::MIN) }),
-                DemoMutation::BumpN { .. } if snapshot.n == i32::MIN => crate::os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]),
-                DemoMutation::BumpN { delta } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(snapshot.n.saturating_add(*delta)) }).info("mutation.cascade", "n bumped"),
+                DemoMutation::SetN { .. } if snapshot.n == i32::MIN => crate::os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]).await,
+                DemoMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).await,
+                DemoMutation::DeleteN => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(i32::MIN) }).await,
+                DemoMutation::BumpN { .. } if snapshot.n == i32::MIN => crate::os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]).await,
+                DemoMutation::BumpN { delta } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(snapshot.n.saturating_add(*delta)) }).await.info("mutation.cascade", "n bumped").await,
             }
         }
 
@@ -9261,66 +9272,66 @@ mod tests {
 
     /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
     async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
-        let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        peer.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("peer apply");
+        let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
+        peer.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("peer apply");
         let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
         let document_id = ArtifactId(peer.envelope().id.clone());
         let schema = SchemaId(peer.envelope().schema.clone());
-        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).await.expect("operation envelope");
         let mut envelope = envelopes.pop().expect("exactly one op envelope for a single-op edit");
         envelope.actor = ActorId(actor.to_string());
         envelope
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
         let valid = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 7 });
         let mut malformed = valid.clone();
         malformed.diff.payload = vec![0xff];
         let before = store.envelope().clone();
 
-        assert!(store.ingest_remote(malformed).is_err(), "malformed remote data must reject before committing the DAG or history");
+        assert!(store.ingest_remote(malformed).await.is_err(), "malformed remote data must reject before committing the DAG or history");
         assert_eq!(store.envelope(), &before);
-        assert_eq!(store.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 0 });
+        assert_eq!(store.snapshot().await.expect("unchanged snapshot"), DemoSnapshot { n: 0 });
 
-        store.ingest_remote(valid).expect("the rejected envelope must not poison its mutation id in the DAG");
-        assert_eq!(store.snapshot().expect("accepted snapshot"), DemoSnapshot { n: 7 });
+        store.ingest_remote(valid.await).await.expect("the rejected envelope must not poison its mutation id in the DAG");
+        assert_eq!(store.snapshot().await.expect("accepted snapshot"), DemoSnapshot { n: 7 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remote_ingest_requires_duplicate_mutation_payload_equivalence() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
         let accepted = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 });
-        store.ingest_remote(accepted.clone()).expect("first remote envelope");
+        store.ingest_remote(accepted.clone()).await.expect("first remote envelope");
         let before = store.envelope().clone();
 
-        store.ingest_remote(accepted.clone()).expect("an exact duplicate is idempotent");
+        store.ingest_remote(accepted.clone()).await.expect("an exact duplicate is idempotent");
         let mut conflict = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 9 });
-        conflict.mutation_id = accepted.mutation_id.clone();
-        let error = store.ingest_remote(conflict).expect_err("the same mutation id may not carry a different payload");
+        conflict.await.mutation_id = accepted.await.mutation_id.clone();
+        let error = store.ingest_remote(conflict.await).await.expect_err("the same mutation id may not carry a different payload");
         assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("conflicts with its established payload")));
         assert_eq!(store.envelope(), &before);
-        assert_eq!(store.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 2 });
+        assert_eq!(store.snapshot().await.expect("unchanged snapshot"), DemoSnapshot { n: 2 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_merge_preflights_every_conflict_before_committing() {
-        let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        local.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local edit");
-        local.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local checkpoint".into()), authors: Vec::new() }).expect("local checkpoint");
-        local.dispatch(ArtifactCommand::CreateAlternative { name: "local".into() }).expect("local alternative");
+        let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
+        local.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("local edit");
+        local.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local checkpoint".into()), authors: Vec::new() }).await.expect("local checkpoint");
+        local.dispatch(ArtifactCommand::CreateAlternative { name: "local".into() }).await.expect("local alternative");
         let local_alternative = local.envelope().vcs.alternatives[0].id.clone();
         let before = local.envelope().clone();
 
-        let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("remote edit");
+        let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
+        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).await.expect("remote edit");
         remote.0.envelope.vcs.alternatives.push(Alternative { id: local_alternative, name: "conflicting remote alternative".into(), checkpoint_ids: Vec::new() });
-        let files = print_document_pack(remote.envelope()).expect("remote pack");
+        let files = print_document_pack(remote.envelope().await).await.expect("remote pack");
 
-        assert!(local.merge_remote_snapshot(&files.pack, &files.spr).is_err(), "a late registry conflict must reject the whole snapshot merge");
+        assert!(local.merge_remote_snapshot(&files.pack, &files.spr).await.is_err(), "a late registry conflict must reject the whole snapshot merge");
         assert_eq!(local.envelope(), &before);
-        assert_eq!(local.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 1 });
+        assert_eq!(local.snapshot().await.expect("unchanged snapshot"), DemoSnapshot { n: 1 });
     }
 
     /// 🐛️ HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS w3-g: the store-level minimal
@@ -9338,26 +9349,26 @@ mod tests {
     /// merges `a`'s `Change` in verbatim without reconciling ids, so `validate_durable_history`
     /// rightly rejects it: `b`'s own `vcs.edits` never gained an entry under the bare id `a`'s
     /// `Change` names.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_after_ingesting_a_remote_edit_stays_valid_once_the_sender_s_own_checkpoint_snapshot_arrives() {
-        let mut a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("a's local edit");
+        let mut a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
+        a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("a's local edit");
         let a_edit = a.envelope().vcs.edits.last().expect("a has an edit").clone();
         let document_id = ArtifactId(a.envelope().id.clone());
         let schema = SchemaId(a.envelope().schema.clone());
-        let wire_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&a_edit, &document_id, &schema).expect("encode a's edit for the wire");
+        let wire_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&a_edit, &document_id, &schema).await.expect("encode a's edit for the wire");
 
-        let mut b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let mut b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
         for envelope in wire_envelopes {
-            b.ingest_remote(envelope).expect("b ingests a's edit over the wire");
+            b.ingest_remote(envelope).await.expect("b ingests a's edit over the wire");
         }
-        b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b checkpoint".into()), authors: Vec::new() }).expect("b's own checkpoint, self-consistent so far — not yet the bug");
+        b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b checkpoint".into()), authors: Vec::new() }).await.expect("b's own checkpoint, self-consistent so far — not yet the bug");
         assert!(!b.envelope().vcs.changes.last().expect("b minted a change").edit_ids.is_empty(), "b's checkpoint must actually cover the ingested edit");
 
-        a.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a checkpoint".into()), authors: Vec::new() }).expect("a's own checkpoint");
-        let files = print_document_pack(a.envelope()).expect("a's pack");
+        a.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a checkpoint".into()), authors: Vec::new() }).await.expect("a's own checkpoint");
+        let files = print_document_pack(a.envelope().await).await.expect("a's pack");
 
-        b.merge_remote_snapshot(&files.pack, &files.spr).expect("b must absorb a's checkpoint even though b only knows a's edit under its wire id");
+        b.merge_remote_snapshot(&files.pack, &files.spr).await.expect("b must absorb a's checkpoint even though b only knows a's edit under its wire id");
 
         for change in &b.envelope().vcs.changes {
             for edit_id in &change.edit_ids {
@@ -9379,98 +9390,98 @@ mod tests {
             document_id: ArtifactId("demo".to_string()),
             actor: ActorId(actor.to_string()),
             dependencies,
-            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
+            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().await.expect("encode demo mutation") },
             inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
             timestamp: hlc,
         }
     }
 
     async fn fresh_demo_store() -> ArtifactStore<DemoSnapshot, DemoMutation> {
-        ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None))
+        ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await
     }
 
     /// 🛰️ A `DeleteN` at an earlier HLC and a `SetN` at a later HLC — replayed in HLC order, the
     /// `SetN` lands on an already-deleted target and raises `mutation.target-missing` (Error).
     async fn modify_vs_delete_envelopes() -> (crate::os_spr::MutationEnvelope, crate::os_spr::MutationEnvelope) {
-        let delete = mutation_envelope_at("deleter", "op-delete", DemoMutation::DeleteN, HybridLogicalTimestamp::new(1, 100), Vec::new());
-        let modify = mutation_envelope_at("modifier", "op-modify", DemoMutation::SetN { n: 42 }, HybridLogicalTimestamp::new(2, 200), Vec::new());
-        (delete, modify)
+        let delete = mutation_envelope_at("deleter", "op-delete", DemoMutation::DeleteN, HybridLogicalTimestamp::new(1, 100).await, Vec::new());
+        let modify = mutation_envelope_at("modifier", "op-modify", DemoMutation::SetN { n: 42 }, HybridLogicalTimestamp::new(2, 200).await, Vec::new());
+        (delete.await, modify.await)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
         for policy in [crate::os_spr::MergePolicy::Normal, crate::os_spr::MergePolicy::Vigilant] {
-            let mut store = fresh_demo_store();
+            let mut store = fresh_demo_store().await;
             store.set_merge_policy(policy);
-            let (delete, modify) = modify_vs_delete_envelopes();
-            store.ingest_remote(delete).expect("the delete alone raises no message and always applies");
-            let pre_merge = store.snapshot().expect("pre-merge snapshot");
-            let pre_merge_ids = store.applied_edit_ids().to_vec();
-            let report = store.ingest_remote(modify).expect("a policy rejection is a MergeReport, not an Err");
+            let (delete, modify) = modify_vs_delete_envelopes().await;
+            store.ingest_remote(delete).await.expect("the delete alone raises no message and always applies");
+            let pre_merge = store.snapshot().await.expect("pre-merge snapshot");
+            let pre_merge_ids = store.applied_edit_ids().await.to_vec();
+            let report = store.ingest_remote(modify).await.expect("a policy rejection is a MergeReport, not an Err");
             assert!(!report.accepted, "{policy:?} must reject an Error-level modify-vs-delete conflict");
             assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
-            assert_eq!(store.snapshot().expect("unchanged snapshot"), pre_merge, "{policy:?}: state stays pre-merge on reject");
+            assert_eq!(store.snapshot().await.expect("unchanged snapshot"), pre_merge, "{policy:?}: state stays pre-merge on reject");
             assert_eq!(store.applied_edit_ids(), pre_merge_ids.as_slice(), "{policy:?}: applied_edit_ids stays pre-merge on reject");
             let conflict_id = report.conflict.clone().expect("a reject must raise a conflict");
-            let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
+            let conflict = store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
             assert_eq!(conflict.status, crate::os_spr::ConflictStatus::Open);
             assert!(matches!(conflict.kind, crate::os_spr::ConflictKind::Quarantined { .. }), "{policy:?}: a rejected batch quarantines, it never degrades");
             assert!(store.open_conflicts().any(|conflict| conflict.id == conflict_id));
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("delete applies cleanly");
-        let report = store.ingest_remote(modify).expect("LaissezFaire only rejects Fatal");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("delete applies cleanly");
+        let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
         assert!(report.accepted);
         assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
-        assert_eq!(store.snapshot().expect("snapshot").n, i32::MIN, "the modify's part is absent — LAW 2 (an Error message ⇒ no change to its target)");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, i32::MIN, "the modify's part is absent — LAW 2 (an Error message ⇒ no change to its target)");
         assert!(report.replayed.iter().any(|edit_messages| edit_messages.messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "an Error message must be reported");
         let conflict_id = report.conflict.expect("worst >= Warning must raise a Degraded conflict");
-        let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded");
+        let conflict = store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded");
         assert!(matches!(conflict.kind, crate::os_spr::ConflictKind::Degraded { .. }));
         assert_eq!(conflict.status, crate::os_spr::ConflictStatus::Open);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chronological_determinism_any_arrival_order_converges() {
-        let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::SetN { n: 10 }, HybridLogicalTimestamp::new(1, 100), Vec::new());
-        let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::SetN { n: 20 }, HybridLogicalTimestamp::new(2, 300), Vec::new());
+        let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::SetN { n: 10 }, HybridLogicalTimestamp::new(1, 100).await, Vec::new());
+        let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::SetN { n: 20 }, HybridLogicalTimestamp::new(2, 300).await, Vec::new());
 
-        let mut forward = fresh_demo_store();
-        forward.ingest_remote(a.clone()).expect("a");
-        forward.ingest_remote(b.clone()).expect("b");
+        let mut forward = fresh_demo_store().await;
+        forward.ingest_remote(a.clone()).await.expect("a");
+        forward.ingest_remote(b.clone()).await.expect("b");
 
-        let mut reversed = fresh_demo_store();
-        reversed.ingest_remote(b).expect("b");
-        reversed.ingest_remote(a).expect("a");
+        let mut reversed = fresh_demo_store().await;
+        reversed.ingest_remote(b.await).await.expect("b");
+        reversed.ingest_remote(a.await).await.expect("a");
 
-        assert_eq!(forward.snapshot().expect("snapshot"), reversed.snapshot().expect("snapshot"));
+        assert_eq!(forward.snapshot().await.expect("snapshot"), reversed.snapshot().await.expect("snapshot"));
         assert_eq!(forward.applied_edit_ids(), reversed.applied_edit_ids(), "both must land in the same HLC order regardless of arrival order");
         assert_eq!(forward.applied_edit_ids(), &["op-a".to_string(), "op-b".to_string()]);
-        assert_eq!(forward.conflicts().len(), reversed.conflicts().len());
-        assert!(forward.conflicts().is_empty(), "two non-conflicting SetN edits raise no conflict");
+        assert_eq!(forward.conflicts().await.len(), reversed.conflicts().await.len());
+        assert!(forward.conflicts().await.is_empty(), "two non-conflicting SetN edits raise no conflict");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_store_snapshot_merge_replays_hlc_order_and_preserves_local_policy() {
-        let mut remote = fresh_demo_store();
-        let later = mutation_envelope_at("later-peer", "later-op", DemoMutation::SetN { n: 20 }, HybridLogicalTimestamp::new(2, 300), Vec::new());
-        let earlier = mutation_envelope_at("earlier-peer", "earlier-op", DemoMutation::SetN { n: 10 }, HybridLogicalTimestamp::new(1, 100), Vec::new());
-        remote.ingest_remote(later).expect("remote receives later edit first");
-        remote.ingest_remote(earlier).expect("remote receives earlier edit second");
-        let files = remote.snapshot_pack().expect("remote snapshot");
+        let mut remote = fresh_demo_store().await;
+        let later = mutation_envelope_at("later-peer", "later-op", DemoMutation::SetN { n: 20 }, HybridLogicalTimestamp::new(2, 300).await, Vec::new());
+        let earlier = mutation_envelope_at("earlier-peer", "earlier-op", DemoMutation::SetN { n: 10 }, HybridLogicalTimestamp::new(1, 100).await, Vec::new());
+        remote.ingest_remote(later.await).await.expect("remote receives later edit first");
+        remote.ingest_remote(earlier.await).await.expect("remote receives earlier edit second");
+        let files = remote.snapshot_pack().await.expect("remote snapshot");
 
-        let mut local = fresh_demo_store();
+        let mut local = fresh_demo_store().await;
         local.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
-        local.merge_remote_snapshot(&files.pack, &files.spr).expect("empty local history adopts valid remote history");
+        local.merge_remote_snapshot(&files.pack, &files.spr).await.expect("empty local history adopts valid remote history");
 
         assert_eq!(local.0.merge_policy(), crate::os_spr::MergePolicy::Vigilant, "the receiving store's local-only policy is never serialized or overwritten");
-        assert_eq!(local.snapshot().expect("adopted snapshot"), DemoSnapshot { n: 20 });
+        assert_eq!(local.snapshot().await.expect("adopted snapshot"), DemoSnapshot { n: 20 });
         assert_eq!(local.applied_edit_ids(), &["earlier-op".to_string(), "later-op".to_string()], "adoption replays authoritative history by HLC rather than arrival order");
         assert_eq!(local.envelope().edit_messages, remote.envelope().edit_messages);
         assert_eq!(local.conflicts(), remote.conflicts());
@@ -9484,48 +9495,48 @@ mod tests {
     /// message ledger survives ingest-then-snapshot under that shared id; the genuinely divergent
     /// multi-op case is covered separately by
     /// `operations_then_snapshot_partitions_a_multi_forward_ledger_by_wire_edit`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operations_then_snapshot_keeps_the_durable_message_ledger_on_the_shared_edit_id() {
-        let mut remote = fresh_demo_store();
-        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: Some("remote source edit".into()) }).expect("remote apply");
+        let mut remote = fresh_demo_store().await;
+        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: Some("remote source edit".into()) }).await.expect("remote apply");
         let source_edit = remote.envelope().vcs.edits.last().expect("source edit").clone();
         let document_id = ArtifactId(remote.envelope().id.clone());
         let schema = SchemaId(remote.envelope().schema.clone());
-        let operation = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).expect("wire operation").pop().expect("one operation");
+        let operation = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).await.expect("wire operation").pop().expect("one operation");
         assert_eq!(source_edit.id, operation.mutation_id.0, "a single-op edit's wire id must equal its own real id");
-        let durable_message = crate::os_spr::MutationMessage::info("mutation.cascade", "remote diagnostic").at(["n"]).at_op(0);
+        let durable_message = crate::os_spr::MutationMessage::info("mutation.cascade", "remote diagnostic").await.at(["n"]).await.at_op(0);
         remote.0.envelope.edit_messages = vec![crate::os_spr::EditMessages { edit_id: source_edit.id.clone(), messages: vec![durable_message.clone()] }];
 
-        let mut local = fresh_demo_store();
-        local.ingest_remote(operation.clone()).expect("operations delivery");
+        let mut local = fresh_demo_store().await;
+        local.ingest_remote(operation.clone()).await.expect("operations delivery");
         let local_edit_id = operation.mutation_id.0.clone();
-        let files = remote.snapshot_pack().expect("snapshot delivery");
-        local.merge_remote_snapshot(&files.pack, &files.spr).expect("snapshot converges after operations");
+        let files = remote.snapshot_pack().await.expect("snapshot delivery");
+        local.merge_remote_snapshot(&files.pack, &files.spr).await.expect("snapshot converges after operations");
 
         assert_eq!(local.envelope().vcs.edits.len(), 1, "snapshot must not duplicate the wire operation");
-        assert_eq!(local.envelope().edit_messages, vec![crate::os_spr::EditMessages { edit_id: local_edit_id, messages: vec![durable_message] }]);
+        assert_eq!(local.envelope().edit_messages, vec![crate::os_spr::EditMessages { edit_id: local_edit_id, messages: vec![durable_message.await] }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operations_then_snapshot_partitions_a_multi_forward_ledger_by_wire_edit() {
-        let mut remote = fresh_demo_store();
-        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }, DemoMutation::SetN { n: 8 }], description: Some("two source operations".into()) }).expect("remote apply");
+        let mut remote = fresh_demo_store().await;
+        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }, DemoMutation::SetN { n: 8 }], description: Some("two source operations".into()) }).await.expect("remote apply");
         let source_edit = remote.envelope().vcs.edits.last().expect("source edit").clone();
         let document_id = ArtifactId(remote.envelope().id.clone());
         let schema = SchemaId(remote.envelope().schema.clone());
-        let operations = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).expect("wire operations");
+        let operations = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).await.expect("wire operations");
         assert_eq!(operations.len(), 2, "fixture source edit has two independent wire operations");
         remote.0.envelope.edit_messages = vec![crate::os_spr::EditMessages {
             edit_id: source_edit.id.clone(),
-            messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "first source diagnostic").at(["n"]).at_op(0), crate::os_spr::MutationMessage::info("mutation.cascade", "second source diagnostic").at(["n"]).at_op(1)],
+            messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "first source diagnostic").await.at(["n"]).await.at_op(0).await, crate::os_spr::MutationMessage::info("mutation.cascade", "second source diagnostic").await.at(["n"]).await.at_op(1).await],
         }];
 
-        let mut local = fresh_demo_store();
+        let mut local = fresh_demo_store().await;
         for operation in &operations {
-            local.ingest_remote(operation.clone()).expect("operations delivery");
+            local.ingest_remote(operation.clone()).await.expect("operations delivery");
         }
-        let files = remote.snapshot_pack().expect("snapshot delivery");
-        local.merge_remote_snapshot(&files.pack, &files.spr).expect("snapshot converges after operations");
+        let files = remote.snapshot_pack().await.expect("snapshot delivery");
+        local.merge_remote_snapshot(&files.pack, &files.spr).await.expect("snapshot converges after operations");
 
         assert_eq!(local.envelope().vcs.edits.len(), 2, "snapshot must not restore the multi-forward source edit beside its two wire edits");
         assert_eq!(local.envelope().edit_messages.len(), 2, "one source ledger is deterministically split into its two established wire owners");
@@ -9538,114 +9549,114 @@ mod tests {
         assert_eq!(local.envelope().edit_messages[1].messages[0].message, "second source diagnostic");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_ledger_remap_rejects_ambiguous_established_operation_ownership() {
-        let mut remote = fresh_demo_store();
-        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }, DemoMutation::SetN { n: 8 }], description: None }).expect("remote apply");
+        let mut remote = fresh_demo_store().await;
+        remote.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }, DemoMutation::SetN { n: 8 }], description: None }).await.expect("remote apply");
         let source_edit = remote.envelope().vcs.edits.last().expect("source edit").clone();
         let document_id = ArtifactId(remote.envelope().id.clone());
         let schema = SchemaId(remote.envelope().schema.clone());
-        let operations = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).expect("wire operations");
+        let operations = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&source_edit, &document_id, &schema).await.expect("wire operations");
 
-        let mut local = fresh_demo_store();
+        let mut local = fresh_demo_store().await;
         for operation in operations {
-            local.ingest_remote(operation).expect("operations delivery");
+            local.ingest_remote(operation).await.expect("operations delivery");
         }
         let mut duplicate = local.envelope().vcs.edits.first().expect("first wire edit").clone();
         duplicate.id = "ambiguous-wire-owner".into();
         local.0.envelope.vcs.edits.push(duplicate);
 
-        assert!(matches!(local.snapshot_ledger_targets(&source_edit), Err(VcsError::ValidationFailed(message)) if message.contains("ambiguous established edit ownership")));
+        assert!(matches!(local.snapshot_ledger_targets(&source_edit).await, Err(VcsError::ValidationFailed(message)) if message.contains("ambiguous established edit ownership")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_store_snapshot_merge_rejects_document_or_schema_mismatch_without_mutation() {
         for (schema, document_id) in [("demo/v1", "foreign"), ("foreign/v1", "demo")] {
-            let remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(schema, document_id, DemoSnapshot { n: 0 }, None));
-            let files = remote.snapshot_pack().expect("foreign snapshot");
-            let mut target = fresh_demo_store();
+            let remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(schema, document_id, DemoSnapshot { n: 0 }, None).await).await;
+            let files = remote.snapshot_pack().await.expect("foreign snapshot");
+            let mut target = fresh_demo_store().await;
             let before = target.envelope().clone();
             let generation = target.generation();
-            assert!(matches!(target.merge_remote_snapshot(&files.pack, &files.spr), Err(VcsError::ValidationFailed(_))));
+            assert!(matches!(target.merge_remote_snapshot(&files.pack, &files.spr).await, Err(VcsError::ValidationFailed(_))));
             assert_eq!(target.envelope(), &before);
             assert_eq!(target.generation(), generation);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quarantine_accept_equals_laissez_faire_result() {
-        let mut quarantined = fresh_demo_store();
+        let mut quarantined = fresh_demo_store().await;
         quarantined.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        quarantined.ingest_remote(delete.clone()).expect("delete applies cleanly");
-        let reject_report = quarantined.ingest_remote(modify.clone()).expect("reject is a report");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        quarantined.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
+        let reject_report = quarantined.ingest_remote(modify.clone()).await.expect("reject is a report");
         assert!(!reject_report.accepted);
         let conflict_id = reject_report.conflict.expect("conflict raised");
-        quarantined.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).expect("accept");
+        quarantined.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).await.expect("accept");
 
-        let mut laissez_faire = fresh_demo_store();
+        let mut laissez_faire = fresh_demo_store().await;
         laissez_faire.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        laissez_faire.ingest_remote(delete).expect("delete applies cleanly");
-        laissez_faire.ingest_remote(modify).expect("modify applies under LaissezFaire");
+        laissez_faire.ingest_remote(delete).await.expect("delete applies cleanly");
+        laissez_faire.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
-        assert_eq!(quarantined.snapshot().expect("snapshot"), laissez_faire.snapshot().expect("snapshot"));
+        assert_eq!(quarantined.snapshot().await.expect("snapshot"), laissez_faire.snapshot().await.expect("snapshot"));
         assert_eq!(quarantined.applied_edit_ids(), laissez_faire.applied_edit_ids());
-        assert_eq!(quarantined.conflicts().iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Open).count(), 0, "no Open conflict remains — accept must not raise a second conflict");
-        assert_eq!(quarantined.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("original conflict kept").status, crate::os_spr::ConflictStatus::Accepted);
+        assert_eq!(quarantined.conflicts().await.iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Open).count(), 0, "no Open conflict remains — accept must not raise a second conflict");
+        assert_eq!(quarantined.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("original conflict kept").status, crate::os_spr::ConflictStatus::Accepted);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quarantine_discard_preserves_state() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("delete applies cleanly");
-        let pre_discard = store.snapshot().expect("pre-discard snapshot");
-        let pre_discard_ids = store.applied_edit_ids().to_vec();
-        let reject_report = store.ingest_remote(modify).expect("reject is a report");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("delete applies cleanly");
+        let pre_discard = store.snapshot().await.expect("pre-discard snapshot");
+        let pre_discard_ids = store.applied_edit_ids().await.to_vec();
+        let reject_report = store.ingest_remote(modify).await.expect("reject is a report");
         let conflict_id = reject_report.conflict.expect("conflict raised");
-        store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).expect("discard");
-        assert_eq!(store.snapshot().expect("snapshot"), pre_discard, "a discarded batch must never be applied");
+        store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).await.expect("discard");
+        assert_eq!(store.snapshot().await.expect("snapshot"), pre_discard, "a discarded batch must never be applied");
         assert_eq!(store.applied_edit_ids(), pre_discard_ids.as_slice());
-        assert_eq!(store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict kept").status, crate::os_spr::ConflictStatus::Discarded);
+        assert_eq!(store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("conflict kept").status, crate::os_spr::ConflictStatus::Discarded);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ledger_matches_a_fresh_replay_of_the_same_envelopes() {
-        let (delete, modify) = modify_vs_delete_envelopes();
+        let (delete, modify) = modify_vs_delete_envelopes().await;
         let modify_edit_id = modify.mutation_id.0.clone();
 
-        let mut first = fresh_demo_store();
+        let mut first = fresh_demo_store().await;
         first.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        first.ingest_remote(delete.clone()).expect("delete applies cleanly");
-        first.ingest_remote(modify.clone()).expect("modify applies under LaissezFaire");
+        first.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
+        first.ingest_remote(modify.clone()).await.expect("modify applies under LaissezFaire");
 
-        let mut replay = fresh_demo_store();
+        let mut replay = fresh_demo_store().await;
         replay.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        replay.ingest_remote(delete).expect("delete applies cleanly");
-        replay.ingest_remote(modify).expect("modify applies under LaissezFaire");
+        replay.ingest_remote(delete).await.expect("delete applies cleanly");
+        replay.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
         assert_eq!(first.messages_for_edit(&modify_edit_id), replay.messages_for_edit(&modify_edit_id));
-        assert!(!first.messages_for_edit(&modify_edit_id).is_empty(), "the modify edit must have raised a message");
-        assert_eq!(first.snapshot().expect("snapshot"), replay.snapshot().expect("snapshot"));
+        assert!(!first.messages_for_edit(&modify_edit_id).await.is_empty(), "the modify edit must have raised a message");
+        assert_eq!(first.snapshot().await.expect("snapshot"), replay.snapshot().await.expect("snapshot"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         // Local edits get large physical-ms HLCs (the local clock ticks off the real wall clock).
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply 1");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("local apply 2");
-        let local_ids = store.applied_edit_ids().to_vec();
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("local apply 1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("local apply 2");
+        let local_ids = store.applied_edit_ids().await.to_vec();
 
         // A remote edit stamped with a tiny HLC — guaranteed to sort before both local edits.
-        let backdated = mutation_envelope_at("backdated-actor", "op-backdated", DemoMutation::SetN { n: 99 }, HybridLogicalTimestamp::new(9, 1), Vec::new());
-        store.ingest_remote(backdated).expect("backdated insert");
+        let backdated = mutation_envelope_at("backdated-actor", "op-backdated", DemoMutation::SetN { n: 99 }, HybridLogicalTimestamp::new(9, 1).await, Vec::new());
+        store.ingest_remote(backdated.await).await.expect("backdated insert");
 
         assert_eq!(store.applied_edit_ids()[0], "op-backdated", "the backdated edit must sort before both local edits");
         assert_eq!(&store.applied_edit_ids()[1..], local_ids.as_slice());
 
-        let hlcs: Vec<HybridLogicalTimestamp> = store.applied_edit_ids().iter().map(|id| store.envelope().vcs.edits.iter().find(|edit| edit.id == *id).and_then(|edit| edit.mutation_meta.first()).map(|meta| meta.timestamp).expect("meta")).collect();
+        let hlcs: Vec<HybridLogicalTimestamp> = store.applied_edit_ids().await.iter().map(|id| store.envelope().vcs.edits.iter().find(|edit| edit.id == *id).and_then(|edit| edit.mutation_meta.first()).map(|meta| meta.timestamp).expect("meta")).collect();
         assert!(hlcs.windows(2).all(|pair| pair[0].cmp_key() <= pair[1].cmp_key()), "applied_edit_ids must stay HLC-sorted: {hlcs:?}");
     }
 
@@ -9656,133 +9667,133 @@ mod tests {
     // laws are proven to hold against this store's real `ingest_remote`/`resolve_conflict`/
     // `messages_for_edit`/`.spr` codec, not only against testkit's own synthetic self-tests.
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_modify_vs_delete_holds_under_normal_and_vigilant() {
         for policy in [crate::os_spr::MergePolicy::Normal, crate::os_spr::MergePolicy::Vigilant] {
-            let mut store = fresh_demo_store();
+            let mut store = fresh_demo_store().await;
             store.set_merge_policy(policy);
-            let (delete, modify) = modify_vs_delete_envelopes();
-            store.ingest_remote(delete).expect("delete applies cleanly");
-            let pre_merge = store.snapshot().expect("pre-merge snapshot");
-            let report = store.ingest_remote(modify).expect("a policy rejection is a MergeReport, not an Err");
-            let post_merge = store.snapshot().expect("post-merge snapshot");
-            crate::os_spr::testkit::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n != i32::MIN);
+            let (delete, modify) = modify_vs_delete_envelopes().await;
+            store.ingest_remote(delete).await.expect("delete applies cleanly");
+            let pre_merge = store.snapshot().await.expect("pre-merge snapshot");
+            let report = store.ingest_remote(modify).await.expect("a policy rejection is a MergeReport, not an Err");
+            let post_merge = store.snapshot().await.expect("post-merge snapshot");
+            crate::os_spr::testkit::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts().await, |snapshot: &DemoSnapshot| snapshot.n != i32::MIN);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_modify_vs_delete_holds_under_laissez_faire() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("delete applies cleanly");
-        let pre_merge = store.snapshot().expect("pre-merge snapshot");
-        let report = store.ingest_remote(modify).expect("LaissezFaire only rejects Fatal");
-        let post_merge = store.snapshot().expect("post-merge snapshot");
-        crate::os_spr::testkit::assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n != i32::MIN);
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("delete applies cleanly");
+        let pre_merge = store.snapshot().await.expect("pre-merge snapshot");
+        let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
+        let post_merge = store.snapshot().await.expect("post-merge snapshot");
+        crate::os_spr::testkit::assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts().await, |snapshot: &DemoSnapshot| snapshot.n != i32::MIN);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_chronological_determinism_holds_for_a_real_modify_vs_delete_batch() {
-        let (delete, modify) = modify_vs_delete_envelopes();
+        let (delete, modify) = modify_vs_delete_envelopes().await;
         let envelopes = [delete, modify];
-        crate::os_spr::testkit::assert_chronological_determinism(envelopes.len(), 7, 6, |order| {
-            let mut store = fresh_demo_store();
+        crate::os_spr::testkit::assert_chronological_determinism(envelopes.len(), 7, 6, async |order| {
+            let mut store = fresh_demo_store().await;
             for &index in order {
-                store.ingest_remote(envelopes[index].clone()).expect("real store ingest must not hard-error even when the batch ends up quarantined");
+                store.ingest_remote(envelopes[index].clone()).await.expect("real store ingest must not hard-error even when the batch ends up quarantined");
             }
-            let snapshot = store.snapshot().expect("snapshot");
-            let applied = store.applied_edit_ids().to_vec();
-            let conflict_ids: Vec<crate::os_spr::ConflictId> = store.conflicts().iter().map(|conflict| conflict.id.clone()).collect();
+            let snapshot = store.snapshot().await.expect("snapshot");
+            let applied = store.applied_edit_ids().await.to_vec();
+            let conflict_ids: Vec<crate::os_spr::ConflictId> = store.conflicts().await.iter().map(|conflict| conflict.id.clone()).collect();
             (snapshot, applied, conflict_ids)
         });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_quarantine_accept_equals_laissez_faire_via_real_store() {
-        let mut quarantined = fresh_demo_store();
+        let mut quarantined = fresh_demo_store().await;
         quarantined.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        quarantined.ingest_remote(delete.clone()).expect("delete applies cleanly");
-        let reject_report = quarantined.ingest_remote(modify.clone()).expect("reject is a report");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        quarantined.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
+        let reject_report = quarantined.ingest_remote(modify.clone()).await.expect("reject is a report");
         let conflict_id = reject_report.conflict.expect("conflict raised");
-        quarantined.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).expect("accept");
+        quarantined.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).await.expect("accept");
 
-        let mut laissez_faire = fresh_demo_store();
+        let mut laissez_faire = fresh_demo_store().await;
         laissez_faire.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        laissez_faire.ingest_remote(delete).expect("delete applies cleanly");
-        laissez_faire.ingest_remote(modify).expect("modify applies under LaissezFaire");
+        laissez_faire.ingest_remote(delete).await.expect("delete applies cleanly");
+        laissez_faire.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
-        let accepted_state = quarantined.snapshot().expect("accepted snapshot");
-        let laissez_faire_state = laissez_faire.snapshot().expect("laissez-faire snapshot");
+        let accepted_state = quarantined.snapshot().await.expect("accepted snapshot");
+        let laissez_faire_state = laissez_faire.snapshot().await.expect("laissez-faire snapshot");
         crate::os_spr::testkit::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_quarantine_discard_preserves_state_via_real_store() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("delete applies cleanly");
-        let pre_discard = store.snapshot().expect("pre-discard snapshot");
-        let reject_report = store.ingest_remote(modify.clone()).expect("reject is a report");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("delete applies cleanly");
+        let pre_discard = store.snapshot().await.expect("pre-discard snapshot");
+        let reject_report = store.ingest_remote(modify.clone()).await.expect("reject is a report");
         let conflict_id = reject_report.conflict.expect("conflict raised");
-        store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).expect("discard");
-        let post_discard = store.snapshot().expect("post-discard snapshot");
+        store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Discard).await.expect("discard");
+        let post_discard = store.snapshot().await.expect("post-discard snapshot");
         // `relayed`: every edit id this store's persisted history (`applied_edit_ids`) could ever
         // ship onward via `flush_outbound`/`snapshot_pack` — a discarded batch is only `seed_
         // applied` on the dag, never added to `applied_edit_ids`/`vcs.edits`, so it can never appear
         // here; this is the real set flush_outbound draws from, not a fabricated stand-in.
-        let relayed = store.applied_edit_ids().to_vec();
+        let relayed = store.applied_edit_ids().await.to_vec();
         crate::os_spr::testkit::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, &[modify.mutation_id.0.clone()], &relayed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_ledger_matches_replay_via_real_store() {
-        let (delete, modify) = modify_vs_delete_envelopes();
+        let (delete, modify) = modify_vs_delete_envelopes().await;
         let modify_edit_id = modify.mutation_id.0.clone();
 
-        let mut first = fresh_demo_store();
+        let mut first = fresh_demo_store().await;
         first.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        first.ingest_remote(delete.clone()).expect("delete applies cleanly");
-        first.ingest_remote(modify.clone()).expect("modify applies under LaissezFaire");
+        first.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
+        first.ingest_remote(modify.clone()).await.expect("modify applies under LaissezFaire");
 
-        let mut replay = fresh_demo_store();
+        let mut replay = fresh_demo_store().await;
         replay.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        replay.ingest_remote(delete).expect("delete applies cleanly");
-        replay.ingest_remote(modify).expect("modify applies under LaissezFaire");
+        replay.ingest_remote(delete).await.expect("delete applies cleanly");
+        replay.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
         let mut ledger = HashMap::new();
-        ledger.insert(modify_edit_id.clone(), first.messages_for_edit(&modify_edit_id).to_vec());
+        ledger.insert(modify_edit_id.clone(), first.messages_for_edit(&modify_edit_id).await.to_vec());
         let mut replayed = HashMap::new();
-        replayed.insert(modify_edit_id.clone(), replay.messages_for_edit(&modify_edit_id).to_vec());
+        replayed.insert(modify_edit_id.clone(), replay.messages_for_edit(&modify_edit_id).await.to_vec());
         assert!(!ledger[&modify_edit_id].is_empty(), "the modify edit must have raised a message for this law to be meaningful");
 
         crate::os_spr::testkit::assert_ledger_matches_replay(&ledger, &replayed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_law_conflict_spr_round_trip_via_real_store() {
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("delete applies cleanly");
-        let report = store.ingest_remote(modify).expect("reject is a report");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("delete applies cleanly");
+        let report = store.ingest_remote(modify).await.expect("reject is a report");
         let conflict_id = report.conflict.expect("conflict raised");
-        let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded").clone();
+        let conflict = store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded").clone();
 
         let pack_bytes = DemoSnapshot { n: 0 }.encode_pack();
         let base_envelope = store.envelope().clone();
-        let encode = |conflict: &crate::os_spr::Conflict| -> Vec<u8> {
+        let encode = async |conflict: &crate::os_spr::Conflict| -> Vec<u8> {
             let mut envelope = base_envelope.clone();
             envelope.conflicts = vec![conflict.clone()];
-            print_document_spr(&envelope).expect("encode conflict via the real .spr codec")
+            print_document_spr(&envelope).await.expect("encode conflict via the real .spr codec")
         };
-        let decode = |bytes: &[u8]| -> crate::os_spr::Conflict {
-            let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes).expect("decode conflict via the real .spr codec");
+        let decode = async |bytes: &[u8]| -> crate::os_spr::Conflict {
+            let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes).await.expect("decode conflict via the real .spr codec");
             parsed.envelope.conflicts.into_iter().next().expect("one conflict round-tripped")
         };
-        crate::os_spr::testkit::assert_conflict_spr_round_trip(&conflict, encode, decode);
+        crate::os_spr::testkit::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
     }
     //#endregion 🔖️TestkitLawWiring
     //#endregion 🔖️MergePolicyTests
@@ -9792,35 +9803,35 @@ mod tests {
     // robustness audit findings HIGH-1, HIGH-2, MEDIUM-3, MEDIUM-4 (`📓️j1-robustness-fixes.md`).
     // Every test here FAILS without its corresponding fix.
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it() {
         // HIGH-1: an id named in `order[k..]` but absent from `edits` means `applied_edit_ids`/
         // `vcs.edits` fell out of sync (crash/recovery, a partially-applied ingest) — a bare
         // `continue` here used to silently compute a WRONG snapshot instead of failing loudly.
         let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
         let order = vec!["ghost-edit".to_string()];
-        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(&DemoSnapshot { n: 0 }, &order, 0, &edits, crate::os_spr::MergePolicy::Normal).expect_err("a ghost edit id must be a loud, typed VcsError");
+        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(&DemoSnapshot { n: 0 }, &order, 0, &edits, crate::os_spr::MergePolicy::Normal).await.expect_err("a ghost edit id must be a loud, typed VcsError");
         assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replay_suffix_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it() {
         // HIGH-1, sibling function — `replay_suffix` is `merge_remote_snapshot`'s own replay
         // primitive and shares the exact same bare-`continue` defect before this fix.
         let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
         let order = vec!["ghost-edit".to_string()];
-        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix(&DemoSnapshot { n: 0 }, &order, 0, &edits).expect_err("a ghost edit id must be a loud, typed VcsError");
+        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix(&DemoSnapshot { n: 0 }, &order, 0, &edits).await.expect_err("a ghost edit id must be a loud, typed VcsError");
         assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edits_for_ids_errors_loudly_on_a_ghost_edit_id_instead_of_silently_filtering_it() {
         // HIGH-2: minting a `ConflictId` from a `filter_map` that silently drops missing ids can
         // (if every id is missing) hash an EMPTY mutation-id set into a content-addressed conflict
         // id — a content address that addresses no content, so unrelated conflicts can collide on
         // it. `edits_for_ids` is the strict replacement both `ingest_remote` mint sites now use.
         let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
-        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::edits_for_ids(&["ghost-edit".to_string()], &edits).expect_err("an id that resolves to nothing must fail loudly, never vanish from the mutation-id set");
+        let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::edits_for_ids(&["ghost-edit".to_string()], &edits).await.expect_err("an id that resolves to nothing must fail loudly, never vanish from the mutation-id set");
         assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
     }
 
@@ -9833,9 +9844,9 @@ mod tests {
         let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![format!("synthetic-edit-{seed}")] };
         let artifact = ArtifactId("demo".into());
         let mutation_ids = vec![MutationId(format!("synthetic-op-{seed}"))];
-        let timestamp = HybridLogicalTimestamp::new(seed, seed);
+        let timestamp = HybridLogicalTimestamp::new(seed, seed).await;
         crate::os_spr::Conflict {
-            id: crate::os_spr::ConflictId::new(&kind, &artifact, &mutation_ids, &timestamp),
+            id: crate::os_spr::ConflictId::new(&kind, &artifact, &mutation_ids, &timestamp).await,
             kind,
             status: crate::os_spr::ConflictStatus::Open,
             messages: Vec::new(),
@@ -9844,41 +9855,41 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capacity() {
         // MEDIUM-3: a peer that keeps sending a batch this replica keeps quarantining can grow
         // `envelope.conflicts` without bound (the dag never advances on quarantine, so the SAME
         // envelope is eligible for redelivery forever). Hitting the open-conflict cap must be a
         // loud, typed refusal — atomic, nothing applied — never a silent drop or overwrite.
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
-        let (delete, modify) = modify_vs_delete_envelopes();
-        store.ingest_remote(delete).expect("the delete alone raises no message and always applies");
+        let (delete, modify) = modify_vs_delete_envelopes().await;
+        store.ingest_remote(delete).await.expect("the delete alone raises no message and always applies");
 
         let cap = super::ArtifactStore::<DemoSnapshot, DemoMutation>::OPEN_CONFLICT_CAP;
         for seed in 0..cap as u64 {
-            store.0.envelope.conflicts.push(synthetic_open_conflict(seed));
+            store.0.envelope.conflicts.push(synthetic_open_conflict(seed).await);
         }
         assert_eq!(store.open_conflicts().count(), cap, "fixture must actually be at capacity for this test to be meaningful");
 
         let before = store.envelope().clone();
-        let before_snapshot = store.snapshot().expect("pre-attempt snapshot");
-        let before_ids = store.applied_edit_ids().to_vec();
+        let before_snapshot = store.snapshot().await.expect("pre-attempt snapshot");
+        let before_ids = store.applied_edit_ids().await.to_vec();
 
-        let error = store.ingest_remote(modify).expect_err("minting one more Open conflict past the cap must be a loud, typed refusal");
+        let error = store.ingest_remote(modify).await.expect_err("minting one more Open conflict past the cap must be a loud, typed refusal");
         assert!(matches!(&error, VcsError::ValidationFailed(message) if message.contains("capacity")), "got {error:?}");
         assert_eq!(store.envelope(), &before, "a refused mint must be fully atomic — nothing about the attempted batch applied");
-        assert_eq!(store.snapshot().expect("snapshot"), before_snapshot);
+        assert_eq!(store.snapshot().await.expect("snapshot"), before_snapshot);
         assert_eq!(store.applied_edit_ids(), before_ids.as_slice());
         assert_eq!(store.open_conflicts().count(), cap, "the backlog must stay exactly at capacity, never silently grow past it");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_cap_while_open_ones_survive() {
         // MEDIUM-3: resolved (`Accepted`/`Discarded`) conflicts are closed historical facts, so
         // unlike `Open` ones they are prunable — oldest push order evicted first, capped, while an
         // `Open` conflict is never touched no matter how far over cap the resolved backlog grows.
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         let cap = super::ArtifactStore::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
         let open = synthetic_open_conflict(u64::MAX);
         store.0.envelope.conflicts.push(open.clone());
@@ -9886,16 +9897,16 @@ mod tests {
         let resolved_count = cap as u64 + overflow;
         for seed in 0..resolved_count {
             let mut resolved = synthetic_open_conflict(seed);
-            resolved.status = crate::os_spr::ConflictStatus::Accepted;
-            store.0.envelope.conflicts.push(resolved);
+            resolved.await.status = crate::os_spr::ConflictStatus::Accepted;
+            store.0.envelope.conflicts.push(resolved.await);
         }
-        assert_eq!(store.conflicts().len(), resolved_count as usize + 1);
+        assert_eq!(store.conflicts().await.len(), resolved_count as usize + 1);
 
         store.0.prune_resolved_conflicts();
 
-        assert_eq!(store.conflicts().len(), cap, "pruning must bring the ledger back down to the cap");
-        assert!(store.conflicts().iter().any(|conflict| conflict.id == open.id && conflict.status == crate::os_spr::ConflictStatus::Open), "the Open conflict must never be evicted, no matter how far over cap the resolved backlog grows");
-        let surviving_seeds: HashSet<u64> = store.conflicts().iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
+        assert_eq!(store.conflicts().await.len(), cap, "pruning must bring the ledger back down to the cap");
+        assert!(store.conflicts().await.iter().any(|conflict| conflict.id == open.id && conflict.status == crate::os_spr::ConflictStatus::Open), "the Open conflict must never be evicted, no matter how far over cap the resolved backlog grows");
+        let surviving_seeds: HashSet<u64> = store.conflicts().await.iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
         assert_eq!(surviving_seeds.len(), cap - 1);
         for evicted_seed in 0..=overflow {
             assert!(!surviving_seeds.contains(&evicted_seed), "seed {evicted_seed} was among the oldest resolved conflicts and must be pruned first");
@@ -9903,92 +9914,92 @@ mod tests {
         assert!(surviving_seeds.contains(&(resolved_count - 1)), "the newest resolved conflict must survive pruning");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_batch() {
         // MEDIUM-4: one `ingest_remote` batch that quarantines BOTH a brand-new edit (`op-c`, never
         // committed before) AND a previously-committed edit a rewind now retroactively invalidates
         // (`op-a`, which carried a REAL non-empty `mutation.cascade` message from its first commit)
         // — proving `replace_edit_messages(.., empty)` clears the stale ledger entry correctly even
         // when it runs in the same pass as a never-populated one, regardless of which kind an id is.
-        let mut store = fresh_demo_store();
+        let mut store = fresh_demo_store().await;
         store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
 
-        let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::BumpN { delta: 5 }, HybridLogicalTimestamp::new(1, 100), Vec::new());
-        store.ingest_remote(a).expect("op-a commits cleanly the first time, on a fresh n=0 target");
-        assert!(!store.messages_for_edit("op-a").is_empty(), "fixture must carry real prior ledger content for this test to be meaningful");
-        assert_eq!(store.snapshot().expect("snapshot"), DemoSnapshot { n: 5 });
+        let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::BumpN { delta: 5 }, HybridLogicalTimestamp::new(1, 100).await, Vec::new());
+        store.ingest_remote(a.await).await.expect("op-a commits cleanly the first time, on a fresh n=0 target");
+        assert!(!store.messages_for_edit("op-a").await.is_empty(), "fixture must carry real prior ledger content for this test to be meaningful");
+        assert_eq!(store.snapshot().await.expect("snapshot"), DemoSnapshot { n: 5 });
 
         // `op-b` (earlier HLC than `op-a`) forces a rewind that replays `op-a` against a DELETED
         // target the second time around. `op-c` (later HLC, brand new) is submitted FIRST but
         // depends on `op-b`, so it buffers in the dag and is released alongside `op-b` in the SAME
         // `ingest_remote` call/batch — the mixed-kind scenario MEDIUM-4 asks for.
-        let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::DeleteN, HybridLogicalTimestamp::new(1, 50), Vec::new());
-        let c = mutation_envelope_at("actor-c", "op-c", DemoMutation::BumpN { delta: 1 }, HybridLogicalTimestamp::new(2, 150), vec![MutationId("op-b".into())]);
-        store.ingest_remote(c).expect("op-c buffers behind its unmet dependency on op-b");
-        let report = store.ingest_remote(b).expect("op-b's arrival releases op-b and op-c into the same batch");
+        let b = mutation_envelope_at("actor-b", "op-b", DemoMutation::DeleteN, HybridLogicalTimestamp::new(1, 50).await, Vec::new());
+        let c = mutation_envelope_at("actor-c", "op-c", DemoMutation::BumpN { delta: 1 }, HybridLogicalTimestamp::new(2, 150).await, vec![MutationId("op-b".into())]);
+        store.ingest_remote(c.await).await.expect("op-c buffers behind its unmet dependency on op-b");
+        let report = store.ingest_remote(b.await).await.expect("op-b's arrival releases op-b and op-c into the same batch");
 
         assert!(!report.accepted, "op-c never committed");
         assert_eq!(store.applied_edit_ids(), &["op-b".to_string()], "only op-b committed — op-a dropped out on retroactive invalidation, op-c never entered");
-        assert_eq!(store.snapshot().expect("snapshot"), DemoSnapshot { n: i32::MIN });
+        assert_eq!(store.snapshot().await.expect("snapshot"), DemoSnapshot { n: i32::MIN });
 
-        assert!(store.messages_for_edit("op-a").is_empty(), "op-a's stale non-empty ledger entry must be cleared, not left stale, once it is retroactively quarantined");
-        assert!(store.messages_for_edit("op-c").is_empty(), "op-c never committed, so it must never gain a ledger entry");
+        assert!(store.messages_for_edit("op-a").await.is_empty(), "op-a's stale non-empty ledger entry must be cleared, not left stale, once it is retroactively quarantined");
+        assert!(store.messages_for_edit("op-c").await.is_empty(), "op-c never committed, so it must never gain a ledger entry");
         assert!(store.envelope().edit_messages.iter().all(|entry| entry.edit_id != "op-a"), "a cleared entry must be fully removed from the durable ledger, not left behind as an empty Vec");
         assert!(store.envelope().edit_messages.iter().all(|entry| entry.edit_id != "op-c"), "op-c must never appear in the durable ledger at all");
 
         let conflict_id = report.conflict.expect("the mixed quarantine batch must raise one conflict");
-        let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
+        let conflict = store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
         assert_eq!(conflict.status, crate::os_spr::ConflictStatus::Open);
         match &conflict.kind {
             crate::os_spr::ConflictKind::Quarantined { envelopes } => assert_eq!(envelopes.len(), 2, "both op-a (retroactive) and op-c (new) must be quarantined TOGETHER in one conflict"),
             other => panic!("expected a Quarantined conflict, got {other:?}"),
         }
-        assert_eq!(store.conflicts().len(), 1, "op-a's clean first commit never raised a conflict of its own — only this one mixed-batch conflict must exist");
+        assert_eq!(store.conflicts().await.len(), 1, "op-a's clean first commit never raised a conflict of its own — only this one mixed-batch conflict must exist");
     }
     //#endregion 🔖️RobustnessTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("checkpoint");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
         let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
         let before = store.envelope().clone();
-        let invalid = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+        let invalid = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect().await }, checkpoint_id: "child-checkpoint".into() };
 
-        assert!(store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![invalid]).is_err());
+        assert!(store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![invalid]).await.is_err());
         assert_eq!(store.envelope(), &before);
 
-        let pin = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
-        store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![pin]).expect("valid pin update");
+        let pin = crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect().await }, checkpoint_id: "child-checkpoint".into() };
+        store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![pin]).await.expect("valid pin update");
         let rederived = &store.envelope().vcs.checkpoints[0];
         assert_ne!(rederived.id, original_checkpoint_id);
         assert_eq!(rederived.composition_pins.len(), 1);
-        assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(store.envelope().clone()).is_ok(), "a persisted pinned checkpoint must validate its rederived identity");
+        assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(store.envelope().clone()).await.is_ok(), "a persisted pinned checkpoint must validate its rederived identity");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn materialize_replays_forward_mutations() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
         assert_eq!(store.envelope().vcs.edits.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
-        assert_eq!(store.snapshot().expect("snapshot").n, 0);
-        store.dispatch(ArtifactCommand::Redo).expect("redo");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 0);
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
     }
 
     //#region 🔖️HistoryLaneTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_lane_defaults_to_document() {
         assert_eq!(HistoryLane::default(), HistoryLane::Document);
     }
@@ -9996,17 +10007,17 @@ mod tests {
     /// @emoji 🛤️ The design's headline acceptance case: undoing after an interleaved run of
     /// document/interaction edits reverts the last DOCUMENT edit, skipping past trailing (and even
     /// mid-history) `Interaction`-lane entries in both directions, which stay applied throughout.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc1");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply doc1");
         let doc1_id = store.applied_edit_ids()[0].clone();
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 100 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction1");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 100 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction1");
         let interaction1_id = store.applied_edit_ids()[1].clone();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply doc2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply doc2");
         let doc2_id = store.applied_edit_ids()[2].clone();
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 200 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction2");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 200 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction2");
         let interaction2_id = store.applied_edit_ids()[3].clone();
 
         assert_eq!(store.envelope().lanes.get(&interaction1_id), Some(&HistoryLane::Interaction));
@@ -10015,97 +10026,97 @@ mod tests {
         assert!(store.envelope().lanes.get(&doc2_id).is_none());
 
         // Default undo skips the TRAILING interaction2 edit to revert doc2 instead.
-        store.dispatch(ArtifactCommand::Undo).expect("undo skips interaction2 to revert doc2");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo skips interaction2 to revert doc2");
         assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()], "doc2 removed; both interaction edits remain applied");
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
 
         // A second default undo reverts doc1 — the only remaining Document-lane entry — even though
         // it now sits BEFORE two still-applied interaction edits in `applied_edit_ids`.
-        store.dispatch(ArtifactCommand::Undo).expect("undo doc1 despite interaction edits between it and the tail");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo doc1 despite interaction edits between it and the tail");
         assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone()]);
         assert_eq!(store.redo_edit_ids(), &[doc2_id.clone(), doc1_id.clone()]);
 
         // Default redo mirrors it: restores doc1 first (nearest Document entry in the redo stack),
         // then doc2, never touching either interaction edit's own applied/redo membership.
-        store.dispatch(ArtifactCommand::Redo).expect("redo doc1");
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo doc1");
         assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone(), doc1_id.clone()]);
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
-        store.dispatch(ArtifactCommand::Redo).expect("redo doc2");
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo doc2");
         assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone(), doc1_id.clone(), doc2_id.clone()]);
-        assert!(store.redo_edit_ids().is_empty());
+        assert!(store.redo_edit_ids().await.is_empty());
     }
 
     /// @emoji 🛤️ The completing half of the mechanism: `UndoInLane`/`RedoInLane` walk a NON-`Document`
     /// lane explicitly and independently of the document lane's own cursor position.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc");
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 99 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply doc");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 99 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction");
         let doc_id = store.applied_edit_ids()[0].clone();
         let interaction_id = store.applied_edit_ids()[1].clone();
 
         // Explicit lane-scoped undo reverts ONLY the interaction edit, leaving the document edit
         // applied — the mirror image of default `Undo` skipping it.
-        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).expect("undo in interaction lane");
+        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
         assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&doc_id));
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&interaction_id));
-        assert_eq!(store.snapshot().expect("snapshot").n, 1, "reverting the interaction edit restores the document edit's own value");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1, "reverting the interaction edit restores the document edit's own value");
 
         // Redoing the Document lane from here has nothing to redo — only the Interaction lane's
         // cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
-        assert_eq!(store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).unwrap_err(), VcsError::NothingToRedo);
+        assert_eq!(store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).await.unwrap_err(), VcsError::NothingToRedo);
 
-        store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).expect("redo in interaction lane");
+        store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).await.expect("redo in interaction lane");
         assert_eq!(store.applied_edit_ids(), &[doc_id.clone(), interaction_id.clone()]);
-        assert!(store.redo_edit_ids().is_empty());
+        assert!(store.redo_edit_ids().await.is_empty());
     }
 
     /// @emoji 🛤️ Acceptance: a history made ENTIRELY of `Interaction`-lane edits is a no-op for
     /// default `Undo` (no `Document`-lane entry exists at all), while the lane-scoped API still
     /// reaches them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction1");
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction2");
-        assert_eq!(store.applied_edit_ids().len(), 2);
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction1");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction2");
+        assert_eq!(store.applied_edit_ids().await.len(), 2);
 
-        let error = store.dispatch(ArtifactCommand::Undo).unwrap_err();
+        let error = store.dispatch(ArtifactCommand::Undo).await.unwrap_err();
         assert_eq!(error, VcsError::NothingToUndo, "no Document-lane entry exists to undo; both interaction edits must stay untouched");
-        assert_eq!(store.applied_edit_ids().len(), 2, "default undo must not remove either interaction edit");
+        assert_eq!(store.applied_edit_ids().await.len(), 2, "default undo must not remove either interaction edit");
 
         // The explicit lane-scoped API can still walk them.
-        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).expect("undo in interaction lane");
-        assert_eq!(store.applied_edit_ids().len(), 1);
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
+        assert_eq!(store.applied_edit_ids().await.len(), 1);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
     }
 
     /// @emoji 🛤️ `Interaction`-lane entries are ordinary persisted `Edit`s — they survive a plain
     /// JSON envelope round trip (`ArtifactStore::envelope_json`, the in-scope persistence path for
     /// this store-level mechanism; `.pack`+`.spr` reload is a follow-up, see `parse_document_spr`'s
     /// `lanes` field-construction comment), and a reloaded store's default undo still skips them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_lane_interaction_entries_survive_envelope_json_round_trip() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply doc");
         let doc_id = store.applied_edit_ids()[0].clone();
-        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 42 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 42 }], description: None, lane: HistoryLane::Interaction }).await.expect("apply interaction");
         let interaction_id = store.applied_edit_ids()[1].clone();
         assert_eq!(store.envelope().lanes.get(&interaction_id), Some(&HistoryLane::Interaction));
 
-        let json = store.envelope_json().expect("envelope json");
+        let json = store.envelope_json().await.expect("envelope json");
         let reloaded_envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_str(&json).expect("parse envelope json");
         assert_eq!(reloaded_envelope.lanes.get(&interaction_id), Some(&HistoryLane::Interaction), "lane tag must survive a plain JSON envelope round trip");
 
-        let mut reloaded = ArtifactStore::new(reloaded_envelope);
+        let mut reloaded = ArtifactStore::new(reloaded_envelope).await;
         assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "reload seeds applied_edit_ids from the persisted cursor, same as any other edit");
-        reloaded.dispatch(ArtifactCommand::Undo).expect("undo on the reloaded store still skips the interaction edit");
+        reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo on the reloaded store still skips the interaction edit");
         assert_eq!(reloaded.applied_edit_ids(), std::slice::from_ref(&interaction_id), "the document edit was removed; the interaction edit is the only one left applied");
-        assert!(reloaded.redo_edit_ids().contains(&doc_id), "the reverted document edit now sits on the redo stack");
+        assert!(reloaded.redo_edit_ids().await.contains(&doc_id), "the reverted document edit now sits on the redo stack");
     }
     //#endregion 🔖️HistoryLaneTests
 
@@ -10114,26 +10125,26 @@ mod tests {
     /// mirroring `PresenceStore`/`TransientStore` — the same `Mutation<S>::diff().apply()` seam,
     /// reused here with the file's existing `DemoSnapshot`/`DemoMutation` fixtures standing in for
     /// an app's hover-shaped type.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_store_apply_updates_hover_and_bumps_generation() {
         let mut store = InteractionStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
         assert_eq!(store.generation(), 0);
         assert_eq!(store.hover().n, 0);
 
-        store.apply(&[DemoMutation::SetN { n: 7 }]).expect("valid interaction mutation");
+        store.apply(&[DemoMutation::SetN { n: 7 }]).await.expect("valid interaction mutation");
         assert_eq!(store.hover().n, 7, "apply routes through Mutation::diff/Diff::apply like PresenceStore");
         assert_eq!(store.generation(), 1);
 
-        store.apply(&[]).expect("empty interaction batch");
+        store.apply(&[]).await.expect("empty interaction batch");
         assert_eq!(store.generation(), 1, "an empty mutation batch must not bump generation, same as PresenceStore/TransientStore");
     }
 
     /// @emoji 🔄️ `reset` discards the current hover outright (a host clears hover when a
     /// view/window closes) and still bumps `generation` so a pending broadcast reflects the clear.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_store_reset_discards_hover_and_bumps_generation() {
         let mut store = InteractionStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
-        store.apply(&[DemoMutation::SetN { n: 3 }]).expect("valid interaction mutation");
+        store.apply(&[DemoMutation::SetN { n: 3 }]).await.expect("valid interaction mutation");
         assert_eq!(store.generation(), 1);
 
         store.reset(DemoSnapshot { n: 0 });
@@ -10142,7 +10153,7 @@ mod tests {
     }
 
     /// @emoji 🏗️ `Default` seeds from `S::default()`, same convention as `PresenceStore`/`TransientStore`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_store_default_seeds_from_hover_default() {
         let store = InteractionStore::<DemoSnapshot, DemoMutation>::default();
         assert_eq!(store.hover().n, 0);
@@ -10150,91 +10161,91 @@ mod tests {
     }
     //#endregion 🔖️InteractionStoreTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_computes_backwards_from_pre_state() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply");
         let edit = &store.envelope().vcs.edits[0];
         assert_eq!(edit.inverse, vec![DemoMutation::SetN { n: 0 }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn commit_checkpoint_wraps_edits_into_change() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
         assert_eq!(store.envelope().vcs.changes.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints[0].message, Some("init".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkout_checkpoint_restores_applied_edits() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
         let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply2");
-        assert_eq!(store.snapshot().expect("snapshot").n, 9);
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).await.expect("apply2");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 9);
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alternatives_switch_restores_checkpoint_chain() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).expect("create alternative");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
-        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).expect("switch");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply on branch");
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("switch");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
         let c1 = store.envelope().vcs.checkpoints[0].id.clone();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).expect("checkout c1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).await.expect("checkout c1");
         assert_eq!(store.current_checkpoint_id(), Some(c1.as_str()));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("fork".into()), authors: Vec::new() }).expect("commit fork");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("fork".into()), authors: Vec::new() }).await.expect("commit fork");
         let children: Vec<&Checkpoint> = store.envelope().vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(c1.as_str())).collect();
         assert_eq!(children.len(), 2, "checking out an old checkpoint before committing must fork, not extend the trunk");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create alternative");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).expect("commit on branch");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).await.expect("commit on branch");
         assert_eq!(store.envelope().vcs.alternatives[0].checkpoint_ids.len(), 2);
         assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_columns_orders_newest_first_and_labels_trunk_root() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit c1");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
         let columns = store.history_columns();
-        assert_eq!(columns.len(), 2);
+        assert_eq!(columns.await.len(), 2);
         assert_eq!(columns[0].description, Some("c2".into()), "newest checkpoint must be first");
         assert_eq!(columns[0].lane, 0);
         assert_eq!(columns[0].labels, vec!["main".to_string()], "newest unlabeled row falls back to main");
@@ -10243,30 +10254,30 @@ mod tests {
         assert!(json.contains("checkpointId"), "wire format must be camelCase: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
         let root = store.envelope().vcs.checkpoints[0].id.clone();
 
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create feature-a");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
 
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).await.expect("checkout root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
 
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).expect("checkout root again");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).expect("commit main resumed");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).await.expect("checkout root again");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).await.expect("commit main resumed");
 
         let columns = store.history_columns();
-        assert_eq!(columns.len(), 4, "root + a1 + b1 + main-resumed");
-        let by_message: HashMap<String, &HistoryColumn> = columns.iter().filter_map(|column| column.description.clone().map(|description| (description, column))).collect();
+        assert_eq!(columns.await.len(), 4, "root + a1 + b1 + main-resumed");
+        let by_message: HashMap<String, &HistoryColumn> = columns.await.iter().filter_map(|column| column.description.clone().map(|description| (description, column))).collect();
         assert_eq!(by_message["root"].lane, 0, "root has no parent, lane 0");
         assert_eq!(by_message["main resumed"].lane, 0, "commit with no alternative stays on the trunk");
         let a_lane = by_message["a1"].lane;
@@ -10275,24 +10286,24 @@ mod tests {
         assert_ne!(b_lane, 0, "b1 belongs to an alternative, not the trunk");
         assert_ne!(a_lane, b_lane, "distinct alternatives must get distinct swimlanes");
 
-        let root_children: Vec<&HistoryColumn> = columns.iter().filter(|column| column.parent_checkpoint_id.as_deref() == Some(root.as_str())).collect();
+        let root_children: Vec<&HistoryColumn> = columns.await.iter().filter(|column| column.parent_checkpoint_id.as_deref() == Some(root.as_str())).collect();
         assert_eq!(root_children.len(), 3, "root forked three ways: a1, b1, main-resumed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn backbone_message_binary_round_trips_every_variant() {
         let snapshot = BackboneMessage::Snapshot { pack: vec![1, 2, 3], spr: Vec::new() };
-        assert_eq!(BackboneMessage::decode_op(&snapshot.encode_op().unwrap()).unwrap(), snapshot);
+        assert_eq!(BackboneMessage::decode_op(&snapshot.encode_op().await.unwrap()).await.unwrap(), snapshot);
 
         let envelope = sample_envelope_for_backbone_test();
-        let operations = BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[envelope.clone(), envelope]) };
-        assert_eq!(BackboneMessage::decode_op(&operations.encode_op().unwrap()).unwrap(), operations);
+        let operations = BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[envelope.clone(), envelope]).await };
+        assert_eq!(BackboneMessage::decode_op(&operations.encode_op().await.unwrap()).await.unwrap(), operations);
 
         let ack = BackboneMessage::Ack { op_ids: vec!["op-1".to_string(), "op-2".to_string()] };
-        assert_eq!(BackboneMessage::decode_op(&ack.encode_op().unwrap()).unwrap(), ack);
+        assert_eq!(BackboneMessage::decode_op(&ack.encode_op().await.unwrap()).await.unwrap(), ack);
 
         let empty_ack = BackboneMessage::Ack { op_ids: Vec::new() };
-        assert_eq!(BackboneMessage::decode_op(&empty_ack.encode_op().unwrap()).unwrap(), empty_ack);
+        assert_eq!(BackboneMessage::decode_op(&empty_ack.encode_op().await.unwrap()).await.unwrap(), empty_ack);
     }
 
     async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope {
@@ -10307,79 +10318,79 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_backbone_by_default() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
         assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
-        let store = ArtifactStore::new(envelope);
-        assert!(store.backbone_ref().is_none());
+        let store = ArtifactStore::new(envelope).await;
+        assert!(store.backbone_ref().await.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn memory_backbone_pair_propagates_edits_bidirectionally() {
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store_a = ArtifactStore::new(envelope_a);
-        let mut store_b = ArtifactStore::new(envelope_b);
-        store_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
-        store_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
+        let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store_a = ArtifactStore::new(envelope_a).await;
+        let mut store_b = ArtifactStore::new(envelope_b).await;
+        store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
+        store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on a");
-        store_b.tick().expect("tick b");
-        assert_eq!(store_b.snapshot().expect("snapshot b").n, 1, "b receives a's edit");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply on a");
+        store_b.tick().await.expect("tick b");
+        assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 1, "b receives a's edit");
 
-        store_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on b");
-        store_a.tick().expect("tick a");
-        assert_eq!(store_a.snapshot().expect("snapshot a").n, 2, "a receives b's edit");
+        store_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply on b");
+        store_a.tick().await.expect("tick a");
+        assert_eq!(store_a.snapshot().await.expect("snapshot a").n, 2, "a receives b's edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store_a = ArtifactStore::new(envelope.clone());
-        let mut store_b = ArtifactStore::new(envelope);
-        store_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
-        store_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store_a = ArtifactStore::new(envelope.clone()).await;
+        let mut store_b = ArtifactStore::new(envelope).await;
+        store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
+        store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
         store_a.detach_backbone();
-        assert!(store_a.backbone_ref().is_none());
+        assert!(store_a.backbone_ref().await.is_none());
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply after detach still works on the in-memory graph");
-        assert_eq!(store_a.snapshot().expect("snapshot a").n, 9);
-        store_b.tick().expect("tick b");
-        assert_eq!(store_b.snapshot().expect("snapshot b").n, 0, "detached edits never reach the peer");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).await.expect("apply after detach still works on the in-memory graph");
+        assert_eq!(store_a.snapshot().await.expect("snapshot a").n, 9);
+        store_b.tick().await.expect("tick b");
+        assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 0, "detached edits never reach the peer");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
         let mut stale_json: serde_json::Value = serde_json::to_value(&envelope).expect("serialize envelope");
         stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
         let stale_envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
 
-        let mut store = ArtifactStore::new(stale_envelope.clone());
-        assert!(store.tick().expect("tick with no live backbone is a no-operation") == false, "no backbone was ever attached, so there is nothing to pump");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply works purely against the in-memory graph");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+        let mut store = ArtifactStore::new(stale_envelope.clone()).await;
+        assert!(store.tick().await.expect("tick with no live backbone is a no-operation") == false, "no backbone was ever attached, so there is nothing to pump");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply works purely against the in-memory graph");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1);
 
-        store.reset(stale_envelope, Vec::new(), Vec::new()).expect("reset");
-        assert!(store.tick().expect("tick after set_state with no live backbone is a no-operation") == false, "set_state must not resurrect IO from a stale backbone descriptor either");
+        store.reset(stale_envelope, Vec::new(), Vec::new()).await.expect("reset");
+        assert!(store.tick().await.expect("tick after set_state with no live backbone is a no-operation") == false, "set_state must not resurrect IO from a stale backbone descriptor either");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
         let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
-        assert_eq!(codec.schema, "test.document-codec-roundtrip/v1");
-        assert_eq!(codec.extension, "demo.doc");
+        assert_eq!(codec.await.schema, "test.document-codec-roundtrip/v1");
+        assert_eq!(codec.await.extension, "demo.doc");
 
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: 4 }, None);
-        let text_files = print_document_text(&envelope).expect("print document text");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: 4 }, None).await;
+        let text_files = print_document_text(&envelope).await.expect("print document text");
 
-        let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
+        let (pack_files, dsl_mirror) = (codec.await.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
         assert_eq!(dsl_mirror, DemoSnapshot { n: 4 }.print_dsl(), "dsl mirror matches the initial snapshot's print_dsl");
 
-        let mirrored = (codec.print_mirror)(&pack_files.pack, &pack_files.spr).expect("codec print_mirror");
+        let mirrored = (codec.await.print_mirror)(&pack_files.pack, &pack_files.spr).expect("codec print_mirror");
         assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
 
         let document_id = ArtifactId("demo".to_string());
@@ -10396,37 +10407,37 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let mut op_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("op envelopes");
+        let mut op_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).await.expect("op envelopes");
         let op_envelope = op_envelopes.pop().expect("exactly one op envelope for a single-op edit");
-        let edit_text = (codec.edit_text_from_envelope)(&op_envelope).expect("codec edit_text_from_envelope");
+        let edit_text = (codec.await.edit_text_from_envelope)(&op_envelope).expect("codec edit_text_from_envelope");
         assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
         assert!(!edit_text.contains('\n') || edit_text.trim_end_matches('\n').lines().count() <= 2, "one header line + one op line: {edit_text:?}");
 
-        preflight_document_codecs(std::slice::from_ref(&codec)).expect("preflight accepts an unclaimed full descriptor without publishing it");
-        assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_none(), "preflight must not publish a codec");
-        let _ = register_document_codec(codec).expect("first document codec registration");
-        assert!(document_codec("test.document-codec-roundtrip/v1").expect("registry availability").is_some(), "registered codec is discoverable by schema string");
-        assert!(document_codec("no-such-schema").expect("registry availability").is_none());
+        preflight_document_codecs(std::slice::from_ref(&codec)).await.expect("preflight accepts an unclaimed full descriptor without publishing it");
+        assert!(document_codec("test.document-codec-roundtrip/v1").await.expect("registry availability").is_none(), "preflight must not publish a codec");
+        let _ = register_document_codec(codec.await).await.expect("first document codec registration");
+        assert!(document_codec("test.document-codec-roundtrip/v1").await.expect("registry availability").is_some(), "registered codec is discoverable by schema string");
+        assert!(document_codec("no-such-schema").await.expect("registry availability").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first() {
         let first = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
         let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
-        assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
+        assert_ne!(first.await.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
-        let _ = register_document_codec(first.clone()).expect("first registration");
-        let _ = register_document_codec(first.clone()).expect("an identical descriptor and executable is idempotent");
-        let conflict = match register_document_codec(second).expect_err("a schema collision must reject rather than replace") {
+        let _ = register_document_codec(first.clone()).await.expect("first registration");
+        let _ = register_document_codec(first.clone()).await.expect("an identical descriptor and executable is idempotent");
+        let conflict = match register_document_codec(second).await.expect_err("a schema collision must reject rather than replace") {
             DocumentCodecRegistryError::Conflict(conflict) => conflict,
             DocumentCodecRegistryError::Unavailable => panic!("document codec registry unavailable"),
         };
         assert_eq!(conflict.schema, "test.duplicate-id-probe/v1");
-        let resolved = document_codec("test.duplicate-id-probe/v1").expect("registry availability").expect("still registered after the second call");
-        assert_eq!(resolved.pack_schema_hash, first.pack_schema_hash, "the first codec remains authoritative after a conflict");
+        let resolved = document_codec("test.duplicate-id-probe/v1").await.expect("registry availability").expect("still registered after the second call");
+        assert_eq!(resolved.pack_schema_hash, first.await.pack_schema_hash, "the first codec remains authoritative after a conflict");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop() {
         async fn append_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
             Ok([bytes, b"-migrated"].concat())
@@ -10435,87 +10446,87 @@ mod tests {
         let from = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "1".into(), subset: "*".into() };
         let to = crate::os_io::ArtifactDialect { artifact_kind: "test.runtime-migration".into(), standard: "2".into(), subset: "*".into() };
         let migration = DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_marker };
-        preflight_dialect_migrations(std::slice::from_ref(&migration)).expect("preflight accepts an unclaimed dialect pair without mutation");
-        assert!(matches!(migrate_document(&from, &to, b"seed"), Err(DialectMigrationError::Missing { .. })), "preflight must not publish a migration");
-        register_dialect_migrations(vec![migration.clone()]).expect("batch migration registration");
-        assert_eq!(migrate_document(&from, &to, b"seed").expect("registered migration"), b"seed-migrated");
+        preflight_dialect_migrations(std::slice::from_ref(&migration)).await.expect("preflight accepts an unclaimed dialect pair without mutation");
+        assert!(matches!(migrate_document(&from, &to, b"seed").await, Err(DialectMigrationError::Missing { .. })), "preflight must not publish a migration");
+        register_dialect_migrations(vec![migration.clone()]).await.expect("batch migration registration");
+        assert_eq!(migrate_document(&from, &to, b"seed").await.expect("registered migration"), b"seed-migrated");
 
         let conflict = DialectMigration { lossless: false, ..migration };
-        assert!(matches!(preflight_dialect_migrations(std::slice::from_ref(&conflict)), Err(DialectMigrationRegistryError::Conflict { .. })), "preflight must reject a descriptor change before batch commit");
-        assert_eq!(migrate_document(&from, &to, b"seed").expect("first migration remains authoritative"), b"seed-migrated");
+        assert!(matches!(preflight_dialect_migrations(std::slice::from_ref(&conflict)).await, Err(DialectMigrationRegistryError::Conflict { .. })), "preflight must reject a descriptor change before batch commit");
+        assert_eq!(migrate_document(&from, &to, b"seed").await.expect("first migration remains authoritative"), b"seed-migrated");
     }
 
     async fn projection_probe(store: &ArtifactStore<DemoSnapshot, DemoMutation>, cause: ArtifactProjectionCause) -> ArtifactProjectionResult<i32, DemoDiff> {
-        let event = store.projection_event(cause, Some(DemoSnapshot { n: -1 }), ArtifactProjectionCacheMode::ValidatePrevious, "deterministic").expect("capture projection event");
+        let event = store.projection_event(cause, Some(DemoSnapshot { n: -1 }), ArtifactProjectionCacheMode::ValidatePrevious, "deterministic").await.expect("capture projection event");
         assert_eq!(event.previous, Some(DemoSnapshot { n: -1 }));
         assert_eq!(event.cache_mode, ArtifactProjectionCacheMode::ValidatePrevious);
-        event.result(event.state.n, None)
+        event.result(event.state.n, None).await
     }
 
     async fn assert_projection_is_stale(store: &ArtifactStore<DemoSnapshot, DemoMutation>, result: ArtifactProjectionResult<i32, DemoDiff>) {
-        assert!(matches!(store.accept_projection_result(result), Err(StaleArtifactProjection { .. })), "a result for an older projection stamp must be rejected");
+        assert!(matches!(store.accept_projection_result(result).await, Err(StaleArtifactProjection { .. })), "a result for an older projection stamp must be rejected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn projection_result_gate_rejects_results_after_every_invalidating_store_transition() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
 
         let before_apply = projection_probe(&store, ArtifactProjectionCause::Apply);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        assert_projection_is_stale(&store, before_apply);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        assert_projection_is_stale(&store, before_apply.await);
 
         let before_undo = projection_probe(&store, ArtifactProjectionCause::Undo);
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
-        assert_projection_is_stale(&store, before_undo);
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        assert_projection_is_stale(&store, before_undo.await);
 
         let before_redo = projection_probe(&store, ArtifactProjectionCause::Redo);
-        store.dispatch(ArtifactCommand::Redo).expect("redo");
-        assert_projection_is_stale(&store, before_redo);
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+        assert_projection_is_stale(&store, before_redo.await);
 
         let before_remote = projection_probe(&store, ArtifactProjectionCause::RemoteIngest);
-        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("projection-peer", DemoMutation::SetN { n: 2 }) }).expect("remote ingest");
-        assert_projection_is_stale(&store, before_remote);
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("projection-peer", DemoMutation::SetN { n: 2 }).await }).await.expect("remote ingest");
+        assert_projection_is_stale(&store, before_remote.await);
 
         let before_reset = projection_probe(&store, ArtifactProjectionCause::Reset);
         let reset_envelope = store.envelope().clone();
-        let reset_applied = store.applied_edit_ids().to_vec();
-        let reset_redo = store.redo_edit_ids().to_vec();
-        store.reset(reset_envelope, reset_applied, reset_redo).expect("reset");
-        assert_projection_is_stale(&store, before_reset);
+        let reset_applied = store.applied_edit_ids().await.to_vec();
+        let reset_redo = store.redo_edit_ids().await.to_vec();
+        store.reset(reset_envelope, reset_applied, reset_redo).await.expect("reset");
+        assert_projection_is_stale(&store, before_reset.await);
 
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("checkpoint");
-        let checkpoint_id = store.current_checkpoint_id().expect("checkpoint id").to_string();
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("checkpoint");
+        let checkpoint_id = store.current_checkpoint_id().await.expect("checkpoint id").to_string();
         let before_checkout = projection_probe(&store, ArtifactProjectionCause::Checkout);
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).expect("checkout");
-        assert_projection_is_stale(&store, before_checkout);
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
+        assert_projection_is_stale(&store, before_checkout.await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn projection_result_gate_rejects_results_after_dependency_and_checkpoint_transitions() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection-dependencies", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection-dependencies", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
 
         let before_replay = projection_probe(&store, ArtifactProjectionCause::Replay);
-        assert_eq!(store.invalidate_after_replay().cause, ArtifactProjectionCause::Replay);
-        assert_projection_is_stale(&store, before_replay);
+        assert_eq!(store.invalidate_after_replay().await.cause, ArtifactProjectionCause::Replay);
+        assert_projection_is_stale(&store, before_replay.await);
 
         let before_policy = projection_probe(&store, ArtifactProjectionCause::PolicyChange);
-        assert_eq!(store.invalidate_after_policy_change().cause, ArtifactProjectionCause::PolicyChange);
-        assert_projection_is_stale(&store, before_policy);
+        assert_eq!(store.invalidate_after_policy_change().await.cause, ArtifactProjectionCause::PolicyChange);
+        assert_projection_is_stale(&store, before_policy.await);
 
         let before_resource = projection_probe(&store, ArtifactProjectionCause::ExternalResourceChange);
-        assert_eq!(store.invalidate_after_external_resource_change().cause, ArtifactProjectionCause::ExternalResourceChange);
-        assert_projection_is_stale(&store, before_resource);
+        assert_eq!(store.invalidate_after_external_resource_change().await.cause, ArtifactProjectionCause::ExternalResourceChange);
+        assert_projection_is_stale(&store, before_resource.await);
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply before checkpoint");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply before checkpoint");
         let before_checkpoint = projection_probe(&store, ArtifactProjectionCause::Checkpoint);
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("non-empty checkpoint");
-        assert_projection_is_stale(&store, before_checkpoint);
-        assert_eq!(store.last_projection_invalidation().expect("checkpoint invalidation").cause, ArtifactProjectionCause::Checkpoint);
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("non-empty checkpoint");
+        assert_projection_is_stale(&store, before_checkpoint.await);
+        assert_eq!(store.last_projection_invalidation().await.expect("checkpoint invalidation").cause, ArtifactProjectionCause::Checkpoint);
 
         let generation = store.generation();
-        let error = store.dispatch(ArtifactCommand::PruneDrafts).expect_err("draft pruning is explicitly unavailable");
+        let error = store.dispatch(ArtifactCommand::PruneDrafts).await.expect_err("draft pruning is explicitly unavailable");
         assert!(matches!(error, VcsError::ValidationFailed(_)));
         assert_eq!(store.generation(), generation, "a rejected prune cannot invalidate or report a success");
     }
@@ -10525,215 +10536,215 @@ mod tests {
     // rejecting `n < 0` before persisting) is gone — `Mutation::validate` is deleted (§C4/C10); the
     // real outcome-messages/`MergePolicy` rejection this replaces is lane 1-A's C6 work.
     async fn reset_and_apply_reject_malformed_history_before_persisting() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: 0 }, None);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: 0 }, None).await;
         let mut malformed_constructor = envelope.clone();
         malformed_constructor.cursor = Some(ArtifactCursor { applied_edit_ids: vec!["missing".into()], redo_edit_ids: Vec::new(), checkpoint_id: None });
-        assert!(matches!(super::ArtifactStore::new(malformed_constructor), Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
+        assert!(matches!(super::ArtifactStore::new(malformed_constructor).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
-        let mut legacy_seed = super::ArtifactStore::new(envelope.clone()).expect("valid seed history");
-        legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("seed edit");
+        let mut legacy_seed = super::ArtifactStore::new(envelope.clone()).await.expect("valid seed history");
+        legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("seed edit");
         let mut cursorless_history = legacy_seed.envelope().clone();
         cursorless_history.cursor = None;
-        assert_eq!(super::ArtifactStore::new(cursorless_history.clone()).expect("cursorless authoritative history is validated and folded").snapshot().expect("cursorless snapshot"), DemoSnapshot { n: 3 });
+        assert_eq!(super::ArtifactStore::new(cursorless_history.clone()).await.expect("cursorless authoritative history is validated and folded").snapshot().await.expect("cursorless snapshot"), DemoSnapshot { n: 3 });
         cursorless_history.vcs.edits.push(cursorless_history.vcs.edits[0].clone());
-        assert!(matches!(super::ArtifactStore::new(cursorless_history), Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
+        assert!(matches!(super::ArtifactStore::new(cursorless_history).await, Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
 
-        let mut store = ArtifactStore::new(envelope.clone());
+        let mut store = ArtifactStore::new(envelope.clone()).await;
         let generation = store.generation();
-        assert!(matches!(store.reset(envelope, vec!["missing".into()], Vec::new()), Err(VcsError::UnknownEdit(id)) if id == "missing"));
+        assert!(matches!(store.reset(envelope, vec!["missing".into()], Vec::new()).await, Err(VcsError::UnknownEdit(id)) if id == "missing"));
         assert_eq!(store.generation(), generation, "failed reset must preserve the live store");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attach_reconciles_a_pushed_snapshot() {
-        let (channel, remote) = ChannelBackbone::pair("chan");
-        let seeded: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut seed_store = ArtifactStore::new(seeded);
-        seed_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
-        let seed_files = seed_store.snapshot_pack().expect("seed snapshot");
-        remote.push(BackboneMessage::Snapshot { pack: seed_files.pack, spr: seed_files.spr }).expect("push snapshot");
+        let (channel, remote) = ChannelBackbone::pair("chan").await;
+        let seeded: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut seed_store = ArtifactStore::new(seeded).await;
+        seed_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply");
+        let seed_files = seed_store.snapshot_pack().await.expect("seed snapshot");
+        remote.push(BackboneMessage::Snapshot { pack: seed_files.pack, spr: seed_files.spr }).await.expect("push snapshot");
 
-        let fresh: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(fresh);
-        store.attach_backbone(Backbones::Channel(channel)).expect("attach reconciles the pushed snapshot");
-        assert_eq!(store.snapshot().expect("snapshot").n, 5, "adopted the pushed snapshot's edit");
+        let fresh: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(fresh).await;
+        store.attach_backbone(Backbones::Channel(channel)).await.expect("attach reconciles the pushed snapshot");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 5, "adopted the pushed snapshot's edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn channel_backbone_round_trips_between_store_and_actor() {
-        let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
-        let attach_flush = remote.drain().expect("drain attach");
+        let (channel, remote) = ChannelBackbone::pair("chan").await;
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
+        let attach_flush = remote.drain().await.expect("drain attach");
         assert!(attach_flush.iter().any(|message| matches!(message, BackboneMessage::Snapshot { .. })), "attach flushes a snapshot to the actor end: {attach_flush:?}");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply");
-        let outbound = remote.drain().expect("drain apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).await.expect("apply");
+        let outbound = remote.drain().await.expect("drain apply");
         assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a local apply is sent outbound as mutations: {outbound:?}");
 
-        remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[foreign_mutation_envelope("peer", DemoMutation::SetN { n: 8 })]) }).expect("push inbound operations");
-        store.tick().expect("tick");
-        assert_eq!(store.snapshot().expect("snapshot").n, 8, "store ingests the actor's inbound operations");
+        remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[foreign_mutation_envelope("peer", DemoMutation::SetN { n: 8 }).await]).await }).await.expect("push inbound operations");
+        store.tick().await.expect("tick");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 8, "store ingests the actor's inbound operations");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pump_acks_ingested_operations() {
-        let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
-        let _ = remote.drain().expect("drain attach snapshot");
+        let (channel, remote) = ChannelBackbone::pair("chan").await;
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
+        let _ = remote.drain().await.expect("drain attach snapshot");
 
         let inbound = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 7 });
-        let mutation_id = inbound.mutation_id.0.clone();
-        remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[inbound]) }).expect("push inbound operations");
-        store.tick().expect("tick");
-        assert_eq!(store.snapshot().expect("snapshot").n, 7, "ingested the inbound operation");
+        let mutation_id = inbound.await.mutation_id.0.clone();
+        remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[inbound.await]).await }).await.expect("push inbound operations");
+        store.tick().await.expect("tick");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 7, "ingested the inbound operation");
 
-        let outbound = remote.drain().expect("drain ack");
+        let outbound = remote.drain().await.expect("drain ack");
         assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Ack { op_ids } if op_ids == &vec![mutation_id.clone()])), "successful operations ingest emits an Ack for the ingested operation ids: {outbound:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_base_only_undo_refuses_a_foreign_tail() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
-        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 }) }).expect("ingest foreign");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2, "foreign edit sits at the tail");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("local apply");
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 }).await }).await.expect("ingest foreign");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2, "foreign edit sits at the tail");
 
-        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).expect_err("undo must refuse a foreign tail");
+        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).await.expect_err("undo must refuse a foreign tail");
         assert!(matches!(error, VcsError::ForeignEdit(_)), "got {error:?}");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2, "the timeline is untouched after refusal");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2, "the timeline is untouched after refusal");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("local apply");
         let local_edit_id = store.applied_edit_ids()[0].clone();
         let foreign = foreign_mutation_envelope("peer", DemoMutation::SetN { n: 2 });
-        let foreign_id = foreign.mutation_id.0.clone();
-        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).expect("ingest foreign");
-        assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
+        let foreign_id = foreign.await.mutation_id.0.clone();
+        store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign.await }).await.expect("ingest foreign");
+        assert_eq!(store.applied_edit_ids().await.len(), 2, "local + foreign are both applied");
 
-        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).expect("transform undo removes the local edit from mid-timeline");
+        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).await.expect("transform undo removes the local edit from mid-timeline");
         assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&foreign_id), "only the local edit is removed; the concurrent foreign edit stays applied");
         assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_edit_id), "the local edit is on the redo stack");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2, "snapshot re-materializes from the foreign edit alone");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2, "snapshot re-materializes from the foreign edit alone");
 
-        store.dispatch(ArtifactCommand::Redo).expect("redo brings the local edit back");
-        assert_eq!(store.applied_edit_ids().len(), 2);
-        assert_eq!(store.snapshot().expect("snapshot").n, 1, "redo re-applies the local edit at the tail");
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo brings the local edit back");
+        assert_eq!(store.applied_edit_ids().await.len(), 2);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1, "redo re-applies the local edit at the tail");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compensating_undo_dispatches_semantic_command() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply");
         let undo_apply = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 0 }], description: Some("compensate".into()) };
-        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).expect("compensating undo");
-        assert_eq!(store.snapshot().expect("snapshot").n, 0);
+        store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).await.expect("compensating undo");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_mutations_exposes_the_latest_edit() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        assert!(store.edit_mutations().is_none(), "no edits yet");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply");
-        let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        assert!(store.edit_mutations().await.is_none(), "no edits yet");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply");
+        let (forwards, inverse, meta) = store.edit_mutations().await.expect("edit operations");
         assert_eq!(forwards, &[DemoMutation::SetN { n: 5 }]);
         assert_eq!(inverse, &[DemoMutation::SetN { n: 0 }], "inverse restores the pre-state");
         assert_eq!(meta.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_absorbs_into_matching_coalesce_key() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("second amend");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).await.expect("first amend");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).await.expect("second amend");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
-        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "undo restores pre-gesture state in one step");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2);
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        assert_eq!(store.snapshot().await.expect("snapshot after undo").n, 0, "undo restores pre-gesture state in one step");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
         // 🪢️ Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
         // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
         // same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
         // previous full-replay-every-time implementation, just without re-replaying history each time.
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
         for n in 1..=50 {
-            store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n }], coalesce_key: Some("drag".into()) }).expect("amend");
+            store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n }], coalesce_key: Some("drag".into()) }).await.expect("amend");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still a single coalesced edit");
         let edit = store.envelope().vcs.edits.last().expect("edit");
         assert_eq!(edit.forwards.len(), 50);
         assert_eq!(edit.inverse.len(), 50);
         assert_eq!(edit.mutation_meta.len(), 50);
-        assert_eq!(store.snapshot().expect("snapshot").n, 50);
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
-        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0, "one undo reverts the whole 50-step coalesced gesture");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 50);
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        assert_eq!(store.snapshot().await.expect("snapshot after undo").n, 0, "one undo reverts the whole 50-step coalesced gesture");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_incremental_cache_survives_undo_redo_round_trip() {
         // 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
         // an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
         // valid across an undo immediately followed by a redo of the very same coalesced edit.
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("first amend");
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
-        store.dispatch(ArtifactCommand::Redo).expect("redo");
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after undo/redo");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).await.expect("first amend");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).await.expect("amend after undo/redo");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(ArtifactCommand::Undo).expect("undo again");
-        assert_eq!(store.snapshot().expect("snapshot after undo").n, 0);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2);
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo again");
+        assert_eq!(store.snapshot().await.expect("snapshot after undo").n, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag-a".into()) }).expect("first drag");
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag-b".into()) }).expect("second drag");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag-a".into()) }).await.expect("first drag");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag-b".into()) }).await.expect("second drag");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "distinct gestures are separate edits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_does_not_absorb_into_committed_edit() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).expect("amend");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("commit");
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 1 }], coalesce_key: Some("drag".into()) }).await.expect("amend");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("commit");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).await.expect("amend after commit");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "committed edits are never amended, even with a matching coalesce key");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assert_subset_harness_fidelity_and_inference_helpers() {
         test_support::assert_import_export_fidelity_bytes(b"fixture", b"fixture", test_support::IoFidelityClass::Exact);
         test_support::assert_import_export_fidelity_bytes(b"fixture", b"other", test_support::IoFidelityClass::Canonical);
         test_support::assert_inference_determinism(&7_i32, &7_i32);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "exact fidelity requires byte-identical export")]
     async fn assert_import_export_fidelity_bytes_exact_rejects_divergence() {
         test_support::assert_import_export_fidelity_bytes(b"fixture", b"other", test_support::IoFidelityClass::Exact);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn test_support_round_trip_helpers_pass_for_demo_operation() {
         test_support::assert_operation_round_trip(&DemoSnapshot { n: 4 }, DemoMutation::SetN { n: 9 });
         test_support::assert_store_roundtrip(DemoSnapshot { n: 4 }, DemoMutation::SetN { n: 9 });
@@ -10748,7 +10759,7 @@ mod tests {
                 dependencies: vec![MutationId("op-0".into())],
                 base_version: 0,
                 author_id: Some(ActorId("actor-explicit".into())),
-                timestamp: HybridLogicalTimestamp::new(1, 1000),
+                timestamp: HybridLogicalTimestamp::new(1, 1000).await,
                 undo_policy: UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
                 semantic_kind: None,
@@ -10770,7 +10781,7 @@ mod tests {
     /// always decodes to `n: 0`) must trip law (2) of the doc comment on
     /// `assert_command_envelope_round_trip` — the same "deliberately lossy impl" pattern
     /// `protocol_testkit`'s `op_text_round_trip_panics_on_a_lossy_impl` uses for `assert_op_text_round_trip`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "did not decode back into an equal forward operation")]
     async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -10803,7 +10814,7 @@ mod tests {
         impl Mutation<DemoSnapshot> for LossyMutation {
             type Diff = LossyDiff;
             async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<LossyDiff> {
-                crate::os_spr::MutationOutcome::new(LossyDiff)
+                crate::os_spr::MutationOutcome::new(LossyDiff).await
             }
             async fn inverse(&self, _snapshot: &DemoSnapshot) -> Vec<Self> {
                 vec![self.clone()]
@@ -10839,69 +10850,69 @@ mod tests {
     // themselves (see `DemoSnapshot`/`DemoMutation` above) — the `dsl_schema` grammar replaces
     // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_dsl_round_trips() {
         test_support::assert_dsl_round_trip(&DemoSnapshot { n: 42 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_dsl_pack_equivalence() {
         test_support::assert_dsl_pack_equivalence(&DemoSnapshot { n: 42 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_op_text_round_trips() {
         test_support::assert_op_line_round_trip(&DemoMutation::SetN { n: 7 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_op_binary_round_trips_and_matches_text() {
         let operation = DemoMutation::SetN { n: 7 };
-        let encoded = operation.encode_op().expect("op encode");
-        let encoded_again = operation.encode_op().expect("op re-encode");
+        let encoded = operation.encode_op().await.expect("op encode");
+        let encoded_again = operation.encode_op().await.expect("op re-encode");
         assert_eq!(encoded, encoded_again, "op binary encoding must be deterministic");
         assert_eq!(encoded[0], pack_rt::OP_BINARY_FORMAT);
-        let decoded = DemoMutation::decode_op(&encoded).expect("op decode");
+        let decoded = DemoMutation::decode_op(&encoded).await.expect("op decode");
         assert_eq!(decoded, operation);
-        let via_text = DemoMutation::parse_op(&operation.print_op()).expect("op parse");
+        let via_text = DemoMutation::parse_op(&operation.print_op()).await.expect("op parse");
         assert_eq!(via_text, decoded, "binary and text round trips diverged");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_op_binary_rejects_unknown_format_and_ordinal() {
         let operation = DemoMutation::SetN { n: 7 };
-        let mut wrong_format = operation.encode_op().expect("op encode");
+        let mut wrong_format = operation.encode_op().await.expect("op encode");
         wrong_format[0] = 9;
-        assert!(DemoMutation::decode_op(&wrong_format).is_err(), "format 9 must be rejected");
+        assert!(DemoMutation::decode_op(&wrong_format).await.is_err(), "format 9 must be rejected");
         let out_of_range = [pack_rt::OP_BINARY_FORMAT, 0x7E];
-        assert!(DemoMutation::decode_op(&out_of_range).is_err(), "ordinal beyond declared variants must be rejected");
+        assert!(DemoMutation::decode_op(&out_of_range).await.is_err(), "ordinal beyond declared variants must be rejected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
         let edit = store.envelope().vcs.edits.last().expect("edit");
-        let printed = print_edit_lines(edit).expect("print edit lines");
+        let printed = print_edit_lines(edit).await.expect("print edit lines");
         assert!(printed.starts_with("edit "), "got {printed:?}");
         assert!(printed.contains("\n  set-n n=1\n"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_after_apply_and_checkpoint() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: Some("bump".into()) }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: Some("bump".into()) }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_document_text_rejects_invalid_op_line_with_span() {
         let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 sequence=1 started=\"1\"\n  not-an-op\n".to_string() };
-        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
         assert_eq!(error.span.line, 3);
     }
 
@@ -10909,43 +10920,43 @@ mod tests {
     /// gestures, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
     /// full-replay differential oracle, so any divergence between the incremental paths and a
     /// from-scratch replay fails loudly here rather than surfacing as a silent snapshot bug later.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stateful_current_matches_full_replay_across_interleaved_commands() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
+        let mut store = ArtifactStore::new(envelope.await).await;
 
         // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }, DemoMutation::SetN { n: 2 }], description: None }).expect("apply multi-op edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }, DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply multi-op edit");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.snapshot().expect("snapshot").n, 2);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2);
 
         // Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
         // (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
         // second `AmendLast` shares that edit's key and merges into it — two edits total, the second
         // one carrying two coalesced increments (3 then 4).
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".into()) }).expect("amend 1");
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("drag".into()) }).expect("amend 2");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".into()) }).await.expect("amend 1");
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("drag".into()) }).await.expect("amend 2");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.snapshot().expect("snapshot").n, 4);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 4);
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
 
         // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
         // the initial snapshot — only the amend gesture's edit is undone here.
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.snapshot().expect("snapshot").n, 2);
-        store.dispatch(ArtifactCommand::Redo).expect("redo");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2);
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.snapshot().expect("snapshot").n, 4);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 4);
 
         // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
         // itself, but a following apply + a second, older undo still must agree with replay).
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply after checkpoint");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply after checkpoint");
         test_support::assert_live_equals_replay(&store);
-        store.dispatch(ArtifactCommand::Undo).expect("undo after checkpoint");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo after checkpoint");
         test_support::assert_live_equals_replay(&store);
-        assert_eq!(store.snapshot().expect("snapshot").n, 4);
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 4);
     }
 
     //#region 🏛️SpaceTests
@@ -10966,17 +10977,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
         }
     }
 
@@ -10984,11 +10995,11 @@ mod tests {
     impl OpBinary for TimestampedMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
-            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let mut out = Vec::with_capacity(body.len() + 3);
             out.push(OP_BINARY_FORMAT);
             crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -11007,8 +11018,9 @@ mod tests {
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
             let spec = spec_fn();
             let body = &bytes[reader.position().await..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position().await as u64, detail: error.to_string() })
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
+            let record_offset = reader.position().await as u64;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
     //#endregion 🔖️OpCodec
@@ -11020,7 +11032,7 @@ mod tests {
             let diff = match self {
                 TimestampedMutation::SetN { n, .. } => DemoDiff { n: Some(*n) },
             };
-            crate::os_spr::MutationOutcome::new(diff)
+            crate::os_spr::MutationOutcome::new(diff).await
         }
 
         async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -11029,33 +11041,33 @@ mod tests {
 
         async fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
             match self {
-                TimestampedMutation::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
+                TimestampedMutation::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms).await),
             }
         }
     }
 
     /// @emoji 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
     async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static>(host: &'a mut SpaceHost, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
-        host.member_mut(document_id).expect("member registered").as_any_mut().downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
+        host.member_mut(document_id).await.expect("member registered").as_any_mut().await.downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn register_space_documents_registers_manifest_collections_and_artifacts_together() {
         // 🎯️ Every member below gets at least one uncommitted edit (dirty), mirroring
         // `space_checkpoint_commits_dirty_members_and_pins_their_checkpoints`'s `member_a` — a fresh
         // member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
         // `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
         // already-clean ones just need a prior checkpoint).
-        let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: 0 }, None));
-        manifest.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply manifest edit");
-        let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: 0 }, None));
-        collection_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply collection a edit");
-        let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: 0 }, None));
-        collection_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply collection b edit");
-        let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None));
-        artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
+        let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: 0 }, None).await).await;
+        manifest.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply manifest edit");
+        let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: 0 }, None).await).await;
+        collection_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply collection a edit");
+        let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: 0 }, None).await).await;
+        collection_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply collection b edit");
+        let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: 0 }, None).await).await;
+        artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("apply artifact edit");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await).await.expect("valid space host history");
         host.register_space_documents(Box::new(manifest), vec![Box::new(collection_a), Box::new(collection_b)], vec![Box::new(artifact_a)]);
 
         assert!(host.member("space-manifest").is_some(), "manifest registered");
@@ -11071,17 +11083,17 @@ mod tests {
         assert_eq!(pinned_ids, HashSet::from(["space-manifest", "collection-a", "collection-b", "artifact-a"]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
-        let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply a");
+        let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None).await).await;
+        member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply a");
 
-        let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: 0 }, None));
-        member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply b");
-        member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
-        let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
+        let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: 0 }, None).await).await;
+        member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply b");
+        member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).await.expect("commit b upfront, so it starts clean");
+        let member_b_checkpoint = member_b.current_checkpoint_id().await.expect("b checkpoint").to_string();
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await).await.expect("valid space host history");
         host.register_member(Box::new(member_a));
         host.register_member(Box::new(member_b));
 
@@ -11097,86 +11109,86 @@ mod tests {
         assert!(!host.member("member-a").expect("member a").is_dirty(), "dirty member-a is committed (and therefore clean) by the space checkpoint");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None);
-        let mut host_a = SpaceHost::new(meta_envelope.clone()).expect("valid first space host history");
-        let mut host_b = SpaceHost::new(meta_envelope).expect("valid second space host history");
-        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other ArtifactStore");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b").await;
+        let meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await;
+        let mut host_a = SpaceHost::new(meta_envelope.clone()).await.expect("valid first space host history");
+        let mut host_b = SpaceHost::new(meta_envelope).await.expect("valid second space host history");
+        assert!(host_a.backbone_ref().await.is_none(), "default is unattached, like any other ArtifactStore");
 
-        host_a.attach_backbone(Backbones::Memory(backbone_a)).expect("attach a");
-        host_b.attach_backbone(Backbones::Memory(backbone_b)).expect("attach b");
-        assert!(host_a.backbone_ref().is_some());
+        host_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
+        host_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
+        assert!(host_a.backbone_ref().await.is_some());
 
-        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply on member, so it's dirty and can be committed");
+        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None).await).await;
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply on member, so it's dirty and can be committed");
         host_a.register_member(Box::new(member));
         host_a.commit_space_checkpoint("studio init".into(), Vec::new()).expect("commit space checkpoint on a");
 
-        host_b.tick().expect("tick b");
-        assert_eq!(host_b.meta_snapshot().expect("meta snapshot b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
+        host_b.tick().await.expect("tick b");
+        assert_eq!(host_b.meta_snapshot().await.expect("meta snapshot b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
 
         host_a.detach_backbone();
         assert!(host_a.backbone_ref().is_none());
         host_a.commit_space_checkpoint("studio offline".into(), Vec::new()).expect("meta history keeps working purely in memory once detached");
-        host_b.tick().expect("tick b again");
-        assert_eq!(host_b.meta_snapshot().expect("meta snapshot b unchanged").checkpoints.len(), 1, "detached space edits never reach the peer");
+        host_b.tick().await.expect("tick b again");
+        assert_eq!(host_b.meta_snapshot().await.expect("meta snapshot b unchanged").checkpoints.len(), 1, "detached space edits never reach the peer");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
-        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
+        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None).await).await;
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await).await.expect("valid space host history");
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        demo_member::<DemoMutation>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
         let space_checkpoint_1 = host.commit_space_checkpoint("first".into(), Vec::new()).expect("commit 1");
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
+        demo_member::<DemoMutation>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
         host.commit_space_checkpoint("second".into(), Vec::new()).expect("commit 2");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "member reflects the second space checkpoint before checking out the first");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").await.snapshot().await.expect("snapshot").n, 2, "member reflects the second space checkpoint before checking out the first");
 
         host.checkout_space_checkpoint(&space_checkpoint_1).expect("checkout space checkpoint 1");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 1, "checking out the first space checkpoint fans out and restores member-a's pinned state");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").await.snapshot().await.expect("snapshot").n, 1, "checking out the first space checkpoint fans out and restores member-a's pinned state");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
-        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
+        let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: 0 }, None).await).await;
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await).await.expect("valid space host history");
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
+        demo_member::<DemoMutation>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
         host.commit_space_checkpoint("root".into(), Vec::new()).expect("commit root");
 
         let alt_id = host.create_space_alternative("branch-a".into()).expect("create alternative");
 
-        demo_member::<DemoMutation>(&mut host, "member-a").dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2 (uncommitted at the studio level)");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 2, "uncommitted edit is live before switching");
+        demo_member::<DemoMutation>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2 (uncommitted at the studio level)");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").await.snapshot().await.expect("snapshot").n, 2, "uncommitted edit is live before switching");
 
         host.switch_space_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
-        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").snapshot().expect("snapshot").n, 1, "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit");
+        assert_eq!(demo_member::<DemoMutation>(&mut host, "member-a").await.snapshot().await.expect("snapshot").n, 1, "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-        let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: 0 }, None));
-        member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 1, physical_ms: 1_000 }], description: None }).expect("apply early");
+        let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: 0 }, None).await).await;
+        member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 1, physical_ms: 1_000 }], description: None }).await.expect("apply early");
 
-        let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None));
-        member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
+        let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: 0 }, None).await).await;
+        member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN { n: 9, physical_ms: 2_000 }], description: None }).await.expect("apply late");
 
-        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).expect("valid space host history");
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None).await).await.expect("valid space host history");
         host.register_member(Box::new(member_early));
         host.register_member(Box::new(member_late));
 
         host.undo().expect("space undo targets the member with the higher HLT");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-early").snapshot().expect("early snapshot").n, 1, "earlier local edit (lower HLT) is untouched");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").snapshot().expect("late snapshot").n, 0, "later local edit (higher HLT) is the one undone");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-early").await.snapshot().await.expect("early snapshot").n, 1, "earlier local edit (lower HLT) is untouched");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").await.snapshot().await.expect("late snapshot").n, 0, "later local edit (higher HLT) is the one undone");
 
         host.redo().expect("studio redo targets the most recently undone edit");
-        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").snapshot().expect("late snapshot after redo").n, 9, "redo restores the member's most recently undone edit");
+        assert_eq!(demo_member::<TimestampedMutation>(&mut host, "member-late").await.snapshot().await.expect("late snapshot after redo").n, 9, "redo restores the member's most recently undone edit");
     }
 
     #[test]
@@ -11185,23 +11197,23 @@ mod tests {
     // merge arbitration is now `ingest_remote`/`resolve_conflict` against first-class `Conflict`s.
     async fn snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ingestion() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply");
-        let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply");
+        let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
         assert_eq!(replayed.n, 3);
-        assert_eq!(store.snapshot().expect("snapshot").n, 3);
-        assert!(store.conflicts().is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 3);
+        assert!(store.conflicts().await.is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
         assert!(store.open_conflicts().next().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_history_op_round_trips() {
         let checkpoint = SpaceCheckpoint {
             id: "sc-1".into(),
             parent_id: None,
             message: "root".into(),
             authors: Vec::new(),
-            timestamp: HybridLogicalTimestamp::new(0, 1),
+            timestamp: HybridLogicalTimestamp::new(0, 1).await,
             members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
         };
         test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() });
@@ -11249,17 +11261,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
         }
     }
 
@@ -11267,11 +11279,11 @@ mod tests {
     impl OpBinary for SeverityMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
-            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let mut out = Vec::with_capacity(body.len() + 3);
             out.push(OP_BINARY_FORMAT);
             crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -11290,8 +11302,9 @@ mod tests {
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
             let spec = spec_fn();
             let body = &bytes[reader.position().await..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position().await as u64, detail: error.to_string() })
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
+            let record_offset = reader.position().await as u64;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
 
@@ -11299,10 +11312,10 @@ mod tests {
         type Diff = DemoDiff;
         async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             match self {
-                SeverityMutation::CleanN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
-                SeverityMutation::WarnN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).warn("mutation.clamped", "n was clamped to a safe range"),
-                SeverityMutation::ErrorN { .. } => crate::os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"]),
-                SeverityMutation::FatalN { .. } => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n invariant violated", ["n"]),
+                SeverityMutation::CleanN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).await,
+                SeverityMutation::WarnN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).await.warn("mutation.clamped", "n was clamped to a safe range").await,
+                SeverityMutation::ErrorN { .. } => crate::os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"]).await,
+                SeverityMutation::FatalN { .. } => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n invariant violated", ["n"]).await,
             }
         }
         async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -11317,117 +11330,117 @@ mod tests {
             document_id: ArtifactId(document_id.to_string()),
             actor: ActorId(actor.to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode severity mutation") },
+            diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().await.expect("encode severity mutation") },
             inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
             timestamp,
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and_cursor() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity-text", DemoSnapshot { n: 0 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: Some("durable warning".into()) }).expect("apply warning");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity-text", DemoSnapshot { n: 0 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: Some("durable warning".into()) }).await.expect("apply warning");
         let edit = store.envelope().vcs.edits.last().expect("one durable edit").clone();
         let messages = store.envelope().edit_messages.last().expect("durable outcome ledger").messages.clone();
         let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
-        let mutation_ids = stable_mutation_ids_for_edit(&edit).expect("stable operation identity");
+        let mutation_ids = stable_mutation_ids_for_edit(&edit).await.expect("stable operation identity");
         let timestamp = edit.mutation_meta.first().expect("metadata timestamp").timestamp;
         store.0.envelope.conflicts.push(crate::os_spr::Conflict {
-            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp),
+            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await,
             kind,
             status: crate::os_spr::ConflictStatus::Open,
             messages,
             actors: vec![ActorId(edit.actor.clone().expect("edit actor"))],
             timestamp,
         });
-        let files = print_document_text(store.envelope()).expect("print full-fidelity text");
+        let files = print_document_text(store.envelope().await).await.expect("print full-fidelity text");
         for record in ["inverse ", "metadata ", "message ", "conflict ", "cursor "] {
             assert!(files.ops.lines().any(|line| line.starts_with(record)), "missing {record:?} record: {}", files.ops);
         }
-        let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).expect("parse full-fidelity text");
+        let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse full-fidelity text");
         assert_eq!(parsed.envelope, store.envelope().clone());
-        assert_eq!(parsed.snapshot, store.snapshot().expect("live snapshot"));
+        assert_eq!(parsed.snapshot, store.snapshot().await.expect("live snapshot"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_rejects_missing_metadata_and_unknown_cursor_without_synthesis() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: 0 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: None }).expect("apply warning");
-        let files = print_document_text(store.envelope()).expect("print strict text");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: 0 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: None }).await.expect("apply warning");
+        let files = print_document_text(store.envelope().await).await.expect("print strict text");
         let missing_metadata = files.ops.lines().filter(|line| !line.starts_with("metadata ")).collect::<Vec<_>>().join("\n");
-        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata), Err(error) if error.message.contains("no metadata records")));
+        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata).await, Err(error) if error.message.contains("no metadata records")));
 
         let unknown_cursor = files.ops.lines().map(|line| if line.starts_with("cursor ") { "cursor applied=[ unknown-edit ] redo=[]".to_string() } else { line.to_string() }).collect::<Vec<_>>().join("\n");
-        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &unknown_cursor), Err(error) if error.message.contains("unknown or duplicate applied edit")));
+        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &unknown_cursor).await, Err(error) if error.message.contains("unknown or duplicate applied edit")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_invalid_ones() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: 0 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::CleanN { n: 1 }], description: None }).expect("first edit");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::CleanN { n: 2 }], description: None }).expect("second edit");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: 0 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::CleanN { n: 1 }], description: None }).await.expect("first edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::CleanN { n: 2 }], description: None }).await.expect("second edit");
         store.0.envelope.vcs.edits[0].sequence_number = 4;
         store.0.envelope.vcs.edits[1].sequence_number = 17;
 
-        let files = print_document_text(store.envelope()).expect("print strict text");
-        let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).expect("parse strict text");
+        let files = print_document_text(store.envelope().await).await.expect("print strict text");
+        let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse strict text");
         assert_eq!(parsed.envelope.vcs.edits.iter().map(|edit| edit.sequence_number).collect::<Vec<_>>(), vec![4, 17]);
 
         let invalid = files.ops.replacen("sequence=4", "sequence=-1", 1);
-        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid), Err(error) if error.message.contains("invalid edit sequence -1")));
+        assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid).await, Err(error) if error.message.contains("invalid edit sequence -1")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn persisted_conflict_requires_a_global_owned_operation_index() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "conflict-index", DemoSnapshot { n: 0 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: None }).expect("apply warning");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "conflict-index", DemoSnapshot { n: 0 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 3 }], description: None }).await.expect("apply warning");
         let edit = store.envelope().vcs.edits.last().expect("one edit").clone();
         let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
-        let mutation_ids = stable_mutation_ids_for_edit(&edit).expect("stable mutation ids");
+        let mutation_ids = stable_mutation_ids_for_edit(&edit).await.expect("stable mutation ids");
         let timestamp = edit.mutation_meta.first().expect("timestamp").timestamp;
         let mut messages = store.envelope().edit_messages.last().expect("outcome message").messages.clone();
         messages[0].op_index = Some(1);
         store.0.envelope.conflicts.push(crate::os_spr::Conflict {
-            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp),
+            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await,
             kind,
             status: crate::os_spr::ConflictStatus::Open,
             messages,
             actors: vec![ActorId(edit.actor.clone().expect("actor"))],
             timestamp,
         });
-        assert!(matches!(validate_persisted_conflicts(store.envelope()), Err(VcsError::ValidationFailed(message)) if message.contains("operation index")));
+        assert!(matches!(validate_persisted_conflicts(store.envelope().await).await, Err(VcsError::ValidationFailed(message)) if message.contains("operation index")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conflict_generation_and_validation_canonicalize_repeated_actors() {
         let document_id = "repeated-conflict-actor";
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None));
-        let clean = severity_mutation_envelope_at(document_id, "same-peer", "same-clean", SeverityMutation::CleanN { n: 1 }, HybridLogicalTimestamp::new(1, 100));
-        let mut fatal = severity_mutation_envelope_at(document_id, "same-peer", "same-fatal", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200));
-        fatal.dependencies = vec![clean.mutation_id.clone()];
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await).await;
+        let clean = severity_mutation_envelope_at(document_id, "same-peer", "same-clean", SeverityMutation::CleanN { n: 1 }, HybridLogicalTimestamp::new(1, 100).await);
+        let mut fatal = severity_mutation_envelope_at(document_id, "same-peer", "same-fatal", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200).await);
+        fatal.await.dependencies = vec![clean.await.mutation_id.clone()];
 
-        store.ingest_remote(fatal).expect("dependent fatal is buffered");
-        let report = store.ingest_remote(clean).expect("ready batch is reported");
+        store.ingest_remote(fatal.await).await.expect("dependent fatal is buffered");
+        let report = store.ingest_remote(clean.await).await.expect("ready batch is reported");
         let conflict_id = report.conflict.expect("fatal batch is quarantined");
         assert!(!report.accepted);
-        let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("durable conflict");
+        let conflict = store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("durable conflict");
         assert_eq!(conflict.actors, vec![ActorId("same-peer".into())]);
-        validate_persisted_conflicts(store.envelope()).expect("generated actors use the canonical unique participant set");
+        validate_persisted_conflicts(store.envelope().await).await.expect("generated actors use the canonical unique participant set");
 
         let mut malformed = store.envelope().clone();
         malformed.conflicts[0].actors.push(ActorId("same-peer".into()));
-        assert!(matches!(validate_persisted_conflicts(&malformed), Err(VcsError::ValidationFailed(message)) if message.contains("malformed actor identities")));
+        assert!(matches!(validate_persisted_conflicts(&malformed).await, Err(VcsError::ValidationFailed(message)) if message.contains("malformed actor identities")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal() {
         let document_id = "severity-atomic";
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None));
-        let clean = severity_mutation_envelope_at(document_id, "clean-peer", "clean-op", SeverityMutation::CleanN { n: 1 }, HybridLogicalTimestamp::new(1, 100));
-        let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await).await;
+        let clean = severity_mutation_envelope_at(document_id, "clean-peer", "clean-op", SeverityMutation::CleanN { n: 1 }, HybridLogicalTimestamp::new(1, 100).await);
+        let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200).await);
         let kind = crate::os_spr::ConflictKind::Quarantined { envelopes: vec![clean.clone(), fatal.clone()] };
         let timestamp = HybridLogicalTimestamp::new(9, 300);
-        let mutation_ids = vec![clean.mutation_id.clone(), fatal.mutation_id.clone()];
+        let mutation_ids = vec![clean.await.mutation_id.clone(), fatal.await.mutation_id.clone()];
         let conflict_id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(document_id.to_string()), &mutation_ids, &timestamp);
         store.0.envelope.conflicts.push(crate::os_spr::Conflict {
             id: conflict_id.clone(),
@@ -11440,38 +11453,38 @@ mod tests {
                 target: vec!["n".to_string()],
                 op_index: Some(0),
             }],
-            actors: vec![clean.actor.clone(), fatal.actor.clone()],
+            actors: vec![clean.await.actor.clone(), fatal.await.actor.clone()],
             timestamp,
         });
-        validate_persisted_conflicts(store.envelope()).expect("well-formed quarantine fixture");
+        validate_persisted_conflicts(store.envelope().await).await.expect("well-formed quarantine fixture");
         let before = store.envelope().clone();
         let generation = store.generation();
 
-        let report = store.resolve_conflict(&conflict_id.0, crate::os_spr::ConflictResolution::Accept).expect("fatal outcome is reported, not an infrastructure error");
+        let report = store.resolve_conflict(&conflict_id.await.0, crate::os_spr::ConflictResolution::Accept).await.expect("fatal outcome is reported, not an infrastructure error");
 
         assert!(!report.accepted);
         assert_eq!(report.replayed.len(), 2, "the aggregate report must retain the clean and fatal replay reports");
         assert_eq!(store.envelope(), &before, "the candidate's earlier clean mutation must never leak through a later fatal rejection");
-        assert_eq!(store.snapshot().expect("unchanged snapshot"), DemoSnapshot { n: 0 });
+        assert_eq!(store.snapshot().await.expect("unchanged snapshot"), DemoSnapshot { n: 0 });
         assert_eq!(store.generation(), generation, "a rejected candidate does not invalidate the source store");
-        assert_eq!(store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("original conflict retained").status, crate::os_spr::ConflictStatus::Open);
+        assert_eq!(store.conflicts().await.iter().find(|conflict| conflict.id == conflict_id).expect("original conflict retained").status, crate::os_spr::ConflictStatus::Open);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_store_snapshot_policy_rejection_keeps_remote_history_quarantined() {
         let document_id = "severity-snapshot";
-        let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200));
-        let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None));
-        remote.0.envelope.vcs.edits.push(edit_from_operation_envelope::<SeverityMutation>(&fatal).expect("fatal edit"));
-        remote.0.envelope.cursor = Some(ArtifactCursor { applied_edit_ids: vec![fatal.mutation_id.0.clone()], redo_edit_ids: Vec::new(), checkpoint_id: None });
-        let files = remote.snapshot_pack().expect("remote snapshot");
+        let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200).await);
+        let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await).await;
+        remote.0.envelope.vcs.edits.push(edit_from_operation_envelope::<SeverityMutation>(&fatal).await.expect("fatal edit"));
+        remote.0.envelope.cursor = Some(ArtifactCursor { applied_edit_ids: vec![fatal.await.mutation_id.0.clone()], redo_edit_ids: Vec::new(), checkpoint_id: None });
+        let files = remote.snapshot_pack().await.expect("remote snapshot");
 
-        let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None));
+        let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await).await;
         let before = local.envelope().clone();
-        assert!(matches!(local.merge_remote_snapshot(&files.pack, &files.spr), Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, .. })));
-        assert_eq!(local.snapshot().expect("local content remains unchanged"), DemoSnapshot { n: 0 });
+        assert!(matches!(local.merge_remote_snapshot(&files.pack, &files.spr).await, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, .. })));
+        assert_eq!(local.snapshot().await.expect("local content remains unchanged"), DemoSnapshot { n: 0 });
         assert!(local.envelope().vcs.edits.is_empty(), "rejected remote edits are never adopted into local history");
-        assert_eq!(local.conflicts().len(), 1);
+        assert_eq!(local.conflicts().await.len(), 1);
         assert_eq!(local.conflicts()[0].status, crate::os_spr::ConflictStatus::Open);
         assert_eq!(local.envelope().id, before.id);
         assert_eq!(local.envelope().schema, before.schema);
@@ -11483,17 +11496,17 @@ mod tests {
     /// on the real apply path) computes, stamped with `op_index`, and the live store is byte-
     /// identical before and after — a pure dry run all the way through, never applying anything even
     /// though it threads state forward internally to preview op `i` against `0..i`'s outcome.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and_changes_nothing() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope);
+        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: 0 }, None).await;
+        let store = ArtifactStore::new(envelope).await;
         let before = store.envelope().clone();
 
         let ops: Vec<Vec<u8>> = vec![
-            SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode clean"),
-            SeverityMutation::WarnN { n: 2 }.encode_op().expect("encode warn"),
-            SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode error"),
-            SeverityMutation::FatalN { n: 99 }.encode_op().expect("encode fatal"),
+            SeverityMutation::CleanN { n: 1 }.encode_op().await.expect("encode clean"),
+            SeverityMutation::WarnN { n: 2 }.encode_op().await.expect("encode warn"),
+            SeverityMutation::ErrorN { n: 99 }.encode_op().await.expect("encode error"),
+            SeverityMutation::FatalN { n: 99 }.encode_op().await.expect("encode fatal"),
         ];
 
         let messages = store.preview_wire(&ops);
@@ -11505,13 +11518,13 @@ mod tests {
         let mut expected = Vec::new();
         let mut running = DemoSnapshot { n: 0 };
         for (index, op) in ops.iter().enumerate() {
-            let mutation = SeverityMutation::decode_op(op).expect("decode");
-            let (next, op_messages) = apply_mutation(&running, &mutation).expect("preview fixture diff applies");
+            let mutation = SeverityMutation::decode_op(op).await.expect("decode");
+            let (next, op_messages) = apply_mutation(&running, &mutation).await.expect("preview fixture diff applies");
             expected.extend(op_messages.into_iter().map(|message| message.at_op(index as u32)));
             running = next;
         }
         assert_eq!(messages, expected, "preview_wire must report exactly the messages the real diff engine computes");
-        assert_eq!(messages.len(), 3, "one message each for warn/error/fatal; the clean op is silent");
+        assert_eq!(messages.await.len(), 3, "one message each for warn/error/fatal; the clean op is silent");
         assert_eq!(messages[0].level, crate::os_dsl::Severity::Warning);
         assert_eq!(messages[0].op_index, Some(1));
         assert_eq!(messages[1].level, crate::os_dsl::Severity::Error);
@@ -11520,51 +11533,51 @@ mod tests {
         assert_eq!(messages[2].op_index, Some(3));
 
         assert_eq!(store.envelope(), &before, "preview_wire is a pure dry run: the live store is byte-identical afterward");
-        assert_eq!(store.snapshot().expect("snapshot unaffected"), DemoSnapshot { n: 0 }, "preview_wire never advances the live cursor");
+        assert_eq!(store.snapshot().await.expect("snapshot unaffected"), DemoSnapshot { n: 0 }, "preview_wire never advances the live cursor");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops_there() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-malformed", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope);
-        let ops: Vec<Vec<u8>> = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode"), vec![0xff, 0xff, 0xff]];
+        let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-malformed", DemoSnapshot { n: 0 }, None).await;
+        let store = ArtifactStore::new(envelope).await;
+        let ops: Vec<Vec<u8>> = vec![SeverityMutation::CleanN { n: 1 }.encode_op().await.expect("encode"), vec![0xff, 0xff, 0xff]];
 
         let messages = store.preview_wire(&ops);
 
-        assert_eq!(messages.len(), 1, "the clean op is silent; the malformed op reports one structural message and stops");
+        assert_eq!(messages.await.len(), 1, "the clean op is silent; the malformed op reports one structural message and stops");
         assert_eq!(messages[0].level, crate::os_dsl::Severity::Fatal);
         assert_eq!(messages[0].code.0, "mutation.invariant");
         assert_eq!(messages[0].op_index, Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
         let initial = DemoSnapshot { n: 0 };
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None));
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None).await).await;
         store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 2 }], description: None }).expect("warning is accepted");
+        let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::WarnN { n: 2 }], description: None }).await.expect("warning is accepted");
         let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
-        let messages = store.messages_for_edit(&edit_id).to_vec();
+        let messages = store.messages_for_edit(&edit_id).await.to_vec();
         let edit = store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).expect("durable edit");
-        let mutation_ids = stable_mutation_ids_for_edit(edit).expect("durable edit carries operation identity");
+        let mutation_ids = stable_mutation_ids_for_edit(edit).await.expect("durable edit carries operation identity");
         let actors = vec![ActorId(edit.actor.clone().expect("durable edit has an actor"))];
         let timestamp = edit.mutation_meta.first().expect("durable edit carries timestamp").timestamp;
         let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
         let conflict_id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp);
-        store.0.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id, kind, status: crate::os_spr::ConflictStatus::Open, messages: messages.clone(), actors, timestamp });
+        store.0.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id.await, kind, status: crate::os_spr::ConflictStatus::Open, messages: messages.clone(), actors, timestamp });
 
         let pack = initial.encode_pack();
-        let spr = print_document_spr(store.envelope()).expect("outcome history encodes");
-        let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).expect("outcome history decodes");
+        let spr = print_document_spr(store.envelope().await).await.expect("outcome history encodes");
+        let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).await.expect("outcome history decodes");
         assert_eq!(parsed.envelope.edit_messages, store.envelope().edit_messages);
         assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
 
-        let restored = ArtifactStore::new(parsed.envelope);
+        let restored = ArtifactStore::new(parsed.envelope).await;
         assert_eq!(restored.messages_for_edit(&edit_id), messages);
         assert_eq!(restored.conflicts(), store.conflicts());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
         let initial = DemoSnapshot { n: 0 };
         let history = crate::os_spr::HistoryLog {
@@ -11577,27 +11590,27 @@ mod tests {
                 finished_at: None,
                 coalesce_key: None,
                 description: None,
-                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode")) }],
+                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::CleanN { n: 1 }.encode_op().await.expect("encode")) }],
                 inverse: Vec::new(),
                 meta: None,
             }],
             ..Default::default()
         };
-        let spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions::default()).expect("encode fixture");
-        let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr).expect_err("authoritative history must never synthesize operation identity");
+        let spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions::default()).await.expect("encode fixture");
+        let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr).await.expect_err("authoritative history must never synthesize operation identity");
         assert!(error.message.contains("authoritative operation metadata"));
     }
     //#endregion 🔖️PreviewWireTests
 
     //#region 🔖️TextFormatHelpers
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_author_conversion_drops_avatar_matching_the_ops_text_format() {
         let author = Author { id: "a1".into(), name: "Alice".into(), avatar: Some("http://example/a1.png".into()) };
         let round_tripped: Author = OpsAuthor::from(&author).into();
         assert_eq!(round_tripped, Author { id: "a1".into(), name: "Alice".into(), avatar: None }, "OpsAuthor never carries avatar — it is not part of the .ops text format");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_header_line_checkpoint_round_trips_including_delimiter_and_quote_characters_in_authors() {
         let header = OpsHeaderLine::Checkpoint {
             id: "c1".to_string(),
@@ -11608,251 +11621,251 @@ mod tests {
             message: Some("first \"checkpoint\"".to_string()),
         };
         let printed = header.print_op();
-        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-        assert!(!printed.contains("parent="), "an absent optional field must be omitted, not printed as a '-' placeholder: {printed}");
-        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert!(!printed.await.contains('\n'), "print_op must be one line: {printed:?}");
+        assert!(!printed.await.contains("parent="), "an absent optional field must be omitted, not printed as a '-' placeholder: {printed}");
+        let parsed = OpsHeaderLine::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, header, "OpsHeaderLine::Checkpoint round trip diverged for {printed:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_header_line_edit_round_trips_including_a_quoted_description() {
         let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()) };
         let printed = header.print_op();
-        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-        assert!(!printed.contains("actor="), "an absent optional field must be omitted: {printed}");
-        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert!(!printed.await.contains('\n'), "print_op must be one line: {printed:?}");
+        assert!(!printed.await.contains("actor="), "an absent optional field must be omitted: {printed}");
+        let parsed = OpsHeaderLine::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, header, "OpsHeaderLine::Edit round trip diverged for {printed:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_header_line_cursor_round_trips_the_full_applied_and_redo_lists() {
         let header = OpsHeaderLine::Cursor { applied: vec!["e1".to_string(), "e3".to_string()], redo: vec!["e2".to_string()], checkpoint: Some("ck-1".to_string()) };
         let printed = header.print_op();
-        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert!(!printed.await.contains('\n'), "print_op must be one line: {printed:?}");
+        let parsed = OpsHeaderLine::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, header, "OpsHeaderLine::Cursor round trip diverged for {printed:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_header_line_parse_op_rejects_a_line_with_no_known_keyword() {
-        let error = OpsHeaderLine::parse_op("not a structural line").unwrap_err();
+        let error = OpsHeaderLine::parse_op("not a structural line").await.unwrap_err();
         assert!(error.message.contains("unknown operation line"), "got {error:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_document_text_rejects_a_header_line_missing_its_required_positional_id() {
         let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "active\n".to_string() };
-        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
         assert!(error.message.contains("expected Text"), "got {error:?}");
         assert_eq!(error.span.line, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_document_text_rejects_an_unknown_header_line_keyword() {
         let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string() };
-        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_err();
+        let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
         assert!(error.message.contains("unknown operation line"), "got {error:?}");
         assert_eq!(error.span.line, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: Some("said \"hi\" and used a \\ backslash".into()) }).expect("apply");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }).expect("create alternative (auto-commits and activates it)");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: Some("said \"hi\" and used a \\ backslash".into()) }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }).await.expect("create alternative (auto-commits and activates it)");
         assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
-        let files = print_document_text(store.envelope()).expect("print document text");
+        let files = print_document_text(store.envelope().await).await.expect("print document text");
         assert!(files.ops.lines().any(|line| line.starts_with("active ")), "an active alternative must print an `active` header line: {}", files.ops);
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        store.dispatch(ArtifactCommand::Undo).expect("undo e1");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo e1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
         // e1 (undone, in redo) precedes e2 (applied) in file order — exactly the interleaving a
         // single tail-edit marker cannot represent (see HistoryCursor's doc).
-        assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
-        let files = print_document_text(store.envelope()).expect("print document text");
+        assert_eq!(store.applied_edit_ids().await.len(), 1, "only e2 is applied");
+        let files = print_document_text(store.envelope().await).await.expect("print document text");
         assert!(files.ops.lines().any(|line| line.starts_with("cursor ")), "a synced cursor must print a `cursor` header line: {}", files.ops);
-        let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+        let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
         assert_eq!(parsed.envelope.cursor, store.envelope().cursor.clone(), "cursor diverged across a print/parse round trip");
         assert_eq!(parsed.snapshot.n, 2, "restored snapshot must reflect only the applied edit (e2), not both");
     }
 
     /// @emoji 🔐️ The save→load→undo proof (contract's runtime-behavior requirement): a store's
     /// undo/redo position survives a full pack+spr save/load cycle, not just its snapshot value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        let post_e1 = store.snapshot().expect("post-e1 snapshot");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
-        let post_e2 = store.snapshot().expect("post-e2 snapshot");
-        store.dispatch(ArtifactCommand::Undo).expect("undo e2");
-        assert_eq!(store.snapshot().expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
+        let post_e1 = store.snapshot().await.expect("post-e1 snapshot");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
+        let post_e2 = store.snapshot().await.expect("post-e2 snapshot");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
+        assert_eq!(store.snapshot().await.expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
         test_support::assert_live_equals_replay(&store);
 
         // Save: print_document_pack persists pack (initial snapshot) + spr (real inverse/meta,
         // AND the cursor reflecting exactly "e1 applied, e2 in redo").
-        let pack_files = print_document_pack(store.envelope()).expect("print document pack");
+        let pack_files = print_document_pack(store.envelope().await).await.expect("print document pack");
         assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
 
         // Load: a FRESH store built only from persisted bytes — no access to the original `store`.
-        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
-        let mut reloaded = ArtifactStore::new(parsed.envelope);
-        assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "ArtifactStore::new must seed live state from the persisted cursor");
+        let mut reloaded = ArtifactStore::new(parsed.envelope).await;
+        assert_eq!(reloaded.snapshot().await.expect("reloaded snapshot"), post_e1, "ArtifactStore::new must seed live state from the persisted cursor");
         assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
         test_support::assert_live_equals_replay(&reloaded);
 
         // Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
-        reloaded.dispatch(ArtifactCommand::Redo).expect("redo e2 after reload");
-        assert_eq!(reloaded.snapshot().expect("post-redo snapshot"), post_e2);
+        reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after reload");
+        assert_eq!(reloaded.snapshot().await.expect("post-redo snapshot"), post_e2);
         test_support::assert_live_equals_replay(&reloaded);
 
         // Undo twice from here reaches the true initial state.
-        reloaded.dispatch(ArtifactCommand::Undo).expect("undo e2 again");
-        reloaded.dispatch(ArtifactCommand::Undo).expect("undo e1");
-        assert_eq!(reloaded.snapshot().expect("final snapshot"), DemoSnapshot { n: 0 });
+        reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo e2 again");
+        reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo e1");
+        assert_eq!(reloaded.snapshot().await.expect("final snapshot"), DemoSnapshot { n: 0 });
         test_support::assert_live_equals_replay(&reloaded);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_codecs_share_complete_authoritative_history_validation() {
         let envelope = create_document_envelope("demo/v1", "codec-validation", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit");
-        let text = print_document_text(store.envelope()).expect("text fixture");
+        let mut store = ArtifactStore::new(envelope.await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("commit");
+        let text = print_document_text(store.envelope().await).await.expect("text fixture");
         let duplicate_change = text.ops.lines().find(|line| line.starts_with("change ")).expect("one persisted change");
         let malformed_text = format!("{}\n{duplicate_change}", text.ops);
-        assert!(matches!(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &malformed_text), Err(error) if error.message.contains("repeats authoritative change")));
+        assert!(matches!(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &malformed_text).await, Err(error) if error.message.contains("repeats authoritative change")));
 
-        let pack = print_document_pack(store.envelope()).expect("binary fixture");
-        let mut history = crate::os_spr::decode_history(&pack.spr, &crate::os_spr::DecodeOptions::default()).expect("decode history");
+        let pack = print_document_pack(store.envelope().await).await.expect("binary fixture");
+        let mut history = crate::os_spr::decode_history(&pack.spr, &crate::os_spr::DecodeOptions::default()).await.expect("decode history");
         history.changes.push(history.changes.first().expect("one persisted change").clone());
-        let malformed_spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() }).expect("encode malformed history");
-        assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr), Err(error) if error.message.contains("repeats authoritative change")));
+        let malformed_spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() }).await.expect("encode malformed history");
+        assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr).await, Err(error) if error.message.contains("repeats authoritative change")));
     }
 
     //#endregion 🔖️TextFormatHelpers
 
     //#region 🔖️CommandErrorPaths
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_with_no_mutations_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), description: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), description: None }).await.unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn amend_last_with_no_mutations_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let error = store.dispatch(ArtifactCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).await.unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_with_nothing_applied_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        assert_eq!(store.dispatch(ArtifactCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        assert_eq!(store.dispatch(ArtifactCommand::Undo).await.unwrap_err(), VcsError::NothingToUndo);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn redo_with_nothing_undone_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        assert_eq!(store.dispatch(ArtifactCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        assert_eq!(store.dispatch(ArtifactCommand::Redo).await.unwrap_err(), VcsError::NothingToRedo);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkout_of_an_unknown_checkpoint_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }).await.unwrap_err();
         assert_eq!(error, VcsError::UnknownChange("nope".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn switch_to_an_unknown_alternative_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }).await.unwrap_err();
         assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
-        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
         envelope.vcs.alternatives.push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] });
-        let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope) {
+        let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope).await {
             Ok(_) => panic!("the alternative's pinned checkpoint id must actually exist"),
             Err(error) => error,
         };
         assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("alt-dangling") && message.contains("checkpoint-that-was-never-recorded")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let error = store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let error = store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }).await.unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compensating_undo_without_a_semantic_command_is_rejected() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }).await.unwrap_err();
         assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).unwrap_err();
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).await.unwrap_err();
         assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let command_text = print_command(&ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("print command");
-        store.dispatch_text(&command_text).expect("dispatch text");
-        assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let command_text = print_command(&ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("print command");
+        store.dispatch_text(&command_text).await.expect("dispatch text");
+        assert_eq!(store.snapshot_json().await.expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
-        let error = store.dispatch_text("not a command").unwrap_err();
+        let error = store.dispatch_text("not a command").await.unwrap_err();
         assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }.encode_op().expect("encode command");
-        store.dispatch_binary(&command_bytes).expect("dispatch binary");
-        assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }.encode_op().await.expect("encode command");
+        store.dispatch_binary(&command_bytes).await.expect("dispatch binary");
+        assert_eq!(store.snapshot_json().await.expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: 7 }).unwrap());
 
         let mut wrong_format = command_bytes.clone();
         wrong_format[0] = 9;
-        let error = store.dispatch_binary(&wrong_format).unwrap_err();
+        let error = store.dispatch_binary(&wrong_format).await.unwrap_err();
         assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_text_binary_equivalence_holds_for_every_document_command_variant() {
         let commands: Vec<ArtifactCommand<DemoMutation>> = vec![
             ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: Some("set n".to_string()) },
@@ -11882,30 +11895,30 @@ mod tests {
     //#endregion 🔖️CommandErrorPaths
 
     //#region 🔖️ReconcileAlternative
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reconcile_alternative_requires_an_existing_checkpoint() {
-        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).unwrap_err();
+        let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).await.unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).expect("commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
         let base_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
 
         let mut without_message = store.envelope().clone();
-        let alt_id = reconcile_alternative(&mut without_message, "no-record", None, Vec::new()).expect("reconcile without message");
+        let alt_id = reconcile_alternative(&mut without_message, "no-record", None, Vec::new()).await.expect("reconcile without message");
         assert_eq!(without_message.vcs.alternatives.last().unwrap().checkpoint_ids, vec![base_checkpoint_id.clone()]);
         assert_eq!(without_message.vcs.checkpoints.len(), 1, "no checkpoint_message means no new checkpoint is recorded");
         assert!(!alt_id.is_empty());
 
         let mut with_message = store.envelope().clone();
         let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
-        reconcile_alternative(&mut with_message, "recorded", Some("merged concurrent work".into()), authors.clone()).expect("reconcile with message");
+        reconcile_alternative(&mut with_message, "recorded", Some("merged concurrent work".into()), authors.clone()).await.expect("reconcile with message");
         assert_eq!(with_message.vcs.checkpoints.len(), 2, "a checkpoint_message appends one reconciliation checkpoint");
         let recorded_checkpoint = with_message.vcs.checkpoints.last().unwrap();
         assert_eq!(recorded_checkpoint.parent_id, Some(base_checkpoint_id));
@@ -11914,14 +11927,14 @@ mod tests {
         assert_eq!(with_message.vcs.changes.last().unwrap().description, Some("merged concurrent work".into()), "the passed checkpoint_message becomes the change's description");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).await.expect("commit 1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).await.expect("commit 2");
 
         let ids: Vec<&str> = store.envelope().vcs.checkpoints.iter().map(|checkpoint| checkpoint.id.as_str()).collect();
         assert_eq!(ids.len(), 2);
@@ -11929,95 +11942,95 @@ mod tests {
         assert!(ids.iter().all(|id| id.starts_with("ck-")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply root");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply root");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply a");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create feature-a");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply a");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
         let a1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
-        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply b");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).await.expect("checkout root");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply b");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
         let b1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
-        assert_eq!(merge_base(store.envelope(), &a1_id, &b1_id), Some(root_id.clone()), "a1 and b1 forked at root");
-        assert_eq!(merge_base(store.envelope(), &a1_id, &root_id), Some(root_id.clone()), "root is its own descendant's merge-base");
-        assert_eq!(merge_base(store.envelope(), &root_id, &root_id), Some(root_id), "a checkpoint is its own merge-base");
+        assert_eq!(merge_base(store.envelope().await, &a1_id, &b1_id), Some(root_id.clone()), "a1 and b1 forked at root");
+        assert_eq!(merge_base(store.envelope().await, &a1_id, &root_id), Some(root_id.clone()), "root is its own descendant's merge-base");
+        assert_eq!(merge_base(store.envelope().await, &root_id, &root_id), Some(root_id), "a checkpoint is its own merge-base");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
-        assert_eq!(merge_base(store.envelope(), &root_id, "unknown-checkpoint"), None, "an id absent from the checkpoint list shares no ancestry with anything");
+        assert_eq!(merge_base(store.envelope().await, &root_id, "unknown-checkpoint"), None, "an id absent from the checkpoint list shares no ancestry with anything");
     }
 
     //#endregion 🔖️ContentAddressedCheckpointAndMergeBase
 
     //#region 🔖️RemoteSnapshotMerge
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("local apply");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).expect("local commit");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("local apply");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).await.expect("local commit");
 
-        let mut remote_store = ArtifactStore::new(store.envelope().clone());
-        remote_store.reset(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new()).expect("reset remote");
-        remote_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("remote apply");
-        remote_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).expect("remote commit");
+        let mut remote_store = ArtifactStore::new(store.envelope().clone()).await;
+        remote_store.reset(store.envelope().clone(), store.applied_edit_ids().await.to_vec(), Vec::new()).await.expect("reset remote");
+        remote_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("remote apply");
+        remote_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).await.expect("remote commit");
 
-        let (channel, remote_end) = ChannelBackbone::pair("chan");
-        store.attach_backbone(Backbones::Channel(channel)).expect("attach");
-        let _ = remote_end.drain().expect("drain attach snapshot");
-        let remote_files = remote_store.snapshot_pack().expect("remote snapshot");
-        remote_end.push(BackboneMessage::Snapshot { pack: remote_files.pack, spr: remote_files.spr }).expect("push snapshot");
-        store.tick().expect("tick merges the pushed snapshot");
+        let (channel, remote_end) = ChannelBackbone::pair("chan").await;
+        store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
+        let _ = remote_end.drain().await.expect("drain attach snapshot");
+        let remote_files = remote_store.snapshot_pack().await.expect("remote snapshot");
+        remote_end.push(BackboneMessage::Snapshot { pack: remote_files.pack, spr: remote_files.spr }).await.expect("push snapshot");
+        store.tick().await.expect("tick merges the pushed snapshot");
 
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the shared original edit is deduped, only the new remote edit is added");
         assert_eq!(store.envelope().vcs.checkpoints.len(), 2, "the remote's new checkpoint is merged in by id");
-        assert_eq!(store.snapshot().expect("snapshot").n, 2, "current folds in the newly merged edit's forwards");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 2, "current folds in the newly merged edit's forwards");
     }
 
     //#endregion 🔖️RemoteSnapshotMerge
 
     //#region 🔖️SpaceMemberCheckoutRouting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
-        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let mut store = ArtifactStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature".into() }).expect("create alternative (auto-commits since no checkpoint existed yet)");
+        let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let mut store = ArtifactStore::new(envelope).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::CreateAlternative { name: "feature".into() }).await.expect("create alternative (auto-commits since no checkpoint existed yet)");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
 
-        SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout at the tip routes through SwitchAlternative");
+        SpaceMember::checkout(&mut store, &tip, &alt_id).await.expect("checkout at the tip routes through SwitchAlternative");
         assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply on branch");
-        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).expect("commit c2, advancing the alt's tip past `tip`");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply on branch");
+        store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2, advancing the alt's tip past `tip`");
 
-        SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
-        assert_eq!(store.snapshot().expect("snapshot").n, 1, "restored the old checkpoint's state");
+        SpaceMember::checkout(&mut store, &tip, &alt_id).await.expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
+        assert_eq!(store.snapshot().await.expect("snapshot").n, 1, "restored the old checkpoint's state");
         assert_eq!(store.envelope().active_alternative_id, None, "the checked-out checkpoint is no longer any alternative's tip, so nothing is active");
     }
 
     //#endregion 🔖️SpaceMemberCheckoutRouting
 
     //#region 🔖️BackbonePorts
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn memory_backbone_port_round_trips_and_reports_a_missing_file() {
         let port = MemoryBackbonePort::new();
         let error = port.read("file://nowhere").unwrap_err();
@@ -12028,7 +12041,7 @@ mod tests {
         assert_eq!(port.read("file://a").expect("read after overwrite"), "payload-2", "write is an upsert");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn local_storage_backbone_port_falls_back_to_its_in_memory_store() {
         let port = LocalStorageBackbonePort::new();
         let error = port.read("local://missing").unwrap_err();
@@ -12037,7 +12050,7 @@ mod tests {
         assert_eq!(port.read("local://a").expect("read falls back too"), "value");
 
         let defaulted = LocalStorageBackbonePort::default();
-        assert!(defaulted.read("local://a").is_err(), "Default constructs its own independent fallback store");
+        assert!(defaulted.read("local://a").await.is_err(), "Default constructs its own independent fallback store");
     }
 
     //#endregion 🔖️BackbonePorts
@@ -12068,7 +12081,9 @@ mod tests {
         ]
     }
 
-    async fn dsl_value_numeric_insensitive_eq(a: &DslValue, b: &DslValue) -> bool {
+    // 🚫️async: E1 pure recursive comparison consumed inside sync `.all()`/`.is_some_and()` closures
+    // that cannot themselves be async — see R9/R10 residue shape 1
+    fn dsl_value_numeric_insensitive_eq(a: &DslValue, b: &DslValue) -> bool {
         match (a, b) {
             (DslValue::Number(x), DslValue::Number(y)) => x == y,
             (DslValue::Array(x), DslValue::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| dsl_value_numeric_insensitive_eq(a, b)),
@@ -12082,26 +12097,26 @@ mod tests {
     /// `PackValueCodec` mirror (`framework/product/os/ts/index.ts`). Run with `--nocapture` to
     /// capture the printed `name -> hex` lines; also asserts `decode_pack_value(encode_pack_value(v))
     /// == v` for every entry so the corpus is never accidentally out of date with the real codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_value_fixture_corpus_hex_dump() {
         for (name, value) in pack_value_fixture_corpus() {
             let bytes = pack_rt::encode_pack_value(&value);
-            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-            println!("[pack_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
-            let decoded = pack_rt::decode_pack_value(&bytes).expect("decode_pack_value");
+            let hex: String = bytes.await.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[pack_value_fixture] {name} ({} bytes) -> {hex}", bytes.await.len());
+            let decoded = pack_rt::decode_pack_value(&bytes).await.expect("decode_pack_value");
             assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
         }
     }
 
     /// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground
     /// truth for the container-less wire codec mirror in TS.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_wire_value_fixture_corpus_hex_dump() {
         for (name, value) in pack_value_fixture_corpus() {
             let bytes = pack_rt::encode_wire_value(&value);
-            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-            println!("[pack_wire_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
-            let decoded = pack_rt::decode_wire_value(&bytes).expect("decode_wire_value");
+            let hex: String = bytes.await.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[pack_wire_value_fixture] {name} ({} bytes) -> {hex}", bytes.await.len());
+            let decoded = pack_rt::decode_wire_value(&bytes).await.expect("decode_wire_value");
             assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
         }
     }
@@ -12121,28 +12136,28 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
         }
     }
 
     impl OpBinary for ValidatedMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
-            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let mut out = Vec::with_capacity(body.len() + 3);
             out.push(OP_BINARY_FORMAT);
             crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -12161,8 +12176,9 @@ mod tests {
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
             let spec = spec_fn();
             let body = &bytes[reader.position().await..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: reader.position().await as u64, detail: error.to_string() })
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
+            let record_offset = reader.position().await as u64;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
 
@@ -12172,8 +12188,8 @@ mod tests {
         type Diff = DemoDiff;
         async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             match self {
-                ValidatedMutation::SetN { n } if *n < 0 => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n must be non-negative", ["n"]),
-                ValidatedMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }),
+                ValidatedMutation::SetN { n } if *n < 0 => crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n must be non-negative", ["n"]).await,
+                ValidatedMutation::SetN { n } => crate::os_spr::MutationOutcome::new(DemoDiff { n: Some(*n) }).await,
             }
         }
         async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -12186,26 +12202,26 @@ mod tests {
         crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_child_dsl_field_round_trips_via_pack_and_value() {
         let target = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "87a".into(), subset: "mesh".into() } };
-        let child: ArtifactChild<DemoSnapshot> = ArtifactChild::new("child-1".into(), target);
+        let child: ArtifactChild<DemoSnapshot> = ArtifactChild::new("child-1".into(), target).await;
 
         let spec = artifact_child_spec();
         let record = artifact_child_to_record(&child);
-        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-        let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
-        let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).expect("from_record");
+        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
+        let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
+        let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).await.expect("from_record");
         assert_eq!(decoded, child);
 
         let value = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::to_value(&child);
-        let via_field = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::from_value(&value).expect("from_value");
+        let via_field = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::from_value(&value).await.expect("from_value");
         assert_eq!(via_field, child);
 
         assert_eq!(child.to_child_ref("mesh-slot"), ChildRef { slot: "mesh-slot".into(), child_id: "child-1".into(), target: child.target.clone() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn owner_ref_dsl_field_round_trips_via_pack() {
         let owner = OwnerRef {
             parent: crate::os_io::ArtifactRef { artifact_id: "parent-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.object".into(), standard: "1".into(), subset: "*".into() } },
@@ -12214,13 +12230,13 @@ mod tests {
         };
         let spec = owner_ref_spec();
         let record = owner_ref_to_record(&owner);
-        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-        let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
-        let decoded = owner_ref_from_record(&decoded_record).expect("from_record");
+        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
+        let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
+        let decoded = owner_ref_from_record(&decoded_record).await.expect("from_record");
         assert_eq!(decoded, owner);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_link_dsl_field_round_trips_every_link_pin_variant() {
         let target = crate::os_io::ArtifactRef { artifact_id: "linked-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
         let pins = vec![LinkPin::Head, LinkPin::Checkpoint { id: "ck-abc123".into() }, LinkPin::Snapshot { blob: BlobRef { hash: "deadbeef".into(), size: 42, media_type: "image/png".into() } }];
@@ -12228,68 +12244,68 @@ mod tests {
             let link = ArtifactLink { target: target.clone(), pin: pin.clone(), role: "cover-image".into() };
             let spec = artifact_link_spec();
             let record = artifact_link_to_record(&link);
-            let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-            let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
-            let decoded = artifact_link_from_record(&decoded_record).expect("from_record");
+            let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
+            let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
+            let decoded = artifact_link_from_record(&decoded_record).await.expect("from_record");
             assert_eq!(decoded, link, "round trip diverged for pin variant {pin:?}");
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_refs_defaults_to_empty_for_a_leaf_snapshot() {
         struct LeafSnapshot;
         impl ArtifactRefs for LeafSnapshot {}
         let snapshot = LeafSnapshot;
-        assert!(snapshot.child_refs().is_empty());
-        assert!(snapshot.links().is_empty());
+        assert!(snapshot.child_refs().await.is_empty());
+        assert!(snapshot.links().await.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
         let dialect = demo_child_dialect();
 
-        let mut child = super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: 7 }.encode_pack()).expect("create");
-        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: Some("bump".into()) }).expect("apply");
-        child.dispatch(ArtifactCommand::Undo).expect("undo");
-        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 11 }], description: None }).expect("re-apply");
+        let mut child = super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: 7 }.encode_pack()).await.expect("create");
+        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: Some("bump".into()) }).await.expect("apply");
+        child.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 11 }], description: None }).await.expect("re-apply");
 
-        let files = print_document_pack(child.envelope()).expect("print");
+        let files = print_document_pack(child.envelope().await).await.expect("print");
         let persisted = encode_document_pack_bytes(&files.pack, &files.spr);
-        let reopened = super::open_member_store::<DemoSnapshot, DemoMutation>(&persisted).expect("open");
+        let reopened = super::open_member_store::<DemoSnapshot, DemoMutation>(&persisted).await.expect("open");
 
         assert_eq!(reopened.envelope().id, "child-round-trip");
-        assert_eq!(reopened.snapshot().expect("head snapshot"), child.snapshot().expect("head snapshot"), "reopened child's live content diverged from the persisted one");
-        assert_eq!(reopened.snapshot().expect("head snapshot"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
+        assert_eq!(reopened.snapshot().await.expect("head snapshot"), child.snapshot().await.expect("head snapshot"), "reopened child's live content diverged from the persisted one");
+        assert_eq!(reopened.snapshot().await.expect("head snapshot"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
-        assert!(matches!(super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[]), Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+        assert!(matches!(super::create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[]).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
         // 🏠️ owner ⇒ dialect: an envelope that is somebody's child but names no dialect cannot be
         // typed by its parent, so `open` must fail closed rather than hand back an untypable member.
         let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: 1 }, None);
-        envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
-        let files = print_document_pack(&envelope).expect("print");
+        envelope.await.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect().await }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
+        let files = print_document_pack(&envelope).await.expect("print");
         let orphan = encode_document_pack_bytes(&files.pack, &files.spr);
-        assert!(matches!(super::open_member_store::<DemoSnapshot, DemoMutation>(&orphan), Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+        assert!(matches!(super::open_member_store::<DemoSnapshot, DemoMutation>(&orphan).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: 1 }, None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
-        let checkpoint = SpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new()).expect("checkpoint");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply after checkpoint");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: 1 }, None).await).await;
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply");
+        let checkpoint = SpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new()).await.expect("checkpoint");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply after checkpoint");
 
-        let historical = DemoSnapshot::decode_pack(&store.pack_at_checkpoint(&checkpoint).expect("pack at checkpoint")).expect("decode");
-        let live = DemoSnapshot::decode_pack(&store.document_pack_bytes().expect("head pack")).expect("decode");
+        let historical = DemoSnapshot::decode_pack(&store.pack_at_checkpoint(&checkpoint).await.expect("pack at checkpoint")).await.expect("decode");
+        let live = DemoSnapshot::decode_pack(&store.document_pack_bytes().await.expect("head pack")).await.expect("decode");
         assert_eq!(historical, DemoSnapshot { n: 2 }, "checkpoint read did not return the pinned content");
         assert_eq!(live, DemoSnapshot { n: 3 }, "reading a checkpoint moved the live cursor");
-        assert!(matches!(store.pack_at_checkpoint("no-such-checkpoint"), Err(VcsError::UnknownChange(_))));
+        assert!(matches!(store.pack_at_checkpoint("no-such-checkpoint").await, Err(VcsError::UnknownChange(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins() {
         struct FixtureDirectory {
             member: ArtifactStore<DemoSnapshot, DemoMutation>,
@@ -12303,30 +12319,30 @@ mod tests {
             }
         }
 
-        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: 1 }, None));
-        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 42 }], description: None }).expect("apply");
-        let pinned = SpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new()).expect("checkpoint");
-        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 99 }], description: None }).expect("apply after pin");
+        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: 1 }, None).await).await;
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 42 }], description: None }).await.expect("apply");
+        let pinned = SpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new()).await.expect("checkpoint");
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 99 }], description: None }).await.expect("apply after pin");
 
         let resolver = MemberLinkResolver::new(FixtureDirectory { member });
-        let target = crate::os_io::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect() };
+        let target = crate::os_io::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect().await };
         let link_of = |pin: LinkPin| ArtifactLink { target: target.clone(), pin, role: "representation".into() };
-        let decode = |state: LinkState| match state {
-            LinkState::Resolved { pack_bytes, .. } => DemoSnapshot::decode_pack(&pack_bytes).expect("decode"),
+        let decode = async |state: LinkState| match state {
+            LinkState::Resolved { pack_bytes, .. } => DemoSnapshot::decode_pack(&pack_bytes).await.expect("decode"),
             other => panic!("expected Resolved, found {other:?}"),
         };
 
-        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Head))), DemoSnapshot { n: 99 }, "a Head pin must follow the target's live tip");
-        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Checkpoint { id: pinned }))), DemoSnapshot { n: 42 }, "a Checkpoint pin must keep resolving to the pinned history, not the tip");
+        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Head)).await).await, DemoSnapshot { n: 99 }, "a Head pin must follow the target's live tip");
+        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Checkpoint { id: pinned })).await).await, DemoSnapshot { n: 42 }, "a Checkpoint pin must keep resolving to the pinned history, not the tip");
 
         let blob = BlobRef { hash: "deadbeef".into(), size: 3, media_type: "application/octet-stream".into() };
-        assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })), LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
+        assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })).await, LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
 
-        let absent = ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
+        let absent = ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect().await }, pin: LinkPin::Head, role: "representation".into() };
         assert_eq!(resolver.resolve(&absent), LinkState::Missing);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn link_resolver_reports_resolved_missing_and_pinned_only_states() {
         struct DemoResolver;
         impl LinkResolver for DemoResolver {
@@ -12340,51 +12356,51 @@ mod tests {
         }
         let target = crate::os_io::ArtifactRef { artifact_id: "linked-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
         let resolver = DemoResolver;
-        assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }), LinkState::Resolved { .. }));
-        assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }), LinkState::PinnedOnly { .. }));
-        assert!(matches!(resolver.resolve(&ArtifactLink { target, pin: LinkPin::Head, role: "gone".into() }), LinkState::Missing));
+        assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }).await, LinkState::Resolved { .. }));
+        assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }).await, LinkState::PinnedOnly { .. }));
+        assert!(matches!(resolver.resolve(&ArtifactLink { target, pin: LinkPin::Head, role: "gone".into() }).await, LinkState::Missing));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composition_graph_owns_forest_rejects_second_owner_and_cycle() {
         let mut graph = CompositionGraph::new();
-        graph.insert_owns("parent-a", "slot-1", "child-1").expect("first owner ok");
-        graph.insert_owns("parent-a", "slot-1", "child-1").expect("idempotent re-own ok");
+        graph.await.insert_owns("parent-a", "slot-1", "child-1").await.expect("first owner ok");
+        graph.await.insert_owns("parent-a", "slot-1", "child-1").await.expect("idempotent re-own ok");
 
-        let error = graph.insert_owns("parent-b", "slot-1", "child-1").expect_err("second owner must be rejected");
+        let error = graph.await.insert_owns("parent-b", "slot-1", "child-1").await.expect_err("second owner must be rejected");
         assert!(error.contains("already owned"), "unexpected message: {error}");
 
-        graph.insert_owns("child-1", "slot-x", "grandchild-1").expect("child owns grandchild ok");
-        assert!(graph.would_cycle_owns("grandchild-1", "parent-a"), "parent-a is an ancestor of grandchild-1 via child-1");
-        let cycle_error = graph.insert_owns("grandchild-1", "slot-y", "parent-a").expect_err("cycle must be rejected");
+        graph.await.insert_owns("child-1", "slot-x", "grandchild-1").await.expect("child owns grandchild ok");
+        assert!(graph.await.would_cycle_owns("grandchild-1", "parent-a"), "parent-a is an ancestor of grandchild-1 via child-1");
+        let cycle_error = graph.await.insert_owns("grandchild-1", "slot-y", "parent-a").await.expect_err("cycle must be rejected");
         assert!(cycle_error.contains("cycle"), "unexpected message: {cycle_error}");
 
-        assert_eq!(graph.owner_of("child-1"), Some("parent-a"));
-        assert_eq!(graph.slot_of("child-1"), Some("slot-1"));
-        graph.remove_owns("child-1");
-        assert_eq!(graph.owner_of("child-1"), None);
+        assert_eq!(graph.await.owner_of("child-1"), Some("parent-a"));
+        assert_eq!(graph.await.slot_of("child-1"), Some("slot-1"));
+        graph.await.remove_owns("child-1");
+        assert_eq!(graph.await.owner_of("child-1"), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composition_graph_links_reject_cycle_but_allow_converging_dag_edges() {
         let mut graph = CompositionGraph::new();
-        graph.insert_link("a", "b").expect("a->b ok");
-        graph.insert_link("b", "c").expect("b->c ok");
-        graph.insert_link("a", "c").expect("a->c ok, a converging (non-cyclic) edge");
+        graph.await.insert_link("a", "b").await.expect("a->b ok");
+        graph.await.insert_link("b", "c").await.expect("b->c ok");
+        graph.await.insert_link("a", "c").await.expect("a->c ok, a converging (non-cyclic) edge");
 
-        let error = graph.insert_link("c", "a").expect_err("closing the loop must be rejected");
+        let error = graph.await.insert_link("c", "a").await.expect_err("closing the loop must be rejected");
         assert!(error.contains("cycle"), "unexpected message: {error}");
 
-        assert_eq!(HashSet::<String>::from_iter(graph.links_from("a")), HashSet::from(["b".to_string(), "c".to_string()]));
-        graph.remove_link("a", "b");
-        assert_eq!(graph.links_from("a"), vec!["c".to_string()]);
+        assert_eq!(HashSet::<String>::from_iter(graph.await.links_from("a")), HashSet::from(["b".to_string(), "c".to_string()]));
+        graph.await.remove_link("a", "b");
+        assert_eq!(graph.await.links_from("a"), vec!["c".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mint_child_id_converges_across_two_replicas_and_varies_by_ordinal_and_slot() {
         let parent_id = "parent-1";
         let slot = "mesh-slot";
-        let ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 7 }.encode_op().expect("encode")];
+        let ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 7 }.encode_op().await.expect("encode")];
         let fingerprint_replica_1 = concat_ops_fingerprint(&ops);
         let fingerprint_replica_2 = concat_ops_fingerprint(&ops);
         assert_eq!(fingerprint_replica_1, fingerprint_replica_2, "identical ops must fingerprint identically");
@@ -12401,25 +12417,25 @@ mod tests {
     }
 
     /// @emoji 🧪️ One fatal preview anywhere ⇒ nothing applied on ANY member, parent included.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-atomic-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let good_op = ValidatedMutation::SetN { n: 5 }.encode_op().expect("encode good op");
-        let bad_op = ValidatedMutation::SetN { n: -1 }.encode_op().expect("encode bad op");
+        let good_op = ValidatedMutation::SetN { n: 5 }.encode_op().await.expect("encode good op");
+        let bad_op = ValidatedMutation::SetN { n: -1 }.encode_op().await.expect("encode bad op");
         let parent_ops = vec![good_op];
         let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![bad_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["bad".into()] };
         let mut children = [(&mut child_store, child_dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
-        match result {
+        let result = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
+        match result.await {
             Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
             // 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6: an
             // ordinary mutation-level (message-based) rejection now travels as `VcsError::Rejected`,
@@ -12439,23 +12455,23 @@ mod tests {
     /// @emoji 🧪️ TASK 2's ownership-check law: `dispatch_group` refuses to touch a `ChildDispatch`
     /// whose claimed parent the coordinator's own `CompositionGraph` does not currently track —
     /// zero side effects, same as any other phase-1 failure.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-unowned-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator = CompositionCoordinator::new();
         // Deliberately NOT seeding `coordinator.graph_mut().insert_owns(..)` — the graph has no
         // record that `parent_ref` owns `child_ref`.
 
-        let op = ValidatedMutation::SetN { n: 1 }.encode_op().expect("encode");
+        let op = ValidatedMutation::SetN { n: 1 }.encode_op().await.expect("encode");
         let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, child_dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
-        match result {
+        let result = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
+        match result.await {
             Ok(_) => panic!("expected an OwnershipViolation, but the dispatch succeeded"),
             Err(VcsError::OwnershipViolation(_)) => {}
             Err(other) => panic!("expected OwnershipViolation, got a different VcsError: {other}"),
@@ -12467,22 +12483,22 @@ mod tests {
     /// nested test module) — the reverse-order rollback `dispatch_group`'s phase 2 falls back to on
     /// a late failure. Proves the order (parent first, then children in reverse dispatch order) and
     /// that a clean rollback restores every member's pre-group snapshot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compensate_undoes_applied_members_in_reverse_order() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-comp-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_a_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
         let child_b_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply parent");
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply parent");
         let parent_edit_id = parent_store.envelope().vcs.edits.last().expect("parent edit").id.clone();
 
-        let mut child_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_a_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        child_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply a");
+        let mut child_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_a_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        child_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply a");
         let child_a_edit_id = child_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
-        let mut child_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_b_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        child_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply b");
+        let mut child_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_b_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        child_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply b");
         let child_b_edit_id = child_b.envelope().vcs.edits.last().expect("b edit").id.clone();
 
         let dispatch_a = ChildDispatch { child: child_a_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
@@ -12492,31 +12508,31 @@ mod tests {
 
         let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some(&parent_edit_id));
 
-        assert!(report.skipped.is_empty(), "every member should have undone cleanly");
-        assert_eq!(report.undone.len(), 3);
-        assert_eq!(report.undone[0].0.artifact_id, parent_ref.artifact_id, "parent undone first");
-        assert_eq!(report.undone[1].0.artifact_id, child_b_ref.artifact_id, "then the LAST-dispatched child");
-        assert_eq!(report.undone[2].0.artifact_id, child_a_ref.artifact_id, "then the first-dispatched child");
+        assert!(report.await.skipped.is_empty(), "every member should have undone cleanly");
+        assert_eq!(report.await.undone.len(), 3);
+        assert_eq!(report.await.undone[0].0.artifact_id, parent_ref.artifact_id, "parent undone first");
+        assert_eq!(report.await.undone[1].0.artifact_id, child_b_ref.artifact_id, "then the LAST-dispatched child");
+        assert_eq!(report.await.undone[2].0.artifact_id, child_a_ref.artifact_id, "then the first-dispatched child");
 
-        assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 0, "parent's edit was undone");
-        assert_eq!(child_a.snapshot().expect("a snapshot").n, 0, "child a's edit was undone");
-        assert_eq!(child_b.snapshot().expect("b snapshot").n, 0, "child b's edit was undone");
+        assert_eq!(parent_store.snapshot().await.expect("parent snapshot").n, 0, "parent's edit was undone");
+        assert_eq!(child_a.snapshot().await.expect("a snapshot").n, 0, "child a's edit was undone");
+        assert_eq!(child_b.snapshot().await.expect("b snapshot").n, 0, "child b's edit was undone");
     }
 
     /// @emoji 🧪️ TASK 2's "if compensation itself fails" law: a member whose own rollback errors is
     /// recorded in `GroupUndoReport.skipped` (never panics, never aborts compensating the rest),
     /// and `fold_compensation_error` upgrades the original failure into `VcsError::CompensationFailed`
     /// carrying both facts.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
         // Parent has NOTHING applied, so `parent.undo()` deterministically fails with
         // `NothingToUndo` — simulating a member whose own rollback errors mid-compensation.
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).expect("apply child");
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 4 }], description: None }).await.expect("apply child");
         let child_edit_id = child_store.envelope().vcs.edits.last().expect("child edit").id.clone();
 
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
@@ -12525,114 +12541,114 @@ mod tests {
 
         let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some("bogus-parent-edit-id"));
 
-        assert_eq!(report.skipped.len(), 1, "the parent's own failed undo must be recorded, not panic");
-        assert_eq!(report.skipped[0].0.artifact_id, parent_ref.artifact_id);
-        assert!(matches!(&report.skipped[0].1, VcsError::NothingToUndo));
-        assert_eq!(report.undone.len(), 1, "the child must still be undone despite the parent's rollback failure");
-        assert_eq!(child_store.snapshot().expect("child snapshot").n, 0);
+        assert_eq!(report.await.skipped.len(), 1, "the parent's own failed undo must be recorded, not panic");
+        assert_eq!(report.await.skipped[0].0.artifact_id, parent_ref.artifact_id);
+        assert!(matches!(&report.await.skipped[0].1, VcsError::NothingToUndo));
+        assert_eq!(report.await.undone.len(), 1, "the child must still be undone despite the parent's rollback failure");
+        assert_eq!(child_store.snapshot().await.expect("child snapshot").n, 0);
 
-        let folded = fold_compensation_error(VcsError::ValidationFailed("late failure".into()), report);
-        assert!(matches!(folded, VcsError::CompensationFailed(_)), "a non-empty skipped list must fold into CompensationFailed, got {folded}");
+        let folded = fold_compensation_error(VcsError::ValidationFailed("late failure".into()), report.await);
+        assert!(matches!(folded.await, VcsError::CompensationFailed(_)), "a non-empty skipped list must fold into CompensationFailed, got {folded}");
     }
 
     /// @emoji 🧪️ TASK 2's "deterministic child id minting across two simulated replicas" law,
     /// end-to-end through `dispatch_group` itself (not just the bare `mint_child_id` helper): two
     /// independent coordinators/parents dispatching the IDENTICAL genesis converge on the identical
     /// minted child id and the identical `invocation_id`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
         // 🎯️ O1: no more registry — `ArtifactStore<DemoSnapshot, DemoMutation>`'s `MemberFactory`
         // impl (above) matches ANY `kind` string, so genesis creation just works.
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let genesis_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() };
         let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: genesis_dialect, initial_pack: Vec::new() }];
-        let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode")];
+        let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode")];
 
-        let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator_1 = CompositionCoordinator::new();
         let mut children_1 = [];
-        let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default()).expect("replica 1 dispatch");
+        let receipt_1 = coordinator_1.await.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default()).await.expect("replica 1 dispatch");
 
-        let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator_2 = CompositionCoordinator::new();
         let mut children_2 = [];
-        let receipt_2 = coordinator_2.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default()).expect("replica 2 dispatch");
+        let receipt_2 = coordinator_2.await.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default()).await.expect("replica 2 dispatch");
 
         assert_eq!(receipt_1.created_children.len(), 1);
         assert_eq!(receipt_2.created_children.len(), 1);
         assert_eq!(receipt_1.created_children[0].0.artifact_id, receipt_2.created_children[0].0.artifact_id, "two replicas performing the identical genesis must mint the identical child id");
         assert_eq!(receipt_1.invocation_id, receipt_2.invocation_id, "two replicas performing the identical composite gesture must converge on the identical invocation id");
 
-        assert_eq!(parent_1.snapshot().expect("parent snapshot").n, 1);
-        assert_eq!(coordinator_1.graph().owner_of(&receipt_1.created_children[0].0.artifact_id), Some(parent_ref.artifact_id.as_str()));
+        assert_eq!(parent_1.snapshot().await.expect("parent snapshot").n, 1);
+        assert_eq!(coordinator_1.await.graph().await.owner_of(&receipt_1.created_children[0].0.artifact_id), Some(parent_ref.artifact_id.as_str()));
         assert_eq!(receipt_1.member_edits.len(), 1, "only the parent got a real edit here — no existing children were dispatched");
         assert_eq!(receipt_1.member_edits[0].0.artifact_id, parent_ref.artifact_id);
     }
 
     /// @emoji 🧪️ TASK 2's group-undo law: a member whose tail belongs to a DIFFERENT (foreign)
     /// group is skipped, never aborting the rest of the group's undo.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
         let group_id = "group-xyz";
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
         let foreign_ref = crate::os_io::ArtifactRef { artifact_id: "foreign-undo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply parent");
-        parent_store.stamp_tail_group_id(group_id).expect("stamp parent");
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply parent");
+        parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
 
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply child");
-        child_store.stamp_tail_group_id(group_id).expect("stamp child");
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply child");
+        child_store.stamp_tail_group_id(group_id).await.expect("stamp child");
 
-        let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply foreign");
-        foreign_store.stamp_tail_group_id("some-other-group").expect("stamp foreign");
+        let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).await.expect("apply foreign");
+        foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
 
         let mut members =
             [(&parent_ref, &mut parent_store), (&child_ref, &mut child_store), (&foreign_ref, &mut foreign_store)];
 
         let report = CompositionCoordinator::undo_group(&mut members, group_id);
 
-        assert_eq!(report.undone.len(), 2, "parent + child both belong to the group and must be undone");
-        assert_eq!(report.skipped.len(), 1, "the foreign member must be skipped, not abort the group");
-        assert_eq!(report.skipped[0].0.artifact_id, foreign_ref.artifact_id);
-        assert!(matches!(&report.skipped[0].1, VcsError::ForeignEdit(_)));
+        assert_eq!(report.await.undone.len(), 2, "parent + child both belong to the group and must be undone");
+        assert_eq!(report.await.skipped.len(), 1, "the foreign member must be skipped, not abort the group");
+        assert_eq!(report.await.skipped[0].0.artifact_id, foreign_ref.artifact_id);
+        assert!(matches!(&report.await.skipped[0].1, VcsError::ForeignEdit(_)));
 
-        assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 0, "parent's group edit was undone");
-        assert_eq!(child_store.snapshot().expect("child snapshot").n, 0, "child's group edit was undone");
-        assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, 3, "the foreign member's own edit must be left untouched");
+        assert_eq!(parent_store.snapshot().await.expect("parent snapshot").n, 0, "parent's group edit was undone");
+        assert_eq!(child_store.snapshot().await.expect("child snapshot").n, 0, "child's group edit was undone");
+        assert_eq!(foreign_store.snapshot().await.expect("foreign snapshot").n, 3, "the foreign member's own edit must be left untouched");
     }
 
     /// @emoji 🧪️ `redo_group`'s mirror of the same law: a foreign-group member's redo stack is left
     /// untouched while a matching member is reapplied.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
         let group_id = "group-redo-1";
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-redo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let foreign_ref = crate::os_io::ArtifactRef { artifact_id: "foreign-redo-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply parent");
-        parent_store.stamp_tail_group_id(group_id).expect("stamp parent");
-        parent_store.dispatch(ArtifactCommand::Undo).expect("undo parent, seeding its redo stack");
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply parent");
+        parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
+        parent_store.dispatch(ArtifactCommand::Undo).await.expect("undo parent, seeding its redo stack");
 
-        let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).expect("apply foreign");
-        foreign_store.stamp_tail_group_id("some-other-group").expect("stamp foreign");
-        foreign_store.dispatch(ArtifactCommand::Undo).expect("undo foreign, seeding its redo stack");
+        let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None }).await.expect("apply foreign");
+        foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
+        foreign_store.dispatch(ArtifactCommand::Undo).await.expect("undo foreign, seeding its redo stack");
 
         let mut members = [(&parent_ref, &mut parent_store), (&foreign_ref, &mut foreign_store)];
         let report = CompositionCoordinator::redo_group(&mut members, group_id);
 
-        assert_eq!(report.undone.len(), 1, "only the matching-group member is redone");
-        assert_eq!(report.undone[0].0.artifact_id, parent_ref.artifact_id);
-        assert_eq!(report.skipped.len(), 1);
-        assert_eq!(report.skipped[0].0.artifact_id, foreign_ref.artifact_id);
+        assert_eq!(report.await.undone.len(), 1, "only the matching-group member is redone");
+        assert_eq!(report.await.undone[0].0.artifact_id, parent_ref.artifact_id);
+        assert_eq!(report.await.skipped.len(), 1);
+        assert_eq!(report.await.skipped[0].0.artifact_id, foreign_ref.artifact_id);
 
-        assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 1, "parent's edit was reapplied");
-        assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, 0, "the foreign member's redo stack was left untouched");
+        assert_eq!(parent_store.snapshot().await.expect("parent snapshot").n, 1, "parent's edit was reapplied");
+        assert_eq!(foreign_store.snapshot().await.expect("foreign snapshot").n, 0, "the foreign member's redo stack was left untouched");
     }
 
     //#region 🔖️TransactionPeerTests
@@ -12643,28 +12659,28 @@ mod tests {
     /// and the initiator's own edit stays at its ordinary `Owner` default (it is not foreign to
     /// itself). Deliberately does NOT seed any `CompositionGraph::insert_owns` edge — `Peer` never
     /// consults `owner_of` at all.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
         let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator = TransactionCoordinator::new();
 
-        let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode initiator op")];
-        let peer_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode peer op");
+        let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode initiator op")];
+        let peer_op = DemoMutation::SetN { n: 2 }.encode_op().await.expect("encode peer op");
         let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["peer".into()] };
         let mut peers = [(&mut peer_store, peer_dispatch)];
 
-        let receipt = coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch");
+        let receipt = coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).await.expect("peer transaction dispatch");
 
         assert_eq!(receipt.member_edits.len(), 2, "both the initiator and the one peer got a real edit");
-        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 1);
-        assert_eq!(peer_store.snapshot().expect("peer snapshot").n, 2);
+        assert_eq!(initiator_store.snapshot().await.expect("initiator snapshot").n, 1);
+        assert_eq!(peer_store.snapshot().await.expect("peer snapshot").n, 2);
 
-        let initiator_group_id = initiator_store.tail_group_id().expect("initiator tail group id");
-        let peer_group_id = peer_store.tail_group_id().expect("peer tail group id");
+        let initiator_group_id = initiator_store.tail_group_id().await.expect("initiator tail group id");
+        let peer_group_id = peer_store.tail_group_id().await.expect("peer tail group id");
         assert_eq!(initiator_group_id, peer_group_id, "both members share the SAME minted invocation id as their group id");
         assert_eq!(initiator_group_id, receipt.invocation_id);
 
@@ -12686,21 +12702,21 @@ mod tests {
     /// member's own dispatch failed" — the exact trigger `dispatch_peer_group`'s real error branch
     /// calls `compensate` from, passing only the members that DID get applied (the initiator + peer
     /// A) as `applied_children`/`parent_applied`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compensate_undoes_applied_peer_members_in_reverse_order() {
         let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let peer_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
         let peer_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply initiator");
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply initiator");
         let initiator_edit_id = initiator_store.envelope().vcs.edits.last().expect("initiator edit").id.clone();
 
-        let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply peer a — the member the transaction already reached");
+        let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply peer a — the member the transaction already reached");
         let peer_a_edit_id = peer_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
-        let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let dispatch_a = ChildDispatch { child: peer_a_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let dispatch_b = ChildDispatch { child: peer_b_ref.clone(), ops: Vec::new(), op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
@@ -12709,45 +12725,45 @@ mod tests {
 
         let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store, &mut peers, &applied_so_far, Some(&initiator_edit_id));
 
-        assert!(report.skipped.is_empty(), "every already-applied member should have undone cleanly");
-        assert_eq!(report.undone.len(), 2, "the initiator and peer A (the only two that were actually applied) are both rolled back");
-        assert_eq!(report.undone[0].0.artifact_id, initiator_ref.artifact_id, "initiator undone first");
-        assert_eq!(report.undone[1].0.artifact_id, peer_a_ref.artifact_id, "then the one applied peer");
+        assert!(report.await.skipped.is_empty(), "every already-applied member should have undone cleanly");
+        assert_eq!(report.await.undone.len(), 2, "the initiator and peer A (the only two that were actually applied) are both rolled back");
+        assert_eq!(report.await.undone[0].0.artifact_id, initiator_ref.artifact_id, "initiator undone first");
+        assert_eq!(report.await.undone[1].0.artifact_id, peer_a_ref.artifact_id, "then the one applied peer");
 
-        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 0, "initiator's edit was compensated");
-        assert_eq!(peer_a.snapshot().expect("a snapshot").n, 0, "peer A's edit was compensated");
+        assert_eq!(initiator_store.snapshot().await.expect("initiator snapshot").n, 0, "initiator's edit was compensated");
+        assert_eq!(peer_a.snapshot().await.expect("a snapshot").n, 0, "peer A's edit was compensated");
     }
 
     /// @emoji 🧪️ Task 2's group-undo law, exercised through a REAL `Peer` transaction end-to-end:
     /// `undo_group` (unmodified — see its own doc comment on being relation-agnostic) reverses BOTH
     /// members of a `dispatch_peer_group` group as ONE, using the exact `invocation_id` that call
     /// minted, with no code path specific to `Peer` needed.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
         let initiator_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let peer_ref = crate::os_io::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator = TransactionCoordinator::new();
 
-        let initiator_ops = vec![DemoMutation::SetN { n: 5 }.encode_op().expect("encode initiator op")];
-        let peer_op = DemoMutation::SetN { n: 7 }.encode_op().expect("encode peer op");
+        let initiator_ops = vec![DemoMutation::SetN { n: 5 }.encode_op().await.expect("encode initiator op")];
+        let peer_op = DemoMutation::SetN { n: 7 }.encode_op().await.expect("encode peer op");
         let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let receipt = {
             let mut peers = [(&mut peer_store, peer_dispatch)];
-            coordinator.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).expect("peer transaction dispatch")
+            coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).await.expect("peer transaction dispatch")
         };
-        assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, 5);
-        assert_eq!(peer_store.snapshot().expect("peer snapshot").n, 7);
+        assert_eq!(initiator_store.snapshot().await.expect("initiator snapshot").n, 5);
+        assert_eq!(peer_store.snapshot().await.expect("peer snapshot").n, 7);
 
         let mut members = [(&initiator_ref, &mut initiator_store), (&peer_ref, &mut peer_store)];
         let report = TransactionCoordinator::undo_group(&mut members, &receipt.invocation_id);
 
-        assert!(report.skipped.is_empty(), "both real transaction members must belong to the group");
-        assert_eq!(report.undone.len(), 2);
-        assert_eq!(initiator_store.snapshot().expect("initiator snapshot after undo").n, 0);
-        assert_eq!(peer_store.snapshot().expect("peer snapshot after undo").n, 0);
+        assert!(report.await.skipped.is_empty(), "both real transaction members must belong to the group");
+        assert_eq!(report.await.undone.len(), 2);
+        assert_eq!(initiator_store.snapshot().await.expect("initiator snapshot after undo").n, 0);
+        assert_eq!(peer_store.snapshot().await.expect("peer snapshot after undo").n, 0);
     }
 
     /// @emoji 🧪️ `Peer`'s cycle guard law (`MemberRelation::Peer`'s doc comment): a SECOND, separate
@@ -12756,33 +12772,33 @@ mod tests {
     /// `would_cycle_owns` is to `Owned`'s genesis cycle guard. Transaction 1 (A initiates, B is the
     /// peer) succeeds and records a `Links` edge A -> B; transaction 2 (B initiates, A is the peer)
     /// would close A -> B -> A and is rejected with zero side effects.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle() {
         let artifact_a_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let artifact_b_ref = crate::os_io::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
         let mut coordinator = TransactionCoordinator::new();
 
-        let op_ab = DemoMutation::SetN { n: 1 }.encode_op().expect("encode a->b op");
+        let op_ab = DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode a->b op");
         let dispatch_ab = ChildDispatch { child: artifact_b_ref.clone(), ops: vec![op_ab], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         {
             let mut peers = [(&mut store_b, dispatch_ab)];
-            coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a, &mut peers, Vec::new(), GroupMeta::default()).expect("first transaction A -> B");
+            coordinator.await.dispatch_peer_group(&artifact_a_ref, &mut store_a, &mut peers, Vec::new(), GroupMeta::default()).await.expect("first transaction A -> B");
         }
-        assert_eq!(store_b.snapshot().expect("b snapshot").n, 1);
+        assert_eq!(store_b.snapshot().await.expect("b snapshot").n, 1);
 
-        let op_ba = DemoMutation::SetN { n: 9 }.encode_op().expect("encode b->a op");
+        let op_ba = DemoMutation::SetN { n: 9 }.encode_op().await.expect("encode b->a op");
         let dispatch_ba = ChildDispatch { child: artifact_a_ref.clone(), ops: vec![op_ba], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut peers = [(&mut store_a, dispatch_ba)];
-        let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b, &mut peers, Vec::new(), GroupMeta::default());
-        match result {
+        let result = coordinator.await.dispatch_peer_group(&artifact_b_ref, &mut store_b, &mut peers, Vec::new(), GroupMeta::default());
+        match result.await {
             Ok(_) => panic!("expected a CompositionCycle rejection, but the dispatch succeeded"),
             Err(VcsError::CompositionCycle(_)) => {}
             Err(other) => panic!("expected CompositionCycle, got a different VcsError: {other}"),
         }
-        assert_eq!(store_a.snapshot().expect("a snapshot").n, 0, "A must have zero new edits after a rejected cycle");
+        assert_eq!(store_a.snapshot().await.expect("a snapshot").n, 0, "A must have zero new edits after a rejected cycle");
     }
 
     /// @emoji 🧪️ W1-C's "Owned reproduces today's behaviour EXACTLY" law: `CompositionCoordinator`
@@ -12793,23 +12809,23 @@ mod tests {
     /// `dispatch_group_*`/`compensate_*`/`undo_group_*`/`redo_group_*` test above this region
     /// already re-proves the rest of `Owned`'s behaviour (ownership check, genesis, atomicity,
     /// compensation order) is untouched, unmodified, still green.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None));
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let parent_ops = vec![DemoMutation::SetN { n: 1 }.encode_op().expect("encode parent op")];
-        let child_op = DemoMutation::SetN { n: 2 }.encode_op().expect("encode child op");
+        let parent_ops = vec![DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode parent op")];
+        let child_op = DemoMutation::SetN { n: 2 }.encode_op().await.expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("owned dispatch");
+        let receipt = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).await.expect("owned dispatch");
 
         assert_eq!(receipt.member_edits.len(), 2);
         let parent_origin = parent_store.envelope().vcs.edits.last().expect("parent edit").mutation_meta.last().expect("parent meta").origin.clone();
@@ -12826,7 +12842,7 @@ mod tests {
     /// `preview_wire` messages rather than an immediate per-member `Err`. Exercises lane 1-A's REAL
     /// `ArtifactStore::set_merge_policy` (§C6, landed) end to end — no test-only policy fixture
     /// needed now that it exists.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
@@ -12837,21 +12853,21 @@ mod tests {
         // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
         // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
         // sets. Going straight to the real type sidesteps that indirection entirely.
-        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid parent envelope");
         parent_store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
         assert_eq!(parent_store.merge_policy(), crate::os_spr::MergePolicy::Normal, "Normal is also the default, but set it explicitly so this test does not rely on that");
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
-        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
+        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().await.expect("encode parent op")];
+        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().await.expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
-        match result {
+        let result = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
+        match result.await {
             Ok(_) => panic!("expected Normal policy to reject an Error-level message, but the dispatch succeeded"),
             Err(VcsError::Rejected { policy, messages }) => {
                 assert_eq!(policy, crate::os_spr::MergePolicy::Normal, "the rejection must name the policy that actually rejected it");
@@ -12875,7 +12891,7 @@ mod tests {
     /// which (lane 1-A's now-landed C6 `ArtifactStore::dispatch`) independently enforces THAT
     /// member's own `merge_policy()` — a child left at the Normal default would still reject its own
     /// Error-level op right here, even though the coordinator's gate already accepted the group.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
@@ -12886,30 +12902,30 @@ mod tests {
         // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
         // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
         // sets. Going straight to the real type sidesteps that indirection entirely.
-        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid parent envelope");
         parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        let mut child_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid child envelope");
+        let mut child_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid child envelope");
         child_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().expect("encode parent op")];
-        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().expect("encode child op");
+        let parent_ops = vec![SeverityMutation::CleanN { n: 1 }.encode_op().await.expect("encode parent op")];
+        let child_op = SeverityMutation::ErrorN { n: 99 }.encode_op().await.expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts an Error-level message");
+        let receipt = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).await.expect("LaissezFaire accepts an Error-level message");
 
         assert_eq!(receipt.member_edits.len(), 2, "both parent and child got a real edit despite the child's Error message");
-        assert_eq!(parent_store.snapshot().expect("parent snapshot").n, 1, "the parent's own clean op still applied");
-        assert_eq!(child_store.snapshot().expect("child snapshot").n, 0, "the child's Error-level op's diff carries no change for its target (LAW 2), even though the group was accepted");
+        assert_eq!(parent_store.snapshot().await.expect("parent snapshot").n, 1, "the parent's own clean op still applied");
+        assert_eq!(child_store.snapshot().await.expect("child snapshot").n, 0, "the child's Error-level op's diff carries no change for its target (LAW 2), even though the group was accepted");
         assert!(receipt.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == crate::os_dsl::Severity::Error), "the child's Error message must still be reported, even on acceptance");
     }
 
     /// @emoji 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
     /// one level `Normal` (the OTHER two policy tests above/below use) would have accepted.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
@@ -12920,19 +12936,19 @@ mod tests {
         // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
         // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
         // sets. Going straight to the real type sidesteps that indirection entirely.
-        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid parent envelope");
         parent_store.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
+        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().await.expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, dispatch)];
 
-        let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
-        match result {
+        let result = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default());
+        match result.await {
             Ok(_) => panic!("expected Vigilant policy to reject a Warning-level message, but the dispatch succeeded"),
             Err(VcsError::Rejected { policy, messages }) => {
                 assert_eq!(policy, crate::os_spr::MergePolicy::Vigilant, "the rejection must name the policy that actually rejected it");
@@ -12947,7 +12963,7 @@ mod tests {
     /// each `target` prefixed with the ORIGINATING member's own `crate::os_io::ArtifactRef::
     /// to_uri()` — the discipline that lets a caller with several members in flight tell messages
     /// apart. Parent-first ordering matches phase 1's own collection order.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn group_receipt_messages_contains_the_union_with_member_path_prefixed_targets() {
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
         let child_ref = crate::os_io::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
@@ -12958,19 +12974,19 @@ mod tests {
         // that block's own comment), so coercing the WRAPPER to `&mut dyn SpaceMember` would read
         // the trait's `Normal` default via its vtable instead of whatever `set_merge_policy` below
         // sets. Going straight to the real type sidesteps that indirection entirely.
-        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None)).expect("valid parent envelope");
+        let mut parent_store = super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid parent envelope");
         parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None));
+        let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: 0 }, None).await).await;
 
         let mut coordinator = CompositionCoordinator::new();
-        coordinator.graph_mut().insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).expect("seed ownership");
+        coordinator.await.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
 
-        let parent_ops = vec![SeverityMutation::WarnN { n: 3 }.encode_op().expect("encode parent op")];
-        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().expect("encode child op");
+        let parent_ops = vec![SeverityMutation::WarnN { n: 3 }.encode_op().await.expect("encode parent op")];
+        let child_op = SeverityMutation::WarnN { n: 5 }.encode_op().await.expect("encode child op");
         let dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![child_op], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
         let mut children = [(&mut child_store, dispatch)];
 
-        let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).expect("LaissezFaire accepts a Warning-level message");
+        let receipt = coordinator.await.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).await.expect("LaissezFaire accepts a Warning-level message");
 
         assert_eq!(receipt.messages.len(), 2, "one Warning from the parent, one from the child");
         assert_eq!(receipt.messages[0].level, crate::os_dsl::Severity::Warning);

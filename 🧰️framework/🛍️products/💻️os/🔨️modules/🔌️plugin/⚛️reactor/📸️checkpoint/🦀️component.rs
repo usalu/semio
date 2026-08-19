@@ -74,8 +74,8 @@ impl CheckpointPack {
 pub async fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
-        let files = plugin_runtime::plugin_document_pack(*id).unwrap_or_default();
-        let document_pack = store::encode_document_pack_bytes(&files.pack, &files.spr);
+        let files = plugin_runtime::plugin_document_pack(*id).await.unwrap_or_default();
+        let document_pack = store::encode_document_pack_bytes(&files.pack, &files.spr).await;
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
     }
     let pack = CheckpointPack { instances, timers, pending_requests, task_restarts };
@@ -88,11 +88,11 @@ pub async fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pendin
 pub async fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
     let pack: CheckpointPack = serde_json::from_slice(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     for instance in &pack.instances {
-        let new_id = plugin_runtime::plugin_create_app(&instance.app_id)?;
+        let new_id = plugin_runtime::plugin_create_app(&instance.app_id).await?;
         if !instance.document_pack.is_empty() {
-            let (doc_pack, spr) = store::decode_document_pack_bytes(&instance.document_pack).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
+            let (doc_pack, spr) = store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
             let files = store::ArtifactPackFiles { pack: doc_pack, spr, ops: String::new() };
-            plugin_runtime::plugin_load_document_pack(new_id, &files)?;
+            plugin_runtime::plugin_load_document_pack(new_id, &files).await?;
         }
     }
     Ok(pack)

@@ -4,7 +4,7 @@
 //! across every load case / eigen-solve).
 
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
-use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
+use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::algebra::{MatD, VecD};
 use std::collections::{HashMap, HashSet};
 
@@ -27,7 +27,7 @@ pub struct Combination {
 /// 🏗️ Model geometry for multi-case/modal/buckling analysis — no loads (those come from `LoadCase`).
 pub struct AnalysisModel {
     pub nodes: Vec<Node>,
-    pub elements: Vec<Box<dyn Element>>,
+    pub elements: Vec<Elements>,
     pub supports: Vec<Support>,
 }
 
@@ -66,7 +66,7 @@ impl DofMap {
     }
 }
 
-async fn build_dof_map(nodes: &[Node], elements: &[Box<dyn Element>]) -> DofMap {
+async fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
     let mut order = Vec::new();
     let mut index = HashMap::new();
     for node in nodes {
@@ -150,7 +150,7 @@ struct RcmPermutation {
     inv_perm: Vec<usize>,
 }
 
-async fn build_rcm_permutation(nodes: &[Node], elements: &[Box<dyn Element>], dof_map: &DofMap) -> RcmPermutation {
+async fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap) -> RcmPermutation {
     let n_nodes = nodes.len();
     let node_index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n_nodes];
@@ -745,7 +745,7 @@ mod tests {
     async fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
         };
         let cases = vec![LoadCase { id: "tip_load".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: -1000.0 }], member_loads: vec![], self_weight: false }];
@@ -764,7 +764,7 @@ mod tests {
 
         let dense_model = Model {
             nodes: model.nodes.clone(),
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 }.into()],
             supports: model.supports.clone(),
             nodal_loads: cases[0].nodal_loads.clone(),
             member_loads: vec![],
@@ -789,7 +789,7 @@ mod tests {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
         };
         let case_a = LoadCase { id: "a_case".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: -1000.0 }], member_loads: vec![], self_weight: false };
@@ -824,7 +824,7 @@ mod tests {
         let (e, area, iy, l, density) = (30e9, 0.05, 1e-4, 6.0, 2400.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "b".into(), fixed: vec![Dof::Ty] }],
         };
         let case = LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
@@ -844,7 +844,7 @@ mod tests {
         let n = 9;
         let dl = total_l / n as f64;
         let nodes: Vec<Node> = (0..=n).map(|i| Node { id: format!("n{i}"), pos: [dl * i as f64, 0.0, 0.0] }).collect();
-        let elements: Vec<Box<dyn Element>> = (0..n).map(|i| Box::new(BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }) as Box<dyn Element>).collect();
+        let elements: Vec<Elements> = (0..n).map(|i| BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }.into()).collect();
         let model = AnalysisModel { nodes, elements, supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }] };
 
         let result = modal(&model, 3).expect("modal solves");
@@ -863,7 +863,7 @@ mod tests {
         let n = 7;
         let dl = total_l / n as f64;
         let nodes: Vec<Node> = (0..=n).map(|i| Node { id: format!("n{i}"), pos: [dl * i as f64, 0.0, 0.0] }).collect();
-        let elements: Vec<Box<dyn Element>> = (0..n).map(|i| Box::new(BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }) as Box<dyn Element>).collect();
+        let elements: Vec<Elements> = (0..n).map(|i| BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }.into()).collect();
         let supports = vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: format!("n{n}"), fixed: vec![Dof::Ty] }];
         let model = AnalysisModel { nodes, elements, supports };
 
@@ -900,7 +900,7 @@ mod tests {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 })],
+            elements: vec![Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "b".into(), fixed: vec![Dof::Ty] }],
         };
         let case = LoadCase { id: "axial".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Tx, value: p }], member_loads: vec![], self_weight: false };
@@ -931,7 +931,7 @@ mod tests {
         let r1 = el1.recover(&ctx_of([0, 1, 2]), &u_of([0, 1, 2]), None);
         let r2 = el2.recover(&ctx_of([0, 2, 3]), &u_of([0, 2, 3]), None);
 
-        let model = AnalysisModel { nodes, elements: vec![Box::new(el1), Box::new(el2)], supports: vec![] };
+        let model = AnalysisModel { nodes, elements: vec![el1.into(), el2.into()], supports: vec![] };
         let result = StaticResult { displacements: vec![], reactions: vec![], elements: vec![("t1".into(), r1), ("t2".into(), r2)], checks: SolutionChecks { residual_norm: 0.0, reaction_sum: [0.0; 6] } };
 
         let averaged = nodal_averaged_scalar(&model, &result, StressScalar::VonMises);
@@ -974,7 +974,7 @@ mod tests {
             Node { id: "b1".into(), pos: [-2.0, 0.0, 0.0] },
             Node { id: "b2".into(), pos: [0.0, -2.0, 0.0] },
         ];
-        let model = AnalysisModel { nodes, elements: vec![Box::new(el_a), Box::new(el_b)], supports: vec![] };
+        let model = AnalysisModel { nodes, elements: vec![el_a.into(), el_b.into()], supports: vec![] };
         let result = StaticResult { displacements: vec![], reactions: vec![], elements: vec![("a".into(), r_a), ("b".into(), r_b)], checks: SolutionChecks { residual_norm: 0.0, reaction_sum: [0.0; 6] } };
 
         let averaged = nodal_averaged_scalar(&model, &result, StressScalar::VonMises);
@@ -997,7 +997,7 @@ mod tests {
     /// 🔍️ An element referencing a node id absent from `model.nodes` is rejected.
     #[semio_framework_async_macros::async_test]
     async fn dangling_element_node_ref_is_rejected() {
-        let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })], supports: vec![] };
+        let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 }.into()], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
     }
@@ -1027,7 +1027,7 @@ mod tests {
         let (e, area, iy, l, w) = (200e9, 0.01, 1e-5, 2.0, 500.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
         };
         let case = LoadCase { id: "udl".into(), nodal_loads: vec![], member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })], self_weight: false };
@@ -1036,7 +1036,7 @@ mod tests {
 
         let dense_model = Model {
             nodes: model.nodes.clone(),
-            elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+            elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 }.into()],
             supports: model.supports.clone(),
             nodal_loads: vec![],
             member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })],

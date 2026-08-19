@@ -12,6 +12,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
 //#region 🔖️ClientInfo
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -96,6 +97,10 @@ pub fn redact_input(input: &serde_json::Value, sensitive_keys: &[&str]) -> serde
 /// 🖇️ Append-only writer seam — the event-sourced OS lane (`os.agent.audit` via `ArtifactHost`) a
 /// later packet builds implements this trait instead of [`FileAuditSink`]; nothing upstream of the
 /// trait changes when that lands.
+// 🔀️ dedyn-fw-os-misc, O1/R11: closed 2-implementor set (`InMemoryAuditSink`, `FileAuditSink`,
+// both below) — `#[dyn_enum]` + `dyn_enum_close!` (`AuditSinks`, right after both impls) close it
+// into an enum instead of `Arc<dyn AuditSink>`.
+#[dyn_enum]
 pub trait AuditSink: Send + Sync {
     fn append(&self, event: &AgentAuditEvent) -> Result<(), GatewayError>;
 }
@@ -150,6 +155,14 @@ impl AuditSink for FileAuditSink {
         let line = serde_json::to_string(event).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
         let mut file = OpenOptions::new().create(true).append(true).open(&self.path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot open audit file `{}`: {error}", self.path.display())))?;
         writeln!(file, "{line}").map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))
+    }
+}
+
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `AuditSink`'s implementor set. Replaces `Arc<dyn AuditSink>`.
+dyn_enum_close! {
+    pub enum AuditSinks: AuditSink {
+        InMemory(InMemoryAuditSink),
+        File(FileAuditSink),
     }
 }
 

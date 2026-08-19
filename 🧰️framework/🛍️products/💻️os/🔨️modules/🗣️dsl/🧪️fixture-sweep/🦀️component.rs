@@ -466,19 +466,19 @@ mod example_asset_discovery {
 
     /// @emoji 📄️ Reads UTF-8 text for the first matching example asset under `artifact_dir`.
     pub async fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
-        let path = find_example_asset(artifact_dir, suffix)?;
+        let path = find_example_asset(artifact_dir, suffix).await?;
         std::fs::read_to_string(&path).ok()
     }
 
     /// @emoji 📒️ Reads bytes for the first matching example asset under `artifact_dir`.
     pub async fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
-        let path = find_example_asset(artifact_dir, suffix)?;
+        let path = find_example_asset(artifact_dir, suffix).await?;
         std::fs::read(&path).ok()
     }
 
     /// @emoji 🗺️ Resolves `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`.
     pub async fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
-        repo_root().join("✏️s").join("🔌️plugins").join(plugin).join("🗿️artifacts").join(artifact)
+        repo_root().await.join("✏️s").join("🔌️plugins").join(plugin).join("🗿️artifacts").join(artifact)
     }
 }
 //#endregion 🔖️ExampleAssetDiscovery
@@ -527,7 +527,7 @@ mod pilot_resolve {
             if path.is_dir() {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if skip_dir_name(&name) {
+                if skip_dir_name(&name).await {
                     continue;
                 }
                 collect_files(&path, out);
@@ -565,14 +565,14 @@ mod pilot_resolve {
             if assets.is_dir() {
                 collect_files(&assets, &mut files);
                 for file in files {
-                    if name_matches_kind(&file, kind_suffix) {
+                    if name_matches_kind(&file, kind_suffix).await {
                         preferred.push(file);
                     }
                 }
             } else {
                 collect_files(&slug, &mut files);
                 for file in files {
-                    if name_matches_kind(&file, kind_suffix) {
+                    if name_matches_kind(&file, kind_suffix).await {
                         fallback.push(file);
                     }
                 }
@@ -597,23 +597,23 @@ mod pilot_resolve {
     /// additive/widening, never a narrowing of what used to resolve.
     pub async fn find_example_semio(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<PathBuf> {
         if let Some(standard) = standard {
-            let per_standard = repo_root().join(artifact_rel).join(STANDARDS_DIR).join(standard).join(EXAMPLES_DIR_NAME);
-            if let Some(found) = find_example_semio_under(&per_standard, kind_suffix) {
+            let per_standard = repo_root().await.join(artifact_rel).join(STANDARDS_DIR).join(standard).join(EXAMPLES_DIR_NAME);
+            if let Some(found) = find_example_semio_under(&per_standard, kind_suffix).await {
                 return Some(found);
             }
         }
-        find_example_semio_under(&repo_root().join(artifact_rel).join(EXAMPLES_DIR_NAME), kind_suffix)
+        find_example_semio_under(&repo_root().await.join(artifact_rel).join(EXAMPLES_DIR_NAME), kind_suffix).await
     }
 
     /// 📄️ Reads example fixture text; `None` soft-skips the pilot when missing mid-migration.
     pub async fn read_example_text(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<String> {
-        let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
+        let path = find_example_semio(artifact_rel, standard, kind_suffix).await?;
         std::fs::read_to_string(&path).ok()
     }
 
     /// 🎒️ Reads example binary/text bytes; `None` soft-skips the pilot when missing mid-migration.
     pub async fn read_example_bytes(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<Vec<u8>> {
-        let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
+        let path = find_example_semio(artifact_rel, standard, kind_suffix).await?;
         std::fs::read(&path).ok()
     }
 }
@@ -757,18 +757,18 @@ mod m5_auto_discovery {
             if path.is_dir() {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if skip_dir_name(&name) {
+                if skip_dir_name(&name).await {
                     continue;
                 }
                 walk(&path, hits);
                 continue;
             }
             let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else { continue };
-            if file_name == GRAMMAR_FILE && parent_chain_is(&path, &[TEXT_DIR, SNAPSHOT_DIR, SCHEMA_DIR]) {
+            if file_name == GRAMMAR_FILE && parent_chain_is(&path, &[TEXT_DIR, SNAPSHOT_DIR, SCHEMA_DIR]).await {
                 hits.grammar_snapshot.push(path);
-            } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, SNAPSHOT_DIR, SCHEMA_DIR]) {
+            } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, SNAPSHOT_DIR, SCHEMA_DIR]).await {
                 hits.protocol_pack.push(path);
-            } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, MUTATIONS_DIR, SCHEMA_DIR]) {
+            } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, MUTATIONS_DIR, SCHEMA_DIR]).await {
                 hits.protocol_spr.push(path);
             }
         }
@@ -828,7 +828,7 @@ mod m5_auto_discovery {
         let mut out: Vec<DiscoveredProtocolFacet> = Vec::new();
         for (kind, files) in [(ProtocolFacetKind::Pack, hits.protocol_pack), (ProtocolFacetKind::Spr, hits.protocol_spr)] {
             for file_path in files {
-                if let Some((plugin, artifact, standard, is_stdio, artifact_rel, label)) = derive_identity(&file_path, &repo_root) {
+                if let Some((plugin, artifact, standard, is_stdio, artifact_rel, label)) = derive_identity(&file_path, &repo_root).await {
                     out.push(DiscoveredProtocolFacet { kind, plugin, artifact, standard, is_stdio, file_path, artifact_rel, label });
                 }
             }
@@ -1165,13 +1165,13 @@ mod m5_handcrafted_grammar_conformance {
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
     async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> Result<(), String> {
-        let grammar = parse_grammar(grammar_semio).map_err(|error| format!("parse grammar.semio: {error:?}"))?;
+        let grammar = parse_grammar(grammar_semio).await.map_err(|error| format!("parse grammar.semio: {error:?}"))?;
         if grammar.dialect != SemioDialect::Grammar {
             return Err("expected grammar dialect".to_string());
         }
         let recognizer = Recognizer::compile(&grammar);
         let body = dsl_body_from_fixture(fixture_semio);
-        let ok = recognizer.recognize(&body).map_err(|error| format!("recognize failed: {error:?}"))?;
+        let ok = recognizer.await.recognize(&body).await.map_err(|error| format!("recognize failed: {error:?}"))?;
         if !ok {
             return Err("grammar did not recognize shipped fixture DSL body".to_string());
         }
@@ -1182,7 +1182,7 @@ mod m5_handcrafted_grammar_conformance {
     async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
         assert!(
-            !facets.is_empty(),
+            !facets.await.is_empty(),
             "auto-discovery found zero 🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken"
         );
 
@@ -1194,22 +1194,22 @@ mod m5_handcrafted_grammar_conformance {
         for facet in &facets {
             let grammar_text =
                 std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
-            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text) {
+            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text).await {
                 soft_skipped += 1;
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 soft_skipped += 1;
                 continue;
             };
-            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text) {
+            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
                 soft_skipped += 1;
                 continue;
             }
             checked += 1;
-            if let Err(detail) = check_grammar_recognizes(&grammar_text, &fixture_text) {
-                if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()) {
+            if let Err(detail) = check_grammar_recognizes(&grammar_text, &fixture_text).await {
+                if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
                     eprintln!("[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for {}: {detail}", facet.label);
                     soft_failures.push(facet.label.clone());
                 } else {
@@ -1220,7 +1220,7 @@ mod m5_handcrafted_grammar_conformance {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 grammar auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.len(),
+            facets.await.len(),
             checked,
             soft_skipped,
             soft_failures.len(),
@@ -1265,16 +1265,16 @@ mod m5_handcrafted_protocol_conformance {
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
     async fn check_protocol_conformance(protocol_semio: &str, bytes: &[u8]) -> Result<(), String> {
-        verify_protocol_source(protocol_semio, bytes)?;
-        let spec = parse_protocol(protocol_semio).map_err(|error| format!("parse_protocol: {error:?}"))?;
-        walk_protocol(&spec, bytes).map(|_| ()).map_err(|error| format!("walk_protocol @{}: {}", error.offset, error.message))
+        verify_protocol_source(protocol_semio, bytes).await?;
+        let spec = parse_protocol(protocol_semio).await.map_err(|error| format!("parse_protocol: {error:?}"))?;
+        walk_protocol(&spec, bytes).await.map(|_| ()).map_err(|error| format!("walk_protocol @{}: {}", error.offset, error.message))
     }
 
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_protocol_facets();
         assert!(
-            !facets.is_empty(),
+            !facets.await.is_empty(),
             "auto-discovery found zero 🧬️schema/{{📸️snapshot,🧬️mutations}}/💾️binary/📡️component.protocol.semio files under ✏️s/🔌️plugins — discovery walk is broken"
         );
 
@@ -1286,7 +1286,7 @@ mod m5_handcrafted_protocol_conformance {
         for facet in &facets {
             let protocol_text =
                 std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
-            if soft_skip_missing(&format!("{}.protocol", facet.label), &protocol_text) {
+            if soft_skip_missing(&format!("{}.protocol", facet.label), &protocol_text).await {
                 soft_skipped += 1;
                 continue;
             }
@@ -1294,16 +1294,16 @@ mod m5_handcrafted_protocol_conformance {
                 ProtocolFacetKind::Pack => ".pack.semio",
                 ProtocolFacetKind::Spr => ".spr.semio",
             };
-            let Some(example_bytes) = pilot_resolve::read_example_bytes(&facet.artifact_rel, facet.standard.as_deref(), kind_suffix) else {
+            let Some(example_bytes) = pilot_resolve::read_example_bytes(&facet.artifact_rel, facet.standard.as_deref(), kind_suffix).await else {
                 eprintln!("[DEBUG] soft-skip {}: no {kind_suffix} under 📚️examples (🖼️assets-first walk)", facet.label);
                 soft_skipped += 1;
                 continue;
             };
-            let Some(bytes) = inner_payload_from_semio_example(&example_bytes, &facet.label) else {
+            let Some(bytes) = inner_payload_from_semio_example(&example_bytes, &facet.label).await else {
                 soft_skipped += 1;
                 continue;
             };
-            if soft_skip_empty_bytes(&facet.label, &bytes) {
+            if soft_skip_empty_bytes(&facet.label, &bytes).await {
                 soft_skipped += 1;
                 continue;
             }
@@ -1312,10 +1312,10 @@ mod m5_handcrafted_protocol_conformance {
                 ProtocolFacetKind::Pack => ConformanceFacet::ProtocolPack,
                 ProtocolFacetKind::Spr => ConformanceFacet::ProtocolSpr,
             };
-            if let Err(detail) = check_protocol_conformance(&protocol_text, &bytes) {
-                let stdio_exempt = facet.is_stdio && m5_auto_discovery::stdio_is_exempt(conformance_facet, &facet.artifact, facet.standard.as_deref());
+            if let Err(detail) = check_protocol_conformance(&protocol_text, &bytes).await {
+                let stdio_exempt = facet.is_stdio && m5_auto_discovery::stdio_is_exempt(conformance_facet, &facet.artifact, facet.standard.as_deref()).await;
                 let known_gap =
-                    !facet.is_stdio && m5_auto_discovery::non_stdio_is_known_gap(conformance_facet, &facet.plugin, &facet.artifact, facet.standard.as_deref());
+                    !facet.is_stdio && m5_auto_discovery::non_stdio_is_known_gap(conformance_facet, &facet.plugin, &facet.artifact, facet.standard.as_deref()).await;
                 if stdio_exempt || known_gap {
                     eprintln!("[DEBUG] soft (stdio-exempt or known pre-existing gap) protocol conformance failure for {}: {detail}", facet.label);
                     soft_failures.push(facet.label.clone());
@@ -1327,7 +1327,7 @@ mod m5_handcrafted_protocol_conformance {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 protocol auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt-or-known-gap soft failure(s), {} hard failure(s)",
-            facets.len(),
+            facets.await.len(),
             checked,
             soft_skipped,
             soft_failures.len(),
@@ -1377,21 +1377,21 @@ mod m5_cross_artifact_rejection {
                 continue;
             }
             let Ok(grammar_text) = std::fs::read_to_string(&facet.file_path) else { continue };
-            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text) {
+            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text).await {
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 continue;
             };
-            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text) {
+            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
                 continue;
             }
-            let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
+            let Ok(grammar) = parse_grammar(&grammar_text).await else { continue };
             if grammar.dialect != SemioDialect::Grammar {
                 continue;
             }
-            usable.push((facet.label.clone(), Recognizer::compile(&grammar), dsl_body_from_fixture(&fixture_text)));
+            usable.push((facet.label.clone(), Recognizer::compile(&grammar).await, dsl_body_from_fixture(&fixture_text).await));
         }
 
         if usable.len() < 2 {
@@ -1403,10 +1403,10 @@ mod m5_cross_artifact_rejection {
             for j in (i + 1)..usable.len() {
                 let (label_a, recognizer_a, body_a) = &usable[i];
                 let (label_b, recognizer_b, body_b) = &usable[j];
-                if recognizer_a.recognize(body_b).unwrap_or(false) {
+                if recognizer_a.recognize(body_b).await.unwrap_or(false) {
                     failures.push(format!("{label_a} grammar must reject {label_b}'s fixture body"));
                 }
-                if recognizer_b.recognize(body_a).unwrap_or(false) {
+                if recognizer_b.recognize(body_a).await.unwrap_or(false) {
                     failures.push(format!("{label_b} grammar must reject {label_a}'s fixture body"));
                 }
             }
@@ -1451,7 +1451,7 @@ mod m5_production_coverage {
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
-        assert!(!facets.is_empty(), "auto-discovery found zero snapshot grammar.semio files — discovery walk is broken");
+        assert!(!facets.await.is_empty(), "auto-discovery found zero snapshot grammar.semio files — discovery walk is broken");
 
         let mut hard_failures: Vec<String> = Vec::new();
         let mut soft_failures: Vec<String> = Vec::new();
@@ -1459,30 +1459,30 @@ mod m5_production_coverage {
 
         for facet in &facets {
             let Ok(grammar_text) = std::fs::read_to_string(&facet.file_path) else { continue };
-            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text) {
+            if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text).await {
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio").await else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 continue;
             };
-            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text) {
+            if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
                 continue;
             }
             // A grammar that fails to even parse is grammar_conformance's failure to surface —
             // this diagnostic only covers the uncovered-productions signal once a grammar parses.
-            let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
+            let Ok(grammar) = parse_grammar(&grammar_text).await else { continue };
             let recognizer = Recognizer::compile(&grammar);
             let body = dsl_body_from_fixture(&fixture_text);
-            let Ok(uncovered) = recognizer.uncovered_productions(&body) else { continue };
+            let Ok(uncovered) = recognizer.await.uncovered_productions(&body).await else { continue };
             if !uncovered.is_empty() {
                 eprintln!("[DEBUG] {}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
             }
             checked += 1;
             // Soft assertion for now (matches the pre-P2-M3 design): recognition must succeed;
             // the uncovered list itself stays advisory until a later wave enforces full coverage.
-            if !recognizer.recognize(&body).unwrap_or(false) {
-                if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()) {
+            if !recognizer.await.recognize(&body).await.unwrap_or(false) {
+                if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
                     soft_failures.push(facet.label.clone());
                 } else {
                     hard_failures.push(format!("{}: fixture must still recognize while coverage is tracked", facet.label));
@@ -1492,7 +1492,7 @@ mod m5_production_coverage {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 production coverage auto-discovery: {} facet(s) found, {} checked, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.len(),
+            facets.await.len(),
             checked,
             soft_failures.len(),
             hard_failures.len()
@@ -1529,7 +1529,7 @@ mod m5_semio_envelope_protocol {
 
     #[semio_framework_async_macros::async_test]
     async fn semio_envelope_protocol_parses_under_the_real_dialect() {
-        let spec = parse_protocol(PROTOCOL).expect("semio envelope protocol.semio must parse under dsl_grammar's real parser");
+        let spec = parse_protocol(PROTOCOL).await.expect("semio envelope protocol.semio must parse under dsl_grammar's real parser");
         assert_eq!(spec.id, "semio.envelope");
         assert_eq!(spec.schema, "semio.envelope");
     }
@@ -1540,9 +1540,9 @@ mod m5_semio_envelope_protocol {
         let payload = b"real gif89a pack payload bytes, not a fabricated placeholder".to_vec();
         let wrapped = wrap_binary(&envelope, &payload);
 
-        verify_protocol_source(PROTOCOL, &wrapped).expect("verify_protocol_source must accept a real wrap_binary envelope");
-        let spec = parse_protocol(PROTOCOL).expect("parse_protocol");
-        let trace = walk_protocol(&spec, &wrapped).expect("walk_protocol must succeed on a real wrap_binary envelope");
+        verify_protocol_source(PROTOCOL, &wrapped).await.expect("verify_protocol_source must accept a real wrap_binary envelope");
+        let spec = parse_protocol(PROTOCOL).await.expect("parse_protocol");
+        let trace = walk_protocol(&spec, &wrapped).await.expect("walk_protocol must succeed on a real wrap_binary envelope");
         assert_eq!(trace.consumed, wrapped.len(), "walk_protocol must consume every byte of the envelope + payload, consumed == len");
     }
 
@@ -1554,8 +1554,8 @@ mod m5_semio_envelope_protocol {
         let envelope = SemioEnvelope::from_envelope_id("stdio.gif", Component::Spr, 3).expect("valid envelope id");
         let wrapped = wrap_binary(&envelope, &[]);
 
-        let spec = parse_protocol(PROTOCOL).expect("parse_protocol");
-        let trace = walk_protocol(&spec, &wrapped).expect("walk_protocol must succeed on an empty-payload envelope");
+        let spec = parse_protocol(PROTOCOL).await.expect("parse_protocol");
+        let trace = walk_protocol(&spec, &wrapped).await.expect("walk_protocol must succeed on an empty-payload envelope");
         assert_eq!(trace.consumed, wrapped.len());
     }
 }

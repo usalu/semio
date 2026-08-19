@@ -1,0 +1,626 @@
+{
+  "crate": "semio-framework-plugin",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 1941,
+      "edits": 1311,
+      "ambiguous": 0,
+      "other": 42
+    }
+  ],
+  "residual_errors": 890,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3656",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3882",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10939",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11181",
+      "code": "(no code)",
+      "msg": "expected `;`, found keyword `self`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11382",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12290",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14007",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14015",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16274",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16275",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16498",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16498",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️component.rs:79",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:136",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:142",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:33",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:228",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:910",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:932",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1418",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1421",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2317",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2609",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5904",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5925",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:8851",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10701",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10702",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10937",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11094",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11101",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11102",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11103",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11157",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11192",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11192",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11260",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12060",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12060",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12211",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12454",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12489",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15516",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16179",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16394",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19856",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20039",
+      "code": "E0053",
+      "msg": "method `from` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📮️requests/🦀️component.rs:107",
+      "code": "E0505",
+      "msg": "cannot move out of `inner` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:511",
+      "code": "E0271",
+      "msg": "expected `{async block@🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:511:14: 511:24}` to be a future th"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:515",
+      "code": "E0271",
+      "msg": "expected `{async block@🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:515:14: 515:24}` to be a future th"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:243",
+      "code": "(no code)",
+      "msg": "lifetime may not live long enough"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:98",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:165",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:166",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:169",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:170",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:173",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:174",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:182",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:183",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:194",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs:196",
+      "code": "E0382",
+      "msg": "use of moved value: `extension`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:390",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:962",
+      "code": "E0790",
+      "msg": "cannot call associated function on trait without specifying the corresponding `impl` type"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1161",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1893",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1901",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2286",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2460",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2466",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2467",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2467",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2468",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2468",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2469",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2469",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2470",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2470",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2470",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2471",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2471",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2472",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2472",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2473",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2474",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2475",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2476",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2477",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2478",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2479",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2480",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl std::future::Future<Output = &[std::string::String]>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3639",
+      "code": "E0271",
+      "msg": "expected `codec` to return `ArtifactCodec`, but it returns `impl Future<Output = ArtifactCodec>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3642",
+      "code": "E0271",
+      "msg": "expected `codec` to return `ArtifactCodec`, but it returns `impl Future<Output = ArtifactCodec>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5256",
+      "code": "E0382",
+      "msg": "use of moved value: `item`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5257",
+      "code": "E0382",
+      "msg": "use of moved value: `item`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5482",
+      "code": "E0271",
+      "msg": "expected `Button` to return `impl Future<Output = UiNode>`, but it returns `UiNode`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6906",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10678",
+      "code": "E0271",
+      "msg": "expected `now_iso` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11088",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12168",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12276",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl std::future::Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13159",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14050",
+      "code": "E0382",
+      "msg": "use of moved value: `definition`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14051",
+      "code": "E0382",
+      "msg": "use of moved value: `definition`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14076",
+      "code": "E0382",
+      "msg": "use of moved value: `definition`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14077",
+      "code": "E0382",
+      "msg": "use of moved value: `definition`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15755",
+      "code": "E0382",
+      "msg": "use of moved value: `hash`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15943",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:15943:60}` to return `Vec<u8>`, but it returns `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15944",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:15944:48}` to return `Vec<u8>`, but it returns `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16163",
+      "code": "dependency_on_unit_never_type_fallback",
+      "msg": "this function depends on never type fallback being `()`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19610",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:524",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:524",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:524",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:601",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:601",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:601",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:601",
+      "code": "(no code)",
+      "msg": "future cannot be sent between threads safely"
+    }
+  ]
+}

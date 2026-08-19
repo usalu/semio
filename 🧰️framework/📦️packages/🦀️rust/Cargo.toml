@@ -28,6 +28,7 @@ semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️pac
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
+semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
 # 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🟦️manifest.ts`);

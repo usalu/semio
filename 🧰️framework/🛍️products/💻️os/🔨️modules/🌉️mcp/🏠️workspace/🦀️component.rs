@@ -13,8 +13,12 @@
 //! backbone propagation pipeline end to end (§`🔖️ProbeDocument` below), it uses a generic
 //! JSON-valued document of its own — never a note-specific type this crate has no business knowing.
 
-use crate::{CapabilityOwner, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, Resource, ResourceContent, SearchFilters};
-use semio_framework_plugin_host::GuestRuntime;
+use crate::{CapabilityOwner, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, NullBackend, Resource, ResourceContent, SearchFilters};
+use crate::actions::MockArtifactChannel;
+use crate::__semio_dispatch_ArtifactChannel;
+use crate::__semio_dispatch_GatewayBackend;
+use semio_framework_dispatch_macros::dyn_enum_close;
+use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -291,7 +295,7 @@ pub struct PluginActivationOutcome {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn activate_plugin_instance(
-    runtime: &dyn GuestRuntime,
+    runtime: &GuestRuntimes,
     repo_root: &Path,
     entry: &PluginRegistryEntry,
     descriptor: &semio_framework::PackageDescriptor,
@@ -350,7 +354,7 @@ pub fn activate_plugin_instance(
 /// never a fabricated result.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    runtime: Arc<dyn GuestRuntime>,
+    runtime: Arc<GuestRuntimes>,
     repo_root: PathBuf,
     entry: PluginRegistryEntry,
     descriptor: semio_framework::PackageDescriptor,
@@ -363,7 +367,7 @@ pub struct PluginArtifactChannel {
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
-        let runtime: Arc<dyn GuestRuntime> = Arc::new(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?);
+        let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?));
         Ok(Self { runtime, repo_root, entry, descriptor, app_ref, actor_label, instances: HashMap::new(), next_seq: 1 })
     }
 
@@ -437,6 +441,18 @@ impl crate::actions::ArtifactChannel for PluginArtifactChannel {
             frames.push(frame);
         }
         Ok(frames)
+    }
+}
+
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s 2-implementor set
+// (`MockArtifactChannel` there, `PluginArtifactChannel` above) — defined here (not in `🔀️dispatch`,
+// where `ActionAdapter` actually stores it) because this is the one module both implementors are
+// jointly nameable from; `🔀️dispatch` imports `ArtifactChannels` back in. Replaces
+// `Box<dyn ArtifactChannel>`.
+dyn_enum_close! {
+    pub enum ArtifactChannels: crate::actions::ArtifactChannel {
+        Mock(MockArtifactChannel),
+        Plugin(PluginArtifactChannel),
     }
 }
 //#endregion 🔖️ArtifactChannel
@@ -565,7 +581,7 @@ impl HeadlessWorkspace {
             .find(|app| app.role == semio_framework::AppRole::Editor)
             .ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
         let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-        let runtime = semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?;
+        let runtime = GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?);
         let (guest, outcome) = activate_plugin_instance(&runtime, &repo_root, entry, &descriptor, &app_ref, &self.actor_label(), 1)?;
         runtime.drop_instance(guest);
         Ok(outcome)
@@ -683,6 +699,16 @@ impl GatewayBackend for Arc<HeadlessWorkspace> {
 
     fn list_resources(&self) -> Result<Vec<Resource>, GatewayError> {
         (**self).list_resources()
+    }
+}
+
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `GatewayBackend`'s 3-implementor set (both impls above, plus
+// `NullBackend` — `🧭️protocol`'s own placeholder backend). Replaces `Box<dyn GatewayBackend>`.
+dyn_enum_close! {
+    pub enum GatewayBackends: GatewayBackend {
+        Null(NullBackend),
+        Workspace(HeadlessWorkspace),
+        WorkspaceArc(Arc<HeadlessWorkspace>),
     }
 }
 

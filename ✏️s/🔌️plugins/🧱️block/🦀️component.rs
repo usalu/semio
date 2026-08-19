@@ -136,14 +136,17 @@ pub struct BlockMeta {
 //#endregion 🔖️Meta
 
 //#region 🔌️Registration
-/// 🔌️ Builds the block plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1/W1d) replaces the old
-/// `.setup(register_block_exports)` escape hatch for all three artifacts — block2d's own
-/// registration surface (`crate::artifacts::block2d::declaration()`) landed once its concurrent
-/// `⚙️engine`-dissolution restructure settled. Every app's CONFIG/PRESENCE schema now registers via
-/// `ArtifactApp::app_schema()` (ticket W1c) instead — an app-scope concern `ArtifactDeclaration`
-/// has no field for by design (see that struct's doc) — so `.setup()` is gone from this plugin
-/// entirely. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 🔌️ Builds the block plugin surface for host registration. Atomic cutover (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, `descriptor-prep`, following `🔱️trinity`'s
+/// `fleet-trinity-recipe`): `.declare_artifact(…)` (new declaration tree) replaces
+/// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` for ALL THREE owned artifacts outright
+/// — the old channel is NOT kept alongside it. `require_declared_capability_or_record`'s exact
+/// sorted-claims equality check (the old channel's `try_build()` path) is why
+/// `.artifact(block2d::declaration())` etc. failed assembly (`"no declared <kind> capability owns the
+/// runtime claims"`); the new channel never runs that check. `.editor_mutation_roster()`/
+/// `.viewer_mutation_roster()` stay: orthogonal, still-supported opt-ins the new declaration tree's
+/// `SurfaceDeclaration.mutation_roster` does not yet wire live — not a second registration of the
+/// artifact/schema/io itself. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each
 /// dimension's own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering
@@ -152,20 +155,14 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
     Plugin::builder("block")
         .label("Block")
         .version("0.1.0")
-        .artifact(crate::artifacts::block2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::block3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::block5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::block2d::Block2dPlayApp>(crate::editor::block2d::create_block2d_app())
+        .declare_artifact(crate::artifacts::block2d::artifact())
+        .declare_artifact(crate::artifacts::block3d::artifact())
+        .declare_artifact(crate::artifacts::block5d::artifact())
         .editor_mutation_roster::<crate::editor::block2d::Block2dPlayApp>()
-        .viewer::<crate::viewer::block2d::Block2dViewer>(crate::viewer::block2d::create_block2d_viewer())
         .viewer_mutation_roster::<crate::viewer::block2d::Block2dViewer>()
-        .editor::<crate::editor::block3d::Block3dPlayApp>(crate::editor::block3d::create_block3d_app())
         .editor_mutation_roster::<crate::editor::block3d::Block3dPlayApp>()
-        .viewer::<crate::viewer::block3d::Block3dViewer>(crate::viewer::block3d::create_block3d_viewer())
         .viewer_mutation_roster::<crate::viewer::block3d::Block3dViewer>()
-        .editor::<crate::editor::block5d::Block5dPlayApp>(crate::editor::block5d::create_block5d_app())
         .editor_mutation_roster::<crate::editor::block5d::Block5dPlayApp>()
-        .viewer::<crate::viewer::block5d::Block5dViewer>(crate::viewer::block5d::create_block5d_viewer())
         .viewer_mutation_roster::<crate::viewer::block5d::Block5dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::block2d::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::block3d::artifact_kind().id })

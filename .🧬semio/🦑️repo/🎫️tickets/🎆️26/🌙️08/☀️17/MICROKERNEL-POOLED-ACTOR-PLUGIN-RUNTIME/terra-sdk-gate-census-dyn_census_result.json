@@ -1,0 +1,127 @@
+{
+  "files_scanned": 10533,
+  "trait_names_declared": 229,
+  "first_party_dyn_total": 84,
+  "first_party_dyn_by_area": {
+    "🧰️framework": 79,
+    "✏️s": 5
+  },
+  "first_party_dyn_by_trait": {
+    "Emit": 15,
+    "HostAsyncRuntime": 10,
+    "HttpBody": 7,
+    "HttpTransport": 5,
+    "RouterEffectHandler": 5,
+    "Operator": 4,
+    "OsBackbonePort": 4,
+    "EnvelopeInjector": 2,
+    "BackboneTransport": 2,
+    "CapabilityChecker": 2,
+    "StorageBackend": 2,
+    "EffectMetricsRecorder": 2,
+    "ThreadSpawner": 2,
+    "QuerySource": 2,
+    "BlobStore": 2,
+    "AsyncHttpTransport": 2,
+    "ToolRegistry": 2,
+    "ResourceRegistry": 2,
+    "PromptRegistry": 2,
+    "MediaCache": 1,
+    "ConflictOracle": 1,
+    "Signer": 1,
+    "SignatureVerifier": 1,
+    "CompletionSink": 1,
+    "DynEngine": 1,
+    "Backbone": 1,
+    "MeshExporter": 1,
+    "MeshImporter": 1,
+    "SpaceBackbonePort": 1
+  },
+  "first_party_dyn_by_area_trait": {
+    "🧰️framework": {
+      "HttpTransport": 5,
+      "MediaCache": 1,
+      "Operator": 4,
+      "RouterEffectHandler": 5,
+      "HostAsyncRuntime": 10,
+      "EnvelopeInjector": 2,
+      "BackboneTransport": 2,
+      "CapabilityChecker": 2,
+      "StorageBackend": 2,
+      "EffectMetricsRecorder": 2,
+      "Emit": 15,
+      "ConflictOracle": 1,
+      "ThreadSpawner": 2,
+      "Signer": 1,
+      "SignatureVerifier": 1,
+      "QuerySource": 2,
+      "BlobStore": 2,
+      "CompletionSink": 1,
+      "HttpBody": 7,
+      "AsyncHttpTransport": 2,
+      "ToolRegistry": 2,
+      "ResourceRegistry": 2,
+      "PromptRegistry": 2,
+      "DynEngine": 1,
+      "Backbone": 1,
+      "MeshExporter": 1,
+      "MeshImporter": 1
+    },
+    "✏️s": {
+      "OsBackbonePort": 4,
+      "SpaceBackbonePort": 1
+    }
+  },
+  "std_lang_dyn_total": 134,
+  "std_lang_dyn_counts": {
+    "FnOnce": 12,
+    "Fn": 50,
+    "Error": 8,
+    "FnMut": 23,
+    "Any": 14,
+    "Future": 27
+  },
+  "std_lang_dyn_by_area": {
+    "🧰️framework": {
+      "Future": 27,
+      "Any": 6,
+      "Error": 8,
+      "FnOnce": 11,
+      "FnMut": 15,
+      "Fn": 38
+    },
+    "✏️s": {
+      "Fn": 12,
+      "FnMut": 8,
+      "Any": 8
+    },
+    "🌎️hub": {
+      "FnOnce": 1
+    }
+  },
+  "unknown_dyn_names_sample": {
+    "Iterator": 4,
+    "ResourceLimiter": 2,
+    "for": 1
+  },
+  "async_fn_by_area": {
+    "🧰️framework": 10386,
+    "✏️s": 56432,
+    "🌎️hub": 251
+  },
+  "plain_fn_by_area": {
+    "🧰️framework": 8590,
+    "✏️s": 966,
+    "🌎️hub": 90
+  },
+  "total_async_fn": 67069,
+  "total_plain_fn": 9646,
+  "async_ratio_pct": 87.43,
+  "tag_counts_by_class": {
+    "E1": 140,
+    "E4": 86,
+    "E5": 15,
+    "E3": 60
+  },
+  "tag_total": 301
+}

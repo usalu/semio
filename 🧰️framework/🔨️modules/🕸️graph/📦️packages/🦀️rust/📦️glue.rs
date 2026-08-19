@@ -2,6 +2,10 @@
 //!
 //! Each domain is a `🦀️component.rs` in the owner tree; this entry file is pure wiring.
 
+// 🃏️ `QueryableGraph` (Jack) has async trait methods; Send-ness comes structurally from the
+// concrete/generic caller, never from a `+ Send` bound on the trait method — see R3 and R7.
+#![allow(async_fn_in_trait)]
+
 // 🃏️ Renamed `dsl` → `dsl_core` (wave MATHEND) to free the crate-root name `dsl` for
 // `pub mod dsl` (Jack) below — both alias the identical crate. `🛂️manifest` updated to match.
 extern crate semio_framework_os_kernel as dsl_core;

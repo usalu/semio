@@ -14,6 +14,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
+use crate::workspace::GatewayBackends;
+use semio_framework_dispatch_macros::dyn_enum;
 
 pub use crate::errors::{GatewayError, GatewayErrorCode};
 pub use crate::schema::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
@@ -511,6 +513,11 @@ impl PromptRegistry for InMemoryPromptRegistry {
 /// against the live plugin host; THIS crate never references `semio-framework`,
 /// `semio-framework-os-kernel`, the plugin host, the channel, or the actor crate (they are mid-rewrite
 /// by the peer `MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` ticket — §2.6 of this packet's brief).
+// 🔀️ dedyn-fw-os-misc, O1/R11: closed 3-implementor set (`NullBackend`, `HeadlessWorkspace`, its
+// `Arc<HeadlessWorkspace>` delegation impl) — `#[dyn_enum]` here + `dyn_enum_close!` at
+// `🏠️workspace`'s `GatewayBackends` (defined alongside `HeadlessWorkspace`, the module both non-Null
+// variants live in) closes it into an enum instead of `Box<dyn GatewayBackend>`.
+#[dyn_enum]
 pub trait GatewayBackend: Send + Sync {
     fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError>;
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError>;
@@ -594,7 +601,7 @@ pub struct McpServer {
     pub tools: Box<dyn ToolRegistry>,
     pub resources: Box<dyn ResourceRegistry>,
     pub prompts: Box<dyn PromptRegistry>,
-    pub backend: Box<dyn GatewayBackend>,
+    pub backend: Box<GatewayBackends>,
     server_name: String,
     server_version: String,
     era: Option<ProtocolEra>,
@@ -603,7 +610,7 @@ pub struct McpServer {
 }
 
 impl McpServer {
-    pub fn new(tools: Box<dyn ToolRegistry>, resources: Box<dyn ResourceRegistry>, prompts: Box<dyn PromptRegistry>, backend: Box<dyn GatewayBackend>) -> Self {
+    pub fn new(tools: Box<dyn ToolRegistry>, resources: Box<dyn ResourceRegistry>, prompts: Box<dyn PromptRegistry>, backend: Box<GatewayBackends>) -> Self {
         Self { tools, resources, prompts, backend, server_name: "semio-os-mcp".to_string(), server_version: env!("CARGO_PKG_VERSION").to_string(), era: None, negotiated_version: None, initialized: false }
     }
 

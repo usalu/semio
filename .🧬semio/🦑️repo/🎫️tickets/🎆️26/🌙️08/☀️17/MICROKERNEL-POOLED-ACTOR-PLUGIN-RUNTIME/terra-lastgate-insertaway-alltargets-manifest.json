@@ -1,0 +1,1591 @@
+{
+  "crate": "semio-framework",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 860,
+      "edits": 199,
+      "ambiguous": 0,
+      "other": 299
+    }
+  ],
+  "residual_errors": 737,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🎯️action-bus/🦀️component.rs:101",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🎯️action-bus/🦀️component.rs:109",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🎯️action-bus/🦀️component.rs:115",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:1447",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:1458",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2078",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2095",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2107",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2135",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2165",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2253",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2277",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2289",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2302",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2330",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2340",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2351",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2365",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2373",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2799",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2817",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2834",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2848",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2863",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2879",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2894",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2931",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:97",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:212",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:224",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:232",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:242",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4090",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4100",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4108",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4119",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4128",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4142",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4160",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4169",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4180",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4194",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4207",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4214",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4227",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4246",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4251",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4266",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4284",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4314",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4680",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4688",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4696",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4705",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5168",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5185",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5207",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5230",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5249",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5265",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5304",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5321",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5338",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5352",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5377",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5394",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5419",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5436",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5449",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5463",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5471",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5489",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5562",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5576",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5612",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5619",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5648",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5668",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5675",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5702",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5725",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5745",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5773",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5790",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5828",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5837",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5855",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5874",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5884",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5899",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5913",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5923",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5932",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5944",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5952",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5959",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5980",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5995",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6014",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6048",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6076",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6112",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6155",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6208",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6222",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6238",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6252",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6274",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6293",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6308",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6364",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6392",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6405",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6413",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6425",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6466",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6505",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6517",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6533",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6542",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6554",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6569",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6585",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6617",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6626",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6645",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6676",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6744",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6759",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6765",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6774",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6783",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6788",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:102",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:128",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2504",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2537",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2549",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2566",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2577",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2586",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2604",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2614",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2637",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2673",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2682",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2688",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2710",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2735",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2751",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2764",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2786",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2831",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2840",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2846",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2875",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2898",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5636",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:99",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:148",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:149",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:152",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:205",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:206",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:214",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:215",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:216",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:217",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:218",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:219",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:220",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:226",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:227",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:228",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:234",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:235",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:236",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:237",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:238",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:244",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:245",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:246",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:247",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:248",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4684",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4690",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4692",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5401",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5402",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5405",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5406",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5407",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5410",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5411",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5412",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5415",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5465",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5467",
+      "code": "E0382",
+      "msg": "use of moved value: `effective`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5720",
+      "code": "E0382",
+      "msg": "use of moved value: `app`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5721",
+      "code": "E0382",
+      "msg": "use of moved value: `app`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5933",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5934",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5935",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5936",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5937",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5938",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5939",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5940",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5987",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5988",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5989",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5990",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5991",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6536",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6537",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:141",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:142",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:143",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2506",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2507",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2533",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2541",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2557",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2562",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2567",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2569",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2571",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2573",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2578",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2579",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2579",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2581",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2582",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2589",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2590",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2594",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2595",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2597",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2597",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2599",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2600",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2605",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2606",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2607",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2607",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2609",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2610",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2615",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2618",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2619",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2621",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2622",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2622",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2627",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2628",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2629",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2630",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2631",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2632",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2633",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2638",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2639",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2640",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2640",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2642",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2647",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2648",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2649",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2649",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2658",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2675",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2676",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2677",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2678",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2689",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2691",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2718",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2742",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2746",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2753",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2758",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2767",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2770",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2772",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2773",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2773",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2775",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2776",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2778",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2779",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2779",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2781",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2782",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2788",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2789",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2791",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2792",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2793",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2826",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2827",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2833",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2834",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2835",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2836",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2866",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2877",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2879",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2885",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2887",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2888",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2891",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2901",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    }
+  ]
+}

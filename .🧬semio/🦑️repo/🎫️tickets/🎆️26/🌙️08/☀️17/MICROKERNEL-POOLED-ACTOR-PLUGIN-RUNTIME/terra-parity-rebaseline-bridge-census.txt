@@ -1,0 +1,62 @@
+=== STALE (pre-H2 runSerialized, no createActorApi): 52 ===
+cad-extension-aec-building	2026-08-18T02:31:54.100391
+cad-extension-aec-building-energy	2026-08-18T02:32:03.046696
+cad-extension-aec-building-structure	2026-08-18T02:32:10.206819
+cad-extension-spatial-shape	2026-08-18T02:32:18.201660
+dag	2026-08-17T17:56:42.890435
+demonstrator	2026-08-17T13:36:54.997195
+fem	2026-08-17T18:10:06.694750
+flow	2026-08-18T14:47:08.419087
+flow-extension-bim	2026-08-18T14:48:46.315562
+flow-extension-brep	2026-08-18T14:49:37.656874
+flow-extension-dictionary	2026-08-18T14:50:14.044408
+flow-extension-draw	2026-08-18T02:52:34.213179
+flow-extension-list	2026-08-18T02:54:04.711698
+flow-extension-logic	2026-08-18T02:55:48.575784
+flow-extension-math	2026-08-18T02:57:47.106772
+flow-extension-primitive	2026-08-18T02:59:49.264576
+flow-extension-text	2026-08-18T03:01:22.349279
+forms	2026-08-17T21:20:22.895593
+gis	2026-08-17T21:12:27.664973
+imperative	2026-08-07T13:33:01.532403
+imperative-extension-control	2026-08-17T18:23:33.277312
+imperative-extension-effect	2026-08-17T18:23:37.077169
+imperative-extension-logic	2026-08-17T18:23:43.093781
+imperative-extension-math	2026-08-17T18:24:54.168745
+imperative-extension-text	2026-08-17T18:25:44.003469
+lowpoly	2026-08-17T18:29:33.045145
+mathematical	2026-08-17T18:30:50.930215
+norm	2026-08-17T18:31:14.430070
+note	2026-08-18T03:27:45.308240
+playbook	2026-08-17T18:35:03.521890
+playbook-module-procedural	2026-08-17T18:35:09.740749
+procedural	2026-08-17T18:35:17.748065
+process	2026-08-17T18:36:01.344937
+process-extension-concrete	2026-08-17T18:36:21.515421
+process-extension-metal	2026-08-17T18:36:25.156186
+process-extension-robotic	2026-08-17T18:36:29.152289
+process-extension-wood	2026-08-17T18:36:32.602495
+puzzle	2026-08-18T03:04:39.416720
+raster	2026-08-17T18:40:29.431442
+reasoning-mindmap	2026-08-17T18:41:32.504847
+remodel	2026-08-17T20:02:41.496348
+s	2026-08-17T17:18:47.373816
+sequence	2026-08-18T14:40:07.306091
+shooting	2026-08-18T14:27:43.779421
+sourcing	2026-08-17T18:44:33.037647
+sourcing-module-beams	2026-08-17T20:47:41.329885
+sourcing-module-slabs	2026-08-17T18:45:00.786436
+sourcing-module-windows	2026-08-17T21:00:40.252298
+stdio	2026-08-18T11:14:12.366576
+trinity	2026-08-18T03:09:31.232923
+vcs	2026-08-17T18:48:00.827506
+writer	2026-08-17T18:48:52.449672
+
+=== FRESH (createActorApi present): 4 ===
+animate	2026-08-18T21:03:32.770128
+architect	2026-08-18T21:03:32.813606
+block	2026-08-18T21:03:32.817728
+cad	2026-08-18T21:03:32.827157
+
+=== UNBUILT/OTHER: 1 ===
+energy

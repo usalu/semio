@@ -26,6 +26,11 @@ name = "semio-os-mcp"
 path = "../../📦️bin.rs"
 
 [dependencies]
+# 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes
+# `GatewayBackend`'s implementor set (`NullBackend`, `HeadlessWorkspace`, `Arc<HeadlessWorkspace>`)
+# into a real enum instead of `Box<dyn GatewayBackend>`. Same dependency shape `🔌️plugin`'s and
+# `🛢️db`'s own Cargo.toml files already use.
+semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 # 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the ONLY facet in
 # this crate that depends on `semio-framework` is `🗂️catalog` (it compiles `CapabilityDefinition`s
 # FROM `semio_framework::manifest::{PackageDescriptor, PluginManifest, AppDefinition, …}` — real types

@@ -1,0 +1,44 @@
+// Standalone rustc probe (not part of any crate) — verifies whether &Arc<Concrete> coerces to
+// &Arc<dyn Trait> at a by-reference call site. Run as: rustc this_file.rs -o /tmp/bin
+//
+// RESULT (real rustc, nightly-2026-07-07-aarch64-apple-darwin):
+//   by-value case (takes_by_value): compiles, EXIT 0, prints "by_value=42"
+//   by-reference case (takes_by_ref): FAILS, E0308
+//     "expected `&Arc<dyn Port>`, found `&Arc<Concrete>`"
+//     help: `Concrete` implements `Port` so you could box the found value and coerce it to the
+//     trait object `Box<dyn Port>`, you will have to change the expected type as well
+//
+// This is why `draft_backbone_port()` (SpaceBackbonePort) and `shared_studio_ports()`/
+// `register_studio_port(_for_test)` (OsBackbonePort) in ✏️s/🔌️plugins/🪐️space/🦀️component.rs could
+// NOT be converted from `Arc<dyn Trait>` to the concrete `store::BackbonePorts` enum: their real
+// framework consumers (`draft_catalog_for`, `DraftCatalog::list_drafts_sweeping_expired`,
+// `DraftCatalog::discard_draft` for SpaceBackbonePort; `open_folder_space_backbone`/
+// `open_file_space_backbone` producing already-erased values for OsBackbonePort) pin the type via
+// by-reference parameters or already-erased return values, both outside this packet's owned path.
+
+use std::sync::Arc;
+
+trait Port { fn read(&self) -> u32; }
+
+struct Concrete;
+impl Port for Concrete { fn read(&self) -> u32 { 42 } }
+
+// by-VALUE consumer (matches list_os_space_catalog_entries/seed_os_space_catalog_if_empty/
+// load_os_space_document/create_os_space — all take Arc<dyn OsBackbonePort> BY VALUE)
+fn takes_by_value(p: Arc<dyn Port>) -> u32 { p.read() }
+
+// by-REFERENCE consumer (matches draft_catalog_for/list_drafts_sweeping_expired/discard_draft —
+// all take &Arc<dyn SpaceBackbonePort> BY REFERENCE)
+fn takes_by_ref(p: &Arc<dyn Port>) -> u32 { p.read() }
+
+fn make_concrete() -> Arc<Concrete> { Arc::new(Concrete) }
+
+fn main() {
+    // by-value call site coercion: WORKS
+    let a = takes_by_value(make_concrete());
+    println!("by_value={a}");
+
+    // by-reference call site: does &Arc<Concrete> coerce to &Arc<dyn Port>? NO — E0308.
+    let b = takes_by_ref(&make_concrete());
+    println!("by_ref={b}");
+}

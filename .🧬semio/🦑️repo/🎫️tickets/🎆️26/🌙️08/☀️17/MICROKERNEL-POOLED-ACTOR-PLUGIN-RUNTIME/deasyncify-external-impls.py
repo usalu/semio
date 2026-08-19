@@ -41,7 +41,13 @@ import os
 import re
 import sys
 
-SKIP_DIRS = ('/target', '/node_modules', '/.git', '/vendor', '/storybook-static', '/.🧬semio')
+SKIP_DIRS = ('/target', '/node_modules', '/.git', '/vendor', '/storybook-static', '/.🧬semio', '/🤖️generated')
+# 🤖️ NEVER codemod machine-written output. The generators emit correct sync code; rewriting
+# their OUTPUT is undone by the next regeneration, and it silently breaks builds in the meantime.
+# Measured 2026-08-19: 22 generated .rs files had been asyncified, and the last 3 errors blocking
+# the entire guest SDK were `IconName::as_str`/`from_str` in one of them — while the generator that
+# writes that file was correct all along.
+
 CENSUS_ROOTS = ['/Users/ueli/Documents/semio/🧰️framework', '/Users/ueli/Documents/semio/✏️s']
 
 # Traits whose signatures are fixed outside this repo. These ALWAYS count as external, even if the

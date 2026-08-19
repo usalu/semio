@@ -1,0 +1,45 @@
+
+> nx run @semio-tech/animate-js:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/animate-js| ../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx [ ../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx ]
+Error: Failed to resolve import "@semio-tech/animate-present-core" from "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx:57:7
+  23 |    splitFigureGrid,
+  24 |    unionDispositionPositions
+  25 |  } from "@semio-tech/animate-present-core";
+     |          ^
+  26 |  import {
+  27 |    applyElementsSurfaceChrome,
+ ❯ _formatLog ../../../../../node_modules/vite/dist/node/chunks/config.js:29079:46
+ ❯ error ../../../../../node_modules/vite/dist/node/chunks/config.js:29076:13
+ ❯ ../../../../../node_modules/vite/dist/node/chunks/config.js:27257:37
+ ❯ transform ../../../../../node_modules/vite/dist/node/chunks/config.js:27225:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  21:19:02
+   Duration  1.33s (transform 91ms, setup 117ms, import 0ms, tests 0ms, environment 736ms)
+
+Warning: command "bun ./📜️script.ts test --reporter=verbose" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/animate-js failed
+
+Failed tasks:
+
+- @semio-tech/animate-js:test
+
+Hint: run the command with --verbose for more details.
+

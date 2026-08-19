@@ -17,6 +17,7 @@
 
 use std::collections::HashMap;
 
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use thiserror::Error;
 
 use crate::contract::{
@@ -100,13 +101,70 @@ pub enum Decision {
 /// The authority never trusts a client-produced [`EventRecord`]. A replica may run `decide` and
 /// apply the result locally, but the authority re-runs `decide` itself and re-stamps `stream`,
 /// `seq` and `hlc` on every event before committing; only `kind` and `payload` survive.
+#[dyn_enum]
 pub trait Decider: Send + Sync {
     /// 🏷️ The actor kind this decider serves, matched against [`ActorKey::kind`].
-    fn actor_kind(&self) -> &str;
+    async fn actor_kind(&self) -> &str;
     /// 🎲️ Decide one command against one state. Pure — see the trait documentation.
-    fn decide(&self, state: &ActorState, command: &CommandEnvelope, context: &DecisionContext) -> Decision;
+    async fn decide(&self, state: &ActorState, command: &CommandEnvelope, context: &DecisionContext) -> Decision;
     /// 🌀️ Fold one committed event into the domain state. Never mutates the revision.
-    fn evolve(&self, state: &mut ActorState, event: &EventRecord);
+    async fn evolve(&self, state: &mut ActorState, event: &EventRecord);
+}
+
+/// 🔢️ The actor kind [`CounterDecider`] serves.
+pub const COUNTER: &str = "counter";
+
+/// 🧮️ Fold [`CounterDecider`]'s little-endian counter bytes back to a `u64`, defaulting to zero for
+/// an unstarted or malformed state.
+fn read_counter(bytes: &[u8]) -> u64 {
+    <[u8; 8]>::try_from(bytes).map(u64::from_le_bytes).unwrap_or(0)
+}
+
+/// 🧮️ The framework's reference [`Decider`]: a little-endian counter over one command kind. Kept in
+/// production scope (not only in tests) so [`Deciders`] closes over a real variant and every
+/// `CommandBus` example in this crate's own tests exercises the genuine enum-dispatch path rather
+/// than a mock. A product built on this framework adds its own deciders as further `Deciders`
+/// variants alongside this one (O1 — closed-set dyn removal, see `dyn_enum_close!` below).
+pub struct CounterDecider;
+
+impl Decider for CounterDecider {
+    async fn actor_kind(&self) -> &str {
+        COUNTER
+    }
+
+    async fn decide(&self, state: &ActorState, command: &CommandEnvelope, _context: &DecisionContext) -> Decision {
+        match command.kind.as_str() {
+            "counter.increment" => Decision::Emit {
+                events: vec![EventRecord {
+                    stream: command.target.clone(),
+                    seq: 0,
+                    hlc: HybridLogicalClock::default(),
+                    kind: "counter.incremented".into(),
+                    payload: command.payload.clone(),
+                }],
+                effects: vec![],
+            },
+            "counter.audit" => Decision::Emit {
+                events: vec![],
+                effects: vec![Effect { kind: "counter.audited".into(), payload: state.bytes.clone() }],
+            },
+            "counter.forbid" => Decision::Reject(Rejection::Invalid { detail: "counter refuses".into() }),
+            "counter.rebuild" => Decision::Defer(ProcessId("rebuild-1".into())),
+            other => Decision::Reject(Rejection::UnknownCommandKind { command_kind: other.into() }),
+        }
+    }
+
+    async fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
+        let step = u64::from(event.payload.first().copied().unwrap_or(0));
+        let current = read_counter(&state.bytes);
+        state.bytes = (current + step).to_le_bytes().to_vec();
+    }
+}
+
+dyn_enum_close! {
+    pub enum Deciders: Decider {
+        Counter(CounterDecider),
+    }
 }
 //#endregion 🔖️Turn
 
@@ -114,13 +172,13 @@ pub trait Decider: Send + Sync {
 /// @emoji 📇️ One actor kind bound to the implementation that serves it.
 pub struct ActorRegistration {
     pub actor_kind: String,
-    pub decider: Box<dyn Decider>,
+    pub decider: Deciders,
 }
 
 impl ActorRegistration {
     /// 🔗️ Bind a decider under the actor kind it declares.
-    pub fn new(decider: Box<dyn Decider>) -> Self {
-        Self { actor_kind: decider.actor_kind().to_string(), decider }
+    pub async fn new(decider: Deciders) -> Self {
+        Self { actor_kind: decider.actor_kind().await.to_string(), decider }
     }
 }
 
@@ -220,8 +278,8 @@ impl<S: AuthorityStore> CommandBus<S> {
     }
 
     /// 📇️ Register a decider under the actor kind it declares, replacing any previous one.
-    pub fn register(&mut self, decider: Box<dyn Decider>) {
-        let registration = ActorRegistration::new(decider);
+    pub async fn register(&mut self, decider: Deciders) {
+        let registration = ActorRegistration::new(decider).await;
         self.registrations.insert(registration.actor_kind.clone(), registration);
     }
 
@@ -268,7 +326,7 @@ impl<S: AuthorityStore> CommandBus<S> {
     ///    turn rather than acknowledging work that never landed.
     /// 10. **Answer** — [`Decision::Reject`] became [`CommandOutcome::Rejected`],
     ///     [`Decision::Defer`] became [`CommandOutcome::Pending`], everything else is accepted.
-    pub fn submit(&mut self, envelope: CommandEnvelope, now: HybridLogicalClock) -> CommandOutcome {
+    pub async fn submit(&mut self, envelope: CommandEnvelope, now: HybridLogicalClock) -> CommandOutcome {
         //#region 🔖️Admit
         let Some(registration) = self.registrations.get(&envelope.target.kind) else {
             let reason = Rejection::UnknownCommandKind { command_kind: envelope.kind.clone() };
@@ -278,7 +336,7 @@ impl<S: AuthorityStore> CommandBus<S> {
 
         //#region 🔖️Deduplicate
         if let Some(key) = &envelope.idempotency_key {
-            match self.store.receipt(key) {
+            match self.store.receipt(key).await {
                 Ok(Some(receipt)) => return CommandOutcome::Accepted { receipt, events: Vec::new(), frontier: None },
                 Ok(None) => {}
                 Err(error) => return unavailable(&envelope, Revision(0), now, &error.to_string()),
@@ -314,7 +372,7 @@ impl<S: AuthorityStore> CommandBus<S> {
             principal: envelope.principal.clone(),
             scope: envelope.scope.clone(),
         };
-        let (events, effects) = match registration.decider.decide(&activation.state, &envelope, &context) {
+        let (events, effects) = match registration.decider.decide(&activation.state, &envelope, &context).await {
             Decision::Emit { events, effects } => (events, effects),
             Decision::Reject(reason) => return refuse(&envelope, activation.state.revision, now, reason),
             Decision::Defer(process) => {
@@ -327,14 +385,14 @@ impl<S: AuthorityStore> CommandBus<S> {
         //#region 🔖️Commit
         let committed = seal(&envelope.target, activation.mailbox_seq, now, events);
         let outbox = dispatchable(&envelope.target, &committed, effects);
-        if let Err(error) = self.store.append_events(&envelope.target, &committed, &outbox) {
+        if let Err(error) = self.store.append_events(&envelope.target, &committed, &outbox).await {
             return unavailable(&envelope, activation.state.revision, now, &error.to_string());
         }
         //#endregion 🔖️Commit
 
         //#region 🔖️Evolve
         for event in &committed {
-            registration.decider.evolve(&mut activation.state, event);
+            registration.decider.evolve(&mut activation.state, event).await;
         }
         if let Some(last) = committed.last() {
             activation.mailbox_seq = last.seq;
@@ -351,7 +409,7 @@ impl<S: AuthorityStore> CommandBus<S> {
             accepted_at: now,
         };
         if let Some(key) = &envelope.idempotency_key {
-            if let Err(error) = self.store.record_receipt(key, &receipt) {
+            if let Err(error) = self.store.record_receipt(key, &receipt).await {
                 return unavailable(&envelope, revision, now, &error.to_string());
             }
         }
@@ -436,16 +494,52 @@ fn dispatchable(actor: &ActorKey, events: &[EventRecord], effects: Vec<Effect>) 
 /// commands** — an action that must be undone is undone by a new command that undoes it, recorded
 /// as a fact like any other. Two-phase commit, distributed locks and cross-actor rollback are all
 /// absent by design, because each of them re-couples the availability of one actor to another.
+#[dyn_enum]
 pub trait Saga: Send + Sync {
     /// 🎬️ The commands this workflow issues in response to one committed event.
-    fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope>;
+    async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope>;
+}
+
+/// 🔁️ The framework's reference [`Saga`]: re-issues the triggering event's command verbatim. Kept
+/// in production scope (not only in tests) so [`Sagas`] closes over a real variant; a product's own
+/// workflows are added as further `Sagas` variants alongside it.
+pub struct EchoSaga;
+
+impl Saga for EchoSaga {
+    /// 🎬️ Re-issues a `counter.increment` at the triggering event's own stream — the framework's
+    /// minimal reference workflow, exercised end-to-end by this crate's own outbox-draining test.
+    async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope> {
+        vec![CommandEnvelope {
+            command_id: crate::contract::CommandId("cmd-counter.increment".into()),
+            kind: "counter.increment".into(),
+            version: 1,
+            target: event.stream.clone(),
+            scope: Scope("space-1".into()),
+            principal: Principal::User { id: "alice".into() },
+            session: Some(crate::contract::SessionId("s1".into())),
+            device: Some(crate::contract::DeviceId("d1".into())),
+            payload: vec![3],
+            causal_frontier: None,
+            client_hlc: HybridLogicalClock { millis: 1, counter: 0 },
+            expected_revision: None,
+            idempotency_key: Some(IdempotencyKey("echo".into())),
+            capability_proof: None,
+            trace: crate::contract::TraceContext::default(),
+        }]
+    }
+}
+
+dyn_enum_close! {
+    pub enum Sagas: Saga {
+        Echo(EchoSaga),
+    }
 }
 
 /// @emoji 🔁️ Turns committed outbox rows into follow-up commands. A seam: it decides *what* to
 /// issue, never *when* to run — the caller owns the scheduling.
 #[derive(Default)]
 pub struct SagaRunner {
-    pub sagas: Vec<Box<dyn Saga>>,
+    pub sagas: Vec<Sagas>,
 }
 
 impl SagaRunner {
@@ -455,7 +549,7 @@ impl SagaRunner {
     }
 
     /// 📇️ Register one workflow.
-    pub fn register(&mut self, saga: Box<dyn Saga>) {
+    pub fn register(&mut self, saga: Sagas) {
         self.sagas.push(saga);
     }
 
@@ -466,16 +560,17 @@ impl SagaRunner {
     /// safe precisely because every command the sagas emit carries an [`IdempotencyKey`] and is
     /// deduplicated by [`CommandBus::submit`]. Rows without an event are pure effects and belong to
     /// the effect dispatcher, not to a saga; they are drained here so one cursor advances.
-    pub fn drain_outbox<S: AuthorityStore + ?Sized>(&mut self, store: &mut S, limit: usize) -> Vec<CommandEnvelope> {
-        let entries = store.pending_outbox(limit).unwrap_or_default();
-        let sagas = &self.sagas;
-        let commands: Vec<CommandEnvelope> = entries
-            .iter()
-            .filter_map(|entry| entry.event.as_ref())
-            .flat_map(|event| sagas.iter().flat_map(move |saga| saga.on_event(event)))
-            .collect();
+    pub async fn drain_outbox<S: AuthorityStore + ?Sized>(&mut self, store: &mut S, limit: usize) -> Vec<CommandEnvelope> {
+        let entries = store.pending_outbox(limit).await.unwrap_or_default();
+        let mut commands: Vec<CommandEnvelope> = Vec::new();
+        for entry in &entries {
+            let Some(event) = entry.event.as_ref() else { continue };
+            for saga in &self.sagas {
+                commands.extend(saga.on_event(event).await);
+            }
+        }
         let delivered: Vec<u64> = entries.iter().map(|entry| entry.id).collect();
-        store.mark_outbox_delivered(&delivered).ok();
+        store.mark_outbox_delivered(&delivered).await.ok();
         commands
     }
 }
@@ -486,56 +581,6 @@ mod tests {
     use super::*;
     use crate::contract::{CommandId, DeviceId, SessionId, TenantId, TraceContext};
     use crate::storage::MemoryAuthorityStore;
-
-    const COUNTER: &str = "counter";
-
-    struct CounterDecider;
-
-    impl Decider for CounterDecider {
-        fn actor_kind(&self) -> &str {
-            COUNTER
-        }
-
-        fn decide(&self, state: &ActorState, command: &CommandEnvelope, _context: &DecisionContext) -> Decision {
-            match command.kind.as_str() {
-                "counter.increment" => Decision::Emit {
-                    events: vec![EventRecord {
-                        stream: command.target.clone(),
-                        seq: 0,
-                        hlc: HybridLogicalClock::default(),
-                        kind: "counter.incremented".into(),
-                        payload: command.payload.clone(),
-                    }],
-                    effects: vec![],
-                },
-                "counter.audit" => Decision::Emit {
-                    events: vec![],
-                    effects: vec![Effect { kind: "counter.audited".into(), payload: state.bytes.clone() }],
-                },
-                "counter.forbid" => Decision::Reject(Rejection::Invalid { detail: "counter refuses".into() }),
-                "counter.rebuild" => Decision::Defer(ProcessId("rebuild-1".into())),
-                other => Decision::Reject(Rejection::UnknownCommandKind { command_kind: other.into() }),
-            }
-        }
-
-        fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
-            let step = u64::from(event.payload.first().copied().unwrap_or(0));
-            let current = read_counter(&state.bytes);
-            state.bytes = (current + step).to_le_bytes().to_vec();
-        }
-    }
-
-    struct EchoSaga;
-
-    impl Saga for EchoSaga {
-        fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope> {
-            vec![command(&event.stream, "counter.increment", Some("echo"))]
-        }
-    }
-
-    fn read_counter(bytes: &[u8]) -> u64 {
-        <[u8; 8]>::try_from(bytes).map(u64::from_le_bytes).unwrap_or(0)
-    }
 
     fn key(kind: &str) -> ActorKey {
         ActorKey { tenant: TenantId("t1".into()), kind: kind.into(), id: "c1".into() }
@@ -561,13 +606,13 @@ mod tests {
         }
     }
 
-    fn bus() -> CommandBus<MemoryAuthorityStore> {
-        allowing(Box::new(|_| PolicyDecision::Allow))
+    async fn bus() -> CommandBus<MemoryAuthorityStore> {
+        allowing(Box::new(|_| PolicyDecision::Allow)).await
     }
 
-    fn allowing(hook: PolicyHook) -> CommandBus<MemoryAuthorityStore> {
+    async fn allowing(hook: PolicyHook) -> CommandBus<MemoryAuthorityStore> {
         let mut bus = CommandBus::new(AuthorityDirectory::new(), MemoryAuthorityStore::default(), hook);
-        bus.register(Box::new(CounterDecider));
+        bus.register(Deciders::Counter(CounterDecider)).await;
         bus
     }
 
@@ -576,10 +621,10 @@ mod tests {
     }
 
     //#region 🔖️Admit
-    #[test]
-    fn a_command_for_an_unserved_actor_kind_is_rejected_as_unknown() {
-        let mut bus = bus();
-        let outcome = bus.submit(command(&key("ghost"), "ghost.poke", None), tick(1));
+    #[semio_framework_async_macros::async_test]
+    async fn a_command_for_an_unserved_actor_kind_is_rejected_as_unknown() {
+        let mut bus = bus().await;
+        let outcome = bus.submit(command(&key("ghost"), "ghost.poke", None), tick(1)).await;
         match outcome {
             CommandOutcome::Rejected { reason: Rejection::UnknownCommandKind { command_kind }, .. } => {
                 assert_eq!(command_kind, "ghost.poke");
@@ -591,10 +636,10 @@ mod tests {
     //#endregion 🔖️Admit
 
     //#region 🔖️Deduplicate
-    #[test]
-    fn an_accepted_turn_emits_events_and_bumps_the_revision() {
-        let mut bus = bus();
-        let outcome = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
+    #[semio_framework_async_macros::async_test]
+    async fn an_accepted_turn_emits_events_and_bumps_the_revision() {
+        let mut bus = bus().await;
+        let outcome = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
         match outcome {
             CommandOutcome::Accepted { receipt, events, .. } => {
                 assert_eq!(events.len(), 1);
@@ -610,11 +655,11 @@ mod tests {
         assert_eq!(activation.mailbox_seq, 1);
     }
 
-    #[test]
-    fn resubmitting_one_idempotency_key_returns_the_identical_receipt_and_no_second_event() {
-        let mut bus = bus();
-        let first = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
-        let second = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(9));
+    #[semio_framework_async_macros::async_test]
+    async fn resubmitting_one_idempotency_key_returns_the_identical_receipt_and_no_second_event() {
+        let mut bus = bus().await;
+        let first = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
+        let second = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(9)).await;
 
         let CommandOutcome::Accepted { receipt: original, events: appended, .. } = first else {
             panic!("first submission must be accepted");
@@ -629,15 +674,15 @@ mod tests {
         let activation = bus.directory().activation(&key(COUNTER)).expect("placed");
         assert_eq!(activation.mailbox_seq, 1);
         assert_eq!(read_counter(&activation.state.bytes), 3);
-        assert_eq!(bus.store().last_seq(&key(COUNTER)).unwrap(), 1);
+        assert_eq!(bus.store().last_seq(&key(COUNTER)).await.unwrap(), 1);
     }
     //#endregion 🔖️Deduplicate
 
     //#region 🔖️Authorize
-    #[test]
-    fn a_policy_denial_rejects_before_the_actor_is_placed() {
-        let mut bus = allowing(Box::new(|_| PolicyDecision::Deny { reason: "no grant".into() }));
-        let outcome = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
+    #[semio_framework_async_macros::async_test]
+    async fn a_policy_denial_rejects_before_the_actor_is_placed() {
+        let mut bus = allowing(Box::new(|_| PolicyDecision::Deny { reason: "no grant".into() })).await;
+        let outcome = bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
         match outcome {
             CommandOutcome::Rejected { reason: Rejection::Unauthorized { detail }, .. } => {
                 assert_eq!(detail, "no grant");
@@ -649,85 +694,85 @@ mod tests {
     //#endregion 🔖️Authorize
 
     //#region 🔖️Fence
-    #[test]
-    fn a_stale_expected_revision_conflicts_and_reports_the_actual_one() {
-        let mut bus = bus();
-        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
+    #[semio_framework_async_macros::async_test]
+    async fn a_stale_expected_revision_conflicts_and_reports_the_actual_one() {
+        let mut bus = bus().await;
+        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
 
         let mut stale = command(&key(COUNTER), "counter.increment", Some("k2"));
         stale.expected_revision = Some(Revision(0));
-        match bus.submit(stale, tick(2)) {
+        match bus.submit(stale, tick(2)).await {
             CommandOutcome::Rejected { reason: Rejection::RevisionConflict { expected, actual }, .. } => {
                 assert_eq!(expected, Revision(0));
                 assert_eq!(actual, Revision(1));
             }
             other => panic!("expected revision conflict, got {other:?}"),
         }
-        assert_eq!(bus.store().last_seq(&key(COUNTER)).unwrap(), 1);
+        assert_eq!(bus.store().last_seq(&key(COUNTER)).await.unwrap(), 1);
     }
 
-    #[test]
-    fn a_matching_expected_revision_passes_the_fence() {
-        let mut bus = bus();
-        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
+    #[semio_framework_async_macros::async_test]
+    async fn a_matching_expected_revision_passes_the_fence() {
+        let mut bus = bus().await;
+        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
 
         let mut fresh = command(&key(COUNTER), "counter.increment", Some("k2"));
         fresh.expected_revision = Some(Revision(1));
-        assert!(matches!(bus.submit(fresh, tick(2)), CommandOutcome::Accepted { .. }));
+        assert!(matches!(bus.submit(fresh, tick(2)).await, CommandOutcome::Accepted { .. }));
         assert_eq!(read_counter(&bus.directory().activation(&key(COUNTER)).unwrap().state.bytes), 6);
     }
     //#endregion 🔖️Fence
 
     //#region 🔖️Decide
-    #[test]
-    fn a_decider_rejection_becomes_a_rejected_outcome() {
-        let mut bus = bus();
-        match bus.submit(command(&key(COUNTER), "counter.forbid", Some("k1")), tick(1)) {
+    #[semio_framework_async_macros::async_test]
+    async fn a_decider_rejection_becomes_a_rejected_outcome() {
+        let mut bus = bus().await;
+        match bus.submit(command(&key(COUNTER), "counter.forbid", Some("k1")), tick(1)).await {
             CommandOutcome::Rejected { reason: Rejection::Invalid { detail }, .. } => {
                 assert_eq!(detail, "counter refuses");
             }
             other => panic!("expected invalid rejection, got {other:?}"),
         }
-        assert_eq!(bus.store().last_seq(&key(COUNTER)).unwrap(), 0);
+        assert_eq!(bus.store().last_seq(&key(COUNTER)).await.unwrap(), 0);
     }
 
-    #[test]
-    fn a_decider_deferral_becomes_a_pending_outcome() {
-        let mut bus = bus();
-        match bus.submit(command(&key(COUNTER), "counter.rebuild", Some("k1")), tick(1)) {
+    #[semio_framework_async_macros::async_test]
+    async fn a_decider_deferral_becomes_a_pending_outcome() {
+        let mut bus = bus().await;
+        match bus.submit(command(&key(COUNTER), "counter.rebuild", Some("k1")), tick(1)).await {
             CommandOutcome::Pending { receipt, process } => {
                 assert_eq!(process, ProcessId("rebuild-1".into()));
                 assert_eq!(receipt.revision, Revision(0));
             }
             other => panic!("expected pending, got {other:?}"),
         }
-        assert_eq!(bus.store().last_seq(&key(COUNTER)).unwrap(), 0);
+        assert_eq!(bus.store().last_seq(&key(COUNTER)).await.unwrap(), 0);
     }
     //#endregion 🔖️Decide
 
     //#region 🔖️Saga
-    #[test]
-    fn the_outbox_drains_exactly_once_across_two_calls() {
-        let mut bus = bus();
-        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1));
-        bus.submit(command(&key(COUNTER), "counter.increment", Some("k2")), tick(2));
+    #[semio_framework_async_macros::async_test]
+    async fn the_outbox_drains_exactly_once_across_two_calls() {
+        let mut bus = bus().await;
+        bus.submit(command(&key(COUNTER), "counter.increment", Some("k1")), tick(1)).await;
+        bus.submit(command(&key(COUNTER), "counter.increment", Some("k2")), tick(2)).await;
 
         let mut runner = SagaRunner::new();
-        runner.register(Box::new(EchoSaga));
+        runner.register(Sagas::Echo(EchoSaga));
 
-        let first = runner.drain_outbox(bus.store_mut(), 64);
+        let first = runner.drain_outbox(bus.store_mut(), 64).await;
         assert_eq!(first.len(), 2);
         assert!(first.iter().all(|follow_up| follow_up.kind == "counter.increment"));
 
-        let second = runner.drain_outbox(bus.store_mut(), 64);
+        let second = runner.drain_outbox(bus.store_mut(), 64).await;
         assert!(second.is_empty());
     }
 
-    #[test]
-    fn effects_reach_the_outbox_without_an_event() {
-        let mut bus = bus();
-        bus.submit(command(&key(COUNTER), "counter.audit", Some("k1")), tick(1));
-        let pending = bus.store().pending_outbox(64).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn effects_reach_the_outbox_without_an_event() {
+        let mut bus = bus().await;
+        bus.submit(command(&key(COUNTER), "counter.audit", Some("k1")), tick(1)).await;
+        let pending = bus.store().pending_outbox(64).await.unwrap();
         assert_eq!(pending.len(), 1);
         assert_eq!(pending[0].kind, "counter.audited");
         assert!(pending[0].event.is_none());
@@ -735,8 +780,8 @@ mod tests {
     //#endregion 🔖️Saga
 
     //#region 🔖️Directory
-    #[test]
-    fn passivation_fences_the_next_activation_with_a_higher_epoch() {
+    #[semio_framework_async_macros::async_test]
+    async fn passivation_fences_the_next_activation_with_a_higher_epoch() {
         let mut directory = AuthorityDirectory::new();
         directory.activate(key(COUNTER), "authority").unwrap();
         let first = directory.activation_epoch(&key(COUNTER)).unwrap();

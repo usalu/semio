@@ -1,0 +1,95 @@
+{
+  "crate": "semio-framework",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 205,
+      "edits": 140,
+      "ambiguous": 0,
+      "other": 8
+    },
+    {
+      "pass": 2,
+      "errors": 60,
+      "edits": 2,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 3,
+      "errors": 58,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 13
+    }
+  ],
+  "residual_errors": 58,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1834",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1880",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:398",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1013",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:253",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1968",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:791",
+      "code": "E0271",
+      "msg": "expected `create_workflow_parameter_id` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:955",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1759",
+      "code": "E0382",
+      "msg": "use of moved value: `validation`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1767",
+      "code": "E0382",
+      "msg": "use of moved value: `validation`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1786",
+      "code": "E0382",
+      "msg": "use of moved value: `validation`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1786",
+      "code": "E0382",
+      "msg": "use of moved value: `validation`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1787",
+      "code": "E0382",
+      "msg": "use of moved value: `validation`"
+    }
+  ]
+}

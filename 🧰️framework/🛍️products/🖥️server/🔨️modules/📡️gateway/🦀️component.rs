@@ -34,19 +34,20 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::{Sink, SinkExt, StreamExt};
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, Mutex, Notify};
 
-use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Decider, PolicyHook};
+use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Deciders, PolicyHook};
 use crate::contract::{
-    ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EphemeralFrame, EventRecord,
-    HybridLogicalClock, IdempotencyKey, ModuleManifest, PolicyDecision, PolicyPoint, PolicyTemplate,
-    Principal, QueryEnvelope, QueryResult, Revision, Scope, ServerInstanceDefinition, TenantId,
+    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock,
+    ModuleManifest, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal,
+    QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition, TenantId,
 };
-use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolver, ResolverChain};
+use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolvers, ResolverChain};
 use crate::storage::{
-    content_hash, AuthorityStore, BlobStore, Lease, MemoryAuthorityStore, MemoryBlobStore,
-    MemoryProjectionStore, MemorySessionStore, OutboxEntry, ProjectionStore, SessionStore,
+    content_hash, AuthorityStore, AuthorityStores, BlobStore, BlobStores, MemoryAuthorityStore,
+    MemoryBlobStore, MemoryProjectionStore, MemorySessionStore, ProjectionStores, SessionStores,
     StorageError, StorageProfile,
 };
 
@@ -158,30 +159,61 @@ impl From<AuthorityError> for ServerError {
 /// [`Router<ServerState>`] and therefore names the transport library, which is exactly why it is
 /// declared here in layer 3 and not next to the manifest in layer 1. Keeping the two halves apart
 /// is what lets a client, a CLI or a documentation generator read a manifest without linking axum.
+#[dyn_enum]
 pub trait ServerModule: Send + Sync {
     /// 📇️ What this module declares to the instance registering it.
-    fn manifest(&self) -> ModuleManifest;
+    async fn manifest(&self) -> ModuleManifest;
 
     /// ⚖️ The deciders this module registers on the command bus, one per actor kind it serves.
-    fn deciders(&self) -> Vec<Box<dyn Decider>> {
+    async fn deciders(&self) -> Vec<Deciders> {
         Vec::new()
     }
 
     /// 🛣️ The routes this module mounts. Called once at build time with the router under
     /// construction; a module that serves no HTTP surface returns it untouched.
-    fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
+    async fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
         router
     }
 
     /// 🪜️ The authentication rungs this module contributes, appended to the shared ladder in
     /// module registration order.
-    fn resolvers(&self) -> Vec<Box<dyn PrincipalResolver>> {
+    async fn resolvers(&self) -> Vec<PrincipalResolvers> {
         Vec::new()
     }
 
     /// 🎓️ The role definitions this module registers into the shared policy engine.
-    fn templates(&self) -> Vec<PolicyTemplate> {
+    async fn templates(&self) -> Vec<PolicyTemplate> {
         Vec::new()
+    }
+}
+
+/// 🧮️ The framework's reference [`ServerModule`]: contributes one policy template and one health
+/// route, nothing else. Kept in production scope (not only in tests) so [`ServerModules`] closes
+/// over a real variant and this crate's own `build_collects_every_module_contribution` test
+/// exercises the genuine enum-dispatch path; a product's own modules are added as further
+/// `ServerModules` variants alongside it.
+pub struct CountingModule;
+
+impl ServerModule for CountingModule {
+    async fn manifest(&self) -> ModuleManifest {
+        ModuleManifest {
+            id: "counting".into(),
+            policies: vec![PolicyTemplate {
+                name: "author".into(),
+                grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }],
+            }],
+            ..Default::default()
+        }
+    }
+
+    async fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
+        router.route("/counting/health", get(|| async { "ok" }))
+    }
+}
+
+dyn_enum_close! {
+    pub enum ServerModules: ServerModule {
+        Counting(CountingModule),
     }
 }
 //#endregion 🔖️Module
@@ -194,26 +226,47 @@ pub trait ServerModule: Send + Sync {
 /// websocket — handshake, submit, relay — while naming nothing but opaque byte frames. Hub supplies
 /// the implementation; another instance may supply a different one, or none at all, in which case
 /// the document route answers [`ServerError::NotFound`].
+#[dyn_enum]
 pub trait DocumentAuthority: Send + Sync {
     /// 👋️ The handshake frame for a joining actor. `resume` carries whatever resumption token the
     /// engine minted previously; the gateway never interprets it.
-    fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>) -> Result<Vec<u8>, ServerError>;
+    async fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>) -> Result<Vec<u8>, ServerError>;
 
     /// 📨️ Apply one client frame and return the frames to send back to the submitter and relay to
     /// the other sessions on the same document.
-    fn submit_frame(&self, scope: &Scope, principal: &Principal, frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError>;
+    async fn submit_frame(&self, scope: &Scope, principal: &Principal, frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError>;
+}
+
+// 📄️ Not closed over a real reference variant (O1 de-dyn): this crate has zero implementors by
+// design — the replication engine is always caller-supplied (Hub or another product this
+// framework product deliberately does not depend on, per the module doc above) — so
+// `DocumentAuthorities` closes over an empty, uninhabited set. `Option<Arc<DocumentAuthorities>>`
+// therefore always observes `None` today, matching every existing test's expectation exactly; the
+// day a real engine lands, it is added here as the first variant, never as a `Box<dyn ..>`.
+dyn_enum_close! {
+    pub enum DocumentAuthorities: DocumentAuthority {}
 }
 //#endregion 🔖️DocumentPort
 
 //#region 🔖️Query
 /// ❓️ One registered read. A query never touches an actor's private state — it answers from a
 /// [`ProjectionStore`], which is why the handler is handed nothing else.
+#[dyn_enum]
 pub trait QueryHandler: Send + Sync {
     /// 🏷️ The [`QueryEnvelope::kind`] this handler answers.
-    fn kind(&self) -> &str;
+    async fn kind(&self) -> &str;
 
     /// 📤️ Answer one query against the read models.
-    fn handle(&self, envelope: &QueryEnvelope, projections: &dyn ProjectionStore) -> Result<QueryResult, ServerError>;
+    async fn handle(&self, envelope: &QueryEnvelope, projections: &ProjectionStores) -> Result<QueryResult, ServerError>;
+}
+
+// ❓️ Not closed over a real reference variant (O1 de-dyn): this crate has zero implementors by
+// design — every query kind is defined by the product built on this framework, not by the
+// framework itself — so `QueryHandlers` closes over an empty, uninhabited set, matching every
+// existing test's expectation that `queries` starts and stays empty. A product's first real
+// handler is added here as the first variant, never as a `Box<dyn ..>`.
+dyn_enum_close! {
+    pub enum QueryHandlers: QueryHandler {}
 }
 //#endregion 🔖️Query
 
@@ -518,70 +571,11 @@ pub fn credential(headers: &HeaderMap, peer: Option<SocketAddr>) -> Credential {
 //#endregion 🔖️Credential
 
 //#region 🔖️Store
-/// 🗄️ A boxed [`AuthorityStore`] usable as the [`CommandBus`]'s type parameter, so a
-/// [`StorageProfile`] can pick a backend at runtime without the bus becoming a dynamic dispatch
-/// point on its own hot path.
-pub struct DynAuthorityStore(Box<dyn AuthorityStore>);
-
-impl DynAuthorityStore {
-    /// 📦️ Wrap a backend.
-    pub fn new(store: Box<dyn AuthorityStore>) -> Self {
-        Self(store)
-    }
-}
-
-impl AuthorityStore for DynAuthorityStore {
-    fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError> {
-        self.0.receipt(key)
-    }
-
-    fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError> {
-        self.0.record_receipt(key, receipt)
-    }
-
-    fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError> {
-        self.0.append_events(actor, events, outbox)
-    }
-
-    fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError> {
-        self.0.events_since(actor, since)
-    }
-
-    fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError> {
-        self.0.last_seq(actor)
-    }
-
-    fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError> {
-        self.0.put_snapshot(actor, revision, bytes)
-    }
-
-    fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError> {
-        self.0.snapshot(actor)
-    }
-
-    fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError> {
-        self.0.enqueue_outbox(entries)
-    }
-
-    fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError> {
-        self.0.pending_outbox(limit)
-    }
-
-    fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError> {
-        self.0.mark_outbox_delivered(ids)
-    }
-
-    fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError> {
-        self.0.acquire_lease(actor, holder)
-    }
-
-    fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool {
-        self.0.validate_lease(actor, lease)
-    }
-}
-
-/// 🏛️ The bus shape this gateway serializes every command through.
-pub type ServerAuthority = CommandBus<DynAuthorityStore>;
+/// 🏛️ The bus shape this gateway serializes every command through. `AuthorityStores` (O1 de-dyn:
+/// `🗄️storage`'s `#[dyn_enum]`-closed enum) replaces the former `DynAuthorityStore` boxed-trait
+/// wrapper — a [`StorageProfile`] still picks a backend at runtime, but now as a concrete enum
+/// variant known to the compiler at every call site rather than an erased `Box<dyn AuthorityStore>`.
+pub type ServerAuthority = CommandBus<AuthorityStores>;
 //#endregion 🔖️Store
 
 //#region 🔖️State
@@ -592,11 +586,11 @@ pub struct ServerState {
     /// 🏛️ The command bus, serialized behind a mutex because a turn is by definition one at a time.
     pub authority: Arc<Mutex<ServerAuthority>>,
     /// 🔭️ The rebuildable read models every query answers from.
-    pub projections: Arc<Mutex<Box<dyn ProjectionStore>>>,
+    pub projections: Arc<Mutex<ProjectionStores>>,
     /// 🧱️ Content-addressed bytes.
-    pub blobs: Arc<Mutex<Box<dyn BlobStore>>>,
+    pub blobs: Arc<Mutex<BlobStores>>,
     /// 🎫️ Live authentication state.
-    pub sessions: Arc<Mutex<Box<dyn SessionStore>>>,
+    pub sessions: Arc<Mutex<SessionStores>>,
     /// ⚖️ Roles as data. A standard lock rather than an async one because the command bus's own
     /// admission hook is synchronous and must consult it inside a turn.
     pub policy: Arc<RwLock<PolicyEngine>>,
@@ -613,9 +607,9 @@ pub struct ServerState {
     /// 🧩️ The static apps this instance hosts.
     pub apps: Arc<AppRegistry>,
     /// ❓️ The registered read handlers, keyed by query kind.
-    pub queries: Arc<DashMap<String, Arc<dyn QueryHandler>>>,
+    pub queries: Arc<DashMap<String, Arc<QueryHandlers>>>,
     /// 📄️ The replication engine, when the instance supplied one.
-    pub documents: Option<Arc<dyn DocumentAuthority>>,
+    pub documents: Option<Arc<DocumentAuthorities>>,
     /// 🏗️ Where this instance's durable state lives.
     pub data_dir: Arc<PathBuf>,
     /// 🕰️ The instance's hybrid logical clock, advanced once per stamped command.
@@ -646,14 +640,14 @@ impl ServerState {
     }
 
     /// 🙋️ Who this caller is, according to the ladder.
-    pub fn identify(&self, headers: &HeaderMap, peer: Option<SocketAddr>) -> crate::policy::Resolved {
-        self.resolvers.resolve(&credential(headers, peer))
+    pub async fn identify(&self, headers: &HeaderMap, peer: Option<SocketAddr>) -> crate::policy::Resolved {
+        self.resolvers.resolve(&credential(headers, peer)).await
     }
 
     /// 📜️ Every durable event of `actor` after `since`.
     pub async fn replay_events(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, ServerError> {
         let authority = self.authority.lock().await;
-        Ok(authority.store().events_since(actor, since)?)
+        Ok(authority.store().events_since(actor, since).await?)
     }
 }
 //#endregion 🔖️State
@@ -693,7 +687,7 @@ pub async fn put_blob(
     State(state): State<ServerState>,
     body: Bytes,
 ) -> Result<Json<BlobReceipt>, ServerError> {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest {
         point: PolicyPoint::BlobWrite,
         principal: resolved.principal,
@@ -702,11 +696,11 @@ pub async fn put_blob(
         action: "write".to_string(),
     })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
-    let computed = content_hash(&body);
+    let computed = content_hash(&body).await;
     if computed != addressed {
         return Err(ServerError::Conflict(format!("blob address {hash} does not match the content hash {computed} of the uploaded bytes")));
     }
-    state.blobs.lock().await.put(computed, &body)?;
+    state.blobs.lock().await.put(computed, &body).await?;
     Ok(Json(BlobReceipt { hash, size: body.len() }))
 }
 
@@ -717,7 +711,7 @@ pub async fn get_blob(
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     State(state): State<ServerState>,
 ) -> Result<Response, ServerError> {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest {
         point: PolicyPoint::BlobRead,
         principal: resolved.principal,
@@ -726,7 +720,7 @@ pub async fn get_blob(
         action: "read".to_string(),
     })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
-    let bytes = state.blobs.lock().await.get(&addressed).ok_or_else(|| ServerError::NotFound(format!("no blob at {hash}")))?;
+    let bytes = state.blobs.lock().await.get(&addressed).await.ok_or_else(|| ServerError::NotFound(format!("no blob at {hash}")))?;
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], bytes).into_response())
 }
 
@@ -737,7 +731,7 @@ pub async fn head_blob(
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     State(state): State<ServerState>,
 ) -> StatusCode {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     let request = PolicyRequest {
         point: PolicyPoint::BlobRead,
         principal: resolved.principal,
@@ -749,7 +743,7 @@ pub async fn head_blob(
         return error.status();
     }
     let Some(addressed) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
-    if state.blobs.lock().await.has(&addressed) {
+    if state.blobs.lock().await.has(&addressed).await {
         StatusCode::OK
     } else {
         StatusCode::NOT_FOUND
@@ -907,13 +901,13 @@ pub async fn post_command(
     State(state): State<ServerState>,
     Json(envelope): Json<CommandEnvelope>,
 ) -> Result<Json<CommandOutcome>, ServerError> {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
     envelope.session = resolved.session;
     envelope.device = resolved.device;
     let now = state.now();
-    let outcome = state.authority.lock().await.submit(envelope, now);
+    let outcome = state.authority.lock().await.submit(envelope, now).await;
     if let CommandOutcome::Accepted { events, .. } = &outcome {
         for event in events {
             if let Ok(bytes) = serde_json::to_vec(event) {
@@ -931,7 +925,7 @@ pub async fn post_query(
     State(state): State<ServerState>,
     Json(envelope): Json<QueryEnvelope>,
 ) -> Result<Json<QueryResult>, ServerError> {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
     state.authorize(&PolicyRequest {
@@ -947,7 +941,7 @@ pub async fn post_query(
         .map(|entry| Arc::clone(entry.value()))
         .ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
     let projections = state.projections.lock().await;
-    Ok(Json(handler.handle(&envelope, &**projections)?))
+    Ok(Json(handler.handle(&envelope, &projections).await?))
 }
 
 /// 💨️ Publish one ephemeral frame onto its scope's lossy lane. Nothing is persisted and nothing is
@@ -958,7 +952,7 @@ pub async fn post_ephemeral(
     State(state): State<ServerState>,
     Json(frame): Json<EphemeralFrame>,
 ) -> Result<Json<usize>, ServerError> {
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     let mut frame = frame;
     frame.principal = resolved.principal;
     state.authorize(&PolicyRequest {
@@ -1054,7 +1048,7 @@ pub async fn get_events(
     State(state): State<ServerState>,
 ) -> Result<Json<Vec<EventRecord>>, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest {
         point: PolicyPoint::EventDelivery,
         principal: resolved.principal,
@@ -1075,7 +1069,7 @@ pub async fn get_event_stream_ws(
     State(state): State<ServerState>,
 ) -> Result<Response, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest {
         point: PolicyPoint::Subscription,
         principal: resolved.principal,
@@ -1132,7 +1126,7 @@ pub async fn get_document_ws(
         return Err(ServerError::NotFound("this instance hosts no document authority".to_string()));
     }
     let scope = Scope(scope);
-    let resolved = state.identify(&headers, Some(peer));
+    let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest {
         point: PolicyPoint::Subscription,
         principal: resolved.principal.clone(),
@@ -1169,7 +1163,7 @@ async fn handle_document(socket: WebSocket, scope: Scope, query: DocumentStreamQ
     let mut live = state.fanout.subscribe(&lane);
     state.presence.join(&scope.0, &query.actor, query.surface.as_deref().unwrap_or("unknown"));
 
-    match documents.welcome(&scope, &query.actor, query.resume.as_deref()) {
+    match documents.welcome(&scope, &query.actor, query.resume.as_deref()).await {
         Ok(welcome) => {
             if sender.send(Message::Binary(welcome.into())).await.is_err() {
                 state.presence.leave(&scope.0, &query.actor);
@@ -1188,7 +1182,7 @@ async fn handle_document(socket: WebSocket, scope: Scope, query: DocumentStreamQ
             incoming = receiver.next() => {
                 match incoming {
                     Some(Ok(Message::Binary(payload))) => {
-                        match documents.submit_frame(&scope, &principal, &payload) {
+                        match documents.submit_frame(&scope, &principal, &payload).await {
                             Ok(frames) => {
                                 for frame in frames {
                                     if sender.send(Message::Binary(frame.clone().into())).await.is_err() {
@@ -1267,10 +1261,10 @@ fn serve_app(state: &ServerState, app: &str, rest: &str) -> Response {
 /// 🏗️ Assembles one server out of a storage profile and a set of modules.
 pub struct ServerBuilder {
     profile: StorageProfile,
-    modules: Vec<Box<dyn ServerModule>>,
-    queries: Vec<Box<dyn QueryHandler>>,
+    modules: Vec<ServerModules>,
+    queries: Vec<QueryHandlers>,
     apps: Vec<(String, PathBuf)>,
-    documents: Option<Arc<dyn DocumentAuthority>>,
+    documents: Option<Arc<DocumentAuthorities>>,
     admin_token: Option<String>,
     id: String,
     version: String,
@@ -1279,19 +1273,19 @@ pub struct ServerBuilder {
 impl ServerBuilder {
     /// 🧩️ Register one module. Its deciders, templates, resolvers and routes are collected at
     /// [`build`](Self::build) time, in registration order.
-    pub fn module(mut self, module: Box<dyn ServerModule>) -> Self {
+    pub fn module(mut self, module: ServerModules) -> Self {
         self.modules.push(module);
         self
     }
 
     /// ❓️ Register one query handler under the kind it declares.
-    pub fn query(mut self, handler: Box<dyn QueryHandler>) -> Self {
+    pub fn query(mut self, handler: QueryHandlers) -> Self {
         self.queries.push(handler);
         self
     }
 
     /// 📄️ Supply the replication engine backing the document websocket.
-    pub fn document_authority(mut self, documents: Arc<dyn DocumentAuthority>) -> Self {
+    pub fn document_authority(mut self, documents: Arc<DocumentAuthorities>) -> Self {
         self.documents = Some(documents);
         self
     }
@@ -1316,21 +1310,21 @@ impl ServerBuilder {
     }
 
     /// 🔨️ Collect every module's contribution into one shared engine, bus, ladder and router.
-    pub fn build(self) -> Server {
+    pub async fn build(self) -> Server {
         let policy = Arc::new(RwLock::new(PolicyEngine::new()));
         let mut chain = ResolverChain::new();
         let mut definition = ServerInstanceDefinition { id: self.id.clone(), version: self.version.clone(), modules: Vec::new() };
-        let mut deciders: Vec<Box<dyn Decider>> = Vec::new();
+        let mut deciders: Vec<Deciders> = Vec::new();
         for module in &self.modules {
-            let manifest = module.manifest();
+            let manifest = module.manifest().await;
             if let Ok(mut engine) = policy.write() {
-                for template in manifest.policies.iter().cloned().chain(module.templates()) {
+                for template in manifest.policies.iter().cloned().chain(module.templates().await) {
                     engine.register_template(template);
                 }
             }
             definition.modules.push(manifest);
-            deciders.extend(module.deciders());
-            for resolver in module.resolvers() {
+            deciders.extend(module.deciders().await);
+            for resolver in module.resolvers().await {
                 chain.push(resolver);
             }
         }
@@ -1344,26 +1338,26 @@ impl ServerBuilder {
         };
 
         let StorageProfile::Embedded { data_dir } = &self.profile;
-        let store = DynAuthorityStore::new(Box::new(MemoryAuthorityStore::new()));
+        let store = AuthorityStores::Memory(MemoryAuthorityStore::new());
         let mut bus = CommandBus::new(AuthorityDirectory::new(), store, hook);
         for decider in deciders {
-            bus.register(decider);
+            bus.register(decider).await;
         }
 
         let apps = AppRegistry::new();
         for (name, dir) in &self.apps {
             apps.register(name, dir.clone());
         }
-        let queries: DashMap<String, Arc<dyn QueryHandler>> = DashMap::new();
+        let queries: DashMap<String, Arc<QueryHandlers>> = DashMap::new();
         for handler in self.queries {
-            queries.insert(handler.kind().to_string(), Arc::from(handler));
+            queries.insert(handler.kind().await.to_string(), Arc::new(handler));
         }
 
         let state = ServerState {
             authority: Arc::new(Mutex::new(bus)),
-            projections: Arc::new(Mutex::new(Box::new(MemoryProjectionStore::new()))),
-            blobs: Arc::new(Mutex::new(Box::new(MemoryBlobStore::new()))),
-            sessions: Arc::new(Mutex::new(Box::new(MemorySessionStore::new()))),
+            projections: Arc::new(Mutex::new(ProjectionStores::Memory(MemoryProjectionStore::new()))),
+            blobs: Arc::new(Mutex::new(BlobStores::Memory(MemoryBlobStore::new()))),
+            sessions: Arc::new(Mutex::new(SessionStores::Memory(MemorySessionStore::new()))),
             policy,
             resolvers: Arc::new(chain),
             admin: Arc::new(AdminGate::new(self.admin_token.clone())),
@@ -1379,7 +1373,7 @@ impl ServerBuilder {
 
         let mut router = base_router(definition.clone());
         for module in &self.modules {
-            router = module.routes(router);
+            router = module.routes(router).await;
         }
         let router = router.layer(axum::middleware::from_fn(cors_middleware)).with_state(state.clone());
         Server { state, router, definition }
@@ -1473,8 +1467,8 @@ mod tests {
     use futures::channel::mpsc::unbounded;
     use std::time::Duration;
 
-    fn state() -> ServerState {
-        Server::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).build().state().clone()
+    async fn state() -> ServerState {
+        Server::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).build().await.state().clone()
     }
 
     fn actor(id: &str) -> ActorKey {
@@ -1670,24 +1664,24 @@ mod tests {
     //#region 🔖️Blob
     #[tokio::test]
     async fn a_blob_address_that_does_not_match_its_bytes_is_a_conflict() {
-        let state = state();
+        let state = state().await;
         grant(&state, PolicyPoint::BlobWrite, "write");
         grant(&state, PolicyPoint::BlobRead, "read");
 
-        let honest = content_hash(b"hello").to_string();
+        let honest = content_hash(b"hello").await.to_string();
         let receipt = put_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello"))
             .await
             .expect("an honest address is accepted");
         assert_eq!(receipt.0.size, 5);
 
-        let lie = content_hash(b"world").to_string();
+        let lie = content_hash(b"world").await.to_string();
         let error = put_blob(Path(lie), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello"))
             .await
             .expect_err("a mismatched address is refused");
         assert_eq!(error.status(), StatusCode::CONFLICT);
 
         assert_eq!(head_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone())).await, StatusCode::OK);
-        let missing = content_hash(b"world").to_string();
+        let missing = content_hash(b"world").await.to_string();
         assert_eq!(head_blob(Path(missing), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone())).await, StatusCode::NOT_FOUND);
         let short = put_blob(Path("beef".to_string()), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello")).await;
         assert_eq!(short.err().map(|error| error.status()), Some(StatusCode::BAD_REQUEST));
@@ -1695,8 +1689,8 @@ mod tests {
 
     #[tokio::test]
     async fn a_blob_write_without_a_grant_is_forbidden() {
-        let state = state();
-        let hash = content_hash(b"hello").to_string();
+        let state = state().await;
+        let hash = content_hash(b"hello").await.to_string();
         let error = put_blob(Path(hash), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello"))
             .await
             .expect_err("closed by default");
@@ -1707,11 +1701,11 @@ mod tests {
     //#region 🔖️EventStream
     #[tokio::test]
     async fn the_replay_live_seam_has_no_gap_and_no_duplicate() {
-        let state = state();
+        let state = state().await;
         let actor = actor("c1");
         {
             let mut authority = state.authority.lock().await;
-            authority.store_mut().append_events(&actor, &[event(&actor, 1), event(&actor, 2), event(&actor, 3)], &[]).unwrap();
+            authority.store_mut().append_events(&actor, &[event(&actor, 1), event(&actor, 2), event(&actor, 3)], &[]).await.unwrap();
         }
 
         let mut live = state.fanout.subscribe(&stream_lane(&actor));
@@ -1738,11 +1732,11 @@ mod tests {
 
     #[tokio::test]
     async fn a_resuming_subscriber_skips_what_it_already_holds() {
-        let state = state();
+        let state = state().await;
         let actor = actor("c1");
         {
             let mut authority = state.authority.lock().await;
-            authority.store_mut().append_events(&actor, &[event(&actor, 1), event(&actor, 2)], &[]).unwrap();
+            authority.store_mut().append_events(&actor, &[event(&actor, 1), event(&actor, 2)], &[]).await.unwrap();
         }
         let mut live = state.fanout.subscribe(&stream_lane(&actor));
         let (mut sink, stream) = unbounded::<Message>();
@@ -1776,33 +1770,15 @@ mod tests {
     //#endregion 🔖️Relay
 
     //#region 🔖️Server
-    struct CountingModule;
-
-    impl ServerModule for CountingModule {
-        fn manifest(&self) -> ModuleManifest {
-            ModuleManifest {
-                id: "counting".into(),
-                policies: vec![PolicyTemplate {
-                    name: "author".into(),
-                    grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }],
-                }],
-                ..Default::default()
-            }
-        }
-
-        fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
-            router.route("/counting/health", get(|| async { "ok" }))
-        }
-    }
-
     #[tokio::test]
     async fn build_collects_every_module_contribution() {
         let server = Server::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() })
             .identity("hub", "0.1.0")
-            .module(Box::new(CountingModule))
+            .module(ServerModules::Counting(CountingModule))
             .app("admin", "/srv/admin")
             .admin_token(Some("secret".to_string()))
-            .build();
+            .build()
+            .await;
 
         assert_eq!(server.definition().modules.len(), 1);
         assert_eq!(server.definition().id, "hub");
@@ -1819,16 +1795,16 @@ mod tests {
 
     #[tokio::test]
     async fn an_unroutable_command_is_rejected_and_publishes_nothing() {
-        let state = state();
+        let state = state().await;
         let mut live = state.fanout.subscribe(&stream_lane(&actor("c1")));
         let outcome = post_command(HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Json(envelope())).await.unwrap();
         assert!(matches!(outcome.0, CommandOutcome::Rejected { .. }));
         assert!(tokio::time::timeout(Duration::from_millis(20), live.recv()).await.is_err());
     }
 
-    #[test]
-    fn the_clock_never_goes_backwards() {
-        let state = state();
+    #[tokio::test]
+    async fn the_clock_never_goes_backwards() {
+        let state = state().await;
         let first = state.now();
         let second = state.now();
         assert!(second > first);

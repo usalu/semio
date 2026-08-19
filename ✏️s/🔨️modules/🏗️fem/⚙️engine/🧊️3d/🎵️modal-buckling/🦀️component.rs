@@ -3,13 +3,13 @@
 
 use crate::fem3d_engine::{meshing, Fem3dError};
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use crate::model::{Dof, Element, Node};
+use crate::model::{Dof, Element, Elements, Node};
 use crate::analyses;
 
 /// 🔢️ Node-major, active-DOF-filtered ordering matching `crate::analyses::ModalResult`/
 /// `BucklingResult`'s documented shape-vector layout — mirrors `fem_2d`'s identically named helper
 /// (both are small local reimplementations of `analyses::build_dof_map`, which isn't `pub`).
-async fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String, Dof)> {
+async fn mode_dof_order(nodes: &[Node], elements: &[Elements]) -> Vec<(String, Dof)> {
     let mut order = Vec::new();
     for node in nodes {
         let mut active: Vec<Dof> = Vec::new();

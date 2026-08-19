@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/flow-js:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript
+
+
+ Test Files  1 passed (1)
+      Tests  no tests
+   Start at  21:24:37
+   Duration  377ms (transform 152ms, setup 0ms, import 212ms, tests 2ms, environment 0ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/flow-js
+
+

@@ -7,7 +7,6 @@
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
-use async_trait::async_trait;
 use neo4rs::{query, Graph, Txn};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
 use uuid::Uuid;
@@ -185,7 +184,6 @@ impl Neo4jDirectory {
     //#endregion 🔖️Projections
 }
 
-#[async_trait]
 impl HubDirectory for Neo4jDirectory {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {

@@ -39,8 +39,11 @@ import {
   OsTransient,
   type EphemeralBox,
   type PluginCatalog,
+  type PluginRegistryEntry,
+  type PluginSourceEvent,
 } from "../../🔨️modules/🎠️kernel/🟦️component.ts";
-import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef } from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
+import { effectiveActionArgs, missingRequiredArgs } from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
+import { type ActionArgDef, type ArgSchema } from "../../🔨️modules/🛂️manifest/🟦️component.ts";
 import {
   ActionId,
   ActorId,
@@ -688,10 +691,11 @@ if (import.meta.vitest) {
   });
 
   describe("effectiveActionArgs", () => {
+    const TEXT_SCHEMA: ArgSchema = { kind: "string", options: [] };
     const textArg = (id: string, extra: Partial<ActionArgDef> = {}): ActionArgDef => ({
       id,
       label: id,
-      control: { kind: "text" },
+      schema: TEXT_SCHEMA,
       required: false,
       ...extra,
     });
@@ -970,6 +974,7 @@ if (import.meta.vitest) {
   class PlayerEvent implements StatechartEvent {
     private static readonly IDS = { open: 0, pause: 1, play: 2, stop: 3, resume: 4 } as const;
     private static readonly NAMES = ["Open", "Pause", "Play", "Stop", "Resume"];
+    readonly eventCount = 5;
     readonly type: keyof typeof PlayerEvent.IDS;
     constructor(type: keyof typeof PlayerEvent.IDS) {
       this.type = type;
@@ -1017,6 +1022,7 @@ if (import.meta.vitest) {
   class RecorderEvent implements StatechartEvent {
     private static readonly IDS = { start: 0, audioStop: 1, videoStop: 2 } as const;
     private static readonly NAMES = ["Start", "AudioStop", "VideoStop"];
+    readonly eventCount = 3;
     readonly type: keyof typeof RecorderEvent.IDS;
     constructor(type: keyof typeof RecorderEvent.IDS) {
       this.type = type;

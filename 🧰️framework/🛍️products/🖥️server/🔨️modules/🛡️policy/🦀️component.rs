@@ -23,6 +23,7 @@
 
 use std::collections::BTreeMap;
 
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 
 use crate::contract::{
@@ -212,12 +213,47 @@ pub struct Resolved {
 
 /// 🪜️ One rung of the authentication ladder. Returning `None` means "not mine", never "denied":
 /// refusal is policy's job at [`PolicyEngine::evaluate`], not authentication's.
+#[dyn_enum]
 pub trait PrincipalResolver: Send + Sync {
     /// 🔍️ Recognize this credential, or decline so the next rung may try.
-    fn resolve(&self, credential: &Credential) -> Option<Resolved>;
+    async fn resolve(&self, credential: &Credential) -> Option<Resolved>;
 
     /// 🏷️ Stable rung name, reported as [`Resolved::via`].
-    fn name(&self) -> &str;
+    async fn name(&self) -> &str;
+}
+
+/// 🪜️ A minimal reference [`PrincipalResolver`] rung: recognizes exactly one configured bearer
+/// token. Kept in production scope (not only in tests) so [`PrincipalResolvers`] closes over a real
+/// variant; a product's own rungs (session cookie, share-token, public-visibility) are added as
+/// further `PrincipalResolvers` variants alongside it.
+pub struct BearerTokenResolver {
+    pub name: String,
+    pub bearer: String,
+    pub principal: Principal,
+}
+
+impl PrincipalResolver for BearerTokenResolver {
+    async fn resolve(&self, credential: &Credential) -> Option<Resolved> {
+        if credential.bearer.as_deref() != Some(self.bearer.as_str()) {
+            return None;
+        }
+        Some(Resolved {
+            principal: self.principal.clone(),
+            session: Some(SessionId(format!("session-{}", self.name))),
+            device: Some(DeviceId("d1".to_string())),
+            via: self.name.clone(),
+        })
+    }
+
+    async fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+dyn_enum_close! {
+    pub enum PrincipalResolvers: PrincipalResolver {
+        BearerToken(BearerTokenResolver),
+    }
 }
 
 /// ⛓️ The ladder itself — generic here, its rungs supplied by the instance. The framework owns the
@@ -227,7 +263,7 @@ pub trait PrincipalResolver: Send + Sync {
 /// first and the broadest last.
 #[derive(Default)]
 pub struct ResolverChain {
-    pub resolvers: Vec<Box<dyn PrincipalResolver>>,
+    pub resolvers: Vec<PrincipalResolvers>,
 }
 
 impl ResolverChain {
@@ -237,20 +273,20 @@ impl ResolverChain {
     }
 
     /// ➕️ Append a rung below every rung already pushed.
-    pub fn push(&mut self, resolver: Box<dyn PrincipalResolver>) {
+    pub fn push(&mut self, resolver: PrincipalResolvers) {
         self.resolvers.push(resolver);
     }
 
     /// 🧭️ Walk the rungs in order and take the first that recognizes the credential. Falling off
     /// the bottom is not an error: an unrecognized caller is anonymous, and anonymous is a perfectly
     /// ordinary principal that policy will then almost certainly deny.
-    pub fn resolve(&self, credential: &Credential) -> Resolved {
-        self.resolvers.iter().find_map(|resolver| resolver.resolve(credential)).unwrap_or_else(|| Resolved {
-            principal: Principal::Anonymous,
-            session: None,
-            device: None,
-            via: "anonymous".to_string(),
-        })
+    pub async fn resolve(&self, credential: &Credential) -> Resolved {
+        for resolver in &self.resolvers {
+            if let Some(resolved) = resolver.resolve(credential).await {
+                return resolved;
+            }
+        }
+        Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".to_string() }
     }
 }
 //#endregion 🔖️Resolver
@@ -320,34 +356,8 @@ mod tests {
         }
     }
 
-    struct StubResolver {
-        name: String,
-        bearer: String,
-        principal: Principal,
-    }
-
-    impl StubResolver {
-        fn boxed(name: &str, bearer: &str, principal: Principal) -> Box<dyn PrincipalResolver> {
-            Box::new(Self { name: name.to_string(), bearer: bearer.to_string(), principal })
-        }
-    }
-
-    impl PrincipalResolver for StubResolver {
-        fn resolve(&self, credential: &Credential) -> Option<Resolved> {
-            if credential.bearer.as_deref() != Some(self.bearer.as_str()) {
-                return None;
-            }
-            Some(Resolved {
-                principal: self.principal.clone(),
-                session: Some(SessionId(format!("session-{}", self.name))),
-                device: Some(DeviceId("d1".to_string())),
-                via: self.name.clone(),
-            })
-        }
-
-        fn name(&self) -> &str {
-            &self.name
-        }
+    fn resolver(name: &str, bearer: &str, principal: Principal) -> PrincipalResolvers {
+        PrincipalResolvers::BearerToken(BearerTokenResolver { name: name.to_string(), bearer: bearer.to_string(), principal })
     }
 
     //#region 🔖️ClosedByDefault
@@ -533,56 +543,56 @@ mod tests {
     //#endregion 🔖️Scope
 
     //#region 🔖️Resolver
-    #[test]
-    fn the_chain_takes_the_first_rung_that_recognizes_a_credential() {
+    #[semio_framework_async_macros::async_test]
+    async fn the_chain_takes_the_first_rung_that_recognizes_a_credential() {
         let mut chain = ResolverChain::new();
-        chain.push(StubResolver::boxed("session", "tok", Principal::User { id: "alice".to_string() }));
-        chain.push(StubResolver::boxed("share", "tok", Principal::Anonymous));
-        let resolved = chain.resolve(&Credential { bearer: Some("tok".to_string()), ..Default::default() });
+        chain.push(resolver("session", "tok", Principal::User { id: "alice".to_string() }));
+        chain.push(resolver("share", "tok", Principal::Anonymous));
+        let resolved = chain.resolve(&Credential { bearer: Some("tok".to_string()), ..Default::default() }).await;
         assert_eq!(resolved.via, "session");
         assert_eq!(resolved.principal, alice());
         assert_eq!(resolved.session, Some(SessionId("session-session".to_string())));
         assert_eq!(resolved.device, Some(DeviceId("d1".to_string())));
     }
 
-    #[test]
-    fn a_later_rung_answers_what_an_earlier_one_declined() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_later_rung_answers_what_an_earlier_one_declined() {
         let mut chain = ResolverChain::new();
-        chain.push(StubResolver::boxed("session", "session-tok", alice()));
-        chain.push(StubResolver::boxed("share", "share-tok", Principal::Device { id: "d9".to_string() }));
-        let resolved = chain.resolve(&Credential { bearer: Some("share-tok".to_string()), ..Default::default() });
+        chain.push(resolver("session", "session-tok", alice()));
+        chain.push(resolver("share", "share-tok", Principal::Device { id: "d9".to_string() }));
+        let resolved = chain.resolve(&Credential { bearer: Some("share-tok".to_string()), ..Default::default() }).await;
         assert_eq!(resolved.via, "share");
         assert_eq!(resolved.principal, Principal::Device { id: "d9".to_string() });
     }
 
-    #[test]
-    fn an_unrecognized_credential_falls_back_to_anonymous() {
+    #[semio_framework_async_macros::async_test]
+    async fn an_unrecognized_credential_falls_back_to_anonymous() {
         let mut chain = ResolverChain::new();
-        chain.push(StubResolver::boxed("session", "session-tok", alice()));
-        let resolved = chain.resolve(&Credential { bearer: Some("garbage".to_string()), ..Default::default() });
+        chain.push(resolver("session", "session-tok", alice()));
+        let resolved = chain.resolve(&Credential { bearer: Some("garbage".to_string()), ..Default::default() }).await;
         assert_eq!(resolved.principal, Principal::Anonymous);
         assert_eq!(resolved.via, "anonymous");
         assert_eq!(resolved.session, None);
         assert_eq!(resolved.device, None);
     }
 
-    #[test]
-    fn an_empty_chain_resolves_everything_to_anonymous() {
-        let resolved = ResolverChain::new().resolve(&Credential::default());
+    #[semio_framework_async_macros::async_test]
+    async fn an_empty_chain_resolves_everything_to_anonymous() {
+        let resolved = ResolverChain::new().resolve(&Credential::default()).await;
         assert_eq!(resolved.principal, Principal::Anonymous);
         assert_eq!(resolved.via, "anonymous");
     }
 
-    #[test]
-    fn rungs_report_their_own_name() {
-        let resolver = StubResolver::boxed("share", "tok", Principal::Anonymous);
-        assert_eq!(resolver.name(), "share");
+    #[semio_framework_async_macros::async_test]
+    async fn rungs_report_their_own_name() {
+        let rung = resolver("share", "tok", Principal::Anonymous);
+        assert_eq!(rung.name().await, "share");
     }
 
-    #[test]
-    fn an_anonymous_fallback_is_still_subject_to_policy() {
+    #[semio_framework_async_macros::async_test]
+    async fn an_anonymous_fallback_is_still_subject_to_policy() {
         let engine = PolicyEngine::new();
-        let resolved = ResolverChain::new().resolve(&Credential::default());
+        let resolved = ResolverChain::new().resolve(&Credential::default()).await;
         let decision = engine.evaluate(&request(PolicyPoint::QueryAccess, resolved.principal, None, "doc-1", "read"));
         assert!(!decision.is_allowed());
     }

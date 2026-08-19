@@ -162,9 +162,9 @@ struct EncCtx<'a> {
 async fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
     if let Some(&idx) = ctx.symbol_index.get(s) {
         out.push(TAG_STR);
-        write_varint_u64(out, idx);
+        write_varint_u64(out, idx).await;
     } else {
-        encode_string_inline(s, out);
+        encode_string_inline(s, out).await;
     }
 }
 
@@ -172,7 +172,7 @@ async fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
 /// `Value`/`DslValue::Object` keys, which are never symrefs.
 async fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
     out.push(TAG_STR_INLINE);
-    write_varint_u64(out, s.len() as u64);
+    write_varint_u64(out, s.len() as u64).await;
     out.extend_from_slice(s.as_bytes());
 }
 
@@ -180,7 +180,7 @@ async fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
 async fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
     let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
-    write_varint_u64(out, idx);
+    write_varint_u64(out, idx).await;
     Ok(())
 }
 
@@ -347,10 +347,10 @@ async fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, r
     let mut ids: Vec<u16> = record.fields.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).filter(|(id, _)| preserve_unknown || spec.is_some_and(|s| s.fields.iter().any(|f| f.id == **id))).map(|(id, _)| *id).collect();
     ids.sort_unstable();
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, ids.len() as u64);
+    write_varint_u64(&mut buf, ids.len() as u64).await;
     for id in ids {
         let value = record.fields.get(&id).expect("id came from this map's own keys");
-        write_varint_u64(&mut buf, id as u64);
+        write_varint_u64(&mut buf, id as u64).await;
         let field_shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
         Box::pin(encode_value(ctx, field_shape, value, depth + 1, &mut buf)).await?;
     }
@@ -374,11 +374,11 @@ async fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &Field
         FieldValue::Bool(b) => out.push(if *b { TAG_TRUE } else { TAG_FALSE }),
         FieldValue::Int(i) => {
             out.push(TAG_INT);
-            write_varint_i64(out, *i);
+            write_varint_i64(out, *i).await;
         }
         FieldValue::UInt(u) => {
             out.push(TAG_UINT);
-            write_varint_u64(out, *u);
+            write_varint_u64(out, *u).await;
         }
         FieldValue::Float(f) => {
             out.push(TAG_F64);
@@ -388,7 +388,7 @@ async fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &Field
         FieldValue::Bytes64(bytes) => encode_bytes(ctx, bytes, out).await?,
         FieldValue::Enum(ordinal) => {
             out.push(TAG_ENUM);
-            write_varint_u64(out, *ordinal as u64);
+            write_varint_u64(out, *ordinal as u64).await;
         }
         FieldValue::Tuple(items) => encode_seq(ctx, items, elem_shape_of(shape).await, true, depth, out).await?,
         FieldValue::List(items) => {
@@ -440,13 +440,13 @@ async fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> 
             ids.push(ctx.writer.write_chunk(piece).await?);
         }
         out.push(TAG_BYTES_CHUNKED);
-        write_varint_u64(out, ids.len() as u64);
+        write_varint_u64(out, ids.len() as u64).await;
         for id in ids {
-            write_varint_u64(out, id.0 as u64);
+            write_varint_u64(out, id.0 as u64).await;
         }
     } else {
         out.push(TAG_BYTES);
-        write_varint_u64(out, bytes.len() as u64);
+        write_varint_u64(out, bytes.len() as u64).await;
         out.extend_from_slice(bytes);
     }
     Ok(())
@@ -459,7 +459,7 @@ async fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Opti
         match kind {
             NumKind::F64 => {
                 out.push(TAG_PACKED_F64);
-                write_varint_u64(out, items.len() as u64);
+                write_varint_u64(out, items.len() as u64).await;
                 for it in items {
                     if let FieldValue::Float(f) = it {
                         out.extend_from_slice(&normalize_f64(*f).await.to_le_bytes());
@@ -468,7 +468,7 @@ async fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Opti
             }
             NumKind::Varint => {
                 out.push(TAG_PACKED_VARINT);
-                write_varint_u64(out, items.len() as u64);
+                write_varint_u64(out, items.len() as u64).await;
                 for it in items {
                     let v: i64 = match it {
                         FieldValue::Int(i) => *i,
@@ -476,14 +476,14 @@ async fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Opti
                         FieldValue::Enum(o) => *o as i64,
                         _ => 0,
                     };
-                    write_varint_i64(out, v);
+                    write_varint_i64(out, v).await;
                 }
             }
         }
         return Ok(());
     }
     out.push(if is_tuple { TAG_TUPLE } else { TAG_LIST });
-    write_varint_u64(out, items.len() as u64);
+    write_varint_u64(out, items.len() as u64).await;
     for it in items {
         Box::pin(encode_value(ctx, elem_shape, it, depth + 1, out)).await?;
     }
@@ -497,7 +497,7 @@ async fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inne
     out.push(TAG_MAP);
     let mut sorted: Vec<&(String, FieldValue)> = entries.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).collect();
     sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-    write_varint_u64(out, sorted.len() as u64);
+    write_varint_u64(out, sorted.len() as u64).await;
     for (k, v) in sorted {
         encode_string(ctx, k, out).await;
         Box::pin(encode_value(ctx, inner_shape, v, depth + 1, out)).await?;
@@ -510,7 +510,7 @@ async fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inne
 async fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth).await?;
     out.push(TAG_STATEMENTS);
-    write_varint_u64(out, items.len() as u64);
+    write_varint_u64(out, items.len() as u64).await;
     for (keyword, record) in items {
         write_symref_forced(ctx, keyword, out).await?;
         let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
@@ -535,7 +535,7 @@ async fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &
         DslValue::String(s) => encode_string(ctx, s, out).await,
         DslValue::Array(items) => {
             out.push(TAG_LIST);
-            write_varint_u64(out, items.len() as u64);
+            write_varint_u64(out, items.len() as u64).await;
             for it in items {
                 Box::pin(encode_dsl_value(ctx, it, depth + 1, out)).await?;
             }
@@ -544,9 +544,9 @@ async fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &
             out.push(TAG_MAP);
             let mut sorted: Vec<&(String, DslValue)> = entries.iter().collect();
             sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-            write_varint_u64(out, sorted.len() as u64);
+            write_varint_u64(out, sorted.len() as u64).await;
             for (k, val) in sorted {
-                encode_string_inline(k, out);
+                encode_string_inline(k, out).await;
                 Box::pin(encode_dsl_value(ctx, val, depth + 1, out)).await?;
             }
         }
@@ -989,12 +989,12 @@ async fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: 
     columns.sort_by_key(|f| f.id);
     let row_count = items.len();
     out.push(TAG_TABLE_SOA);
-    write_varint_u64(out, row_count as u64);
-    write_varint_u64(out, columns.len() as u64);
+    write_varint_u64(out, row_count as u64).await;
+    write_varint_u64(out, columns.len() as u64).await;
     for field in &columns {
         let present: Vec<bool> = items.iter().map(|row| matches!(row, FieldValue::Record(r) if r.fields.get(&field.id).is_some_and(|v| !matches!(v, FieldValue::Absent)))).collect();
         let dense = present.iter().all(|p| *p);
-        write_varint_u64(out, field.id as u64);
+        write_varint_u64(out, field.id as u64).await;
         out.push(if dense { 0 } else { 1 });
         if !dense {
             let mut bitmap = vec![0u8; row_count.div_ceil(8)];
@@ -1027,7 +1027,7 @@ async fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: 
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::Int(v)) = r.fields.get(&field.id) {
-                            write_varint_i64(out, *v);
+                            write_varint_i64(out, *v).await;
                         }
                     }
                 }
@@ -1039,7 +1039,7 @@ async fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: 
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::UInt(v)) = r.fields.get(&field.id) {
-                            write_varint_u64(out, *v);
+                            write_varint_u64(out, *v).await;
                         }
                     }
                 }
@@ -1051,7 +1051,7 @@ async fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: 
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::Enum(v)) = r.fields.get(&field.id) {
-                            write_varint_u64(out, *v as u64);
+                            write_varint_u64(out, *v as u64).await;
                         }
                     }
                 }
@@ -1239,8 +1239,8 @@ pub async fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
     fields.sort_by_key(|f| f.id);
     let mut buf = Vec::new();
     for f in fields {
-        write_varint_u64(&mut buf, f.id as u64);
-        write_varint_u64(&mut buf, f.key.len() as u64);
+        write_varint_u64(&mut buf, f.id as u64).await;
+        write_varint_u64(&mut buf, f.key.len() as u64).await;
         buf.extend_from_slice(f.key.as_bytes());
         buf.push(shape_tag(&f.shape).await);
     }
@@ -1375,9 +1375,9 @@ pub async fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options
         symbol_index.insert(s.clone(), i as u64);
     }
     let mut out = Vec::new();
-    write_varint_u64(&mut out, symbols.len() as u64);
+    write_varint_u64(&mut out, symbols.len() as u64).await;
     for s in &symbols {
-        write_varint_u64(&mut out, s.len() as u64);
+        write_varint_u64(&mut out, s.len() as u64).await;
         out.extend_from_slice(s.as_bytes());
     }
     let mut body_options = options.clone();
@@ -1477,8 +1477,8 @@ mod tests {
                 FieldSpec::new(14, "value_field", Shape::Value),
                 FieldSpec::new(15, "table_field", Shape::Table(table_row_spec)),
                 FieldSpec::new(16, "wire_field", Shape::Wire),
-                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
-                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap())),
+                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").await.unwrap())),
                 FieldSpec::new(19, "ref_field", Shape::Ref("material")),
                 FieldSpec::new(20, "coord_field", Shape::Coord(3)),
                 FieldSpec::new(21, "dir_field", Shape::Dir),
@@ -1559,18 +1559,18 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️RoundTrip
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trips_every_shape_variant_in_one_document() {
         let spec = full_spec();
         let record = full_record();
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert!(report.unknown_field_ids.is_empty());
         assert!(!report.schema_drift);
-        assert_eq!(decoded, record);
+        assert_eq!(decoded, record.await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trips_scalar_edge_cases() {
         let spec = RecordSpec::new(
             None,
@@ -1599,8 +1599,8 @@ mod tests {
         fields.insert(9, FieldValue::Bytes64(vec![]));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
 
         assert_eq!(decoded.get(1), Some(&FieldValue::Text(String::new())));
         match decoded.get(2) {
@@ -1617,7 +1617,7 @@ mod tests {
         assert_eq!(decoded.get(9), Some(&FieldValue::Bytes64(vec![])));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
         let spec = RecordSpec::new(
             None,
@@ -1636,15 +1636,15 @@ mod tests {
         fields.insert(4, FieldValue::List(vec![FieldValue::Value(DslValue::Bool(true)), FieldValue::Value(DslValue::Null)]));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(1), record.get(1));
         assert_eq!(decoded.get(2), record.get(2));
         assert_eq!(decoded.get(3), record.get(3));
         assert_eq!(decoded.get(4), record.get(4));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_soa_round_trips_with_sparse_columns() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_spec))]);
         let mut row0 = HashMap::new();
@@ -1660,8 +1660,8 @@ mod tests {
         fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row0 }), FieldValue::Record(RecordValue { fields: row1 })]));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         let Some(FieldValue::List(rows)) = decoded.get(1) else { panic!("expected table rows") };
         assert_eq!(rows.len(), 2);
         let FieldValue::Record(r0) = &rows[0] else { panic!("row0 not a record") };
@@ -1677,7 +1677,7 @@ mod tests {
     /// `Record` with its own `Option` sub-field left absent — `decode_table_soa`'s fallback branch
     /// must thread the known column shape through so `decode_record_fields` still backfills that
     /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_soa_nested_record_column_backfills_absent_option_subfield() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_nested_record_spec))]);
         let mut header_fields = HashMap::new();
@@ -1691,8 +1691,8 @@ mod tests {
         fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         let Some(FieldValue::List(rows)) = decoded.get(1) else { panic!("expected table rows") };
         let FieldValue::Record(row0) = &rows[0] else { panic!("row0 not a record") };
         let Some(FieldValue::Record(header)) = row0.get(2) else { panic!("expected header record") };
@@ -1706,7 +1706,7 @@ mod tests {
     /// tuple-vs-list marker of its own. `decode_table_soa`'s fallback branch must thread the
     /// known column `Shape::Tuple` through so `decode_value` reconstructs a `FieldValue::Tuple`,
     /// not a `FieldValue::List` — a `List` fails `[T; N]`'s `DslField::from_value` downstream.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_tuple_spec))]);
         let mut row = HashMap::new();
@@ -1716,8 +1716,8 @@ mod tests {
         fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         let Some(FieldValue::List(rows)) = decoded.get(1) else { panic!("expected table rows") };
         let FieldValue::Record(row0) = &rows[0] else { panic!("row0 not a record") };
         assert_eq!(
@@ -1727,20 +1727,20 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wire_literal_round_trips_bare_node_and_undirected_edge() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
         let mut fields = HashMap::new();
         fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Object(vec![]) }));
         let record = RecordValue { fields };
-        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(1), record.get(1));
     }
     //#endregion 🔖️RoundTrip
 
     //#region 🔖️Canonical
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
         let spec = full_spec();
         let record_a = full_record();
@@ -1748,23 +1748,23 @@ mod tests {
         // `HashMap` insertion order never affects iteration order anyway, but this at minimum
         // proves two independent builds of an equal value encode identically, twice in a row.
         let mut shuffled_fields = HashMap::new();
-        let mut ids: Vec<u16> = record_a.fields.keys().copied().collect();
+        let mut ids: Vec<u16> = record_a.await.fields.keys().copied().collect();
         ids.sort_unstable_by(|a, b| b.cmp(a));
         for id in ids {
-            shuffled_fields.insert(id, record_a.fields.get(&id).unwrap().clone());
+            shuffled_fields.insert(id, record_a.await.fields.get(&id).unwrap().clone());
         }
         let record_b = RecordValue { fields: shuffled_fields };
         assert_eq!(record_a, record_b);
 
-        let bytes_a = encode_document(&spec, &record_a, &EncodeOptions::default()).expect("encode a");
-        let bytes_b = encode_document(&spec, &record_b, &EncodeOptions::default()).expect("encode b");
+        let bytes_a = encode_document(&spec, &record_a, &EncodeOptions::default()).await.expect("encode a");
+        let bytes_b = encode_document(&spec, &record_b, &EncodeOptions::default()).await.expect("encode b");
         assert_eq!(bytes_a, bytes_b, "canonical encoding must be byte-identical regardless of HashMap insertion order");
 
-        let bytes_a_again = encode_document(&spec, &record_a, &EncodeOptions::default()).expect("encode a again");
+        let bytes_a_again = encode_document(&spec, &record_a, &EncodeOptions::default()).await.expect("encode a again");
         assert_eq!(bytes_a, bytes_a_again, "encoding the same document twice must be byte-identical");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_hash_is_order_independent_and_content_sensitive() {
         let spec_a = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(2, "b", Shape::Text), FieldSpec::new(1, "a", Shape::Int)]);
         let spec_b = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
@@ -1776,25 +1776,25 @@ mod tests {
     //#endregion 🔖️Canonical
 
     //#region 🔖️Unknown
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_field_round_trips_through_decode_then_reencode() {
         let full = full_spec();
         let mut record = full_record();
         // Add a field id absent from `narrow_spec` below but present in `full` for the initial
         // encode, simulating "a writer on a newer schema version wrote an extra field".
-        record.fields.insert(200, FieldValue::Text("extra field payload".to_string()));
-        record.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
+        record.await.fields.insert(200, FieldValue::Text("extra field payload".to_string()));
+        record.await.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
 
-        let mut widened_fields = full.fields.clone();
+        let mut widened_fields = full.await.fields.clone();
         widened_fields.push(FieldSpec::new(200, "extra", Shape::Text));
         widened_fields.push(FieldSpec::new(201, "extra_list", Shape::List(Box::new(Shape::Int))));
-        let widened_spec = RecordSpec::new(full.keyword.as_deref(), full.layout, widened_fields);
+        let widened_spec = RecordSpec::new(full.await.keyword.as_deref(), full.await.layout, widened_fields);
 
-        let bytes = encode_document(&widened_spec, &record, &EncodeOptions::default()).expect("encode with widened spec");
+        let bytes = encode_document(&widened_spec, &record, &EncodeOptions::default()).await.expect("encode with widened spec");
 
         // Decode against the NARROW spec (doesn't know fields 200/201) — they must still decode
         // and be reported as unknown.
-        let (decoded, report) = decode_document(&bytes, &full, &DecodeOptions::default()).expect("decode with narrow spec");
+        let (decoded, report) = decode_document(&bytes, &full, &DecodeOptions::default()).await.expect("decode with narrow spec");
         let mut unknown_sorted = report.unknown_field_ids.clone();
         unknown_sorted.sort_unstable();
         assert_eq!(unknown_sorted, vec![200, 201]);
@@ -1802,8 +1802,8 @@ mod tests {
         assert_eq!(decoded.get(201), Some(&FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)])));
 
         // Re-encode the decoded (narrow-spec) RecordValue — the unknown fields must survive.
-        let reencoded = encode_document(&full, &decoded, &EncodeOptions::default()).expect("re-encode");
-        let (decoded_again, report_again) = decode_document(&reencoded, &full, &DecodeOptions::default()).expect("decode again");
+        let reencoded = encode_document(&full, &decoded, &EncodeOptions::default()).await.expect("re-encode");
+        let (decoded_again, report_again) = decode_document(&reencoded, &full, &DecodeOptions::default()).await.expect("decode again");
         assert_eq!(decoded_again.get(200), Some(&FieldValue::Text("extra field payload".to_string())));
         assert_eq!(decoded_again.get(201), Some(&FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)])));
         let mut unknown_again_sorted = report_again.unknown_field_ids.clone();
@@ -1811,7 +1811,7 @@ mod tests {
         assert_eq!(unknown_again_sorted, vec![200, 201]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_reports_them() {
         let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
         let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
@@ -1820,10 +1820,10 @@ mod tests {
         fields.insert(2, FieldValue::Text("dropped on decode".to_string()));
         let record = RecordValue { fields };
 
-        let bytes = encode_document(&wide, &record, &EncodeOptions::default()).expect("encode");
+        let bytes = encode_document(&wide, &record, &EncodeOptions::default()).await.expect("encode");
         let mut options = DecodeOptions::default();
         options.preserve_unknown = false;
-        let (decoded, report) = decode_document(&bytes, &narrow, &options).expect("decode");
+        let (decoded, report) = decode_document(&bytes, &narrow, &options).await.expect("decode");
         assert_eq!(report.unknown_field_ids, vec![2]);
         assert_eq!(decoded.get(2), None);
         assert_eq!(decoded.get(1), Some(&FieldValue::Int(1)));
@@ -1831,7 +1831,7 @@ mod tests {
     //#endregion 🔖️Unknown
 
     //#region 🔖️Chunking
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn large_bytes_field_is_chunked_and_round_trips() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
         let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
@@ -1842,12 +1842,12 @@ mod tests {
         let mut options = EncodeOptions::default();
         options.chunk_threshold = 1024;
         options.chunk_size = 64 * 1024;
-        let bytes = encode_document(&spec, &record, &options).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &options).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(payload)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_body_splits_across_multiple_frames_when_frame_size_is_small() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "text", Shape::Text)]);
         let mut fields = HashMap::new();
@@ -1856,32 +1856,32 @@ mod tests {
 
         let mut options = EncodeOptions::default();
         options.frame_size = 64;
-        let bytes = encode_document(&spec, &record, &options).expect("encode");
-        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_document(&spec, &record, &options).await.expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(1), record.get(1));
     }
     //#endregion 🔖️Chunking
 
     //#region 🔖️RecordBody
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn record_body_round_trips_every_shape() {
         let spec = full_spec();
         let record = full_record();
-        let bytes = encode_record_body(&spec, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, report) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).expect("decode");
-        assert_eq!(decoded, record);
+        let bytes = encode_record_body(&spec, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, report) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
+        assert_eq!(decoded, record.await);
         assert!(report.unknown_field_ids.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn record_body_is_deterministic_for_equal_inputs() {
         let spec = full_spec();
-        let a = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode a");
-        let b = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode b");
+        let a = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).await.expect("encode a");
+        let b = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).await.expect("encode b");
         assert_eq!(a, b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
         let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
@@ -1891,12 +1891,12 @@ mod tests {
 
         let mut options = EncodeOptions::default();
         options.chunk_threshold = 1024;
-        let bytes = encode_record_body(&spec, &record, &options).expect("encode");
-        let (decoded, _) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_record_body(&spec, &record, &options).await.expect("encode");
+        let (decoded, _) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(payload)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn record_body_preserves_and_reports_unknown_fields() {
         let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)]);
         let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
@@ -1905,8 +1905,8 @@ mod tests {
         fields.insert(9, FieldValue::Text("kept".to_string()));
         let record = RecordValue { fields };
 
-        let bytes = encode_record_body(&wide, &record, &EncodeOptions::default()).expect("encode");
-        let (decoded, report) = decode_record_body(&bytes, &narrow, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_record_body(&wide, &record, &EncodeOptions::default()).await.expect("encode");
+        let (decoded, report) = decode_record_body(&bytes, &narrow, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.get(9), Some(&FieldValue::Text("kept".to_string())));
         assert_eq!(report.unknown_field_ids, vec![9]);
     }

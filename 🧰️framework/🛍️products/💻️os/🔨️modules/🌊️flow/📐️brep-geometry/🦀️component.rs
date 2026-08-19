@@ -13,10 +13,15 @@ use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, Field
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
-pub static KERNEL: OnceLock<RwLock<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
+// 🔀️ dedyn-fw-os-misc, O1/R11 case 3: `BrepKernel` has exactly one impl (`Brep`, in `🗄️stdio`) —
+// every `dyn BrepKernel` call site was already handing this module a concrete `Brep`, so the trait
+// object was a no-op coercion, not a real seam. Deleting it also clears an existing O1 violation:
+// every `BrepKernel` method is `async fn`, which is not dyn-compatible (E0038) — `dyn BrepKernel`
+// could not have compiled as-is.
+pub static KERNEL: OnceLock<RwLock<Box<Brep>>> = OnceLock::new();
 pub static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), semio_framework::MeshData>>> = OnceLock::new();
 
-pub fn kernel() -> &'static RwLock<Box<dyn BrepKernel + Send + Sync>> {
+pub fn kernel() -> &'static RwLock<Box<Brep>> {
     KERNEL.get_or_init(|| RwLock::new(Box::new(Brep::new())))
 }
 
@@ -45,14 +50,14 @@ pub fn evict_mesh_cache_for_handle(handle: &str) {
 
 
 // #region 🔖️Helpers
-pub fn with_kernel<T>(f: impl FnOnce(&mut dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
+pub fn with_kernel<T>(f: impl FnOnce(&mut Brep) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let mut guard = kernel().write().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
     f(&mut **guard)
 }
 
 /// 🔓️ Read-only kernel access — lets concurrent queries (tessellate, volume, closest-point, …)
 /// proceed in parallel with each other while still serializing against mutating operations.
-pub fn with_kernel_read<T>(f: impl FnOnce(&dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
+pub fn with_kernel_read<T>(f: impl FnOnce(&Brep) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let guard = kernel().read().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
     f(&**guard)
 }
@@ -71,7 +76,7 @@ pub fn kind_label(kind: GeometryKind) -> &'static str {
     }
 }
 
-pub fn geometry_dict(kernel: &dyn BrepKernel, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
+pub fn geometry_dict(kernel: &Brep, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
     let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
     Ok(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
@@ -189,7 +194,7 @@ pub fn points_to_grid(points: &[Vec3], rows: usize) -> Result<Vec<Vec<Vec3>>, Ev
     Ok((0..rows).map(|row| (0..cols).map(|col| points[row * cols + col]).collect()).collect())
 }
 
-pub fn wire_from_points(kernel: &mut dyn BrepKernel, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
+pub fn wire_from_points(kernel: &mut Brep, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
     if points.len() >= 2 {
         block_on(kernel.polyline_wire(points)).map_err(map_kernel_error)
     } else if let Some(point) = points.first() {
@@ -521,7 +526,7 @@ pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> S
 }
 
 /// 🧊️ Bridges GLB export through mesh tessellation: tessellates every shape, merges the resulting triangle soup into one `MeshData`, and encodes it with the shared `GlbExporter` mesh codec (the same codec every other app uses for GLB).
-pub fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepModuleError> {
+pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepModuleError> {
     use semio_framework::MeshExporter;
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
@@ -554,7 +559,7 @@ pub fn import_solid_json(format: &str, data: &str, tolerance: f64) -> String {
 }
 
 /// 🧊️ Bridges GLB import through the mesh codec: decodes GLB bytes to `MeshData` via `GlbImporter`, re-encodes it as OBJ text, and ingests that through the kernel's own OBJ importer.
-pub fn import_glb_via_tessellation(kernel: &mut dyn BrepKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<String>, BrepModuleError> {
+pub fn import_glb_via_tessellation(kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<String>, BrepModuleError> {
     use semio_framework::MeshImporter;
     let mesh = semio_framework::GlbImporter.import(bytes).map_err(BrepModuleError::Mesh)?;
     let obj_text = semio_framework::mesh_to_obj(&mesh, "glb-import");

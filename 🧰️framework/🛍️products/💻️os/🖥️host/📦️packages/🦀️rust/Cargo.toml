@@ -48,6 +48,14 @@ zip = { version = "2.4", default-features = false, features = ["deflate"], optio
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 tokio = { version = "1", features = ["sync"], default-features = false }
 uuid = { version = "1.20", features = ["v7", "serde"] }
+# 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): this crate did not depend
+# on the plugin-host runtime AT ALL before this packet, which is exactly why "native smoke" (33/33
+# via `semio-framework-os-run`) exercised a code path the product does not use — `🎠️activation.rs`'s
+# own module doc explains the fix. Native-only: `NativeKernelRuntime` spawns real OS threads and is
+# never compiled for wasm32, where the JS host already owns plugin execution off this crate.
+semio-framework-actor = { workspace = true }
+semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+semio-framework-async = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 uuid = { version = "1.20", features = ["v7", "serde", "js"] }

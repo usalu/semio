@@ -1,0 +1,6 @@
+REVERTED known-bad pattern
+--- lib recheck ---
+
+warning: `semio-framework-os-kernel` (lib) generated 417 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.55s
+LIB_EXIT:0

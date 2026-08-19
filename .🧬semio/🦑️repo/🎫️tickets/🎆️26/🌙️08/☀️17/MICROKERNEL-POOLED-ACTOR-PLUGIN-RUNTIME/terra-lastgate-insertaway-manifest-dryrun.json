@@ -1,0 +1,286 @@
+{
+  "crate": "semio-framework",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 179,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 54
+    }
+  ],
+  "residual_errors": 179,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1455",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1479",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1685",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1696",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1706",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1709",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1715",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1719",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1725",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1729",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1825",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1828",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1871",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1874",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2094",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2097",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2218",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2105",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2114",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2119",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2127",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2244",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2256",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2275",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1959",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1962",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1319",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1443",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1016",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1025",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2379",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1102",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1105",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1113",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2390",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1122",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1127",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1135",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2400",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2403",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2409",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2413",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2419",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2423",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:401",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:404",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:642",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:646",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:655",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:663",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:669",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:256",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:259",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:678",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    }
+  ]
+}

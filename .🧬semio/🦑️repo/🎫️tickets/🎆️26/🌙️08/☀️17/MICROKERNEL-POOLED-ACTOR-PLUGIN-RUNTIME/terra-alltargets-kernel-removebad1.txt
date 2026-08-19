@@ -1,0 +1,11 @@
+[pass 1] errors=2872 bad-await=7 out-of-scope=0
+  removed 1
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs: span at 132220 is b'group_spec', not b'await'
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs: span at 131992 is b'RecordSpec', not b'await'
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs: span at 31201 is b'recursive_spec', not b'await'
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs: span at 31005 is b'RecordSpec', not b'await'
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs: span at 736886 is b'dsl_value_numeric_insensitive_eq(v, ov)', not b'await'
+    REFUSED 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs: span at 736688 is b'dsl_value_numeric_insensitive_eq(a, b)', not b'await'
+[pass 2] errors=2868 bad-await=6 out-of-scope=0
+  removed 0
+  no progress — stopping

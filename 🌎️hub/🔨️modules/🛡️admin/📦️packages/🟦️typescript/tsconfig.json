@@ -24,5 +24,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "../../🧱️elements/**/*.tsx"],
-  "exclude": ["node_modules", "📤️dist"]
+  "exclude": ["node_modules", "📤️dist", "📜️script.ts"]
 }

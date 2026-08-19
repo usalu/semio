@@ -1041,7 +1041,7 @@ pub struct ShellState {
     /// 📇️ The hub directory client used to issue `os.directory.*` commands (§C6) — constructed once
     /// identity resolves, holding the session token.
     #[cfg(not(target_arch = "wasm32"))]
-    pub directory_client: Option<DirectoryClient<NativeDirectoryTransport>>,
+    pub directory_client: Option<DirectoryClient<NativeDirectoryTransport<TokioHostRuntime>>>,
     /// 📡️ `/directory/ws` stream messages, drained once per frame by `pump_directory_events` — owned
     /// by a dedicated background thread that drives itself via `directory_runtime.block_on` (see
     /// `open_directory_stream`) so the auto-reconnect backoff never blocks the render loop either.
@@ -1072,7 +1072,7 @@ pub struct ShellState {
     /// `DirectoryClient` this shell constructs so they all draw on the SAME `HttpPool` byte budget/
     /// outstanding-request accounting rather than each minting a disjoint pool.
     #[cfg(not(target_arch = "wasm32"))]
-    pub directory_transport: NativeDirectoryTransport,
+    pub directory_transport: NativeDirectoryTransport<TokioHostRuntime>,
     /// 🛑️ This shell's own directory-request cancellation root — `CancelToken::root()`, never
     /// cancelled by this packet (no shutdown hook wired to it yet — see the packet report's honest
     /// gaps), but every directory `OperationContext` this shell builds is a `.child()` of this ONE
@@ -1320,7 +1320,7 @@ impl ShellState {
         // pool — a different, unrelated concern from this HTTP client's blocking-call budget; see
         // this packet's own lease-request note on why a second, small plan is used here).
         #[cfg(not(target_arch = "wasm32"))]
-        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport, CancelToken) = {
+        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport<TokioHostRuntime>, CancelToken) = {
             let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
             let plan = thread_plan(cores);
             let budget = ThreadBudget::from_plan(plan);

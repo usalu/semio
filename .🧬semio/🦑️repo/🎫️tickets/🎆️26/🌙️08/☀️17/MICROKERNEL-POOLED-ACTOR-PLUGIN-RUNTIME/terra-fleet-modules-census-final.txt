@@ -1,0 +1,34 @@
+=== RUST FILES ===
+{"path": "✏️s/🔨️modules/📜️imperative/📝️compiler/🦀️component.rs", "async_fn_count": 6, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": []}
+{"path": "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/🦀️component.rs", "async_fn_count": 6, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": []}
+{"path": "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/📦️glue.rs", "async_fn_count": 0, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": []}
+{"path": "✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs", "async_fn_count": 17, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": ["Operator"]}
+{"path": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📦️glue.rs", "async_fn_count": 0, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": []}
+{"path": "✏️s/🔨️modules/📜️imperative/⚙️engine/🦀️component.rs", "async_fn_count": 16, "plain_fn_count": 0, "dyn_uses": [], "tag_count": 0, "tags": [], "test_async_fn_residue": 0, "async_trait_attr_count": 0, "block_on_count": 0, "traits_declared": [], "impls_for": ["protocol::Identified", "protocol::Patchable"]}
+
+=== TS FILES ===
+{"path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts", "async_markers": 0, "size": 17437}
+{"path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts", "async_markers": 50, "size": 139131}
+{"path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts", "async_markers": 2, "size": 173099}
+{"path": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📜️script.ts", "async_markers": 0, "size": 586}
+
+=== OTHER FILES ===
+✏️s/🔨️modules/AGENTS.md
+✏️s/🔨️modules/README.md
+✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/AGENTS.md
+✏️s/🔨️modules/📜️imperative/AGENTS.md
+✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📋️project.json
+✏️s/🔨️modules/💭️mindmap/AGENTS.md
+
+=== TOTALS ===
+rust files: 6
+async fn total: 45
+plain fn total: 0
+first-party dyn uses total: 0
+🚫️async tag total: 0
+#[test] async fn residue total: 0
+#[async_trait] attr total: 0
+block_on total: 0
+ts files: 4

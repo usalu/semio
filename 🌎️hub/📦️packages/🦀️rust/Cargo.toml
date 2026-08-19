@@ -39,7 +39,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 dashmap = "6"
-async-trait = "0.1"
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

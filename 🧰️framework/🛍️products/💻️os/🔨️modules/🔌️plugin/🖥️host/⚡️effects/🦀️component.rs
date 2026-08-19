@@ -83,7 +83,10 @@ impl ActorScopeRegistry {
     /// ignored, see [`addressed_actor_id`]) at `generation`, opening a fresh child scope under
     /// `package_scope`. Must be called before any of this actor's effects are dispatched, and again
     /// on every restart with the bumped generation.
-    pub fn activate(&self, runtime: &dyn HostAsyncRuntime, actor: u64, generation: u16, package_scope: &ScopeHandle) -> ScopeHandle {
+    // 🔀️ dedyn-emit-runtime, O1/R3: generic over `R: HostAsyncRuntime` (Send-ness derived
+    // structurally at each caller's own concrete `R`, never a bound on this fn) rather than `&dyn
+    // HostAsyncRuntime` — mirrors `db_storage`'s `R: HostAsyncRuntime` holders.
+    pub fn activate<R: HostAsyncRuntime>(&self, runtime: &R, actor: u64, generation: u16, package_scope: &ScopeHandle) -> ScopeHandle {
         let scope = runtime.open_scope(ScopeOwner::Actor(actor), Some(package_scope));
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").insert(actor, ActorRecord { scope: scope.clone(), generation });
         scope
@@ -251,15 +254,22 @@ fn decode_mailbox_entry(wire: &[u8]) -> (u8, &[u8]) {
 /// `ChannelPolicy::LosslessBounded`, so a burst is bounded/rejected exactly the way any other
 /// mailbox burst is, and a `Park`ed actor's completions simply accumulate there — undelivered but
 /// never dropped — until [`EnvelopeCompletionSink::flush`] is called on resume).
-pub struct EnvelopeCompletionSink {
+// 🧬️ O1/R11(a) — generic over `I: EnvelopeInjector` rather than `Arc<dyn EnvelopeInjector>`: the
+// whole-repo census (dyn-http-tail) found exactly ONE implementor anywhere (`RecordingEnvelopeInjector`,
+// the test double the module doc already calls out — no real kernel/shard loop implements this trait
+// yet) and BOTH `EnvelopeCompletionSink` and `AsyncEffectExecutor` are used ONLY inside this file
+// (verified: `AsyncEffectExecutor::new` has zero production call sites repo-wide, only `mod tests`).
+// Zero blast radius outside this file, so this is R11(a)'s trivial case, not R11(b) — nothing returns
+// a runtime-chosen implementation, `inject` just consumes an owned `Envelope`.
+pub struct EnvelopeCompletionSink<I: EnvelopeInjector> {
     actors: ActorScopeRegistry,
     events: Arc<EventRouter>,
-    injector: Arc<dyn EnvelopeInjector>,
+    injector: Arc<I>,
     subscribed: Mutex<std::collections::HashSet<u64>>,
 }
 
-impl EnvelopeCompletionSink {
-    pub fn new(actors: ActorScopeRegistry, events: Arc<EventRouter>, injector: Arc<dyn EnvelopeInjector>) -> Self {
+impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
+    pub fn new(actors: ActorScopeRegistry, events: Arc<EventRouter>, injector: Arc<I>) -> Self {
         Self { actors, events, injector, subscribed: Mutex::new(std::collections::HashSet::new()) }
     }
 
@@ -294,7 +304,7 @@ impl EnvelopeCompletionSink {
     }
 }
 
-impl CompletionSink for EnvelopeCompletionSink {
+impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8) {
         // 🛑️ Generation gate — snapshotted at dispatch time (`OperationContext.generation`),
         // checked here at delivery time: a stale generation (the actor restarted since this
@@ -329,11 +339,11 @@ fn encode_event(event: &Event) -> Vec<u8> {
     serde_json::to_vec(event).unwrap_or_default()
 }
 
-fn emit_completed_ok(sink: &Arc<EnvelopeCompletionSink>, ctx: &OperationContext, req: RequestId, bytes: Vec<u8>) {
+fn emit_completed_ok<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, bytes: Vec<u8>) {
     sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Ok(bytes) }), ctx.lane);
 }
 
-fn emit_completed_err(sink: &Arc<EnvelopeCompletionSink>, ctx: &OperationContext, req: RequestId, code: &str, message: impl Into<String>) {
+fn emit_completed_err<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, code: &str, message: impl Into<String>) {
     sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Err(fault_bytes(code, message.into())) }), ctx.lane);
 }
 //#endregion 🧯️Fault encoding
@@ -376,6 +386,16 @@ impl std::error::Error for RouterEffectError {}
 /// per-effect dispatch loop (see the packet report's `## honest gaps`). `AsyncEffectExecutor` only
 /// guarantees WHERE this runs (off the async workers, via `ComputePool::run_blocking`) and WHEN
 /// (strictly after the turn) — never re-implements the routers' own logic.
+// 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight. `handle`
+// is plain sync, so `dyn RouterEffectHandler` is not an E0038 violation and stays R1-legal.
+// `dyn_enum_close!` needs every implementor nameable from ONE always-compiled declaration site, but
+// two of the three (`RecordingRouterHandler`, `AlwaysOkRouterHandler`, this file's own `mod tests`)
+// are `#[cfg(test)]`-only while `AsyncEffectExecutor.router_handler: Arc<dyn RouterEffectHandler>`
+// is an always-compiled field — same `dyn_enum_close!`-DSL-has-no-per-variant-`#[cfg]` blocker as
+// `HttpBody`'s own exception note in `🛎️services/🦀️component.rs`. `AsyncEffectExecutor::new` is,
+// as of this packet, called ONLY from `mod tests` repo-wide (verified: zero production call sites)
+// — genuinely not wired to a real router yet (see `UnwiredRouterEffectHandler`'s own doc), so there
+// is no live production seam to generic-ize either. Revisit once a real caller exists.
 pub trait RouterEffectHandler: Send + Sync {
     fn handle(&self, effect: RouterEffect) -> Result<Vec<u8>, RouterEffectError>;
 }
@@ -545,10 +565,17 @@ impl EffectMetricsRecorder for RecordingMetrics {
 
 //#region 🎛️AsyncEffectExecutor
 /// 🎛️ Every async host service this executor dispatches effects onto.
-pub struct AsyncServices {
-    pub runtime: Arc<dyn HostAsyncRuntime>,
+// 🔀️ dedyn-emit-runtime, O1/R3: generic over `R: HostAsyncRuntime` (this packet's own
+// `HostAsyncRuntime` family) rather than `Arc<dyn HostAsyncRuntime>` — `StorageScheduler<R>` was
+// already generic (see `🛎️services`), so `Arc<StorageScheduler>` bare was already ill-typed before
+// this fix; `R` here makes both fields agree. `AsyncEffectExecutor::new` has zero production call
+// sites repo-wide today (see `#region 🎛️AsyncEffectExecutor`'s own header note) — every construction
+// is this module's own tests, all against `semio_framework_async::testkit::ManualRuntime` — so `R`
+// stays a free type parameter here rather than defaulting to that test double.
+pub struct AsyncServices<R: HostAsyncRuntime> {
+    pub runtime: Arc<R>,
     pub http: Arc<HttpPool>,
-    pub storage: Arc<StorageScheduler>,
+    pub storage: Arc<StorageScheduler<R>>,
     pub timers: Arc<TimerWheel>,
     pub events: Arc<EventRouter>,
     pub compute: Arc<ComputePool>,
@@ -581,20 +608,28 @@ pub struct EffectDispatchReport {
     pub shell_owned: u32,
 }
 
-pub struct AsyncEffectExecutor {
-    services: AsyncServices,
+// 🧬️ O1/R11(a) — generic over the same `I: EnvelopeInjector` as `EnvelopeCompletionSink<I>`; see that
+// struct's own doc for why this is the trivial-generics case, not `dyn_enum_close!`. `R:
+// HostAsyncRuntime` added alongside it (dedyn-emit-runtime, same R11(a) reasoning — see
+// `AsyncServices<R>`'s own doc): replaces `Arc<dyn HostAsyncRuntime>` inside `services`.
+pub struct AsyncEffectExecutor<I: EnvelopeInjector, R: HostAsyncRuntime> {
+    services: AsyncServices<R>,
     actors: ActorScopeRegistry,
     capabilities: CapabilityRevocationRegistry,
-    sink: Arc<EnvelopeCompletionSink>,
+    sink: Arc<EnvelopeCompletionSink<I>>,
     backbone: Arc<BackboneRegistry>,
     router_handler: Arc<dyn RouterEffectHandler>,
     metrics: Arc<dyn EffectMetricsRecorder>,
     trace_ids: TraceIdAllocator,
 }
 
-impl AsyncEffectExecutor {
+// 🔀️ `R: HostAsyncRuntime + 'static` (not just `HostAsyncRuntime`, matching `StorageScheduler<R>`'s
+// own impl bound in `🛎️services`): every dispatch method below builds a `HostFuture<()> = Pin<Box<dyn
+// Future<..> + Send + 'static>>` capturing `Arc<R>` inside an `async move` block, which needs `R:
+// 'static` to be nameable at all.
+impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, R> {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(services: AsyncServices, actors: ActorScopeRegistry, capabilities: CapabilityRevocationRegistry, sink: Arc<EnvelopeCompletionSink>, backbone: Arc<BackboneRegistry>, router_handler: Arc<dyn RouterEffectHandler>, metrics: Arc<dyn EffectMetricsRecorder>) -> Self {
+    pub fn new(services: AsyncServices<R>, actors: ActorScopeRegistry, capabilities: CapabilityRevocationRegistry, sink: Arc<EnvelopeCompletionSink<I>>, backbone: Arc<BackboneRegistry>, router_handler: Arc<dyn RouterEffectHandler>, metrics: Arc<dyn EffectMetricsRecorder>) -> Self {
         Self { services, actors, capabilities, sink, backbone, router_handler, metrics, trace_ids: TraceIdAllocator::new() }
     }
 
@@ -602,7 +637,7 @@ impl AsyncEffectExecutor {
         &self.actors
     }
 
-    pub fn completion_sink(&self) -> &Arc<EnvelopeCompletionSink> {
+    pub fn completion_sink(&self) -> &Arc<EnvelopeCompletionSink<I>> {
         &self.sink
     }
 
@@ -972,7 +1007,7 @@ mod tests {
     use semio_framework_async::testkit::ManualRuntime;
     use std::sync::atomic::AtomicUsize;
 
-    fn services(runtime: Arc<dyn HostAsyncRuntime>) -> AsyncServices {
+    fn services<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> AsyncServices<R> {
         AsyncServices {
             runtime: runtime.clone(),
             http: Arc::new(HttpPool::new(Arc::new(semio_framework_os_services::UnwiredHttpTransport), Arc::new(ComputePool::new(4)), 1_000_000, 8)),
@@ -1009,7 +1044,7 @@ mod tests {
         }
     }
 
-    fn executor(runtime: Arc<dyn HostAsyncRuntime>) -> (AsyncEffectExecutor, RecordingEnvelopeInjector, ActorScopeRegistry) {
+    fn executor<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> (AsyncEffectExecutor<RecordingEnvelopeInjector, R>, RecordingEnvelopeInjector, ActorScopeRegistry) {
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
         let injector = RecordingEnvelopeInjector::new();
@@ -1021,7 +1056,7 @@ mod tests {
         (executor, injector, actors)
     }
 
-    fn activate(executor: &AsyncEffectExecutor, actors: &ActorScopeRegistry, runtime: &dyn HostAsyncRuntime, actor: u64, generation: u16) -> ScopeHandle {
+    fn activate<R: HostAsyncRuntime>(executor: &AsyncEffectExecutor<RecordingEnvelopeInjector, R>, actors: &ActorScopeRegistry, runtime: &R, actor: u64, generation: u16) -> ScopeHandle {
         let package_scope = runtime.open_scope(ScopeOwner::Package("pkg".to_string()), None);
         let scope = actors.activate(runtime, actor, generation, &package_scope);
         let _ = executor;
@@ -1035,7 +1070,7 @@ mod tests {
     #[test]
     fn revoked_capability_cancels_only_its_own_operations_and_actor_survives() {
         let runtime = ManualRuntime::new(0);
-        let runtime_dyn: Arc<dyn HostAsyncRuntime> = Arc::new(runtime.clone());
+        let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (mut executor, injector, actors) = executor(runtime_dyn.clone());
         let scope = activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
         // 🐛️ `executor()`'s default `UnwiredRouterEffectHandler` always returns `Err` — this test
@@ -1086,7 +1121,7 @@ mod tests {
     #[test]
     fn storage_quota_denial_produces_a_typed_completion_not_a_panic() {
         let runtime = ManualRuntime::new(0);
-        let runtime_dyn: Arc<dyn HostAsyncRuntime> = Arc::new(runtime.clone());
+        let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let mut svc = services(runtime_dyn.clone());
         svc.storage = Arc::new(StorageScheduler::new(runtime_dyn.clone(), runtime_dyn.open_scope(ScopeOwner::Service("tiny-storage"), None), 4, 4));
         let actors = ActorScopeRegistry::new();
@@ -1208,7 +1243,7 @@ mod tests {
     #[test]
     fn spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched() {
         let runtime = ManualRuntime::new(0);
-        let runtime_dyn: Arc<dyn HostAsyncRuntime> = Arc::new(runtime.clone());
+        let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (executor, injector, actors) = executor(runtime_dyn.clone());
         activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
@@ -1222,7 +1257,7 @@ mod tests {
     #[test]
     fn shell_effects_are_reported_shell_owned_never_dispatched() {
         let runtime = ManualRuntime::new(0);
-        let runtime_dyn: Arc<dyn HostAsyncRuntime> = Arc::new(runtime.clone());
+        let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (executor, _injector, actors) = executor(runtime_dyn.clone());
         activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
@@ -1234,7 +1269,7 @@ mod tests {
     #[test]
     fn router_effect_runs_through_compute_pool_and_completes_ok() {
         let runtime = ManualRuntime::new(0);
-        let runtime_dyn: Arc<dyn HostAsyncRuntime> = Arc::new(runtime.clone());
+        let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (mut executor, injector, actors) = executor(runtime_dyn.clone());
         activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
         let recording_handler = Arc::new(RecordingRouterHandler(AtomicUsize::new(0)));

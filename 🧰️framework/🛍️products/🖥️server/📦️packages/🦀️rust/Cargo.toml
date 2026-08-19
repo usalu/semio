@@ -25,3 +25,10 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1", features = ["sync", "rt", "macros", "net", "time"] }
 dashmap = "6"
 futures = "0.3"
+# 🔀️ O1 (drop dyn dispatch, dedyn-fw-server): `#[dyn_enum]`/`dyn_enum_close!` — every former
+# `dyn <Trait>` seam in `storage`/`authority`/`policy`/`gateway` closes over a generated enum
+# instead of a boxed trait object.
+semio-framework-dispatch-macros = { path = "../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

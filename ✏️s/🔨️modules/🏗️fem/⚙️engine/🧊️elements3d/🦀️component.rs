@@ -3,7 +3,7 @@
 //! (flat facet shell: CST membrane + DKT bending + drilling stabilization).
 
 use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
-use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
+use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, MemberUdl, ShellState, SolidStress};
 use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 
 // #region 🔖️Bar3
@@ -930,9 +930,9 @@ mod tests {
                 Node { id: "d".into(), pos: [3.0, 0.0, 0.0] },
             ],
             elements: vec![
-                Box::new(Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 }),
-                Box::new(Bar3 { id: "bc".into(), node_a: "b".into(), node_b: "c".into(), e, a, density: 0.0 }),
-                Box::new(Bar3 { id: "bd".into(), node_a: "b".into(), node_b: "d".into(), e, a, density: 0.0 }),
+                Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 }.into(),
+                Bar3 { id: "bc".into(), node_a: "b".into(), node_b: "c".into(), e, a, density: 0.0 }.into(),
+                Bar3 { id: "bd".into(), node_a: "b".into(), node_b: "d".into(), e, a, density: 0.0 }.into(),
             ],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "c".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "d".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }],
             nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Tx, value: p * 0.6 }, NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: p * 0.8 }],
@@ -980,7 +980,7 @@ mod tests {
         let w = 1000.0;
         let model = Model {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
-            elements: vec![Box::new(Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, g, a, iy, iz, j, roll: 0.0, density: 0.0 })],
+            elements: vec![Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, g, a, iy, iz, j, roll: 0.0, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] }],
             nodal_loads: vec![],
             member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: 0.0, wz: -w })],
@@ -1261,7 +1261,7 @@ mod solid_tests {
         let nodes: Vec<Node> = (0..4).map(|i| Node { id: format!("n{i}"), pos: positions[i] }).collect();
         let model = crate::analyses::AnalysisModel {
             nodes,
-            elements: vec![Box::new(Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density })],
+            elements: vec![Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density }.into()],
             supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "n1".into(), fixed: vec![Dof::Ty, Dof::Tz] }, Support { node_id: "n2".into(), fixed: vec![Dof::Tz] }],
         };
         let case = crate::analyses::LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
@@ -1362,15 +1362,15 @@ mod solid_tests {
             }
         }
 
-        let mut elements: Vec<Box<dyn Element>> = Vec::new();
+        let mut elements: Vec<Elements> = Vec::new();
         for ix in 0..nx {
-            elements.push(Box::new(Hex8 {
+            elements.push(Hex8 {
                 id: format!("hex{ix}"),
                 nodes: [corner_id(ix, 0, 0), corner_id(ix + 1, 0, 0), corner_id(ix + 1, 1, 0), corner_id(ix, 1, 0), corner_id(ix, 0, 1), corner_id(ix + 1, 0, 1), corner_id(ix + 1, 1, 1), corner_id(ix, 1, 1)],
                 e,
                 nu,
                 density: 0.0,
-            }));
+            }.into());
         }
 
         let supports = corners.iter().map(|&(iy, iz)| Support { node_id: corner_id(0, iy, iz), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }).collect();
@@ -1533,7 +1533,7 @@ mod shell_tests {
         let p = -1000.0;
         let model = Model {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [1.0, 0.0, 0.0] }, Node { id: "c".into(), pos: [0.0, 1.0, 0.0] }],
-            elements: vec![Box::new(ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e, nu, thickness: t, density: 0.0 })],
+            elements: vec![ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e, nu, thickness: t, density: 0.0 }.into()],
             supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] }, Support { node_id: "b".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] }],
             nodal_loads: vec![NodalLoad { node_id: "c".into(), dof: Dof::Tz, value: p }],
             member_loads: vec![],

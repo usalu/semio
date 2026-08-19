@@ -6,20 +6,32 @@ use neural_engine::{Atom, Value, SCHEMA_KEY};
 // #region 🔖️Compile
 /// 📝️ Emits one line of source per step, e.g. `state.increment(by=5, key="counter");`
 pub async fn compile_to_text(path: &Path) -> String {
-    compile_steps(&path.steps, 0)
+    compile_steps(&path.steps, 0).await
 }
 
 async fn compile_steps(steps: &[Step], indent: usize) -> String {
     let pad = "  ".repeat(indent);
-    steps.iter().map(|step| compile_step(step, indent, &pad)).collect::<Vec<_>>().join("\n")
+    // 🪜️ `Iterator::map` is a sync closure — recursive async calls are hoisted into a for-loop
+    // instead of chained through it (R10 residue shape #1).
+    let mut lines = Vec::with_capacity(steps.len());
+    for step in steps {
+        lines.push(compile_step(step, indent, &pad).await);
+    }
+    lines.join("\n")
 }
 
 async fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
     match step.kind.as_str() {
         "control.if" => {
-            let key = read_string_param(&step.params, "key").unwrap_or_else(|| "condition".into());
-            let then_body = step.bodies.get("then").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
-            let else_body = step.bodies.get("else").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
+            let key = read_string_param(&step.params, "key").await.unwrap_or_else(|| "condition".into());
+            let then_body = match step.bodies.get("then") {
+                Some(path) => compile_steps(&path.steps, indent + 1).await,
+                None => String::new(),
+            };
+            let else_body = match step.bodies.get("else") {
+                Some(path) => compile_steps(&path.steps, indent + 1).await,
+                None => String::new(),
+            };
             if else_body.is_empty() {
                 format!("{pad}if ({key}) {{\n{then_body}\n{pad}}}")
             } else {
@@ -27,22 +39,30 @@ async fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
             }
         }
         "control.while" => {
-            let key = read_string_param(&step.params, "key").unwrap_or_else(|| "condition".into());
-            let body = step.bodies.get("body").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
+            let key = read_string_param(&step.params, "key").await.unwrap_or_else(|| "condition".into());
+            let body = match step.bodies.get("body") {
+                Some(path) => compile_steps(&path.steps, indent + 1).await,
+                None => String::new(),
+            };
             format!("{pad}while ({key}) {{\n{body}\n{pad}}}")
         }
         "control.repeat" => {
-            let count = read_number_param(&step.params, "count").unwrap_or(0.0);
-            let body = step.bodies.get("body").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
+            let count = read_number_param(&step.params, "count").await.unwrap_or(0.0);
+            let body = match step.bodies.get("body") {
+                Some(path) => compile_steps(&path.steps, indent + 1).await,
+                None => String::new(),
+            };
             format!("{pad}repeat ({count}) {{\n{body}\n{pad}}}")
         }
         _ => {
-            let params: Vec<String> = step
-                .params
-                .keys()
-                .filter(|key| key.as_str() != SCHEMA_KEY)
-                .map(|key| format!("{}={}", key, format_value(step.params.get(key).expect("key just yielded by params.keys()")))) // 🛡️ infallible: key sourced from this same dict's own keys()
-                .collect();
+            let mut params: Vec<String> = Vec::new();
+            for key in step.params.keys() {
+                if key.as_str() == SCHEMA_KEY {
+                    continue;
+                }
+                let value = step.params.get(key).expect("key just yielded by params.keys()"); // 🛡️ infallible: key sourced from this same dict's own keys()
+                params.push(format!("{}={}", key, format_value(value).await));
+            }
             if params.is_empty() {
                 format!("{pad}{}();", step.kind)
             } else {
@@ -83,7 +103,7 @@ mod tests {
     async fn compile_to_text_emits_one_line_per_step() {
         let path =
             Path { steps: vec![Step { id: "s1".into(), kind: "state.increment".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(5.0))), bodies: BTreeMap::new() }] };
-        assert_eq!(compile_to_text(&path), "state.increment(by=5, key=\"counter\");");
+        assert_eq!(compile_to_text(&path).await, "state.increment(by=5, key=\"counter\");");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -91,7 +111,7 @@ mod tests {
         let mut bodies = BTreeMap::new();
         bodies.insert("then".into(), Path { steps: vec![Step { id: "t1".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))), bodies: BTreeMap::new() }] });
         let path = Path { steps: vec![Step { id: "s1".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), bodies }] };
-        let text = compile_to_text(&path);
+        let text = compile_to_text(&path).await;
         assert!(text.contains("if (flag)"));
         assert!(text.contains("log.print"));
     }

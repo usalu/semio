@@ -103,7 +103,7 @@ impl RequestRegistry {
     /// once (a request resolved before its future is ever polled just sits `Ready`).
     pub async fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
         let mut inner = self.inner.borrow_mut();
-        let waker = inner.complete(id.0, result);
+        let waker = inner.complete(id.0, result).await;
         drop(inner);
         if let Some(waker) = waker {
             waker.wake();
@@ -136,7 +136,10 @@ impl RequestRegistry {
             }
             _ => None,
         };
-        let waker = outcome.and_then(|result| inner.complete(id.0, result));
+        let waker = match outcome {
+            Some(result) => inner.complete(id.0, result).await,
+            None => None,
+        };
         drop(inner);
         if let Some(waker) = waker {
             waker.wake();

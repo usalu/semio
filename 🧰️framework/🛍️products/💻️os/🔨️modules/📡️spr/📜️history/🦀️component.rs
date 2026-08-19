@@ -2588,7 +2588,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_rejects_unsupported_format() {
-        let payload = vec![2u8, 0, 0].await;
+        let payload = vec![2u8, 0, 0];
         let dict = DictReader::new().await;
         let err = decode_doc(&payload, &dict).await.unwrap_err();
         assert!(matches!(err, ProtocolError::Malformed { .. }));

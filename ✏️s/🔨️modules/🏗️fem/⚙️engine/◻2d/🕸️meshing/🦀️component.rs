@@ -6,7 +6,7 @@
 
 use crate::fem2d_engine::Fem2dError;
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
-use crate::model::{Bar2, BeamEb2, Dof, Element, NodalLoad, Node};
+use crate::model::{Bar2, BeamEb2, Dof, Element, Elements, NodalLoad, Node};
 use std::collections::HashMap;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
@@ -29,7 +29,7 @@ pub(crate) struct MeshedRegion {
 }
 
 /// 🧩️ `build_nodes_and_elements`'s resolved `(nodes, elements, meshed regions)` triple.
-pub(crate) type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedRegion>);
+pub(crate) type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<MeshedRegion>);
 
 /// 📐️ Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula.
 async fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
@@ -46,7 +46,7 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
-    let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());
+    let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
         let (id, start, end, material_id, section_id) = match element {
             FemElement::Bar { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id),
@@ -62,10 +62,10 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
         let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem2dError::UnknownSectionId(section_id.clone()))?;
         match element {
             FemElement::Bar { .. } => {
-                elements.push(Box::new(Bar2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, density: material.rho }));
+                elements.push(Bar2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, density: material.rho }.into());
             }
             FemElement::Beam { .. } => {
-                elements.push(Box::new(BeamEb2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, iy: section.iy, density: material.rho }));
+                elements.push(BeamEb2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, iy: section.iy, density: material.rho }.into());
             }
         }
     }
@@ -92,7 +92,7 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(Box::new(crate::elements2d::Tri3Cst {
+            elements.push(crate::elements2d::Tri3Cst {
                 id: format!("{}_t{}", region.id, tri_index),
                 nodes: tri_nodes,
                 e: material.e,
@@ -100,7 +100,7 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
                 thickness: region.thickness,
                 kind: crate::elements2d::PlaneKind::Stress,
                 density: material.rho,
-            }));
+            }.into());
         }
 
         meshed_regions.push(MeshedRegion { region_id: region.id.clone(), material_id: region.material_id.clone(), thickness: region.thickness, node_ids, points: tri_mesh.points, tris: tri_mesh.tris });

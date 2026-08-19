@@ -64,7 +64,8 @@ pub mod layout {
         Finished,
     }
 
-    async fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde skip_serializing_if) — see R9
+    fn is_default<T: Default + PartialEq>(value: &T) -> bool {
         *value == T::default()
     }
 
@@ -125,7 +126,8 @@ pub mod layout {
     }
 
     impl UiPresence {
-        pub async fn is_default(&self) -> bool {
+        // 🚫️async: E1 pure accessor consumed by external-trait impls (serde skip_serializing_if) — see R9
+        pub fn is_default(&self) -> bool {
             *self == Self::default()
         }
         /// 🙈️ `false` for `state == Hidden` — callers must not render, lay out, or hit-test the element.
@@ -157,16 +159,16 @@ pub mod layout {
         /// flags on elements that are genuinely not rendered (not to be confused with a domain "dimmed"
         /// prop, e.g. a tree item's eye-toggle, which must stay visible/clickable).
         pub async fn hidden_if(hidden: bool) -> Self {
-            Self::state(if hidden { UiState::Hidden } else { UiState::Normal })
+            Self::state(if hidden { UiState::Hidden } else { UiState::Normal }).await
         }
         /// 🚫️ `Disabled` when `disabled`, else `Normal` — the one-line migration for today's `disabled` flags.
         pub async fn disabled_if(disabled: bool) -> Self {
-            Self::state(if disabled { UiState::Disabled } else { UiState::Normal })
+            Self::state(if disabled { UiState::Disabled } else { UiState::Normal }).await
         }
         /// 🎉️ `Celebrating` when `celebrating`, else `Normal` — the transient completion emphasis fired e.g.
         /// when an introduction step advances by the user performing the taught action.
         pub async fn celebrate_if(celebrating: bool) -> Self {
-            Self::state(if celebrating { UiState::Celebrating } else { UiState::Normal })
+            Self::state(if celebrating { UiState::Celebrating } else { UiState::Normal }).await
         }
     }
 
@@ -315,24 +317,29 @@ pub mod layout {
     const CONTEXT_MENU_ROW_BUDGET: usize = 9;
     const CONTEXT_MENU_PRIMARY_BUDGET: usize = 5;
 
-    async fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
+    fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
         item.separator == Some(true) && item.label.is_none()
     }
 
     /// 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider.
-    async fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
+    fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
         item.separator == Some(true) && item.label.is_some()
     }
 
-    async fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
+    fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
         item.id.starts_with("menu.group.")
     }
 
-    async fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
+    fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
         item.id.strip_prefix("menu.group.").unwrap_or(item.id.as_str())
     }
 
-    async fn context_menu_taxonomy_rank(category: &str) -> usize {
+    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
+    fn context_menu_taxonomy_rank(category: &str) -> usize {
         RIBBON_PARENT_CATEGORIES.iter().position(|known| *known == category).unwrap_or(RIBBON_PARENT_CATEGORIES.len())
     }
 
@@ -406,7 +413,7 @@ pub mod layout {
         let mut out = leaves_and_headers;
         out.extend(group_rows);
         if !destructive_leaves.is_empty() {
-            out.push(context_menu_separator_row(out.len()));
+            out.push(context_menu_separator_row(out.len()).await);
             out.extend(destructive_leaves);
         }
         out
@@ -419,7 +426,7 @@ pub mod layout {
     /// primaries+groups row count is still over budget, the excess trailing groups fold into one
     /// `menu.group.more`. Destructive leaves are carried separately and appended last, after a separator.
     async fn context_menu_emit_over_budget(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
-        async fn bucket_mut(buckets: &mut Vec<ContextMenuItemSpec>, id: String) -> usize {
+        fn bucket_mut(buckets: &mut Vec<ContextMenuItemSpec>, id: String) -> usize {
             match buckets.iter().position(|bucket| bucket.id == id) {
                 Some(index) => index,
                 None => {
@@ -480,7 +487,7 @@ pub mod layout {
             out.push(ContextMenuItemSpec { id: "menu.group.more".into(), label: None, children: Some(folded_children), ..Default::default() });
         }
         if !destructive_leaves.is_empty() {
-            out.push(context_menu_separator_row(out.len()));
+            out.push(context_menu_separator_row(out.len()).await);
             out.extend(destructive_leaves);
         }
         out
@@ -495,19 +502,21 @@ pub mod layout {
     /// buckets into `"actions"`) — pass `AppActionRegistry::category_of` at the SDK funnel, or
     /// `ActionDefinition.category` lookups in shell builders.
     pub async fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
-        let items: Vec<ContextMenuItemSpec> = items
-            .into_iter()
-            .map(|item| {
-                let children = item.children.map(|children| organize_context_menu(children, category_of));
-                ContextMenuItemSpec { children, ..item }
-            })
-            .collect();
-        let items = context_menu_merge_group_rows(context_menu_normalize_separators(items));
+        let mut recursed: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
+        for item in items {
+            let children = match item.children {
+                Some(children) => Some(Box::pin(organize_context_menu(children, category_of)).await),
+                None => None,
+            };
+            recursed.push(ContextMenuItemSpec { children, ..item });
+        }
+        let items = context_menu_normalize_separators(recursed).await;
+        let items = context_menu_merge_group_rows(items).await;
         let interactive_count = items.iter().filter(|item| item.separator != Some(true)).count();
         if interactive_count <= CONTEXT_MENU_ROW_BUDGET {
-            context_menu_emit_within_budget(items)
+            context_menu_emit_within_budget(items).await
         } else {
-            context_menu_emit_over_budget(items, category_of)
+            context_menu_emit_over_budget(items, category_of).await
         }
     }
 
@@ -551,7 +560,7 @@ pub mod layout {
             items.push(ContextMenuItemSpec { id: "shell.openPalette".into(), label: Some("Command Palette".into()), action: Some("shell.openPalette".into()), ..Default::default() });
         }
         let categories: HashMap<String, Option<String>> = actions.iter().map(|action| (action.id.clone(), action.category.clone())).collect();
-        organize_context_menu(items, &|id| categories.get(id).cloned().flatten())
+        organize_context_menu(items, &|id| categories.get(id).cloned().flatten()).await
     }
     //#endregion 🗂️ContextMenuOrganizer
 
@@ -687,11 +696,13 @@ pub mod layout {
     //#endregion 🔖️PanelTabConstants
 
     //#region 🔖️WindowLayout
-    async fn kind_window() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn kind_window() -> String {
         "window".into()
     }
 
-    async fn kind_stack() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn kind_stack() -> String {
         "stack".into()
     }
 
@@ -798,39 +809,24 @@ pub mod layout {
     }
 
     pub async fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
-        WindowLayout {
-            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-                kind: kind_stack(),
-                size: None,
-                active_window_kind_id: None,
-                children: window_kind_ids.iter().enumerate().map(|(index, id)| create_window_layout(id.clone(), titles.and_then(|rows| rows.get(index).cloned()), None, None)).collect(),
-            }),
+        let mut children = Vec::with_capacity(window_kind_ids.len());
+        for (index, id) in window_kind_ids.iter().enumerate() {
+            children.push(create_window_layout(id.clone(), titles.and_then(|rows| rows.get(index).cloned()), None, None).await);
         }
+        WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: None, children }) }
     }
 
     pub async fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
-        WindowLayout {
-            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                kind: direction.into(),
-                size: None,
-                children: window_ids
-                    .iter()
-                    .enumerate()
-                    .map(|(index, id)| {
-                        WindowLayoutChild::Stack(WindowLayoutStackNode {
-                            kind: kind_stack(),
-                            size: sizes.and_then(|rows| rows.get(index).copied()),
-                            active_window_kind_id: None,
-                            children: vec![create_window_layout(id.clone(), titles.and_then(|rows| rows.get(index).cloned()).or_else(|| Some(id.clone())), None, None)],
-                        })
-                    })
-                    .collect(),
-            }),
+        let mut children = Vec::with_capacity(window_ids.len());
+        for (index, id) in window_ids.iter().enumerate() {
+            let window = create_window_layout(id.clone(), titles.and_then(|rows| rows.get(index).cloned()).or_else(|| Some(id.clone())), None, None).await;
+            children.push(WindowLayoutChild::Stack(WindowLayoutStackNode { kind: kind_stack(), size: sizes.and_then(|rows| rows.get(index).copied()), active_window_kind_id: None, children: vec![window] }));
         }
+        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.into(), size: None, children }) }
     }
 
     pub async fn create_tab_stack_layout(window_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
-        create_stack_layout(window_ids, titles)
+        create_stack_layout(window_ids, titles).await
     }
 
     /// 🪟️ Builds a balanced fallback layout for an app that declares no `default_layout`: a single
@@ -841,20 +837,16 @@ pub mod layout {
         }
         if window_ids.len() == 1 {
             return WindowLayout {
-                root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: Some(window_ids[0].clone()), children: vec![create_window_layout(window_ids[0].clone(), None, None, None)] }),
+                root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: Some(window_ids[0].clone()), children: vec![create_window_layout(window_ids[0].clone(), None, None, None).await] }),
             };
         }
         let count = window_ids.len() as f64;
-        WindowLayout {
-            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                kind: "row".into(),
-                size: None,
-                children: window_ids
-                    .iter()
-                    .map(|id| WindowLayoutChild::Stack(WindowLayoutStackNode { kind: kind_stack(), size: Some(1.0 / count), active_window_kind_id: Some(id.clone()), children: vec![create_window_layout(id.clone(), None, None, None)] }))
-                    .collect(),
-            }),
+        let mut children = Vec::with_capacity(window_ids.len());
+        for id in window_ids {
+            let window = create_window_layout(id.clone(), None, None, None).await;
+            children.push(WindowLayoutChild::Stack(WindowLayoutStackNode { kind: kind_stack(), size: Some(1.0 / count), active_window_kind_id: Some(id.clone()), children: vec![window] }));
         }
+        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children }) }
     }
 
     pub async fn create_named_layout(id: impl Into<String>, label: impl Into<String>, layout: WindowLayout, origin: impl Into<String>, icon_id: Option<IconName>, group_path: Option<Vec<String>>) -> NamedLayout {
@@ -875,22 +867,22 @@ pub mod layout {
     /// 🧭️ Collects every `window_kind_id` referenced by a layout tree.
     pub async fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
         let mut ids = Vec::new();
-        collect_window_kind_ids_from_root(&layout.root, &mut ids);
+        collect_window_kind_ids_from_root(&layout.root, &mut ids).await;
         ids
     }
 
     async fn collect_window_kind_ids_from_root(root: &WindowLayoutRoot, out: &mut Vec<String>) {
         match root {
-            WindowLayoutRoot::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
-            WindowLayoutRoot::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+            WindowLayoutRoot::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out).await,
+            WindowLayoutRoot::Stack(stack) => collect_window_kind_ids_from_stack(stack, out).await,
         }
     }
 
     async fn collect_window_kind_ids_from_children(children: &[WindowLayoutChild], out: &mut Vec<String>) {
         for child in children {
             match child {
-                WindowLayoutChild::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
-                WindowLayoutChild::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+                WindowLayoutChild::Axis(axis) => Box::pin(collect_window_kind_ids_from_children(&axis.children, out)).await,
+                WindowLayoutChild::Stack(stack) => collect_window_kind_ids_from_stack(stack, out).await,
             }
         }
     }
@@ -1327,7 +1319,7 @@ pub mod layout {
 
         const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn action_descriptor_and_style_spec_serialize_to_golden_json() {
             let values = (
                 ActionDescriptor { controller_id: "ctrl".into(), action: "doThing".into(), args: Some(DslValue::Number(42.0)) },
@@ -1340,7 +1332,7 @@ pub mod layout {
 
         const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn window_layout_serializes_to_golden_json() {
             let layout = WindowLayout {
                 root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
@@ -1351,7 +1343,7 @@ pub mod layout {
                             kind: "stack".into(),
                             size: Some(0.5),
                             active_window_kind_id: Some("main".into()),
-                            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None  corner: None }],
+                            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
                         }),
                         WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "vertical".into(), size: Some(0.5), children: vec![] }),
                     ],
@@ -1365,7 +1357,7 @@ pub mod layout {
 
         const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"layout-grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn window_measure_serializes_to_golden_json() {
             let measures = vec![
                 WindowMeasure::Select {
@@ -1434,28 +1426,28 @@ pub mod layout {
             WindowMeasure::Toggle { id: id.into(), icon_id: IconName::PanelLeft, label: Some(id.into()), pressed: true, text: None, on_change: ActionDescriptor { controller_id: "c".into(), action: "t".into(), args: None } }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_unwraps_matching_utility_group_children_into_utility_options() {
-            let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
-            let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
+            let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size").await]).await];
+            let (general, utility_options) = partition_window_measures(&measures, Some("brush")).await;
             assert!(general.is_empty());
             assert_eq!(utility_options.len(), 1);
             assert!(matches!(&utility_options[0], WindowMeasure::Toggle { id, .. } if id == "size"), "tagged wrapper is routing-only — children render flat");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
-            let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
-            let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill"));
+            let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size").await]).await];
+            let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill")).await;
             assert!(general_other.is_empty() && utility_options_other.is_empty(), "wrong active utility drops the group entirely");
-            let (general_none, utility_options_none) = partition_window_measures(&measures, None);
+            let (general_none, utility_options_none) = partition_window_measures(&measures, None).await;
             assert!(general_none.is_empty() && utility_options_none.is_empty(), "no active utility drops the group entirely");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
             let measures = vec![
-                utility_scoped_group("grid", None, vec![]),
+                utility_scoped_group("grid", None, vec![]).await,
                 WindowMeasure::Slider {
                     id: "zoom".into(),
                     label: None,
@@ -1471,20 +1463,20 @@ pub mod layout {
                     on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
                 },
             ];
-            let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
+            let (general, utility_options) = partition_window_measures(&measures, Some("brush")).await;
             assert_eq!(general.len(), 2, "untagged group and slider both stay general");
             assert!(utility_options.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_empty_input_roundtrips_to_empty() {
-            let (general, utility_options) = partition_window_measures(&[], Some("brush"));
+            let (general, utility_options) = partition_window_measures(&[], Some("brush")).await;
             assert!(general.is_empty() && utility_options.is_empty());
         }
 
         const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"onChange\":null,\"onCommit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn window_engagement_serializes_to_golden_json() {
             let engagement = WindowEngagement {
                 session_active: Some(true),
@@ -1668,11 +1660,11 @@ pub mod utilities {
         for utility in utilities {
             let node = utility_toggle_node(controller_id, utility, active_utility_id);
             match &utility.group {
-                None => nodes.push(node),
+                None => nodes.push(node.await),
                 Some(group) => {
                     if let Some(&index) = group_positions.get(group) {
                         if let UtilityNode::Collection { children, .. } = &mut nodes[index] {
-                            children.push(node);
+                            children.push(node.await);
                         }
                     } else {
                         group_positions.insert(group.clone(), nodes.len());
@@ -1685,7 +1677,7 @@ pub mod utilities {
                             order: None,
                             disabled: None,
                             category: utility.category,
-                            children: vec![node],
+                            children: vec![node.await],
                         });
                     }
                 }
@@ -1710,13 +1702,13 @@ pub mod utilities {
 
         const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"wrench\",\"label\":\"Utility\",\"title\":\"Utility\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runUtility\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"panel-left\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleUtility\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"folder\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn utility_node_serializes_to_golden_json() {
             let nodes = vec![
                 UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
-                utility_button("btn1", IconName::Wrench, "Utility", ActionDescriptor { controller_id: "ctrl".into(), action: "runUtility".into(), args: None }).with_category(UtilityCategory::History),
-                utility_toggle("tog1", IconName::PanelLeft, "Toggle", true, ActionDescriptor { controller_id: "ctrl".into(), action: "toggleUtility".into(), args: None }),
-                utility_collection("col1", IconName::Folder, "Group", vec![utility_separator("sep2")]),
+                utility_button("btn1", IconName::Wrench, "Utility", ActionDescriptor { controller_id: "ctrl".into(), action: "runUtility".into(), args: None }).await.with_category(UtilityCategory::History).await,
+                utility_toggle("tog1", IconName::PanelLeft, "Toggle", true, ActionDescriptor { controller_id: "ctrl".into(), action: "toggleUtility".into(), args: None }).await,
+                utility_collection("col1", IconName::Folder, "Group", vec![utility_separator("sep2").await]).await,
             ];
             let json = serde_json::to_string(&nodes).unwrap();
             assert_eq!(json, GOLDEN_UTILITY_NODE_JSON);
@@ -1728,9 +1720,9 @@ pub mod utilities {
             DerivedUtilitySpec { id: id.into(), label: id.to_uppercase(), icon_id: IconName::CircleDot, group: group.map(str::to_string), category: None }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn derive_utility_nodes_marks_the_active_utility_pressed() {
-            let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
+            let nodes = derive_utility_nodes("ctrl", &[spec("select", None).await, spec("brush", None).await], Some("brush")).await;
             assert_eq!(nodes.len(), 2);
             match &nodes[0] {
                 UtilityNode::Toggle { id, pressed, on_change, .. } => {
@@ -1750,9 +1742,9 @@ pub mod utilities {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn derive_utility_nodes_groups_shared_group_into_one_collection() {
-            let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("line", Some("shapes")), spec("rect", Some("shapes"))], None);
+            let nodes = derive_utility_nodes("ctrl", &[spec("select", None).await, spec("line", Some("shapes")).await, spec("rect", Some("shapes")).await], None).await;
             assert_eq!(nodes.len(), 2, "one ungrouped toggle + one shapes collection");
             assert!(matches!(&nodes[0], UtilityNode::Toggle { id, .. } if id == "select"));
             match &nodes[1] {
@@ -1766,9 +1758,9 @@ pub mod utilities {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn derive_utility_nodes_hoists_single_child_groups() {
-            let nodes = derive_utility_nodes("ctrl", &[spec("transform", Some("transform")), spec("brush", None)], Some("transform"));
+            let nodes = derive_utility_nodes("ctrl", &[spec("transform", Some("transform")).await, spec("brush", None).await], Some("transform")).await;
             assert_eq!(nodes.len(), 2, "lone group child is hoisted — no nested Transform/Transform pair");
             match &nodes[0] {
                 UtilityNode::Toggle { id, pressed, .. } => {
@@ -1907,20 +1899,20 @@ pub mod role_chrome {
     }
 
     async fn open_with_entry_item(entry: &OpenWithEntry, is_de: bool) -> ContextMenuItemSpec {
-        let toggle_action = if entry.is_default { OS_CLEAR_DEFAULT_APP } else { os_set_default_action(entry.role) };
+        let toggle_action = if entry.is_default { OS_CLEAR_DEFAULT_APP } else { os_set_default_action(entry.role).await };
         let toggle = ContextMenuItemSpec {
             id: format!("menu.open-with.{}.{}.set-default", entry.plugin_id, entry.app_id),
-            label: Some(set_as_default_label_text(is_de).to_string()),
+            label: Some(set_as_default_label_text(is_de).await.to_string()),
             checked: Some(entry.is_default),
             action: Some(toggle_action.into()),
-            args: Some(open_with_args(entry)),
+            args: Some(open_with_args(entry).await),
             ..Default::default()
         };
         ContextMenuItemSpec {
             id: format!("menu.open-with.{}.{}", entry.plugin_id, entry.app_id),
             label: Some(entry.label.clone()),
-            action: Some(palette_open_with_action(entry.role).into()),
-            args: Some(open_with_args(entry)),
+            action: Some(palette_open_with_action(entry.role).await.into()),
+            args: Some(open_with_args(entry).await),
             children: Some(vec![toggle]),
             ..Default::default()
         }
@@ -1944,10 +1936,12 @@ pub mod role_chrome {
             if group.is_empty() {
                 continue;
             }
-            children.push(ContextMenuItemSpec { id: format!("menu.open-with.{}.header", role.as_str()), label: Some(role_title_chip_text(role, is_de).to_string()), separator: Some(true), ..Default::default() });
-            children.extend(group.into_iter().map(|entry| open_with_entry_item(entry, is_de)));
+            children.push(ContextMenuItemSpec { id: format!("menu.open-with.{}.header", role.as_str().await), label: Some(role_title_chip_text(role, is_de).await.to_string()), separator: Some(true), ..Default::default() });
+            for entry in group {
+                children.push(open_with_entry_item(entry, is_de).await);
+            }
         }
-        ContextMenuItemSpec { id: "menu.open-with".into(), label: Some(open_with_label_text(is_de).to_string()), children: Some(children), ..Default::default() }
+        ContextMenuItemSpec { id: "menu.open-with".into(), label: Some(open_with_label_text(is_de).await.to_string()), children: Some(children), ..Default::default() }
     }
     //#endregion 🔖️OpenWithMenu
 
@@ -1982,7 +1976,15 @@ pub mod role_chrome {
         if role == ChromeRole::Editor {
             return utilities;
         }
-        utilities.into_iter().map(|utility| if utility.category() == UtilityCategory::History { disable_utility(utility) } else { utility }).collect()
+        let mut out = Vec::with_capacity(utilities.len());
+        for utility in utilities {
+            if utility.category().await == UtilityCategory::History {
+                out.push(disable_utility(utility).await);
+            } else {
+                out.push(utility);
+            }
+        }
+        out
     }
     //#endregion 🔖️RoleFiltering
 
@@ -1993,31 +1995,31 @@ pub mod role_chrome {
         use super::*;
         use crate::wgpu::IconName;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_boot_env_accepts_viewer_and_falls_back_to_editor() {
-            assert_eq!(ChromeRole::from_boot_env(Some("viewer")), ChromeRole::Viewer);
-            assert_eq!(ChromeRole::from_boot_env(Some("editor")), ChromeRole::Editor);
-            assert_eq!(ChromeRole::from_boot_env(Some("bogus")), ChromeRole::Editor);
-            assert_eq!(ChromeRole::from_boot_env(Some("")), ChromeRole::Editor);
-            assert_eq!(ChromeRole::from_boot_env(None), ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(Some("viewer")).await, ChromeRole::Viewer);
+            assert_eq!(ChromeRole::from_boot_env(Some("editor")).await, ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(Some("bogus")).await, ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(Some("")).await, ChromeRole::Editor);
+            assert_eq!(ChromeRole::from_boot_env(None).await, ChromeRole::Editor);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn title_chip_text_covers_both_roles_in_both_locales() {
-            assert_eq!(role_title_chip_text(ChromeRole::Viewer, false), "Viewer");
-            assert_eq!(role_title_chip_text(ChromeRole::Viewer, true), "Betrachter");
-            assert_eq!(role_title_chip_text(ChromeRole::Editor, false), "Editor");
-            assert_eq!(role_title_chip_text(ChromeRole::Editor, true), "Editor");
+            assert_eq!(role_title_chip_text(ChromeRole::Viewer, false).await, "Viewer");
+            assert_eq!(role_title_chip_text(ChromeRole::Viewer, true).await, "Betrachter");
+            assert_eq!(role_title_chip_text(ChromeRole::Editor, false).await, "Editor");
+            assert_eq!(role_title_chip_text(ChromeRole::Editor, true).await, "Editor");
         }
 
         async fn entry(plugin_id: &str, app_id: &str, role: ChromeRole, is_default: bool) -> OpenWithEntry {
             OpenWithEntry { plugin_id: plugin_id.into(), app_id: app_id.into(), label: app_id.into(), role, is_default }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn open_with_menu_item_groups_by_role_viewer_first_then_editor() {
-            let entries = vec![entry("norm", "s.cad.cad@1/*#editor", ChromeRole::Editor, false), entry("cad", "s.cad.cad@1/*#viewer", ChromeRole::Viewer, true)];
-            let menu = open_with_menu_item(&entries, false);
+            let entries = vec![entry("norm", "s.cad.cad@1/*#editor", ChromeRole::Editor, false).await, entry("cad", "s.cad.cad@1/*#viewer", ChromeRole::Viewer, true).await];
+            let menu = open_with_menu_item(&entries, false).await;
             assert_eq!(menu.id, "menu.open-with");
             assert_eq!(menu.label.as_deref(), Some("Open with…"));
             let children = menu.children.expect("submenu children");
@@ -2029,10 +2031,10 @@ pub mod role_chrome {
             assert_eq!(children[3].id, "menu.open-with.norm.s.cad.cad@1/*#editor");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn open_with_menu_item_toggle_sets_when_not_default_and_clears_when_default() {
-            let entries = vec![entry("cad", "editor", ChromeRole::Editor, false), entry("norm", "editor-alt", ChromeRole::Editor, true)];
-            let menu = open_with_menu_item(&entries, false);
+            let entries = vec![entry("cad", "editor", ChromeRole::Editor, false).await, entry("norm", "editor-alt", ChromeRole::Editor, true).await];
+            let menu = open_with_menu_item(&entries, false).await;
             let editor_entries: Vec<_> = menu.children.unwrap().into_iter().filter(|item| item.separator != Some(true)).collect();
             let not_default_toggle = editor_entries[0].children.as_ref().unwrap()[0].clone();
             assert_eq!(not_default_toggle.action.as_deref(), Some(OS_SET_DEFAULT_EDITOR));
@@ -2042,10 +2044,10 @@ pub mod role_chrome {
             assert_eq!(already_default_toggle.checked, Some(true));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn open_with_menu_item_localizes_headers_and_label_to_german() {
-            let entries = vec![entry("cad", "viewer", ChromeRole::Viewer, false)];
-            let menu = open_with_menu_item(&entries, true);
+            let entries = vec![entry("cad", "viewer", ChromeRole::Viewer, false).await];
+            let menu = open_with_menu_item(&entries, true).await;
             assert_eq!(menu.label.as_deref(), Some("Öffnen mit…"));
             assert_eq!(menu.children.unwrap()[1].children.as_ref().unwrap()[0].label.as_deref(), Some("Als Standard festlegen"));
         }
@@ -2054,25 +2056,28 @@ pub mod role_chrome {
             ShellMenuAction { id: id.into(), label: id.into(), icon: None, keys: None, kind: kind.into(), category: None, in_palette: true, arg_carrying: false }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn filter_shell_menu_actions_drops_mutation_kind_for_viewer_only() {
-            let actions = vec![shell_action("shell.rename", "Mutation"), shell_action("shell.zoomIn", "View")];
-            let viewer = filter_shell_menu_actions_for_role(&actions, ChromeRole::Viewer);
+            let actions = vec![shell_action("shell.rename", "Mutation").await, shell_action("shell.zoomIn", "View").await];
+            let viewer = filter_shell_menu_actions_for_role(&actions, ChromeRole::Viewer).await;
             assert_eq!(viewer.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), vec!["shell.zoomIn"]);
-            let editor = filter_shell_menu_actions_for_role(&actions, ChromeRole::Editor);
+            let editor = filter_shell_menu_actions_for_role(&actions, ChromeRole::Editor).await;
             assert_eq!(editor.len(), 2, "editor chrome keeps every action");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn apply_role_to_utilities_disables_history_only_for_viewer() {
             let press = ActionDescriptor { controller_id: "history".into(), action: "undo".into(), args: None };
             let toggle = ActionDescriptor { controller_id: "select".into(), action: "toggleSelect".into(), args: None };
-            let utilities = vec![utility_button("undo", IconName::RotateCcw, "Undo", press).with_category(UtilityCategory::History), utility_toggle("select", IconName::MousePointer, "Select", false, toggle)];
-            let viewer = apply_role_to_utilities(utilities.clone(), ChromeRole::Viewer);
-            assert_eq!(viewer[0].category(), UtilityCategory::History);
+            let utilities = vec![
+                utility_button("undo", IconName::RotateCcw, "Undo", press).await.with_category(UtilityCategory::History).await,
+                utility_toggle("select", IconName::MousePointer, "Select", false, toggle).await,
+            ];
+            let viewer = apply_role_to_utilities(utilities.clone(), ChromeRole::Viewer).await;
+            assert_eq!(viewer[0].category().await, UtilityCategory::History);
             assert!(matches!(&viewer[0], UtilityNode::Button { disabled: Some(true), .. }), "undo must be disabled for a viewer");
             assert!(matches!(&viewer[1], UtilityNode::Toggle { disabled: None, .. }), "non-history utilities are untouched");
-            let editor = apply_role_to_utilities(utilities, ChromeRole::Editor);
+            let editor = apply_role_to_utilities(utilities, ChromeRole::Editor).await;
             assert!(matches!(&editor[0], UtilityNode::Button { disabled: None, .. }), "editor chrome never disables history utilities");
         }
     }
@@ -2646,12 +2651,13 @@ pub mod ui {
                 item.presence.color = own_color;
                 item.presence.peers = peer_marks_for(&item.id);
                 if let Some(children) = &mut item.items {
-                    stamp_items(children, selected, previewed, own_color, peer_marks_for);
+                    // 🔁️ Box::pin: self-recursive async fn (R10 residue shape 3).
+                    Box::pin(stamp_items(children, selected, previewed, own_color, peer_marks_for)).await;
                 }
             }
         }
         for section in sections {
-            stamp_items(&mut section.items, selected, previewed, own_color, peer_marks_for);
+            stamp_items(&mut section.items, selected, previewed, own_color, peer_marks_for).await;
         }
     }
 
@@ -2686,7 +2692,7 @@ pub mod ui {
     }
 
     pub async fn ui_inspector_mixed_text(values: &[String]) -> UiInspectorMixedText {
-        let uniform = ui_inspector_all_equal(values);
+        let uniform = ui_inspector_all_equal(values).await;
         UiInspectorMixedText { value: if uniform { values.first().cloned().unwrap_or_default() } else { String::new() }, placeholder: if uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) } }
     }
 
@@ -2696,12 +2702,12 @@ pub mod ui {
     }
 
     pub async fn ui_inspector_mixed_number(values: &[f64]) -> UiInspectorMixedNumber {
-        let uniform = ui_inspector_all_equal(values);
+        let uniform = ui_inspector_all_equal(values).await;
         UiInspectorMixedNumber { value: if uniform { *values.first().unwrap_or(&0.0) } else { f64::NAN }, uniform }
     }
 
     pub async fn ui_inspector_mixed_select(values: &[String]) -> UiInspectorMixedText {
-        ui_inspector_mixed_text(values)
+        ui_inspector_mixed_text(values).await
     }
 
     pub struct UiInspectorMixedToggle {
@@ -2710,12 +2716,12 @@ pub mod ui {
     }
 
     pub async fn ui_inspector_mixed_toggle(values: &[bool]) -> UiInspectorMixedToggle {
-        let uniform = ui_inspector_all_equal(values);
+        let uniform = ui_inspector_all_equal(values).await;
         UiInspectorMixedToggle { pressed: uniform && values.first().copied().unwrap_or(false), uniform }
     }
 
     pub async fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
-        ui_inspector_mixed_number(values)
+        ui_inspector_mixed_number(values).await
     }
 
     pub async fn ui_inspector_readonly_field(id: impl Into<String>, label: impl Into<Label>, value: impl Into<String>) -> UiNode {
@@ -2751,7 +2757,7 @@ pub mod ui {
      * callers' patch handlers branch on whichever key the dispatched action actually carries. */
     pub async fn ui_inspector_stepper_field(id: impl Into<String>, label: impl Into<Label>, values: &[f64], step: f64, action: ActionDescriptor) -> UiNode {
         let id = id.into();
-        let mixed = ui_inspector_mixed_number(values);
+        let mixed = ui_inspector_mixed_number(values).await;
         UiNode::Field(UiFieldNode {
             menu: None,
             id: id.clone(),
@@ -2768,12 +2774,12 @@ pub mod ui {
      * `values` via {@link ui_inspector_mixed_toggle}. */
     pub async fn ui_inspector_toggle_field(id: impl Into<String>, label: impl Into<Label>, icon_id: impl Into<IconName>, values: &[bool], action: ActionDescriptor) -> UiNode {
         let id = id.into();
-        let mixed = ui_inspector_mixed_toggle(values);
+        let mixed = ui_inspector_mixed_toggle(values).await;
         UiNode::Field(UiFieldNode {
             menu: None,
             id: id.clone(),
             label: label.into(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { menu: None, id, icon_id: icon_id.into(), text: None, on_change: action, presence: UiPresence::selected(mixed.pressed) })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { menu: None, id, icon_id: icon_id.into(), text: None, on_change: action, presence: UiPresence::selected(mixed.pressed).await })),
             description: None,
             required: None,
             error: None,
@@ -2800,9 +2806,9 @@ pub mod ui {
             presence: UiPresence::default(),
             children: vec![
                 // 🔤️ Axis symbols (X/Y/Z) are mathematical notation, not translatable UI chrome.
-                ui_inspector_stepper_field(format!("{id}.x"), Label::data("X"), &xs, step, axis_action("x")),
-                ui_inspector_stepper_field(format!("{id}.y"), Label::data("Y"), &ys, step, axis_action("y")),
-                ui_inspector_stepper_field(format!("{id}.z"), Label::data("Z"), &zs, step, axis_action("z")),
+                ui_inspector_stepper_field(format!("{id}.x"), Label::data("X").await, &xs, step, axis_action("x")).await,
+                ui_inspector_stepper_field(format!("{id}.y"), Label::data("Y").await, &ys, step, axis_action("y")).await,
+                ui_inspector_stepper_field(format!("{id}.z"), Label::data("Z").await, &zs, step, axis_action("z")).await,
             ],
         })
     }
@@ -2813,20 +2819,24 @@ pub mod ui {
             .filter(|group| !group.fields.is_empty())
             .map(|group| UiSectionNode { menu: None, id: group.id.clone(), label: Some(group.label.clone()), default_open: Some(group.default_open.unwrap_or(true)), presence: UiPresence::default(), children: group.fields.clone() })
             .collect();
-        ui_declarative_sections_to_tree(&sections)
+        ui_declarative_sections_to_tree(&sections).await
     }
 
     pub async fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
-        let tree_sections: Vec<UiTreeSectionNode> = sections
-            .iter()
-            .map(|section| UiTreeSectionNode {
+        let mut tree_sections: Vec<UiTreeSectionNode> = Vec::with_capacity(sections.len());
+        for section in sections {
+            let mut items = Vec::with_capacity(section.children.len());
+            for (index, child) in section.children.iter().enumerate() {
+                items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index)).await);
+            }
+            tree_sections.push(UiTreeSectionNode {
                 id: section.id.clone(),
                 label: section.label.clone(),
                 default_open: Some(section.default_open.unwrap_or(true)),
                 presence: section.presence.clone(),
-                items: section.children.iter().enumerate().map(|(index, child)| ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index))).collect(),
-            })
-            .collect();
+                items,
+            });
+        }
         UiNode::Tree(if tree_sections.is_empty() {
             UiTreeNode {
                 menu: None,
@@ -2837,7 +2847,7 @@ pub mod ui {
                     presence: UiPresence::default(),
                     items: vec![UiTreeItemNode {
                         id: "empty".into(),
-                        label: Label::data("—"),
+                        label: Label::data("—").await,
                         description: None,
                         icon_id: None,
                         presence: UiPresence::default(),
@@ -2894,7 +2904,7 @@ pub mod ui {
                     draggable: None,
                     drag_data: None,
                     items: None,
-                    control: ui_node_to_control(&field.child),
+                    control: ui_node_to_control(&field.child).await,
                     dimmed: None,
                 }
             }
@@ -2914,34 +2924,40 @@ pub mod ui {
                 control: Some(UiControlNode::Button(button.clone())),
                 dimmed: None,
             },
-            UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())),
-            UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())),
-            UiNode::Toggle(toggle) => tree_control_item(toggle.id.clone(), UiControlNode::Toggle(toggle.clone())),
-            UiNode::Group(group) => UiTreeItemNode {
-                menu: None,
-                id: group.id.clone(),
-                label: group.label.clone(),
-                description: None,
-                icon_id: None,
-                presence: UiPresence::default(),
-                default_open: group.default_open,
-                action: None,
-                actions: None,
-                draggable: None,
-                drag_data: None,
-                items: Some(group.children.iter().enumerate().map(|(index, child)| ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index))).collect()),
-                control: None,
-                dimmed: None,
-            },
-            UiNode::KeyValue(key_value) => tree_control_item(fallback_id, UiControlNode::KeyValue(key_value.clone())),
-            UiNode::Slider(slider) => tree_control_item(slider.id.clone(), UiControlNode::Slider(slider.clone())),
-            UiNode::NumberStepper(stepper) => tree_control_item(stepper.id.clone(), UiControlNode::NumberStepper(stepper.clone())),
-            UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())),
-            UiNode::IconSelect(icon_select) => tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone())),
+            UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())).await,
+            UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())).await,
+            UiNode::Toggle(toggle) => tree_control_item(toggle.id.clone(), UiControlNode::Toggle(toggle.clone())).await,
+            UiNode::Group(group) => {
+                let mut items = Vec::with_capacity(group.children.len());
+                for (index, child) in group.children.iter().enumerate() {
+                    items.push(Box::pin(ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index))).await);
+                }
+                UiTreeItemNode {
+                    menu: None,
+                    id: group.id.clone(),
+                    label: group.label.clone(),
+                    description: None,
+                    icon_id: None,
+                    presence: UiPresence::default(),
+                    default_open: group.default_open,
+                    action: None,
+                    actions: None,
+                    draggable: None,
+                    drag_data: None,
+                    items: Some(items),
+                    control: None,
+                    dimmed: None,
+                }
+            }
+            UiNode::KeyValue(key_value) => tree_control_item(fallback_id, UiControlNode::KeyValue(key_value.clone())).await,
+            UiNode::Slider(slider) => tree_control_item(slider.id.clone(), UiControlNode::Slider(slider.clone())).await,
+            UiNode::NumberStepper(stepper) => tree_control_item(stepper.id.clone(), UiControlNode::NumberStepper(stepper.clone())).await,
+            UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())).await,
+            UiNode::IconSelect(icon_select) => tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone())).await,
             UiNode::Separator(_) => UiTreeItemNode {
                 menu: None,
                 id: format!("{}.sep", fallback_id),
-                label: Label::data("—"),
+                label: Label::data("—").await,
                 description: None,
                 icon_id: None,
                 presence: UiPresence::default(),
@@ -2957,7 +2973,7 @@ pub mod ui {
             other => UiTreeItemNode {
                 menu: None,
                 id: fallback_id,
-                label: Label::data(format!("{other:?}")),
+                label: Label::data(format!("{other:?}")).await,
                 description: None,
                 icon_id: None,
                 presence: UiPresence::default(),
@@ -2977,7 +2993,7 @@ pub mod ui {
         UiTreeItemNode {
             menu: None,
             id,
-            label: Label::data(String::new()),
+            label: Label::data(String::new()).await,
             description: None,
             icon_id: None,
             presence: UiPresence::default(),
@@ -3189,19 +3205,23 @@ pub mod ui {
         pub max_distance: f64,
     }
 
-    async fn default_manual_lod() -> f64 {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn default_manual_lod() -> f64 {
         100.0
     }
 
-    async fn default_distance_reference() -> f64 {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn default_distance_reference() -> f64 {
         100.0
     }
 
-    async fn default_grid_factor() -> f64 {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn default_grid_factor() -> f64 {
         10.0
     }
 
-    async fn default_true() -> bool {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn default_true() -> bool {
         true
     }
 
@@ -3227,11 +3247,13 @@ pub mod ui {
         .to_string()
     }
 
-    pub async fn world3d_default_selection_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn world3d_default_selection_json() -> String {
         r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into()
     }
 
-    pub async fn world3d_default_meshes_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn world3d_default_meshes_json() -> String {
         "[]".into()
     }
 
@@ -3320,7 +3342,8 @@ pub mod ui {
         pub zoom: f64,
     }
 
-    async fn default_true_zoom() -> f64 {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    fn default_true_zoom() -> f64 {
         1.0
     }
 
@@ -3604,50 +3627,61 @@ pub mod ui {
         pub selection_mode: String,
     }
 
-    pub async fn tiled_map_default_render_mode() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_render_mode() -> String {
         "combined".into()
     }
 
-    pub async fn tiled_map_default_vector_style() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_vector_style() -> String {
         "colored".into()
     }
 
-    pub async fn tiled_map_default_lod_mode() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_lod_mode() -> String {
         "automatic".into()
     }
 
-    pub async fn tiled_map_default_tile_url_template() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_tile_url_template() -> String {
         "/osm/{z}/{x}/{y}.png".into()
     }
 
-    pub async fn tiled_map_default_vector_tile_url_template() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_vector_tile_url_template() -> String {
         "/vt/{z}/{x}/{y}.pbf".into()
     }
 
     /** 🗺️ Empty layer-visibility gate map: the owning plugin's engine defaults every layer id it recognizes to visible, so the framework need not enumerate app-specific layer ids. */
-    pub async fn tiled_map_default_layer_visibility_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_layer_visibility_json() -> String {
         "{}".into()
     }
 
     /** 🗺️ Empty layer-stroke-scale multiplier map: the owning plugin's engine defaults every layer id it recognizes to a 1.0 multiplier, so the framework need not enumerate app-specific layer ids. */
-    pub async fn tiled_map_default_layer_stroke_scale_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_layer_stroke_scale_json() -> String {
         "{}".into()
     }
 
     /** 🗺️ Empty selection: the owning plugin's engine treats a missing selection key as "none selected", so the framework need not encode app-specific feature categories. */
-    pub async fn tiled_map_default_selection_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_selection_json() -> String {
         "{}".into()
     }
 
-    pub async fn tiled_map_default_hover_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_hover_json() -> String {
         "null".into()
     }
 
-    pub async fn tiled_map_default_selection_method() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_selection_method() -> String {
         "rectangle".into()
     }
 
-    pub async fn tiled_map_default_selection_mode() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn tiled_map_default_selection_mode() -> String {
         "default".into()
     }
 
@@ -3703,31 +3737,38 @@ pub mod ui {
         pub lod_mode: String,
     }
 
-    pub async fn board2d_default_glyph_catalogs_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_glyph_catalogs_json() -> String {
         "{}".into()
     }
 
-    pub async fn board2d_default_selection_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_selection_json() -> String {
         "[]".into()
     }
 
-    pub async fn board2d_default_selection_method() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_selection_method() -> String {
         "rectangle".into()
     }
 
-    pub async fn board2d_default_grid_factor() -> f64 {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_grid_factor() -> f64 {
         1.0
     }
 
-    pub async fn board2d_default_brush_weights_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_brush_weights_json() -> String {
         "{}".into()
     }
 
-    pub async fn board2d_default_placement_compatibility_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_placement_compatibility_json() -> String {
         "[]".into()
     }
 
-    pub async fn board2d_default_lod_mode() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn board2d_default_lod_mode() -> String {
         "automatic".into()
     }
 
@@ -3767,7 +3808,8 @@ pub mod ui {
         pub interactive: bool,
     }
 
-    pub async fn ink_canvas_default_selection_json() -> String {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+    pub fn ink_canvas_default_selection_json() -> String {
         "[]".into()
     }
 
@@ -4096,7 +4138,7 @@ pub mod ui {
         /** @emoji 📖️ Builds a read-only JSON viewer scene: a pretty-printed JSON buffer, `"json"`
          * language, and `settingsJson` set to `{"readOnly":true}`. */
         pub async fn json_view(json_pretty: String) -> Self {
-            let mut scene = Self::base(json_pretty, Some("json".into()), None);
+            let mut scene = Self::base(json_pretty, Some("json".into()), None).await;
             scene.settings_json = Some(serde_json::json!({ "readOnly": true }).to_string());
             scene
         }
@@ -4105,7 +4147,7 @@ pub mod ui {
          * `settingsJson` carries `{"readOnly":false,"onEditSettings":<ActionDescriptor>}`, fired by the
          * renderer when the user edits editor settings (font size, tab width, ...) via its own chrome. */
         pub async fn code_input(buffer: String, language: &str, on_edit_settings: &ActionDescriptor) -> Self {
-            let mut scene = Self::base(buffer, Some(language.into()), None);
+            let mut scene = Self::base(buffer, Some(language.into()), None).await;
             scene.settings_json = Some(serde_json::json!({ "readOnly": false, "onEditSettings": on_edit_settings }).to_string());
             scene
         }
@@ -4199,8 +4241,10 @@ pub mod ui {
     }
 
     impl Default for UiNode {
+        // 🚫️async: E1 impl of external trait (Default) — inlines `ui_stack_vertical`'s pure body rather
+        // than asyncifying that widely-async-consumed builder just for this one sync call site — see R9
         fn default() -> Self {
-            ui_stack_vertical(vec![])
+            UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: Some("standard".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, children: vec![], drop_action: None, drop_overlay: None })
         }
     }
 
@@ -4257,19 +4301,19 @@ pub mod ui {
     }
 
     pub async fn build_canvas_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Canvas2dScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::Canvas2d, None, None, Some(scene), None, None, None, None, None, None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::Canvas2d, None, None, Some(scene), None, None, None, None, None, None, None, None).await
     }
 
     pub async fn build_world_3d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: World3dScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::World3d, None, None, None, Some(scene), None, None, None, None, None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::World3d, None, None, None, Some(scene), None, None, None, None, None, None, None).await
     }
 
     pub async fn build_node_graph_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: NodeGraphScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::NodeGraph, None, None, None, None, Some(scene), None, None, None, None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::NodeGraph, None, None, None, None, Some(scene), None, None, None, None, None, None).await
     }
 
     pub async fn build_text_editor_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TextEditorScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::TextEditor, None, None, None, None, None, Some(scene), None, None, None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::TextEditor, None, None, None, None, None, Some(scene), None, None, None, None, None).await
     }
 
     //#region 🔖️TextIdentifierOccurrences
@@ -4294,7 +4338,7 @@ pub mod ui {
 
     /// 🔎️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
     pub async fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
-        let (start, end) = text_identifier_bounds_at(text, cursor)?;
+        let (start, end) = text_identifier_bounds_at(text, cursor).await?;
         let needle = &text[start..end];
         if needle.is_empty() {
             return None;
@@ -4304,7 +4348,7 @@ pub mod ui {
         while let Some(found) = text[scan..].find(needle) {
             let at = scan + found;
             let next_end = at + needle.len();
-            if text_identifier_bounds_at(text, at) == Some((at, next_end)) {
+            if text_identifier_bounds_at(text, at).await == Some((at, next_end)) {
                 ranges.push(serde_json::json!({ "start": at, "end": next_end }));
             }
             scan = at + needle.len();
@@ -4315,47 +4359,47 @@ pub mod ui {
     //#endregion 🔖️TextIdentifierOccurrences
 
     pub async fn build_table_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TableScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::Table, None, None, None, None, None, None, Some(scene), None, None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::Table, None, None, None, None, None, None, Some(scene), None, None, None, None).await
     }
 
     pub async fn build_paint_2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Paint2dScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::Paint2d, None, None, None, None, None, None, None, Some(scene), None, None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::Paint2d, None, None, None, None, None, None, None, Some(scene), None, None, None).await
     }
 
     pub async fn build_virtual_file_system_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: VirtualFileSystemScene, pane_id: Option<String>, binding_id: Option<String>) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::VirtualFileSystem, pane_id, binding_id, None, None, None, None, None, None, Some(scene), None, None)
+        component_scene(surface_id, controller_id, SurfaceKind::VirtualFileSystem, pane_id, binding_id, None, None, None, None, None, None, Some(scene), None, None).await
     }
 
     pub async fn build_tiled_map_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: TiledMapScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::TiledMap, None, None, None, None, None, None, None, None, None, Some(scene), None)
+        component_scene(surface_id, controller_id, SurfaceKind::TiledMap, None, None, None, None, None, None, None, None, None, Some(scene), None).await
     }
 
     pub async fn build_board2d_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: Board2dScene) -> UiNode {
-        component_scene(surface_id, controller_id, SurfaceKind::Board2d, None, None, None, None, None, None, None, None, None, None, Some(scene))
+        component_scene(surface_id, controller_id, SurfaceKind::Board2d, None, None, None, None, None, None, None, None, None, None, Some(scene)).await
     }
 
     pub async fn build_icon_render_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: IconRenderScene) -> UiNode {
-        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::IconRender, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::IconRender, None, None, None, None, None, None, None, None, None, None, None).await else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { icon_render: Some(scene), ..node })
     }
 
     pub async fn build_ink_canvas_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: InkCanvasScene) -> UiNode {
-        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::InkCanvas, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::InkCanvas, None, None, None, None, None, None, None, None, None, None, None).await else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { ink_canvas: Some(scene), ..node })
     }
 
     pub async fn build_graph_timeline_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: GraphTimelineScene) -> UiNode {
-        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::GraphTimeline, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::GraphTimeline, None, None, None, None, None, None, None, None, None, None, None).await else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { graph_timeline: Some(scene), ..node })
     }
 
     pub async fn build_diff_view_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: DiffViewScene) -> UiNode {
-        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::DiffView, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::DiffView, None, None, None, None, None, None, None, None, None, None, None).await else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { diff_view: Some(scene), ..node })
     }
 
     pub async fn build_event_feed_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: EventFeedScene) -> UiNode {
-        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::EventFeed, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::EventFeed, None, None, None, None, None, None, None, None, None, None, None).await else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { event_feed: Some(scene), ..node })
     }
 
@@ -4365,7 +4409,7 @@ pub mod ui {
     pub async fn ui_empty_state(id: &str, title: Label, description: Option<Label>, action: Option<UiButtonNode>) -> UiNode {
         let mut children = vec![UiNode::Text(UiTextNode { menu: None, value: title, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })];
         if let Some(description) = description {
-            children.push(ui_text(description));
+            children.push(ui_text(description).await);
         }
         if let Some(action) = action {
             children.push(UiNode::Button(action));
@@ -4394,7 +4438,7 @@ pub mod ui {
                 icon_id: IconName::RotateCw,
                 // 🚧️ Framework-level fallback copy (not app content); not yet routed through app_labels!
                 // since this SDK-level builder predates the two-axis macro — flagged for a follow-up pass.
-                label: Label::data("Retry"),
+                label: Label::data("Retry").await,
                 action: retry,
                 style: None,
                 presence: UiPresence::default(),
@@ -4440,13 +4484,13 @@ pub mod ui {
             drop_action: None,
             drop_overlay: None,
             children: vec![
-                UiNode::Text(UiTextNode { menu: None, value: Label::data(title), emphasize: Some(true), data_attributes: None, presence: UiPresence::default() }),
-                ui_text(Label::data(message)),
+                UiNode::Text(UiTextNode { menu: None, value: Label::data(title).await, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() }),
+                ui_text(Label::data(message).await).await,
                 UiNode::Button(UiButtonNode {
                     menu: None,
                     id: Some("recovery.restartApp".into()),
                     icon_id: IconName::RotateCcw,
-                    label: Label::data(restart_label),
+                    label: Label::data(restart_label).await,
                     action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.restartApp".into(), args: args.clone() },
                     style: None,
                     presence: UiPresence::default(),
@@ -4455,7 +4499,7 @@ pub mod ui {
                     menu: None,
                     id: Some("recovery.disablePlugin".into()),
                     icon_id: IconName::Link2Off,
-                    label: Label::data(disable_label),
+                    label: Label::data(disable_label).await,
                     action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.disablePlugin".into(), args: args.clone() },
                     style: None,
                     presence: UiPresence::default(),
@@ -4464,7 +4508,7 @@ pub mod ui {
                     menu: None,
                     id: Some("recovery.showDiagnostics".into()),
                     icon_id: IconName::Info,
-                    label: Label::data(diagnostics_label),
+                    label: Label::data(diagnostics_label).await,
                     action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.showDiagnostics".into(), args },
                     style: None,
                     presence: UiPresence::default(),
@@ -4486,7 +4530,7 @@ pub mod ui {
             activate: None,
             drop_action: Some(drop_action),
             drop_overlay: Some(UiDropOverlaySpec { title: title.clone(), hint: hint.clone(), accept: accept.map(Into::into) }),
-            children: vec![ui_text(title), ui_text(hint)],
+            children: vec![ui_text(title).await, ui_text(hint).await],
         })
     }
     //#endregion 🔖️StatusBuilders
@@ -4515,66 +4559,66 @@ pub mod ui {
                 drop_action: None,
                 drop_overlay: None,
                 children: vec![
-                    UiNode::Text(UiTextNode { menu: None, value: Label::data("Hello"), emphasize: Some(true), data_attributes: None, presence: UiPresence::default() }),
-                    UiNode::Button(UiButtonNode { menu: None, id: Some("btn1".into()), icon_id: IconName::Save, label: Label::data("Save"), action: act("save"), style: None, presence: UiPresence::default() }),
+                    UiNode::Text(UiTextNode { menu: None, value: Label::data("Hello").await, emphasize: Some(true), data_attributes: None, presence: UiPresence::default() }),
+                    UiNode::Button(UiButtonNode { menu: None, id: Some("btn1".into()), icon_id: IconName::Save, label: Label::data("Save").await, action: act("save").await, style: None, presence: UiPresence::default() }),
                     UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }),
                     UiNode::Input(UiInputNode {
                         menu: None,
                         id: "inp1".into(),
                         input_kind: "text".into(),
                         value: "abc".into(),
-                        placeholder: Some(Label::data("type...")),
+                        placeholder: Some(Label::data("type...").await),
                         commit: None,
                         min: None,
                         max: None,
                         step: None,
                         accept: None,
-                        on_change: act("setValue"),
+                        on_change: act("setValue").await,
                         presence: UiPresence::default(),
                     }),
                     UiNode::Select(UiSelectNode {
                         menu: None,
                         id: "sel1".into(),
                         value: "a".into(),
-                        items: vec![UiSelectItem { value: "a".into(), label: Label::data("A") }, UiSelectItem { value: "b".into(), label: Label::data("B") }],
+                        items: vec![UiSelectItem { value: "a".into(), label: Label::data("A").await }, UiSelectItem { value: "b".into(), label: Label::data("B").await }],
                         placeholder: None,
-                        on_change: act("selectChange"),
+                        on_change: act("selectChange").await,
                         presence: UiPresence::default(),
                     }),
-                    UiNode::Toggle(UiToggleNode { menu: None, id: "tog1".into(), icon_id: IconName::AlignLeft, text: None, on_change: act("toggle"), presence: UiPresence::selected(true) }),
+                    UiNode::Toggle(UiToggleNode { menu: None, id: "tog1".into(), icon_id: IconName::AlignLeft, text: None, on_change: act("toggle").await, presence: UiPresence::selected(true).await }),
                     UiNode::Group(UiGroupNode {
                         menu: None,
                         id: "grp1".into(),
-                        label: Label::data("Group"),
+                        label: Label::data("Group").await,
                         default_open: Some(true),
                         presence: UiPresence::default(),
-                        children: vec![UiNode::Text(UiTextNode { menu: None, value: Label::data("child"), emphasize: None, data_attributes: None, presence: UiPresence::default() })],
+                        children: vec![UiNode::Text(UiTextNode { menu: None, value: Label::data("child").await, emphasize: None, data_attributes: None, presence: UiPresence::default() })],
                     }),
-                    UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "V".into() }], presence: UiPresence::default() }),
-                    UiNode::Slider(UiSliderNode { menu: None, id: "sl1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some("%".into()), on_change: act("sliderChange"), presence: UiPresence::default() }),
-                    UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: act("setAbs"), on_delta: act("setDelta"), presence: UiPresence::default() }),
-                    UiNode::Ring(UiRingNode { menu: None, id: "ring1".into(), orb_id: "orb1".into(), t: 0.25, presence: UiPresence::default(), on_change: act("ringChange") }),
-                    UiNode::IconSelect(UiIconSelectNode { menu: None, id: "icn1".into(), value: "star".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("iconChange"), presence: UiPresence::default() }),
+                    UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![UiKeyValueEntry { label: Label::data("K").await, value: "V".into() }], presence: UiPresence::default() }),
+                    UiNode::Slider(UiSliderNode { menu: None, id: "sl1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some("%".into()), on_change: act("sliderChange").await, presence: UiPresence::default() }),
+                    UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: act("setAbs").await, on_delta: act("setDelta").await, presence: UiPresence::default() }),
+                    UiNode::Ring(UiRingNode { menu: None, id: "ring1".into(), orb_id: "orb1".into(), t: 0.25, presence: UiPresence::default(), on_change: act("ringChange").await }),
+                    UiNode::IconSelect(UiIconSelectNode { menu: None, id: "icn1".into(), value: "star".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("iconChange").await, presence: UiPresence::default() }),
                     UiNode::Field(UiFieldNode {
                         menu: None,
                         id: "field1".into(),
-                        label: Label::data("Field"),
+                        label: Label::data("Field").await,
                         description: Some("desc".into()),
                         required: Some(true),
                         error: None,
-                        child: Box::new(UiNode::Text(UiTextNode { menu: None, value: Label::data("child"), emphasize: None, data_attributes: None, presence: UiPresence::default() })),
+                        child: Box::new(UiNode::Text(UiTextNode { menu: None, value: Label::data("child").await, emphasize: None, data_attributes: None, presence: UiPresence::default() })),
                         presence: UiPresence::default(),
                     }),
-                    UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
+                    UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section").await), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
                     UiNode::Tree(UiTreeNode {
                         menu: None,
                         sections: vec![UiTreeSectionNode {
                             id: "treesec1".into(),
-                            label: Some(Label::data("Items")),
+                            label: Some(Label::data("Items").await),
                             default_open: Some(true),
                             presence: UiPresence::default(),
                             items: vec![{
-                                let mut item = UiTreeItemNode::base("item1", Label::data("Item 1"));
+                                let mut item = UiTreeItemNode::base("item1", Label::data("Item 1").await).await;
                                 item.presence.selected = true;
                                 item
                             }],
@@ -4583,7 +4627,7 @@ pub mod ui {
                         interaction_domain: None,
                         drop_action: None,
                     }),
-                    UiNode::Image(UiImageNode { menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text")), presence: UiPresence::default() }),
+                    UiNode::Image(UiImageNode { menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text").await), presence: UiPresence::default() }),
                     UiNode::ComponentScene(UiComponentSceneNode {
                         menu: None,
                         surface_id: "surf1".into(),
@@ -4637,9 +4681,9 @@ pub mod ui {
 
         const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_node_tree_serializes_to_golden_json() {
-            let node = sample_tree();
+            let node = sample_tree().await;
             let json = serde_json::to_string(&node).unwrap();
             assert_eq!(json, GOLDEN_UI_NODE_TREE_JSON, "UiNode wire format drifted \u{2014} lock this in before moving the type into ui_wgpu");
             let roundtripped: UiNode = serde_json::from_str(&json).unwrap();
@@ -4647,12 +4691,12 @@ pub mod ui {
         }
 
         /// 🌀️ `presence.status` follows the same skip-if-default convention as `presence.selected`: the whole `presence` key is absent when fully default, and round-trips when set.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set() {
-            let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
+            let idle = UiTreeItemNode::base("idle", Label::data("Idle").await).await;
             assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
-            let mut loading = UiTreeItemNode::base("loading1", Label::data("Loading"));
+            let mut loading = UiTreeItemNode::base("loading1", Label::data("Loading").await).await;
             loading.presence.status = UiStatus::Loading;
             let json = serde_json::to_string(&loading).unwrap();
             assert!(json.contains("\"presence\":{\"status\":\"loading\"}"));
@@ -4661,12 +4705,12 @@ pub mod ui {
         }
 
         /// 🌀️ `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
-            let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
+            let idle = UiTreeItemNode::base("idle", Label::data("Idle").await).await;
             assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
-            let mut waiting = UiTreeItemNode::base("waiting1", Label::data("Waiting"));
+            let mut waiting = UiTreeItemNode::base("waiting1", Label::data("Waiting").await).await;
             waiting.presence.status = UiStatus::Waiting;
             let json = serde_json::to_string(&waiting).unwrap();
             assert!(json.contains("\"presence\":{\"status\":\"waiting\"}"));
@@ -4675,11 +4719,11 @@ pub mod ui {
         }
 
         /// 🚫️ `presence.state == Hidden` short-circuits everything else — round-trips like any other state.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_tree_item_hidden_state_roundtrips() {
-            let mut hidden = UiTreeItemNode::base("hidden1", Label::data("Hidden"));
+            let mut hidden = UiTreeItemNode::base("hidden1", Label::data("Hidden").await).await;
             hidden.presence.state = UiState::Hidden;
-            assert!(!hidden.presence.visible());
+            assert!(!hidden.presence.visible().await);
             let json = serde_json::to_string(&hidden).unwrap();
             assert!(json.contains("\"presence\":{\"state\":\"hidden\"}"));
             let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
@@ -4688,11 +4732,11 @@ pub mod ui {
 
         /// 🎉️ `presence.state == Celebrating` serializes to `"celebrating"` — guards the TS/Rust `UiState`
         /// mirror staying byte-for-byte (see `ui/styling/js/index.ts`'s `UI_STATES`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_tree_item_celebrating_state_roundtrips() {
-            let mut celebrating = UiTreeItemNode::base("celebrating1", Label::data("Celebrating"));
+            let mut celebrating = UiTreeItemNode::base("celebrating1", Label::data("Celebrating").await).await;
             celebrating.presence.state = UiState::Celebrating;
-            assert!(celebrating.presence.visible());
+            assert!(celebrating.presence.visible().await);
             let json = serde_json::to_string(&celebrating).unwrap();
             assert!(json.contains("\"presence\":{\"state\":\"celebrating\"}"));
             let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
@@ -4701,20 +4745,20 @@ pub mod ui {
 
         /// ✨ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
         /// belt-and-braces check so a future variant can't silently drop its shared state on the wire.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_ui_node_variant_serializes_a_non_default_presence() {
             async fn assert_presence_serializes(mut node: UiNode, label: &str) {
-                *node.presence_mut() = UiPresence::selected(true);
+                *node.presence_mut().await = UiPresence::selected(true).await;
                 let json = serde_json::to_string(&node).unwrap();
                 assert!(json.contains("\"presence\""), "{label} did not serialize a non-default presence: {json}");
             }
             assert_presence_serializes(
                 UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }),
                 "Stack",
-            );
-            assert_presence_serializes(UiNode::Text(UiTextNode { menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
-            assert_presence_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l"), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
-            assert_presence_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
+            ).await;
+            assert_presence_serializes(UiNode::Text(UiTextNode { menu: None, value: Label::data("x").await, emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text").await;
+            assert_presence_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l").await, action: act("a").await, style: None, presence: UiPresence::default() }), "Button").await;
+            assert_presence_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator").await;
             assert_presence_serializes(
                 UiNode::Input(UiInputNode {
                     menu: None,
@@ -4727,36 +4771,36 @@ pub mod ui {
                     max: None,
                     step: None,
                     accept: None,
-                    on_change: act("a"),
+                    on_change: act("a").await,
                     presence: UiPresence::default(),
                 }),
                 "Input",
-            );
-            assert_presence_serializes(UiNode::Select(UiSelectNode { menu: None, id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
-            assert_presence_serializes(UiNode::Toggle(UiToggleNode { menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
-            assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
-            assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
-            assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
-            assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
-            assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
+            ).await;
+            assert_presence_serializes(UiNode::Select(UiSelectNode { menu: None, id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a").await, presence: UiPresence::default() }), "Select").await;
+            assert_presence_serializes(UiNode::Toggle(UiToggleNode { menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a").await, presence: UiPresence::default() }), "Toggle").await;
+            assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue").await;
+            assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a").await, presence: UiPresence::default() }), "Slider").await;
+            assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a").await, on_delta: act("a").await, presence: UiPresence::default() }), "NumberStepper").await;
+            assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a").await, presence: UiPresence::default() }), "Ring").await;
+            assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a").await, presence: UiPresence::default() }), "IconSelect").await;
             assert_presence_serializes(
                 UiNode::Field(UiFieldNode {
                     menu: None,
                     id: "i".into(),
-                    label: Label::data("l"),
+                    label: Label::data("l").await,
                     description: None,
                     required: None,
                     error: None,
-                    child: Box::new(UiNode::Text(UiTextNode { menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() })),
+                    child: Box::new(UiNode::Text(UiTextNode { menu: None, value: Label::data("x").await, emphasize: None, data_attributes: None, presence: UiPresence::default() })),
                     presence: UiPresence::default(),
                 }),
                 "Field",
-            );
-            assert_presence_serializes(UiNode::Section(UiSectionNode { menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
-            assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
-            assert_presence_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
-            assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
-            assert_presence_serializes(UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }), "ExternalSlot");
+            ).await;
+            assert_presence_serializes(UiNode::Section(UiSectionNode { menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section").await;
+            assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l").await, default_open: None, presence: UiPresence::default(), children: vec![] }), "Group").await;
+            assert_presence_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree").await;
+            assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image").await;
+            assert_presence_serializes(UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }), "ExternalSlot").await;
             assert_presence_serializes(
                 UiNode::ComponentScene(UiComponentSceneNode {
                     menu: None,
@@ -4783,14 +4827,14 @@ pub mod ui {
                     event_feed: None,
                 }),
                 "ComponentScene",
-            );
+            ).await;
         }
 
         /// ☁ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
         /// absent when unset, round-trips (camelCase `pointsJson`) when set.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set() {
-            let bare = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+            let bare = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()).await;
             assert!(!serde_json::to_string(&bare).unwrap().contains("pointsJson"));
 
             let mut with_points = bare;
@@ -4804,7 +4848,7 @@ pub mod ui {
         const GOLDEN_SURFACE_KIND_JSON: &str =
             "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn surface_kind_serializes_to_golden_json() {
             let kinds = vec![
                 SurfaceKind::Canvas2d,
@@ -4828,13 +4872,13 @@ pub mod ui {
             assert_eq!(roundtripped, kinds);
         }
 
-        const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+        const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn scene_records_serialize_to_golden_json() {
             let scenes = (
                 Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
-                TableScene::base("[]", "[]"),
+                TableScene::base("[]", "[]").await,
                 Paint2dScene {
                     document_sync_json: "{}".into(),
                     assets_json: "[]".into(),
@@ -4849,12 +4893,12 @@ pub mod ui {
                 },
                 IconRenderScene { request_json: "{}".into(), footer: None, frame_json: None },
                 VirtualFileSystemScene { schema_json: "{}".into(), rows_json: "[]".into(), selected_row_ids_json: None, hovered_row_id: None, empty_message: Some("Empty".into()), drag_drop_enabled: Some(true) },
-                TiledMapScene::base("{}".into(), "{}".into()),
-                Board2dScene::base("{}".into(), "{}".into(), true),
-                InkCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
+                TiledMapScene::base("{}".into(), "{}".into()).await,
+                Board2dScene::base("{}".into(), "{}".into(), true).await,
+                InkCanvasScene::base("{}".into(), "select".into(), "edit".into(), true).await,
                 GraphTimelineScene { columns_json: "[]".into() },
-                NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
-                TextEditorScene::base("buf".into(), Some("rust".into()), None),
+                NodeGraphScene::base(vec![], vec![], NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }).await,
+                TextEditorScene::base("buf".into(), Some("rust".into()), None).await,
                 BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None },
             );
             let json = serde_json::to_string(&scenes).unwrap();
@@ -4869,7 +4913,7 @@ pub mod ui {
         /// `Debug`/`PartialEq` for tuples up to 12 elements, and that tuple is already at the cap.
         const GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON: &str = "[{\"before\":\"a\",\"after\":\"b\",\"language\":\"rust\",\"mode\":\"unified\"},{\"entriesJson\":\"[]\",\"follow\":true,\"activateAction\":\"openEvent\"}]";
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
             let scenes =
                 (DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()), domain_id: None }, EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()), domain_id: None });
@@ -4881,7 +4925,7 @@ pub mod ui {
 
         /// 🖱️ `UiMenuRef`/`ContextMenuItemSpec` camelCase wire shape — in particular `hover_args` must
         /// serialize as `hoverArgs` (the exact field-rename pitfall documented on `UiDirtyScope`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case() {
             let menu_ref = UiMenuRef { id: "row".into(), args: Some(DslValue::Object(vec![("id".into(), DslValue::String("row-1".into()))])) };
             let json = serde_json::to_string(&menu_ref).unwrap();
@@ -4914,24 +4958,25 @@ pub mod ui {
 
         /// 🖱️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default
         /// — the same exhaustiveness belt-and-braces check as `every_ui_node_variant_serializes_a_non_default_presence`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_ui_node_variant_serializes_a_set_menu_ref() {
             async fn assert_menu_serializes(mut node: UiNode, label: &str) {
                 assert!(!serde_json::to_string(&node).unwrap().contains("\"menu\""), "{label} must omit a default menu ref");
-                *node.menu_mut() = Some(UiMenuRef { id: "m".into(), args: None });
+                *node.menu_mut().await = Some(UiMenuRef { id: "m".into(), args: None });
                 let json = serde_json::to_string(&node).unwrap();
                 assert!(json.contains("\"menu\":{\"id\":\"m\"}"), "{label} did not serialize a set menu ref: {json}");
-                assert_eq!(node.menu(), Some(&UiMenuRef { id: "m".into(), args: None }));
+                assert_eq!(node.menu().await, Some(&UiMenuRef { id: "m".into(), args: None }));
             }
             assert_menu_serializes(
                 UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }),
                 "Stack",
-            );
-            assert_menu_serializes(UiNode::Text(UiTextNode { menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
-            assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
-            assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
-            assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
-            assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
+            )
+            .await;
+            assert_menu_serializes(UiNode::Text(UiTextNode { menu: None, value: Label::data("x").await, emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text").await;
+            assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l").await, action: act("a").await, style: None, presence: UiPresence::default() }), "Button").await;
+            assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator").await;
+            assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image").await;
+            assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree").await;
         }
 
         //#region 🗂️OrganizeContextMenuTests
@@ -4940,7 +4985,7 @@ pub mod ui {
         }
 
         async fn menu_destructive(id: &str) -> ContextMenuItemSpec {
-            ContextMenuItemSpec { destructive: Some(true), ..menu_leaf(id) }
+            ContextMenuItemSpec { destructive: Some(true), ..menu_leaf(id).await }
         }
 
         async fn menu_group(category: &str, children: Vec<ContextMenuItemSpec>) -> ContextMenuItemSpec {
@@ -4955,21 +5000,22 @@ pub mod ui {
             ContextMenuItemSpec { id: id.into(), separator: Some(true), ..Default::default() }
         }
 
-        async fn no_category(_id: &str) -> Option<String> {
+        // 🚫️async: E1 pure accessor consumed by sync-only std call sites (&dyn Fn value) — see R9
+        fn no_category(_id: &str) -> Option<String> {
             None
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_emits_as_is_within_budget() {
-            let items = vec![menu_leaf("a"), menu_leaf("b"), menu_group("view", vec![menu_leaf("c")])];
-            let organized = organize_context_menu(items.clone(), &no_category);
+            let items = vec![menu_leaf("a").await, menu_leaf("b").await, menu_group("view", vec![menu_leaf("c").await]).await];
+            let organized = organize_context_menu(items.clone(), &no_category).await;
             assert_eq!(organized, items, "within budget with leaves already before groups, nothing is reordered: {organized:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_puts_destructive_leaves_last_after_a_separator() {
-            let items = vec![menu_destructive("delete"), menu_leaf("a"), menu_leaf("b")];
-            let organized = organize_context_menu(items, &no_category);
+            let items = vec![menu_destructive("delete").await, menu_leaf("a").await, menu_leaf("b").await];
+            let organized = organize_context_menu(items, &no_category).await;
             assert_eq!(organized.len(), 4, "a separator is inserted before the destructive tail: {organized:?}");
             assert_eq!(organized[0].id, "a");
             assert_eq!(organized[1].id, "b");
@@ -4979,20 +5025,31 @@ pub mod ui {
             assert_eq!(organized[3].destructive, Some(true));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_merges_same_id_groups_and_dedupes_children_by_id() {
-            let items = vec![menu_group("view", vec![menu_leaf("zoomIn"), menu_leaf("zoomOut")]), menu_leaf("a"), menu_group("view", vec![menu_leaf("zoomOut"), menu_leaf("resetZoom")])];
-            let organized = organize_context_menu(items, &no_category);
+            let items = vec![
+                menu_group("view", vec![menu_leaf("zoomIn").await, menu_leaf("zoomOut").await]).await,
+                menu_leaf("a").await,
+                menu_group("view", vec![menu_leaf("zoomOut").await, menu_leaf("resetZoom").await]).await,
+            ];
+            let organized = organize_context_menu(items, &no_category).await;
             assert_eq!(organized.iter().filter(|item| item.id == "menu.group.view").count(), 1, "only one merged row remains: {organized:?}");
             let view_group = organized.iter().find(|item| item.id == "menu.group.view").expect("merged view group present");
             let child_ids: Vec<&str> = view_group.children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
             assert_eq!(child_ids, vec!["zoomIn", "zoomOut", "resetZoom"], "children concat in first-seen order, deduped by id: {child_ids:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones() {
-            let items = vec![menu_separator("lead-bare"), menu_leaf("a"), menu_separator("dup-1"), menu_separator("dup-2"), menu_leaf("b"), menu_separator("trail-bare")];
-            let organized = organize_context_menu(items, &no_category);
+            let items = vec![
+                menu_separator("lead-bare").await,
+                menu_leaf("a").await,
+                menu_separator("dup-1").await,
+                menu_separator("dup-2").await,
+                menu_leaf("b").await,
+                menu_separator("trail-bare").await,
+            ];
+            let organized = organize_context_menu(items, &no_category).await;
             assert_eq!(organized.len(), 3, "leading/trailing bare separators drop, the doubled run collapses to one: {organized:?}");
             assert_eq!(organized[0].id, "a");
             assert_eq!(organized[1].separator, Some(true));
@@ -5000,66 +5057,76 @@ pub mod ui {
             assert_eq!(organized[2].id, "b");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header() {
-            let items = vec![menu_leaf("a"), menu_header("Recent"), menu_leaf("b")];
-            let organized = organize_context_menu(items.clone(), &no_category);
+            let items = vec![menu_leaf("a").await, menu_header("Recent").await, menu_leaf("b").await];
+            let organized = organize_context_menu(items.clone(), &no_category).await;
             assert_eq!(organized, items, "a header is preserved in place, untouched by budget/ordering: {organized:?}");
             assert_eq!(organized[1].label.as_deref(), Some("Recent"));
             assert_eq!(organized[1].separator, Some(true));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last() {
-            let items = vec![menu_group("mystery", vec![menu_leaf("x")]), menu_group("export", vec![menu_leaf("y")]), menu_group("view", vec![menu_leaf("z")])];
-            let organized = organize_context_menu(items, &no_category);
+            let items = vec![
+                menu_group("mystery", vec![menu_leaf("x").await]).await,
+                menu_group("export", vec![menu_leaf("y").await]).await,
+                menu_group("view", vec![menu_leaf("z").await]).await,
+            ];
+            let organized = organize_context_menu(items, &no_category).await;
             let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
             assert_eq!(ids, vec!["menu.group.view", "menu.group.export", "menu.group.mystery"], "view < export < unknown category: {ids:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_folds_overflow_groups_into_menu_group_more() {
-            let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
+            let mut items: Vec<ContextMenuItemSpec> = Vec::with_capacity(5);
+            for index in 0..5 {
+                items.push(menu_leaf(&format!("primary{index}")).await);
+            }
             for category in ["hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform"] {
-                items.push(menu_group(category, vec![menu_leaf(&format!("{category}-child"))]));
+                items.push(menu_group(category, vec![menu_leaf(&format!("{category}-child")).await]).await);
             }
             assert!(items.len() > 9, "fixture must exceed the row budget to exercise the >9 path");
-            let organized = organize_context_menu(items, &no_category);
+            let organized = organize_context_menu(items, &no_category).await;
             assert_eq!(organized.len(), 9, "primaries + groups clamp to the 9-row budget: {organized:?}");
             assert_eq!(organized.last().unwrap().id, "menu.group.more");
             assert!(!organized.last().unwrap().children.as_ref().unwrap().is_empty(), "the folded group carries the overflowing groups' children");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_buckets_overflow_leaves_by_category_of() {
-            let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
+            let mut items: Vec<ContextMenuItemSpec> = Vec::with_capacity(5);
+            for index in 0..5 {
+                items.push(menu_leaf(&format!("primary{index}")).await);
+            }
             for index in 0..6 {
-                items.push(menu_leaf(&format!("overflow{index}")));
+                items.push(menu_leaf(&format!("overflow{index}")).await);
             }
             let categorize = |id: &str| if id.starts_with("overflow") { Some("view".to_string()) } else { None };
-            let organized = organize_context_menu(items, &categorize);
+            let organized = organize_context_menu(items, &categorize).await;
             assert_eq!(organized.len(), 6, "5 primaries + 1 view group: {organized:?}");
             assert_eq!(organized[5].id, "menu.group.view");
             assert_eq!(organized[5].children.as_ref().unwrap().len(), 6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown() {
             assert_eq!(RIBBON_PARENT_CATEGORIES.len(), 20);
             for category in RIBBON_PARENT_CATEGORIES {
-                assert!(ribbon_parent_label(category, false).is_some(), "missing EN label for {category:?}");
-                assert!(ribbon_parent_label(category, true).is_some(), "missing DE label for {category:?}");
+                assert!(ribbon_parent_label(category, false).await.is_some(), "missing EN label for {category:?}");
+                assert!(ribbon_parent_label(category, true).await.is_some(), "missing DE label for {category:?}");
             }
-            assert_eq!(ribbon_parent_label("not-a-category", false), None);
+            assert_eq!(ribbon_parent_label("not-a-category", false).await, None);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn build_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette() {
             let actions = vec![
                 ShellMenuAction { id: "shell.rename".into(), label: "Rename".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: true, arg_carrying: true },
                 ShellMenuAction { id: "shell.hidden".into(), label: "Hidden".into(), icon: None, keys: None, kind: "Mutation".into(), category: None, in_palette: false, arg_carrying: false },
             ];
-            let specs = build_shell_context_menu_specs(&actions, true);
+            let specs = build_shell_context_menu_specs(&actions, true).await;
             assert_eq!(specs.len(), 2, "the non-palette action is filtered out, the palette leaf is appended: {specs:?}");
             assert_eq!(specs[0].id, "shell.rename");
             assert_eq!(specs[0].action.as_deref(), Some("shell.openActionPane"), "arg-carrying actions route through the reserved action");

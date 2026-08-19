@@ -495,11 +495,11 @@ mod native {
             let body_hash = [0xABu8; 32];
             let pack_bytes = b"a complete .spk pack file, opaque to this crate";
 
-            write_sidecar(&protocol_path, &body_hash, pack_bytes).unwrap();
+            write_sidecar(&protocol_path, &body_hash, pack_bytes).await.unwrap();
             let expected_path = dir.join("doc.abababab.sprc");
             assert!(expected_path.exists());
 
-            let read_back = read_sidecar(&protocol_path, &body_hash).unwrap();
+            let read_back = read_sidecar(&protocol_path, &body_hash).await.unwrap();
             assert_eq!(read_back, pack_bytes);
         }
 
@@ -508,7 +508,7 @@ mod native {
             let dir = scratch_dir("sidecar_missing").await;
             let protocol_path = dir.join("doc.spr");
             let result = read_sidecar(&protocol_path, &[0u8; 32]);
-            assert!(matches!(result, Err(ProtocolError::Io(_))));
+            assert!(matches!(result.await, Err(ProtocolError::Io(_))));
         }
         //#endregion 🔖️Sidecar
 

@@ -17,8 +17,13 @@ export default defineConfig({
     name: "@semio-tech/s-2d-js",
     mode: "test",
     environment: "node",
-    include: ["index.ts"],
-    coverage: { include: ["index.ts"] },
+    // 🩹️ In-source (`import.meta.vitest`) suite in `📦️index.ts` — `include` names ACTUAL TEST FILES,
+    // and no file named literally "index.ts" exists here (the real file is `📦️index.ts`), so this was
+    // silently collecting zero tests while `nx test` reported success. See the os-dev/replication
+    // configs' note on why `include` must stay empty for an in-source suite.
+    include: [],
+    includeSource: ["📦️index.ts"],
+    coverage: { include: ["📦️index.ts"] },
     passWithNoTests: false,
   },
 });

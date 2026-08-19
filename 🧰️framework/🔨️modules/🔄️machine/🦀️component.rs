@@ -353,7 +353,7 @@ mod kernel {
     //! 🧠️ Pure statechart core — SCXML-style run-to-completion over dense static tables.
     //!
     //! Nothing in this module executes I/O, sleeps, or reaches a host: every effectful
-    //! request becomes a [`Command`] pushed to a [`CommandSink`] for the caller to route.
+    //! request becomes a [`Command`] pushed onto the caller's `Vec<Command<M>>` sink for routing.
 
     use super::inspect::{InspectionEvent, Inspector};
     use crate::{ActionId, ActorId, Configuration, EventId, GuardId, InvokeId, Machine, NodeId, StatechartEvent, TimerId};
@@ -429,7 +429,11 @@ mod kernel {
     pub type GuardFn<M> = fn(&<M as Machine>::Context, Option<&<M as Machine>::Event>) -> bool;
 
     /// 🧵️ Mutates context and/or pushes commands; used for entry/exit/transition actions alike.
-    pub type ActionFn<M> = fn(&mut <M as Machine>::Context, Option<&<M as Machine>::Event>, &mut dyn CommandSink<M>);
+    // 🧬️ A former `&mut dyn CommandSink<M>` — that trait had exactly one impl (`Vec<Command<M>>`), and
+    // `impl Trait` is not nameable in a fn-pointer type, so per R11 ("exactly one impl ⇒ delete the
+    // trait object, use the concrete type") this slot names the concrete sink directly; the trait was
+    // then deleted outright (see 🔖️Commands below) once nothing referenced it any more.
+    pub type ActionFn<M> = fn(&mut <M as Machine>::Context, Option<&<M as Machine>::Event>, &mut Vec<Command<M>>);
 
     /// 🧵️ Builds the initial context from consumer-supplied input.
     pub type InputFn<M> = fn(<M as Machine>::Input) -> <M as Machine>::Context;
@@ -635,16 +639,12 @@ mod kernel {
         CancelTimer(TimerId),
     }
 
-    /// 🎇️ Where a running machine pushes the [`Command`]s it produces.
-    pub trait CommandSink<M: Machine> {
-        async fn push(&mut self, command: Command<M>);
-    }
-
-    impl<M: Machine> CommandSink<M> for Vec<Command<M>> {
-        async fn push(&mut self, command: Command<M>) {
-            Vec::push(self, command);
-        }
-    }
+    // 🧬️ `CommandSink` used to be a trait (`Box`/`&dyn`-free already, but still an indirection) with
+    // exactly one impl, `Vec<Command<M>>`. R11: "exactly one impl ⇒ delete the trait object, use the
+    // concrete type." `ActionFn<M>` is a fn-pointer type and cannot name `impl Trait`, so every caller
+    // in this file already had to settle on the one concrete sink type — once that cascade happened the
+    // trait had zero remaining callers. Deleted rather than kept as a vestigial one-impl abstraction;
+    // every former `&mut impl CommandSink<M>` below is `&mut Vec<Command<M>>` directly.
 
     //#endregion 🔖️Commands
 
@@ -771,7 +771,7 @@ mod kernel {
         selected
     }
 
-    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) {
+    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) {
         let nodes = def.nodes;
 
         let mut exit_ids: Vec<NodeId> = Vec::new();
@@ -868,7 +868,7 @@ mod kernel {
         }
     }
 
-    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let def = M::definition();
         inspector.observe(InspectionEvent::MacrostepStart);
         let mut queue: VecDeque<ActiveTrigger<M>> = VecDeque::new();
@@ -918,7 +918,7 @@ mod kernel {
 
     /// 🚀️ Builds a fresh [`Snapshot`] from `input`, entering the root's default descendant chain
     /// and settling any eventless/done transitions enabled immediately on init.
-    pub async fn init<M: Machine>(input: M::Input, sink: &mut impl CommandSink<M>) -> Snapshot<M> {
+    pub async fn init<M: Machine>(input: M::Input, sink: &mut Vec<Command<M>>) -> Snapshot<M> {
         let def = M::definition();
         let mut snapshot = Snapshot { configuration: <M::Config as Default>::default(), context: (def.context_from_input)(input), status: Status::Running, history: Vec::new() };
         let mut entry_ids: Vec<NodeId> = Vec::new();
@@ -943,14 +943,14 @@ mod kernel {
 
     /// 🏃️ Runs one external event to completion (a "macrostep"): the triggered microstep,
     /// then every enabled eventless/`on_done` microstep, until the configuration settles.
-    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Event(event.event_id()), event: Some(event) };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
     /// ⏱️ Runs an `after`-timer firing to completion — the runtime's entry point when a
     /// [`crate::Host`] reports a scheduled [`TimerId`] elapsed.
-    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Timer(timer), event: None };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
@@ -991,7 +991,7 @@ mod kernel {
             allow: bool,
         }
 
-        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut dyn CommandSink<ToggleMachine>) {
+        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut Vec<Command<ToggleMachine>>) {
             ctx.count += 1;
         }
 
@@ -1275,6 +1275,7 @@ mod persist {
 
     use super::kernel::{Snapshot, Status};
     use crate::{Configuration, Machine, NodeId};
+    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
     //#region 🔖️Persist
 
@@ -1300,11 +1301,23 @@ mod persist {
     }
 
     /// 💾️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
+    #[dyn_enum]
     pub trait Migration {
         /// The fingerprint this migration accepts as input.
         async fn source_fingerprint(&self) -> u64;
         /// Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
         async fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
+    }
+
+    // 🧬️ `restore`/`step` take a caller-supplied, potentially heterogeneous list of migrations — per
+    // R11, an open-shaped parameter like this becomes generic (`Mg: Migration`) rather than
+    // `dyn Migration`; when a real caller someday needs to mix several concrete migration types in one
+    // call, ITS crate declares its own closed `dyn_enum_close!` enum over just the types it needs and
+    // passes that as `Mg`. Today nothing outside tests implements `Migration`, so production callers
+    // that pass an empty slice use this zero-variant enum — the same uninhabited shape proven by
+    // `semio-framework-dispatch-macros`' own `NoWidgets`/`NoCounters` tests.
+    dyn_enum_close! {
+        pub enum NoMigrations: Migration {}
     }
 
     /// 💾️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
@@ -1323,13 +1336,22 @@ mod persist {
     /// sequence until the fingerprint matches the current machine, then re-resolving
     /// stable ids back to dense [`NodeId`]s. `context` is supplied by the caller since
     /// the consumer's `Context` may itself need domain-specific deserialization.
-    pub async fn restore<M: Machine>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&dyn Migration]) -> Result<Snapshot<M>, RestoreError> {
+    pub async fn restore<M: Machine, Mg: Migration>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&Mg]) -> Result<Snapshot<M>, RestoreError> {
         let def = M::definition();
         let mut current = persisted.clone();
         while current.fingerprint != def.fingerprint {
-            let next = migrations.iter().find(|m| m.source_fingerprint() == current.fingerprint);
+            // 🧬️ `Iterator::find`'s closure is sync (R10 residue shape 1: `.await` inside a sync
+            // closure is E0728) — hoisted into a plain loop so each candidate's async fingerprint
+            // check can be awaited.
+            let mut next = None;
+            for m in migrations {
+                if m.source_fingerprint().await == current.fingerprint {
+                    next = Some(*m);
+                    break;
+                }
+            }
             match next {
-                Some(m) => current = m.migrate(current),
+                Some(m) => current = m.migrate(current).await,
                 None => return Err(RestoreError::FingerprintMismatch),
             }
         }
@@ -1373,7 +1395,7 @@ mod persist {
             assert_eq!(persisted.fingerprint, UnitToggleMachine::definition().fingerprint);
             assert!(persisted.states.iter().any(|s| s == "on"));
 
-            let restored = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), &[]).expect("restore should succeed");
+            let restored = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]).expect("restore should succeed");
             assert!(restored.matches("on"));
         }
 
@@ -1383,7 +1405,7 @@ mod persist {
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
             persisted.fingerprint = 9999;
-            let result = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), &[]);
+            let result = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]);
             assert!(matches!(result, Err(RestoreError::FingerprintMismatch)));
         }
 
@@ -1405,8 +1427,8 @@ mod persist {
             let mut persisted = persist(&snapshot);
             persisted.fingerprint = 9999;
             let migration = BumpFingerprint;
-            let migrations: &[&dyn Migration] = &[&migration];
-            let restored = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), migrations).expect("migration should bridge fingerprint");
+            let migrations: &[&BumpFingerprint] = &[&migration];
+            let restored = restore::<UnitToggleMachine, BumpFingerprint>(&persisted, UnitToggleContext::default(), migrations).expect("migration should bridge fingerprint");
             assert!(restored.matches("off"));
         }
     }
@@ -1706,8 +1728,8 @@ mod step {
 
     /// 🔁️ Restores from `prior`, runs one macrostep, and persists the result — the whole
     /// read-transition-write cycle, with the live [`Snapshot`] confined to this frame.
-    pub async fn step<M: Machine>(prior: &PersistedSnapshot, context: M::Context, event: M::Event, migrations: &[&dyn Migration]) -> Result<MachineStep<M>, RestoreError> {
-        let mut snapshot = persist::restore::<M>(prior, context, migrations)?;
+    pub async fn step<M: Machine, Mg: Migration>(prior: &PersistedSnapshot, context: M::Context, event: M::Event, migrations: &[&Mg]) -> Result<MachineStep<M>, RestoreError> {
+        let mut snapshot = persist::restore::<M, Mg>(prior, context, migrations).await?;
         let mut commands = Vec::new();
         let mut inspector = StepInspector::default();
         let report = kernel::macrostep::<M>(&mut snapshot, event, &mut commands, &mut inspector);
@@ -2150,8 +2172,8 @@ pub trait StatechartSchema {
 
 pub use host::{Host, NativeHost, TestHost};
 pub use inspect::{InspectionEvent, Inspector, MicrostepTrace, NullInspector, TraceInspector};
-pub use kernel::{init, macrostep, timer_elapsed, ActionFn, Command, CommandSink, GuardFn, InputFn, MachineDefinition, NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger, MICROSTEP_LIMIT, ROOT};
-pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
+pub use kernel::{init, macrostep, timer_elapsed, ActionFn, Command, GuardFn, InputFn, MachineDefinition, NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger, MICROSTEP_LIMIT, ROOT};
+pub use persist::{persist, restore, Migration, NoMigrations, PersistedSnapshot, RestoreError};
 pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 pub use step::{start, step, MachineStep};
 
@@ -2339,7 +2361,7 @@ mod tests {
 #[cfg(feature = "macros")]
 #[cfg(test)]
 mod checkout_integration {
-    use crate::{ActorSystem, CommandSink, InvokeId, Machine, TestHost, TimerId, TraceInspector};
+    use crate::{ActorSystem, Command, InvokeId, Machine, NoMigrations, TestHost, TimerId, TraceInspector};
 
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CheckoutContext {
@@ -2360,11 +2382,11 @@ mod checkout_integration {
         ctx.attempts < 3
     }
 
-    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.method_set = true;
     }
 
-    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.attempts += 1;
     }
 
@@ -2488,7 +2510,7 @@ mod checkout_integration {
 
         let persisted = super::persist(&snapshot);
         assert_eq!(persisted.fingerprint, checkout::Checkout::definition().fingerprint);
-        let restored = crate::restore::<checkout::Checkout>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
+        let restored = crate::restore::<checkout::Checkout, NoMigrations>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
         assert!(restored.matches("processing"));
     }
 
@@ -2530,7 +2552,7 @@ mod checkout_integration {
         let mut context = CheckoutContext::default();
 
         for (event, expected) in [(checkout::Event::Confirm, "selecting"), (checkout::Event::SelectMethod, "processing")] {
-            let step = crate::step::<checkout::Checkout>(&carried, context.clone(), event, &[]).expect("restore should succeed");
+            let step = crate::step::<checkout::Checkout, NoMigrations>(&carried, context.clone(), event, &[]).expect("restore should succeed");
             assert!(step.is_active(expected), "expected `{expected}` after the transition, got {:?}", step.active);
             context.method_set = true;
             carried = step.persisted;
@@ -2542,7 +2564,7 @@ mod checkout_integration {
     #[test]
     async fn step_reports_entered_and_exited_states() {
         let initial = crate::start::<checkout::Checkout>(()).persisted;
-        let step = crate::step::<checkout::Checkout>(&initial, CheckoutContext::default(), checkout::Event::Confirm, &[]).expect("restore should succeed");
+        let step = crate::step::<checkout::Checkout, NoMigrations>(&initial, CheckoutContext::default(), checkout::Event::Confirm, &[]).expect("restore should succeed");
 
         assert!(step.exited.contains(&"cart"), "expected `cart` to be exited, got {:?}", step.exited);
         assert!(step.entered.contains(&"payment"), "expected the compound `payment` to be entered, got {:?}", step.entered);
@@ -2555,10 +2577,10 @@ mod checkout_integration {
     #[test]
     async fn step_with_a_blocked_guard_leaves_the_configuration_untouched() {
         let initial = crate::start::<checkout::Checkout>(()).persisted;
-        let confirmed = crate::step::<checkout::Checkout>(&initial, CheckoutContext::default(), checkout::Event::Confirm, &[]).expect("restore should succeed");
+        let confirmed = crate::step::<checkout::Checkout, NoMigrations>(&initial, CheckoutContext::default(), checkout::Event::Confirm, &[]).expect("restore should succeed");
 
         let exhausted = CheckoutContext { attempts: 3, method_set: false };
-        let blocked = crate::step::<checkout::Checkout>(&confirmed.persisted, exhausted, checkout::Event::SelectMethod, &[]).expect("restore should succeed");
+        let blocked = crate::step::<checkout::Checkout, NoMigrations>(&confirmed.persisted, exhausted, checkout::Event::SelectMethod, &[]).expect("restore should succeed");
 
         assert!(blocked.is_active("selecting"), "the blocked guard must leave `selecting` active, got {:?}", blocked.active);
         assert!(blocked.entered.is_empty(), "a rejected transition enters nothing, got {:?}", blocked.entered);
@@ -2569,7 +2591,7 @@ mod checkout_integration {
     async fn step_rejects_a_persisted_snapshot_from_another_machine_shape() {
         let mut foreign = crate::start::<checkout::Checkout>(()).persisted;
         foreign.fingerprint ^= 0xFFFF_FFFF;
-        let outcome = crate::step::<checkout::Checkout>(&foreign, CheckoutContext::default(), checkout::Event::Confirm, &[]);
+        let outcome = crate::step::<checkout::Checkout, NoMigrations>(&foreign, CheckoutContext::default(), checkout::Event::Confirm, &[]);
         assert!(outcome.is_err(), "a mismatched fingerprint with no migration must not restore");
     }
 

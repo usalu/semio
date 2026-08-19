@@ -1,0 +1,34 @@
+
+> nx run @semio-tech/cad-js-module-aec-building-energy:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/cad-js-module-aec-building-energy| 🟦️component.ts [ 🟦️component.ts ]
+TypeError: Cannot destructure property 'bboxSizesFromPositions' from null or undefined value
+ ❯ ../📐️spatial-shape/ð¦ï¸component.ts:6:208
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  21:21:57
+   Duration  834ms (transform 628ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+Warning: command "bun ./📜️script.ts test --reporter=verbose" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/cad-js-module-aec-building-energy failed
+
+Failed tasks:
+
+- @semio-tech/cad-js-module-aec-building-energy:test
+
+Hint: run the command with --verbose for more details.
+

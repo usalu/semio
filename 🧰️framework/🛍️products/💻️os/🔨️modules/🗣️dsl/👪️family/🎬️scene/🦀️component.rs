@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-scene.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-scene.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-scene.grammar must parse");
         assert_eq!(grammar.id, "family-scene");
         assert!(grammar.productions.len() > 4, "family-scene should expose a real shared vocabulary");
     }

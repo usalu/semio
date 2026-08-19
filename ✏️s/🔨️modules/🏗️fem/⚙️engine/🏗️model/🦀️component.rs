@@ -5,10 +5,11 @@
 //! on top of this crate.
 
 
-pub use crate::elements2d::{Bar2, BeamEb2};
-pub use crate::elements3d::{Bar3, Frame3};
+pub use crate::elements2d::{Bar2, BeamEb2, PlateDkt, Quad4, Quad8, Tri3Cst, Tri6Lst};
+pub use crate::elements3d::{Bar3, Frame3, Hex8, ShellFacet3, Tet4};
 
 use crate::algebra::{MatD, VecD};
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;
@@ -82,6 +83,7 @@ pub struct ElementContext {
 /// nodal loads for a member UDL, and recovers internal forces from the solved displacement vector.
 /// Every vector this trait produces or consumes is node-major, DOF-minor ordered, matching
 /// `node_ids()` paired with `dofs_per_node()`.
+#[dyn_enum]
 pub trait Element {
     async fn id(&self) -> &str;
     async fn node_ids(&self) -> Vec<String>;
@@ -109,17 +111,76 @@ pub trait Element {
     }
 }
 
+/// 🌱️ A minimal 2-node axial spring — `[Tx]`-only stiffness `k`, geometry-independent (no `ctx`
+/// lookup, unlike every real 2D/3D element). Simple enough to hand-calc in closed form, so it anchors
+/// `model`'s own solver tests without pulling in a full `Bar2`/`BeamEb2` geometry+material fixture.
+pub struct AxialSpring {
+    pub id: String,
+    pub a: String,
+    pub b: String,
+    pub k: f64,
+}
+
+impl Element for AxialSpring {
+    async fn id(&self) -> &str {
+        &self.id
+    }
+
+    async fn node_ids(&self) -> Vec<String> {
+        vec![self.a.clone(), self.b.clone()]
+    }
+
+    async fn dofs_per_node(&self) -> &[Dof] {
+        &[Dof::Tx]
+    }
+
+    async fn stiffness_global(&self, _ctx: &ElementContext) -> MatD {
+        let mut m = MatD::zeros(2, 2);
+        m.set(0, 0, self.k);
+        m.set(0, 1, -self.k);
+        m.set(1, 0, -self.k);
+        m.set(1, 1, self.k);
+        m
+    }
+
+    async fn recover(&self, _ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
+        ElementResult::Bar { n: self.k * (u_local.get(1) - u_local.get(0)) }
+    }
+}
+
+/// 🧬️ O1 closed-set dispatch for `Element` — 13 first-party implementors, all in this crate (12 real
+/// 2D/3D elements in `elements2d`/`elements3d`, plus `AxialSpring` above); see
+/// `📓️terra-fem-report.md`. Must sit textually AFTER the `#[dyn_enum]` trait in this same module (the
+/// generated `__semio_dispatch_Element!` is a bare, textually-scoped `macro_rules!` invocation).
+dyn_enum_close! {
+    pub enum Elements: Element {
+        AxialSpring(AxialSpring),
+        Bar2(Bar2),
+        BeamEb2(BeamEb2),
+        Tri3Cst(Tri3Cst),
+        Tri6Lst(Tri6Lst),
+        Quad4(Quad4),
+        Quad8(Quad8),
+        PlateDkt(PlateDkt),
+        Bar3(Bar3),
+        Frame3(Frame3),
+        Tet4(Tet4),
+        Hex8(Hex8),
+        ShellFacet3(ShellFacet3),
+    }
+}
+
 /// 🏗️ The assembled structural model handed to `solve_linear_static`.
 #[derive(Default)]
 pub struct Model {
     pub nodes: Vec<Node>,
-    pub elements: Vec<Box<dyn Element>>,
+    pub elements: Vec<Elements>,
     pub supports: Vec<Support>,
     pub nodal_loads: Vec<NodalLoad>,
     pub member_loads: Vec<(String, MemberUdl)>,
 }
 
-/// 🔍️ Element trait objects aren't `Debug`, so print element ids/count instead — this is what lets
+/// 🔍️ No `Elements` variant derives `Debug`, so print element ids/count instead — this is what lets
 /// `Result<Model, _>` be used with `unwrap_err()`/`expect_err()` in caller test code.
 impl fmt::Debug for Model {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -460,44 +521,10 @@ pub async fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError
 mod tests {
     use super::*;
 
-    struct AxialSpring {
-        id: String,
-        a: String,
-        b: String,
-        k: f64,
-    }
-
-    impl Element for AxialSpring {
-        async fn id(&self) -> &str {
-            &self.id
-        }
-
-        async fn node_ids(&self) -> Vec<String> {
-            vec![self.a.clone(), self.b.clone()]
-        }
-
-        async fn dofs_per_node(&self) -> &[Dof] {
-            &[Dof::Tx]
-        }
-
-        async fn stiffness_global(&self, _ctx: &ElementContext) -> MatD {
-            let mut m = MatD::zeros(2, 2);
-            m.set(0, 0, self.k);
-            m.set(0, 1, -self.k);
-            m.set(1, 0, -self.k);
-            m.set(1, 1, self.k);
-            m
-        }
-
-        async fn recover(&self, _ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
-            ElementResult::Bar { n: self.k * (u_local.get(1) - u_local.get(0)) }
-        }
-    }
-
     async fn two_spring_model() -> Model {
         Model {
             nodes: vec![Node { id: "n1".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "n2".into(), pos: [1.0, 0.0, 0.0] }],
-            elements: vec![Box::new(AxialSpring { id: "e1".into(), a: "n1".into(), b: "n2".into(), k: 1000.0 })],
+            elements: vec![AxialSpring { id: "e1".into(), a: "n1".into(), b: "n2".into(), k: 1000.0 }.into()],
             supports: vec![Support { node_id: "n1".into(), fixed: vec![Dof::Tx] }],
             nodal_loads: vec![NodalLoad { node_id: "n2".into(), dof: Dof::Tx, value: 10.0 }],
             member_loads: vec![],

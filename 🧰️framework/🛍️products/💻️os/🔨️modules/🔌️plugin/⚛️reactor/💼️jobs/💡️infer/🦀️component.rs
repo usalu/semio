@@ -22,15 +22,17 @@ use super::{run_two_phase, JobCtx};
 use std::future::Future;
 use std::pin::Pin;
 
-pub(super) async fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
+// module for the full explanation; same `JobFn` registry shape.
+pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
         run_two_phase(
             ctx,
             restored,
-            move || decode(&decode_input),
-            move || crate::app::wire_artifact_infer(&execute_input).map_err(|error| super::fault(error.code, error.message.clone())),
+            move || async move { decode(&decode_input).await },
+            move || async move { crate::app::wire_artifact_infer(&execute_input).await.map_err(|error| super::fault(error.code, error.message.clone())) },
         )
         .await
     })

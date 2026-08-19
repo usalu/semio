@@ -6,9 +6,13 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
-//! 🎯️ Design choice: every `db_*` crate below `db_artifact` takes `&dyn Emit` /
-//! `Arc<dyn Emit>` rather than depending on this crate directly (see `db_core`'s `Emit`
-//! doc) — this crate supplies the real sinks that implement that trait, plus the standalone
+//! 🎯️ Design choice: `db_*` crates below `db_artifact` stay decoupled from this crate's concrete
+//! sinks via `db_core`'s `Emit` trait (see its own doc) rather than depending on this crate
+//! directly — `db_security` stays generic over `E: Emit`, `db_engine::Database` is generic over
+//! its own `E: Emit` default-`StructuredSink<MemorySink>` (dedyn-emit-runtime, O1/R11(a): replaces
+//! the former `Arc<dyn Emit>` erasure; `db_artifact`/`db_actor` use the concrete `NullEmit` instead,
+//! per R11(c), since no real call site anywhere in this repo ever passes them anything else). This
+//! crate supplies the real sinks (`StructuredSink`/`AuditSink`) that implement that trait, plus the standalone
 //! registries (`MetricRegistry`, `SpanRegistry`, `HealthRegistry`, `DeterminismVerifier`) a
 //! deployment wires up independently of the `Emit` event stream. Depends on `pack_core` (in
 //! addition to `db_core`, which was already a transitive dependency) for two things only:

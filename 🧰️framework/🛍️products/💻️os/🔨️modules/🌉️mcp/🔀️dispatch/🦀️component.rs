@@ -11,12 +11,14 @@
 //! contract. [`MockArtifactChannel`] is a fully-scripted in-memory artifact store this crate's own
 //! tests (and, until P7 lands, the live binary) drive against.
 
-use crate::audit::{hash_input, redact_input, AgentAuditEvent, AuditDecision, AuditSink, ClientInfo, SENSITIVE_KEYS};
+use crate::audit::{hash_input, redact_input, AgentAuditEvent, AuditDecision, AuditSink, AuditSinks, ClientInfo, SENSITIVE_KEYS};
 use crate::catalog::Catalog;
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, Attachment, HandleKind, HandleTable, IdempotencyStore, SessionHandle};
 use crate::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
 use crate::schema::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
+use crate::workspace::ArtifactChannels;
+use semio_framework_dispatch_macros::dyn_enum;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -96,6 +98,11 @@ pub struct Fault {
 /// `instance` is an opaque handle a real `InstanceDirectory` (P7) would resolve from a
 /// `(plugin_id, app_id, artifact_ref)` triple; until P7 lands, every capability in this crate's live
 /// binary targets a single default instance (`0`), documented at the call site in the module root.
+// 🔀️ dedyn-fw-os-misc, O1/R11: closed 2-implementor set (`MockArtifactChannel` here,
+// `🏠️workspace::PluginArtifactChannel`) — `#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s
+// `ArtifactChannels` (the module both implementors are jointly nameable from) closes it into an enum
+// instead of `Box<dyn ArtifactChannel>`.
+#[dyn_enum]
 pub trait ArtifactChannel: Send {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
 }
@@ -212,7 +219,8 @@ struct MockChannelState {
 /// `TransactionPrepare` time, a second `TransactionPrepare` on a still-pending instance genuinely
 /// returns `transaction.instance-busy`. `Clone` shares the SAME underlying state (`Arc<Mutex<..>>`) —
 /// a test keeps one handle for scripting/assertions while handing a clone to `ActionAdapter` (which
-/// takes ownership of a `Box<dyn ArtifactChannel>`).
+/// takes ownership of a `Box<ArtifactChannels>` (was `Box<dyn ArtifactChannel>`, see the
+/// `dyn_enum_close!` note above the trait).
 #[derive(Clone)]
 pub struct MockArtifactChannel {
     state: Arc<Mutex<MockChannelState>>,
@@ -372,10 +380,10 @@ struct AuditContext<'a> {
 /// `Arc`) across every tool call in a process, matching P1b's own "one shared `McpServer`" model
 /// (`📓️terra-P1b-report.md` §7.2) — nothing here is per-connection-session-aware yet either.
 pub struct ActionAdapter {
-    channel: Mutex<Box<dyn ArtifactChannel>>,
+    channel: Mutex<Box<ArtifactChannels>>,
     handles: Arc<HandleTable>,
     idempotency: Arc<IdempotencyStore>,
-    audit: Arc<dyn AuditSink>,
+    audit: Arc<AuditSinks>,
     policy: PolicyEngine,
     client: ClientInfo,
     invocation_counter: AtomicU64,
@@ -384,7 +392,7 @@ pub struct ActionAdapter {
 const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
 
 impl ActionAdapter {
-    pub fn new(channel: Box<dyn ArtifactChannel>, handles: Arc<HandleTable>, idempotency: Arc<IdempotencyStore>, audit: Arc<dyn AuditSink>, auto_approve: AutoApprovePolicy, client: ClientInfo) -> Self {
+    pub fn new(channel: Box<ArtifactChannels>, handles: Arc<HandleTable>, idempotency: Arc<IdempotencyStore>, audit: Arc<AuditSinks>, auto_approve: AutoApprovePolicy, client: ClientInfo) -> Self {
         let policy = PolicyEngine::new(handles.clone(), auto_approve);
         Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0) }
     }
@@ -845,13 +853,27 @@ mod quick {
         compile(&fixtures::note_and_cad_source(), Locale::En, Terminology::Native).expect("fixture catalog compiles")
     }
 
-    fn harness(auto_approve: AutoApprovePolicy) -> (ActionAdapter, MockArtifactChannel, Arc<HandleTable>, Arc<InMemoryAuditSink>) {
+    // 🔀️ dedyn-fw-os-misc: returns `Arc<AuditSinks>` (was `Arc<InMemoryAuditSink>`) — ONE shared
+    // `Arc`, same instance `ActionAdapter` holds, so events it records via the trait method are
+    // visible through this same handle. `InMemoryAuditSink::events()` is inherent (not part of the
+    // `AuditSink` trait), so a caller wanting it back matches the `AuditSinks::InMemory` variant —
+    // see `assert_events` below.
+    fn harness(auto_approve: AutoApprovePolicy) -> (ActionAdapter, MockArtifactChannel, Arc<HandleTable>, Arc<AuditSinks>) {
         let channel = MockArtifactChannel::new();
         let handles = Arc::new(HandleTable::new());
         let idempotency = Arc::new(IdempotencyStore::new());
-        let audit = Arc::new(InMemoryAuditSink::new());
-        let adapter = ActionAdapter::new(Box::new(channel.clone()), handles.clone(), idempotency, audit.clone(), auto_approve, ClientInfo { name: "test".into(), version: "0".into() });
+        let audit = Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new()));
+        let adapter = ActionAdapter::new(Box::new(ArtifactChannels::Mock(channel.clone())), handles.clone(), idempotency, audit.clone(), auto_approve, ClientInfo { name: "test".into(), version: "0".into() });
         (adapter, channel, handles, audit)
+    }
+
+    // 🔀️ dedyn-fw-os-misc: extracts the recorded events from a harness `Arc<AuditSinks>` known (by
+    // every caller in this test module) to be the `InMemory` variant.
+    fn assert_events(audit: &AuditSinks) -> Vec<AgentAuditEvent> {
+        match audit {
+            AuditSinks::InMemory(sink) => sink.events(),
+            AuditSinks::File(_) => panic!("test harness always constructs AuditSinks::InMemory"),
+        }
     }
 
     fn principal(scopes: &[&str]) -> AgentPrincipal {
@@ -1000,7 +1022,7 @@ mod quick {
         let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::PermissionDenied);
 
-        let events = audit.events();
+        let events = assert_events(&audit);
         assert!(events.iter().any(|event| matches!(&event.decision, AuditDecision::Denied { code } if *code == GatewayErrorCode::PermissionDenied) && event.capability == "cad.editor.translateSelection"));
     }
     //#endregion 🔖️ScopeDenialAudited

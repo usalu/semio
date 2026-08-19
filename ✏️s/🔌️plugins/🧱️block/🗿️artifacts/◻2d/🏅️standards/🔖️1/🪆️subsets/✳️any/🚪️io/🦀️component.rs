@@ -1,5 +1,10 @@
-//! 🚪️ IO s.block2d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `crate::artifacts::block2d::declaration`), not per-leaf register().
+//! 🚪️ IO s.block2d (1/✳️any) — OLD channel (`ArtifactComposition`/`io_registry::entries()`), still
+//! live at runtime but no longer wired into `crate::artifacts::block2d::artifact()` (ticket
+//! 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, `descriptor-prep`): the new declaration channel
+//! carries its own `io_declaration()` (see the sibling `🪆️subsets/✳️any/🦀️component.rs`) with
+//! `entries: &[]` — this file's `entries()`/`Block2dComposerComposition` are a documented, real gap
+//! (foreign-format import/export not yet ported to the typed `Serializer`/`Deserializer` shape),
+//! kept here as reference for that follow-up, not deleted.
 pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 //#region 🎹️DerivedComposition

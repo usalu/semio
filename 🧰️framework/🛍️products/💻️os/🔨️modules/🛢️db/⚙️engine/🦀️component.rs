@@ -557,12 +557,41 @@ pub mod vcs_integration {
 }
 //#endregion 🔖️VersionGraph
 
+//#region 🔖️VersionGraphs
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `VersionGraph`'s 2-implementor set — `NullVersionGraph`
+// always, `VcsVersionGraph` only when the `vcs` feature is on (mirrors the two `#[cfg]` branches
+// `Database`'s constructors already had to pick between). `dyn_enum_close!`'s variant DSL has no
+// per-variant `#[cfg]` (see `semio_framework_dispatch_macros`'s own `DynEnumVariant::parse`), so the
+// whole closing site is duplicated per feature state instead of gating one variant inside it —
+// still ONE concrete `VersionGraphs` type per build, never a generic thread through
+// `ArtifactEngineConfig`/`ArtifactEngine`/`Database`. Replaces `Arc<dyn VersionGraph>`.
+use crate::__semio_dispatch_VersionGraph;
+use semio_framework_dispatch_macros::dyn_enum_close;
+
+#[cfg(feature = "vcs")]
+dyn_enum_close! {
+    pub enum VersionGraphs: VersionGraph {
+        Null(NullVersionGraph),
+        Vcs(vcs_integration::VcsVersionGraph),
+    }
+}
+
+#[cfg(not(feature = "vcs"))]
+dyn_enum_close! {
+    pub enum VersionGraphs: VersionGraph {
+        Null(NullVersionGraph),
+    }
+}
+//#endregion 🔖️VersionGraphs
+
 //#region 🔖️Observe
 /// @emoji 📡️ The default observability wiring `Database::open`/`open_at` build when the caller
 /// doesn't supply their own: an in-memory `db_observe::StructuredSink` (real JSON-lines encoding,
 /// just not flushed anywhere durable by default — a caller wanting file/pipe output constructs
 /// `db_observe::WriterSink` themselves and passes it via `Database::open_with_emit`).
-fn default_emit() -> Arc<dyn Emit> {
+// 🔀️ dedyn-emit-runtime, O1/R1: concrete return type (`Database`'s `E` default matches it exactly),
+// not `Arc<dyn Emit>` — every caller (`open`/`open_at`/`open_with_authz`) infers `E` from this value.
+fn default_emit() -> Arc<db_observe::StructuredSink<db_observe::MemorySink>> {
     Arc::new(db_observe::StructuredSink::new(db_observe::MemorySink::new()))
 }
 //#endregion 🔖️Observe
@@ -647,16 +676,28 @@ pub struct DbHealth {
 /// a catalog-root CAS write, which a `Mutex` does directly without the mailbox's priority-lane/
 /// backpressure machinery (that machinery matters for a document's WAL under load, not a rare
 /// catalog-root swap).
-pub struct Database {
+// 🔀️ `A` is the pluggable `AuthzHook` implementation (see `db_artifact::ArtifactEngineConfig`'s own
+// doc) — dedyn-fw-os-misc, R11(a): a caller-supplied, stored implementation is trivially generic;
+// `AllowAll` default keeps every existing unparameterized `Database` reference (this crate's own
+// `open`/`open_at`/`open_with_emit`, plus every external caller) compiling unchanged.
+//
+// 🔀️ `E` is the pluggable `Emit` sink — dedyn-emit-runtime, O1/R11(a): `open_with_emit`'s own doc
+// ("a caller-supplied Emit sink, e.g. a `db_observe::WriterSink`") is exactly R11(a)'s "trivially
+// generic" shape, the same pattern `A` above already uses. Default is `db_observe::StructuredSink<
+// db_observe::MemorySink>` — the concrete type `default_emit()` has always constructed — so every
+// existing unparameterized `Database`/`Database<A>` reference (this crate's own `open`/`open_at`/
+// `open_with_authz`, plus `🌎️hub` and every other external caller, none of which ever names this
+// type parameter) compiles unchanged. Replaces `Arc<dyn Emit>`.
+pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll, E: Emit + 'static = db_observe::StructuredSink<db_observe::MemorySink>> {
     storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>,
     config: DbConfig,
     capabilities: DbCapabilities,
-    authz: Arc<dyn db_artifact::AuthzHook>,
+    authz: Arc<A>,
     /// @emoji 🌿️ Never `None`: `NullVersionGraph` (an `Unimplemented`-on-every-call
     /// placeholder, not an `Option` layer — see its own doc) is the default when the `vcs` feature
     /// is disabled, exactly matching `db_artifact::ArtifactEngineConfig::default`'s own choice.
-    version_graph: Arc<dyn VersionGraph>,
-    emit: Arc<dyn Emit>,
+    version_graph: Arc<VersionGraphs>,
+    emit: Arc<E>,
     health: Arc<db_observe::HealthRegistry>,
     catalog: Mutex<CatalogState>,
     open_artifacts: Mutex<HashMap<String, Arc<db_artifact::ArtifactAuthority>>>,
@@ -668,27 +709,54 @@ pub struct Database {
 // classified as thread-owning alongside `db_artifact`, per its report's "db_engine (per-submit
 // bridge threads)"). Every `.wal()`/`.snapshot()`/`.catalog()`/`.index()`/`.payload()`/`.lease()`
 // accessor call is `.await`ed inside the SAME `block_on`, never a bare synchronous call.
-impl Database {
+impl Database<db_artifact::AllowAll> {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
     /// over an arbitrary `Arc<db_storage::DbBackend<db_storage::InlineRuntime>>` backend, wired with the default `AllowAll` authz and
     /// (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
-    pub fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database, DbError> {
+    pub fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database<db_artifact::AllowAll>, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit())
     }
 
-    /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
-    /// instead of the default `AllowAll`.
-    pub fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<dyn db_artifact::AuthzHook>) -> Result<Database, DbError> {
-        Database::open_with(config, storage, authz, default_emit())
+    /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
+    /// `profile`. Synchronous by contract (every existing caller — `db_cli`, `🌎️hub`'s `fs` storage
+    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it takes
+    /// `db_storage`'s own [`db_storage::InlineRuntime`] rather than threading a caller-supplied
+    /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
+    /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
+    pub fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
+        let fs = db_actor::block_on(db_storage::FsStorage::open_inline("db_engine", root))?;
+        let storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>> = Arc::new(db_storage::DbBackend::Fs(fs));
+        Database::open(DbConfig::for_profile(profile), storage)
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
     /// over a real file) instead of the default in-memory one.
-    pub fn open_with_emit(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
+    // 🔀️ dedyn-emit-runtime, O1/R11(a): generic over `E: Emit` (the function's own type param, not
+    // `Database`'s default) so the returned `Database<AllowAll, E>` carries the caller's concrete
+    // sink type — this fn has zero callers anywhere in the repo today (public, documented extension
+    // seam per `open_with_emit`'s own doc; matches `open_with_authz`'s identical shape below).
+    pub fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit)
     }
+}
 
-    fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<dyn db_artifact::AuthzHook>, emit: Arc<dyn Emit>) -> Result<Database, DbError> {
+impl<A: db_artifact::AuthzHook + 'static> Database<A> {
+    /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
+    /// instead of the default `AllowAll`.
+    pub fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>) -> Result<Database<A>, DbError> {
+        Database::open_with(config, storage, authz, default_emit())
+    }
+}
+
+// 🔀️ dedyn-emit-runtime, O1/R11(a): every method below reads/writes `self.emit`, so this whole
+// block (previously `impl<A: AuthzHook + 'static> Database<A>`, default-`E` only) is now generic
+// over `E: Emit` too. `open_with_authz` above stays in its own default-`E` block since it never
+// takes an `emit` argument and must return the SAME default-`E` `Database<A>` every unparameterized
+// caller expects — Rust resolves its `Database::open_with(..)` call by inferring `E` from
+// `default_emit()`'s concrete return type regardless of which `impl` block `open_with` itself lives
+// in, so the split is transparent to every call site.
+impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
+    fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
         let storage_capabilities = db_actor::block_on(storage.capabilities());
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
@@ -715,25 +783,13 @@ impl Database {
         health.set("db_engine.catalog", db_observe::HealthState::Healthy);
 
         #[cfg(feature = "vcs")]
-        let version_graph: Arc<dyn VersionGraph> = Arc::new(vcs_integration::VcsVersionGraph::new());
+        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Vcs(vcs_integration::VcsVersionGraph::new()));
         #[cfg(not(feature = "vcs"))]
-        let version_graph: Arc<dyn VersionGraph> = Arc::new(NullVersionGraph);
+        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Null(NullVersionGraph));
 
         emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64)));
 
         Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()) })
-    }
-
-    /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
-    /// `profile`. Synchronous by contract (every existing caller — `db_cli`, `🌎️hub`'s `fs` storage
-    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it takes
-    /// `db_storage`'s own [`db_storage::InlineRuntime`] rather than threading a caller-supplied
-    /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
-    /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
-    pub fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database, DbError> {
-        let fs = db_actor::block_on(db_storage::FsStorage::open_inline("db_engine", root))?;
-        let storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>> = Arc::new(db_storage::DbBackend::Fs(fs));
-        Database::open(DbConfig::for_profile(profile), storage)
     }
 
     /// @emoji ⚙️ Builds one `ArtifactEngineConfig`. Sets the 4 fields this crate has ALWAYS
@@ -744,13 +800,22 @@ impl Database {
     /// `db_security::SecurityGate`-backed default policy already matches `AllowAll`'s permissive
     /// single-tenant spirit), and the spread keeps this call site correct across further additive
     /// growth without another coordinated edit.
-    fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig {
+    fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig<A, VersionGraphs> {
+        // 🔀️ Can't `..db_artifact::ArtifactEngineConfig::default()` spread here: that default is
+        // only defined for `ArtifactEngineConfig<AllowAll, NullVersionGraph>` (see its `impl
+        // Default`), a different concrete type from `ArtifactEngineConfig<A, VersionGraphs>`
+        // whenever this `Database<A>` was opened via `open_with_authz` with a non-`AllowAll` hook —
+        // struct-update syntax requires an exact type match. Pull the `A`/`V`-independent defaults
+        // (`security`/`emit`/`projections`) from the default instantiation by value instead.
+        let other_defaults = db_artifact::ArtifactEngineConfig::default();
         db_artifact::ArtifactEngineConfig {
             limits: self.config.limits.clone(),
             authz: self.authz.clone(),
             version_graph: self.version_graph.clone(),
             preview_ttl_ms: self.config.limits.max_preview_ttl_ms,
-            ..db_artifact::ArtifactEngineConfig::default()
+            security: other_defaults.security,
+            emit: other_defaults.emit,
+            projections: other_defaults.projections,
         }
     }
 

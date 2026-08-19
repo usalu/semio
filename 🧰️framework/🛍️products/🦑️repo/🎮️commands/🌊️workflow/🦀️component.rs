@@ -1,4 +1,5 @@
 use crate::args::ParsedArgs;
+use dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -221,6 +222,13 @@ impl Scheduler {
 // #endregion 🔖️Scheduler
 
 // #region 🔖️AgentRunner
+/// 🔀️ Closed set of exactly three locally-invocable coding-agent CLIs — `dyn_enum_close!` below
+/// generates `AgentRunners`/`impl AgentRunner for AgentRunners` (R11: closed set ⇒ enum dispatch,
+/// not `Box<dyn AgentRunner>`). `available_runners` stays generic over `R: AgentRunner` rather than
+/// pinned to `AgentRunners` — the `#[cfg(test)]` `UnavailableRunner` below exercises its filter
+/// directly, with no need for a test-only enum variant (the `dyn_enum!` DSL has no per-variant
+/// `#[cfg]` support — see `📓️terra-dedyn-fw-hub-repo-report.md`).
+#[dyn_enum]
 trait AgentRunner: Send {
     fn id(&self) -> &str;
     fn available(&self) -> bool;
@@ -265,12 +273,20 @@ impl AgentRunner for CodexAgent {
     }
 }
 
-fn available_runners(candidates: Vec<Box<dyn AgentRunner>>) -> Vec<Box<dyn AgentRunner>> {
+dyn_enum_close! {
+    enum AgentRunners: AgentRunner {
+        Cursor(CursorAgent),
+        Claude(ClaudeAgent),
+        Codex(CodexAgent),
+    }
+}
+
+fn available_runners<R: AgentRunner>(candidates: Vec<R>) -> Vec<R> {
     candidates.into_iter().filter(|runner| runner.available()).collect()
 }
 
-fn select_runner(model: &str) -> Option<Box<dyn AgentRunner>> {
-    available_runners(vec![Box::new(CursorAgent), Box::new(ClaudeAgent), Box::new(CodexAgent)]).into_iter().find(|runner| runner.id() == model)
+fn select_runner(model: &str) -> Option<AgentRunners> {
+    available_runners(vec![AgentRunners::from(CursorAgent), AgentRunners::from(ClaudeAgent), AgentRunners::from(CodexAgent)]).into_iter().find(|runner| runner.id() == model)
 }
 // #endregion 🔖️AgentRunner
 
@@ -310,7 +326,7 @@ mod tests {
 
     #[test]
     fn unavailable_runners_are_filtered() {
-        assert!(available_runners(vec![Box::new(UnavailableRunner)]).is_empty());
+        assert!(available_runners(vec![UnavailableRunner]).is_empty());
     }
 
     #[test]

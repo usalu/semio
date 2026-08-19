@@ -4,7 +4,7 @@
 use crate::fem2d_engine::meshing::build_nodes_and_elements;
 use crate::fem2d_engine::Fem2dError;
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad};
-use crate::model::{Dof, Element, MemberUdl, Node, Support};
+use crate::model::{Dof, Element, Elements, MemberUdl, Node, Support};
 use std::collections::HashMap;
 
 /// 🔢️ Node-major, active-DOF-filtered ordering matching `crate::analyses::ModalResult`/
@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// `analyses::build_dof_map`, which isn't `pub`, following the same precedent that module's own doc
 /// comment sets for `lib.rs`'s private `build_dof_map`) used to unpack a raw mode-shape `VecD` back
 /// into per-node `[f64;6]` values.
-async fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String, Dof)> {
+async fn mode_dof_order(nodes: &[Node], elements: &[Elements]) -> Vec<(String, Dof)> {
     let mut order = Vec::new();
     for node in nodes {
         let mut active: Vec<Dof> = Vec::new();
@@ -61,7 +61,7 @@ pub async fn fem2d_modal_mode_values(doc: &Fem2dSnapshot, mode_index: usize) -> 
 }
 
 /// 🧩️ `buckling_inputs`'s resolved `(nodes, elements, supports, load case)` quadruple.
-type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, crate::analyses::LoadCase);
+type BucklingInputs = (Vec<Node>, Vec<Elements>, Vec<Support>, crate::analyses::LoadCase);
 
 /// 🌉️ Shared buckling-case resolution for `fem2d_buckling`/`fem2d_buckling_mode_values`: builds the
 /// geometry plus the ONE named `case_id`'s `analyses::LoadCase`, mirroring `fem2d_solve_all`'s
@@ -71,7 +71,7 @@ async fn buckling_inputs(doc: &Fem2dSnapshot, case_id: &str) -> Result<BucklingI
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let member_node_ids: std::collections::HashSet<String> = doc.nodes.iter().map(|n| n.id.clone()).collect();
     let nodes: Vec<Node> = nodes.into_iter().filter(|n| member_node_ids.contains(&n.id)).collect();
-    let elements: Vec<Box<dyn Element>> = elements.into_iter().take(doc.elements.len()).collect();
+    let elements: Vec<Elements> = elements.into_iter().take(doc.elements.len()).collect();
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 

@@ -1,6 +1,7 @@
 //! 🕸️ Version graph seam and Emit observability.
 
 use crate::db_ids::{ActorId, DbError, ArtifactId};
+use semio_framework_dispatch_macros::dyn_enum;
 
 //#region 🔖️VersionGraph
 /// @emoji 📝️ One committed, content-addressed change to record in the version graph — the
@@ -31,6 +32,10 @@ pub struct CheckpointRequest {
 /// `vcs`-type-free trait. `db_engine` supplies the real implementation over `vcs::ArtifactVcs*`;
 /// anything vcs-agnostic (e.g. a deployment with the `vcs` feature disabled) can supply
 /// `NullVersionGraph` instead.
+// 🔀️ dedyn-fw-os-misc, O1/R11: closed 2-implementor set (`NullVersionGraph`, the `vcs`-feature-
+// gated `VcsVersionGraph`) — `#[dyn_enum]` here + `dyn_enum_close!` at `db_engine`'s `VersionGraphs`
+// closes it into an enum instead of `Arc<dyn VersionGraph>`.
+#[dyn_enum]
 pub trait VersionGraph: Send + Sync {
     /// @emoji 📝️ Records `change` against `document`, returning its assigned change id.
     fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError>;
@@ -115,9 +120,12 @@ impl EmitEvent {
 }
 
 /// @emoji 📡️ The observability seam: every `db_*` crate that wants to emit a metric/span/log
-/// event takes `&dyn Emit` (or `Arc<dyn Emit>`) rather than depending on `db_observe` directly —
-/// inverts the dependency so `db_core..db_cluster` stay `db_observe`-free while `db_observe`'s
-/// real sinks (structured/audit JSON-lines, metric registries) implement this trait.
+/// event stays generic over `E: Emit` (`db_security`, `db_engine::Database`) or uses the concrete
+/// `NullEmit` (`db_artifact`, `db_actor` — R11(c): no real call site anywhere threads anything else
+/// through them) rather than depending on `db_observe` directly — dedyn-emit-runtime, O1/R11(a):
+/// replaces the former `&dyn Emit`/`Arc<dyn Emit>` erasure with the same trivial-generics shape
+/// `AuthzHook`/`VersionGraph` already use, so `db_core..db_cluster` stay `db_observe`-free while
+/// `db_observe`'s real sinks (structured/audit JSON-lines, metric registries) implement this trait.
 pub trait Emit: Send + Sync {
     fn emit(&self, event: EmitEvent);
 }
@@ -150,9 +158,13 @@ mod tests {
         assert!(matches!(graph.head(&document, "main"), Err(DbError::Unimplemented(_))));
     }
 
+    // 🔀️ dedyn-fw-os-misc: was `version_graph_trait_object_is_dyn_compatible` (asserted `Box<dyn
+    // VersionGraph>` construction) — O1 removed the trait object; the equivalent coverage is that a
+    // bare `NullVersionGraph` still satisfies every `VersionGraph` method through the trait, which
+    // is exactly what every real call site (now `db_engine::VersionGraphs::Null(..)`) relies on.
     #[test]
-    fn version_graph_trait_object_is_dyn_compatible() {
-        let graph: Box<dyn VersionGraph> = Box::new(NullVersionGraph);
+    fn null_version_graph_satisfies_the_version_graph_trait_directly() {
+        let graph = NullVersionGraph;
         let document: ArtifactId = "doc-1".into();
         assert!(graph.head(&document, "main").is_err());
     }
@@ -170,10 +182,13 @@ mod tests {
     }
 
     #[test]
-    fn emit_trait_object_records_events_with_fields_and_document() {
+    // 🔀️ dedyn-emit-runtime, O1/R11: was `emit_trait_object_records_events_with_fields_and_document`
+    // (asserted `&dyn Emit` construction) — O1 removed the trait object; the equivalent coverage is
+    // that a bare `RecordingEmit` still satisfies `Emit::emit` directly, which is exactly what every
+    // real call site now relies on (generic `E: Emit` params, or a concrete `NullEmit`).
+    fn emit_satisfies_the_emit_trait_directly_and_records_events() {
         let sink = RecordingEmit { events: std::sync::Mutex::new(Vec::new()) };
-        let emit: &dyn Emit = &sink;
-        emit.emit(EmitEvent::new("command.applied").with_document("doc-1".into()).field("bytes", EmitField::U64(128)).field("ok", EmitField::Bool(true)));
+        sink.emit(EmitEvent::new("command.applied").with_document("doc-1".into()).field("bytes", EmitField::U64(128)).field("ok", EmitField::Bool(true)));
         let events = sink.events.lock().unwrap();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].name, "command.applied");

@@ -62,7 +62,7 @@ async fn native_registrars() -> &'static Mutex<HashMap<String, NativeRegistrar>>
 
 /// 🔌️ Registers an in-process extension crate that can materialize real operators when contributions sync.
 pub async fn register_native_imperative_module(plugin_id: &str, register: NativeRegistrar) {
-    native_registrars().lock().expect("native imperative registrars lock").insert(plugin_id.to_string(), register);
+    native_registrars().await.lock().expect("native imperative registrars lock").insert(plugin_id.to_string(), register);
 }
 
 /// 📥️ Supplies default `contributionsJson` for dev hosts that have not pushed contributions yet.
@@ -71,11 +71,15 @@ pub async fn register_default_imperative_contributions(provider: fn() -> String)
 }
 
 async fn ensure_bootstrapped() {
-    BOOTSTRAPPED.get_or_init(|| {
-        if let Some(provider) = DEFAULT_CONTRIBUTIONS.get() {
-            sync_imperative_module_contributions(&provider());
-        }
-    });
+    // 🚪️ `OnceLock::get_or_init`'s closure is sync-only, so the exactly-once guard is a manual
+    // check-then-set here instead — benign under the single-threaded guest executor (R3).
+    if BOOTSTRAPPED.get().is_some() {
+        return;
+    }
+    if let Some(provider) = DEFAULT_CONTRIBUTIONS.get() {
+        sync_imperative_module_contributions(&provider()).await;
+    }
+    let _ = BOOTSTRAPPED.set(());
 }
 
 struct ContributedExtensionStub {
@@ -117,9 +121,9 @@ async fn merge_catalogue_sections(target: &mut Vec<serde_json::Value>, catalogue
 async fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Value>) {
     let mut registry = Registry::new();
     let mut catalogue_sections = Vec::new();
-    let registrars = native_registrars().lock().expect("native imperative registrars lock");
+    let registrars = native_registrars().await.lock().expect("native imperative registrars lock");
     for entry in parse_contributions(contributions_json) {
-        let Some((app_id, manifest_json)) = imperative_module_fields(&entry) else {
+        let Some((app_id, manifest_json)) = imperative_module_fields(&entry).await else {
             continue;
         };
         if app_id != imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID {
@@ -131,10 +135,10 @@ async fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json
         if let Some(register) = registrars.get(&entry.plugin_id) {
             register(&mut registry);
         } else {
-            register_manifest_operators(&mut registry, &entry.plugin_id, &manifest);
+            register_manifest_operators(&mut registry, &entry.plugin_id, &manifest).await;
         }
         if let Some(catalogue_json) = manifest.contributes.catalogue_json.as_deref() {
-            merge_catalogue_sections(&mut catalogue_sections, catalogue_json);
+            merge_catalogue_sections(&mut catalogue_sections, catalogue_json).await;
         }
     }
     registry.finalize();
@@ -143,11 +147,11 @@ async fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json
 
 /// 🔌️ Refreshes contributed `imperative.module` operators and catalogue sections.
 pub async fn sync_imperative_module_contributions(contributions_json: &str) {
-    let mut state = registry_state().lock().expect("imperative registry state lock");
+    let mut state = registry_state().await.lock().expect("imperative registry state lock");
     if state.contributions_json == contributions_json {
         return;
     }
-    let (registry, catalogue_sections) = compose_registry(contributions_json);
+    let (registry, catalogue_sections) = compose_registry(contributions_json).await;
     state.registry = registry;
     state.catalogue_sections = catalogue_sections;
     state.contributions_json = contributions_json.to_string();
@@ -155,15 +159,15 @@ pub async fn sync_imperative_module_contributions(contributions_json: &str) {
 
 /// 📦️ Returns the composed imperative operator registry from synced contributions.
 pub async fn imperative_module_registry() -> Registry {
-    ensure_bootstrapped();
-    let contributions_json = registry_state().lock().expect("imperative registry state lock").contributions_json.clone();
-    compose_registry(&contributions_json).0
+    ensure_bootstrapped().await;
+    let contributions_json = registry_state().await.lock().expect("imperative registry state lock").contributions_json.clone();
+    compose_registry(&contributions_json).await.0
 }
 
 /// 📚️ Merges catalogue sections from synced imperative modules.
 pub async fn imperative_catalogue_json(registry: &Registry) -> String {
-    ensure_bootstrapped();
-    let state = registry_state().lock().expect("imperative registry state lock");
+    ensure_bootstrapped().await;
+    let state = registry_state().await.lock().expect("imperative registry state lock");
     let mut sections: Vec<serde_json::Value> = Vec::new();
     let mut section_ids = std::collections::BTreeSet::new();
     let mut items_by_section: HashMap<String, Vec<serde_json::Value>> = HashMap::new();
@@ -218,23 +222,23 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_contributions_yield_empty_registry() {
-        sync_imperative_module_contributions("[]");
-        let registry = imperative_module_registry();
+        sync_imperative_module_contributions("[]").await;
+        let registry = imperative_module_registry().await;
         assert!(registry.operator_catalogue().is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn sync_is_idempotent_for_same_json() {
-        sync_imperative_module_contributions("[]");
-        sync_imperative_module_contributions("[]");
-        assert!(imperative_module_registry().operator_catalogue().is_empty());
+        sync_imperative_module_contributions("[]").await;
+        sync_imperative_module_contributions("[]").await;
+        assert!(imperative_module_registry().await.operator_catalogue().is_empty());
     }
 
     #[cfg(feature = "linked-modules")]
     #[semio_framework_async_macros::async_test]
     async fn linked_modules_bootstrap_registers_text_operators() {
-        super::linked_modules::bootstrap_linked_modules();
-        let registry = imperative_module_registry();
+        super::linked_modules::bootstrap_linked_modules().await;
+        let registry = imperative_module_registry().await;
         assert!(registry.operator_info("text.uppercase").is_some());
         assert!(registry.operator_info("math.add").is_some());
     }

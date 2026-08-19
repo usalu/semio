@@ -36,7 +36,7 @@ import sys
 from collections import defaultdict
 
 REPO = "/Users/ueli/Documents/semio"
-FIELD_RE = re.compile(r"^no field `([a-zA-Z0-9_]+)` on type `impl Future<Output ?= ?.*>`$")
+FIELD_RE = re.compile(r"^no field `([a-zA-Z0-9_]+)` on type `impl (?:std::future::)?Future<Output ?= ?.*>`$")
 
 
 def in_scope(abs_path: str, scope: str) -> bool:

@@ -1,0 +1,5 @@
+[pass 1] errors=1577 await-edits=1 ambiguous=0 other=213
+  applied 1
+[pass 2] errors=1569 await-edits=0 ambiguous=0 other=216
+  fixpoint reached (no unambiguous .await edits left)
+report -> .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-hard-semio-framework-os-kernel-apply-r4.json

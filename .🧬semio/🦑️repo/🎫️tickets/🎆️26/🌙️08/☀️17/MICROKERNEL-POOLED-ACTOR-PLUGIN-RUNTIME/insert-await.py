@@ -69,11 +69,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from collections import defaultdict
 
 REPO = "/Users/ueli/Documents/semio"
+
+# 🎯 Matches a suggested_replacement that is PURELY an `.await` token insertion — `.await`, `await.`,
+# `.await.`, or bare `await` — and nothing else. See the BUGFIX note in collect_await_edits: rustc's
+# actual insertion text depends on where in the chain it lands, so this cannot be a fixed substring.
+AWAIT_TOKEN_RE = re.compile(r"\.?await\.?")
 SCRATCH = (
     "/private/tmp/claude-501/-Users-ueli-Documents-semio/"
     "e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad"
@@ -83,13 +89,28 @@ SCRATCH = (
 AWAIT_CODES = {"E0308", "E0599", "E0277", "E0369", "E0605", "E0614", "E0609"}
 
 
-def run_check(crate: str, target_dir: str, all_targets: bool) -> list[dict]:
-    """🩺 Run cargo check and return the parsed JSON diagnostics."""
+def run_check(crate: str, target_dir: str, all_targets: bool,
+              features: str | None = None, all_features: bool = False) -> list[dict]:
+    """🩺 Run cargo check and return the parsed JSON diagnostics.
+
+    FEATURES MATTER — a real trap on this ticket
+    --------------------------------------------
+    `cargo check -p semio-framework-ui --lib` was EXIT 0 while `cargo check -p semio-framework-plugin`
+    failed with 276 errors *inside* `semio-framework-ui` — because the SDK depends on it with
+    `features = ["wgpu"]` and a bare check builds `default = []`. Feature-gated code a standalone
+    check never compiles is indistinguishable from deleted code, and this repo has been bitten by
+    that shape more than once. **Acceptance must run the command the CONSUMER runs, feature flags
+    included** — so pass `--features` (or `--all-features`) to reach that code.
+    """
     cmd = [
         "cargo", "check", "-p", crate,
         "--message-format=json-diagnostic-rendered-ansi",
         "--all-targets" if all_targets else "--lib",
     ]
+    if all_features:
+        cmd.append("--all-features")
+    elif features:
+        cmd += ["--features", features]
     env = dict(os.environ, CARGO_TARGET_DIR=target_dir)
     proc = subprocess.run(cmd, cwd=REPO, env=env, capture_output=True, text=True)
     out = []
@@ -154,7 +175,14 @@ def collect_await_edits(diags: list[dict], scope: str | None):
                 # and applying it lands text on the wrong token. `kernel-ripple` had to write repair
                 # scripts for exactly that across ~10 files. The message is a hint; the replacement
                 # is the contract.
-                if ".await" not in repl:
+                #
+                # BUGFIX (framework-last-gate, 2026-08-19): this nightly's rustc emits the insertion
+                # point mid-chain, right after the call site's OWN existing `.` — so the suggested
+                # text is the bare token `await.` (dot AFTER, none before), never the substring
+                # `.await`. The old `".await" not in repl` check silently discarded every candidate
+                # of this shape (measured: 0 edits applied across the whole crate despite 100+
+                # eligible diagnostics). Match on the token itself, not a fixed dot position.
+                if not AWAIT_TOKEN_RE.fullmatch(repl.strip()):
                     continue
                 if not is_await_hint:
                     continue
@@ -263,6 +291,10 @@ def main() -> int:
                     help="blast-radius guard: abort a pass that would edit more files than this; "
                          "0 disables")
     ap.add_argument("--all-targets", action="store_true")
+    ap.add_argument("--features", default=None,
+                    help="comma-separated cargo features - MUST match what the consumer enables, "
+                         "or feature-gated code is never compiled and its errors stay invisible")
+    ap.add_argument("--all-features", action="store_true")
     ap.add_argument("--target-dir", default=None)
     ap.add_argument("--report", default=None)
     args = ap.parse_args()
@@ -275,7 +307,7 @@ def main() -> int:
     history = []
 
     for npass in range(1, args.max_passes + 1):
-        diags = run_check(args.crate, target_dir, args.all_targets)
+        diags = run_check(args.crate, target_dir, args.all_targets, args.features, args.all_features)
         errors = [d for d in diags if d.get("level") == "error"]
         edits, ambiguous, other = collect_await_edits(diags, args.scope)
         print(f"[pass {npass}] errors={len(errors)} await-edits={len(edits)} "
@@ -341,7 +373,7 @@ def main() -> int:
             break
 
     if args.report:
-        diags = run_check(args.crate, target_dir, args.all_targets)
+        diags = run_check(args.crate, target_dir, args.all_targets, args.features, args.all_features)
         edits, ambiguous, other = collect_await_edits(diags, args.scope)
         with open(args.report, "w", encoding="utf-8") as fh:
             json.dump({

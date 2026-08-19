@@ -310,44 +310,44 @@ impl ActionArgDef {
 
     /// @emoji 🔤️ A free-text argument.
     pub async fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(None))
+        Self::with_schema(id, label, Self::plain_string(None).await).await
     }
 
     /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
     pub async fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
+        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None }).await
     }
 
     /// @emoji 🎚️ A bounded slider argument.
     pub async fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
-        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
+        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None }).await;
         def.presentation = Some(ArgPresentation::Slider);
         def
     }
 
     /// @emoji 🔘️ A boolean toggle argument.
     pub async fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Boolean)
+        Self::with_schema(id, label, ArgSchema::Boolean).await
     }
 
     /// @emoji 🔽️ A single-choice select argument.
     pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
-        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
+        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None }).await
     }
 
     /// @emoji 🧭️ A three-component vector argument.
     pub async fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
+        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None }).await
     }
 
     /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
     pub async fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })).await).await
     }
 
     /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
     pub async fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })).await).await
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
@@ -403,7 +403,7 @@ impl ActionArgDef {
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
     /// `description`/`default`.
     pub async fn json_schema(&self) -> serde_json::Value {
-        let mut schema = arg_schema_json_schema(&self.schema);
+        let mut schema = Box::pin(arg_schema_json_schema(&self.schema)).await;
         if let Some(map) = schema.as_object_mut() {
             if let Some(description) = &self.description {
                 map.insert("description".into(), serde_json::Value::String(description.clone()));
@@ -471,7 +471,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
                 map.insert("pattern".into(), serde_json::Value::String(pattern.clone()));
             }
             if let Some(format) = format {
-                apply_arg_format(map, format);
+                apply_arg_format(map, format).await;
             }
             value
         }
@@ -501,7 +501,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
             value
         }
         ArgSchema::Array { items, min_items, max_items } => {
-            let mut value = serde_json::json!({ "type": "array", "items": arg_schema_json_schema(items) });
+            let mut value = serde_json::json!({ "type": "array", "items": Box::pin(arg_schema_json_schema(items)).await });
             let map = value.as_object_mut().expect("object schema");
             if let Some(min_items) = min_items {
                 map.insert("minItems".into(), serde_json::json!(min_items));
@@ -515,7 +515,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
             let mut properties = serde_json::Map::new();
             let mut required = Vec::new();
             for field in fields {
-                properties.insert(field.id.clone(), field.json_schema());
+                properties.insert(field.id.clone(), field.json_schema().await);
                 if field.required {
                     required.push(serde_json::Value::String(field.id.clone()));
                 }
@@ -815,13 +815,13 @@ impl ActionSemantics {
     pub async fn for_kind(kind: ActionKind) -> Self {
         match kind {
             ActionKind::Mutation => Self {
-                effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
+                effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}").await], reversible: true, ..Default::default() },
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], approval: ApprovalMode::WhenDestructive },
                 execution: CapabilityExecution { preview: PreviewMode::Diff, undo: UndoMode::Inverse, expected_revision: true, ..Default::default() },
                 ..Default::default()
             },
             ActionKind::View | ActionKind::Interaction => Self {
-                effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}")], ..Default::default() },
+                effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}").await], ..Default::default() },
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
                 ..Default::default()
             },
@@ -883,14 +883,14 @@ impl ActionDefinition {
             keys: None,
             in_palette: true,
             category: None,
-            semantics: ActionSemantics::for_kind(kind),
+            semantics: ActionSemantics::for_kind(kind).await,
         }
     }
 
     /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
     pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         let id = id.into();
-        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
+        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind).await).await
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this action.
@@ -907,7 +907,7 @@ impl ActionDefinition {
 
     /// @emoji 🎨️ Sets palette visibility for this action.
     pub async fn in_palette(self, in_palette: bool) -> Self {
-        self.with_in_palette(in_palette)
+        self.with_in_palette(in_palette).await
     }
 
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES`
@@ -921,7 +921,7 @@ impl ActionDefinition {
 
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
     pub async fn category(self, category: impl Into<String>) -> Self {
-        self.with_category(category)
+        self.with_category(category).await
     }
 
     /// @emoji 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
@@ -964,25 +964,25 @@ pub async fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
             keys: Some("mod+z".into()),
-            ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History)
+            ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History).await
         },
         ActionDefinition {
             keys: Some("mod+shift+z".into()),
-            ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History)
+            ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History).await
         },
-        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
-        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
-        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
-        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
+        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History).await,
+        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History).await,
+        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History).await,
+        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History).await,
         ActionDefinition {
             in_palette: false,
             ..ActionDefinition::new_catalog(
                 REVERT_TO_COMMAND_ACTION_ID,
                 LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"),
                 ActionKind::History,
-            )
+            ).await
         }
-        .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
+        .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required().await]).await,
     ]
 }
 
@@ -997,9 +997,9 @@ pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter"
 /// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
 pub async fn set_history_command_filter_action_definition() -> ActionDefinition {
     let options = vec![
-        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")),
-        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
-        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
+        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")).await,
+        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")).await,
+        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")).await,
     ];
     ActionDefinition {
         in_palette: false,
@@ -1007,9 +1007,9 @@ pub async fn set_history_command_filter_action_definition() -> ActionDefinition 
             SET_HISTORY_COMMAND_FILTER_ACTION_ID,
             LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"),
             ActionKind::View,
-        )
+        ).await
     }
-    .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).default_value(serde_json::json!("all"))])
+    .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all")).await]).await
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -1028,13 +1028,13 @@ pub async fn note_shell_command_action_definition() -> ActionDefinition {
             NOTE_SHELL_COMMAND_ACTION_ID,
             LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"),
             ActionKind::Shell,
-        )
+        ).await
     }
     .with_args([
-        ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
-        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
-        ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
-    ])
+        ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required().await,
+        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required().await,
+        ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")).await,
+    ]).await
 }
 
 //#region 🔖️Clipboard
@@ -1043,32 +1043,32 @@ pub async fn note_shell_command_action_definition() -> ActionDefinition {
 /// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
 pub async fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     let anchoring_options = vec![
-        ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")),
-        ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")),
-        ActionArgOption::new("centroid", LocalizedLabel::native("Centroid", "Schwerpunkt")),
-        ActionArgOption::new("bottomLeft", LocalizedLabel::native("Bottom Left", "Unten links")),
-        ActionArgOption::new("bottomRight", LocalizedLabel::native("Bottom Right", "Unten rechts")),
-        ActionArgOption::new("topLeft", LocalizedLabel::native("Top Left", "Oben links")),
-        ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
+        ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")).await,
+        ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")).await,
+        ActionArgOption::new("centroid", LocalizedLabel::native("Centroid", "Schwerpunkt")).await,
+        ActionArgOption::new("bottomLeft", LocalizedLabel::native("Bottom Left", "Unten links")).await,
+        ActionArgOption::new("bottomRight", LocalizedLabel::native("Bottom Right", "Unten rechts")).await,
+        ActionArgOption::new("topLeft", LocalizedLabel::native("Top Left", "Oben links")).await,
+        ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")).await,
     ];
     vec![
         ActionDefinition {
             keys: Some("mod+c".into()),
-            ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard).await
         },
         ActionDefinition {
             keys: Some("mod+x".into()),
-            ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard).await
         },
         ActionDefinition {
             keys: Some("mod+v".into()),
-            ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard).await
         }
         .with_args([
             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options)
-                .default_value(serde_json::json!("original")),
-            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
-        ]),
+                .await.default_value(serde_json::json!("original")).await,
+            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")).await,
+        ]).await,
     ]
 }
 //#endregion 🔖️Clipboard
@@ -1108,67 +1108,67 @@ pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDe
         return Vec::new();
     }
     let merge_options = vec![
-        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")),
-        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")),
-        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")),
-        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")),
-        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")),
+        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")).await,
+        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")).await,
+        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")).await,
+        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")).await,
+        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")).await,
     ];
     let method_options = vec![
-        ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")),
-        ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")),
-        ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")),
+        ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")).await,
+        ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")).await,
+        ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")).await,
     ];
     let mode_options = vec![
-        ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")),
-        ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")),
+        ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")).await,
+        ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")).await,
     ];
     vec![
         ActionDefinition {
             in_palette: false,
-            ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction)
+            ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction).await
         }
         .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
-            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
-            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
-        ]),
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
+            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).await.required().await,
+            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required().await,
+        ]).await,
         ActionDefinition {
             in_palette: false,
-            ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction)
+            ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction).await
         }
         .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
-        ]),
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required().await,
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
+        ]).await,
         ActionDefinition {
             keys: Some("escape".into()),
-            ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction)
+            ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction).await
         },
         ActionDefinition {
             keys: Some("mod+a".into()),
-            ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction)
+            ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction).await
         },
         ActionDefinition::new_catalog(
             SET_SELECTION_MODE_ACTION_ID,
             LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"),
             ActionKind::Interaction,
         )
-        .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required(),
-        ]),
+        .await.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+            ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required().await,
+        ]).await,
         ActionDefinition::new_catalog(
             SET_INTERACTION_GRANULARITY_ACTION_ID,
             LocalizedLabel::native("Set Granularity", "Granularität festlegen"),
             ActionKind::Interaction,
         )
-        .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required(),
-        ]),
+        .await.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+            ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required().await,
+        ]).await,
     ]
 }
 //#endregion 🔖️Interaction
@@ -1187,12 +1187,12 @@ pub async fn set_active_utility_action_definition() -> ActionDefinition {
             SET_ACTIVE_UTILITY_ACTION_ID,
             LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"),
             ActionKind::View,
-        )
+        ).await
     }
     .with_args([
-        ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(),
-        ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")),
-    ])
+        ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required().await,
+        ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")).await,
+    ]).await
 }
 
 /// @emoji 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — auto-injected
@@ -1209,9 +1209,9 @@ pub async fn set_active_tool_action_definition() -> ActionDefinition {
             SET_ACTIVE_TOOL_ACTION_ID,
             LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"),
             ActionKind::View,
-        )
+        ).await
     }
-    .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).required()])
+    .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required().await]).await
 }
 
 /// @emoji 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
@@ -1226,7 +1226,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 pub async fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View)
+        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View).await
     }
 }
 
@@ -1242,7 +1242,9 @@ impl ActionRef {
         Self(id.into())
     }
 
-    pub async fn as_str(&self) -> &str {
+    // 🚫️async: E1 transitive — the only consumer is inside an `Iterator::find` (external trait)
+    // closure, which must be sync; pure field access, no I/O (R9).
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1407,14 +1409,14 @@ impl CommandDefinition {
             args: Vec::new(),
             keybindings: Vec::new(),
             in_palette: true,
-            semantics: ActionSemantics::for_kind(kind),
+            semantics: ActionSemantics::for_kind(kind).await,
         }
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
     pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         let id = id.into();
-        Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
+        Self::new(id.clone(), label, category, catalog_command_icon_id(&id).await, kind).await
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
@@ -1537,7 +1539,9 @@ impl ToolRef {
         Self(id.into())
     }
 
-    pub async fn as_str(&self) -> &str {
+    // 🚫️async: E1 transitive — the only consumer is inside an `Iterator::find` (external trait)
+    // closure, which must be sync; pure field access, no I/O (R9).
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1606,12 +1610,12 @@ pub async fn element_id_segment(raw: &str) -> String {
 
 /// @emoji 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
 /// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
-/// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
+/// parts instead of a context/registry: `child_element_id("ui.chat", &["send"]).await` → `"ui.chat.send"`.
 pub async fn child_element_id(parent: &str, segments: &[&str]) -> String {
     let mut id = parent.to_string();
     for segment in segments {
         id.push('.');
-        id.push_str(&element_id_segment(segment));
+        id.push_str(&element_id_segment(segment).await);
     }
     id
 }
@@ -1623,7 +1627,7 @@ pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
 
 /// @emoji 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
 pub async fn window_element_id(kind_id: &str) -> String {
-    child_element_id("framework.window", &[kind_id])
+    child_element_id("framework.window", &[kind_id]).await
 }
 
 /// @emoji 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
@@ -1834,42 +1838,42 @@ impl IntroductionInteraction {
 
     /// @emoji 📇️ An interaction completing when the user activates action `id`.
     pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label)
+        Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into()).await), label).await
     }
 
     /// @emoji 🧰️ An interaction completing when the user activates utility `id`.
     pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label)
+        Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into()).await), label).await
     }
 
     /// @emoji 🛠️ An interaction completing when the user activates tool `id`.
     pub async fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into())), label)
+        Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into()).await), label).await
     }
 
     /// @emoji 📑️ An interaction completing when panel tab `id` opens.
     pub async fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Panel(id.into()), label)
+        Self::new(IntroductionInteractionKind::Panel(id.into()), label).await
     }
 
     /// @emoji 🌲️ An interaction completing when tree section/item `id` expands.
     pub async fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Expand(id.into()), label)
+        Self::new(IntroductionInteractionKind::Expand(id.into()), label).await
     }
 
     /// @emoji 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
     pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label)
+        Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label).await
     }
 
     /// @emoji 🔍️ An interaction completing when the user zooms 3D window `window_kind_id`.
     pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label)
+        Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label).await
     }
 
     /// @emoji 🌐️ An interaction completing when the user orbits 3D window `window_kind_id`.
     pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label)
+        Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label).await
     }
 
     /// @emoji 🎉️ Overrides which element id is stamped `data-celebrated` on completion.
@@ -1945,7 +1949,7 @@ impl IntroductionPoint {
 
     /// @emoji 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
-        Self::entity(window_id, domain, "*")
+        Self::entity(window_id, domain, "*").await
     }
 
     /// @emoji 🪡️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
@@ -1981,15 +1985,18 @@ pub enum IntroductionKeyModifier {
     Meta,
 }
 
-async fn introduction_pointer_button_left() -> IntroductionPointerButton {
+// 🚫️async: E4 fn-pointer slot (serde default)
+fn introduction_pointer_button_left() -> IntroductionPointerButton {
     IntroductionPointerButton::Left
 }
 
-async fn introduction_pointer_button_right() -> IntroductionPointerButton {
+// 🚫️async: E4 fn-pointer slot (serde default)
+fn introduction_pointer_button_right() -> IntroductionPointerButton {
     IntroductionPointerButton::Right
 }
 
-async fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
+// 🚫️async: E4 fn-pointer slot (serde default)
+fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
     vec![IntroductionKeyModifier::Alt]
 }
 
@@ -2213,11 +2220,13 @@ pub enum TutorialAssetSrc {
     DataUrl { data: String },
 }
 
-async fn tutorial_narration_default_rate() -> f64 {
+// 🚫️async: E4 fn-pointer slot (serde default)
+fn tutorial_narration_default_rate() -> f64 {
     1.0
 }
 
-async fn tutorial_rate_is_default(rate: &f64) -> bool {
+// 🚫️async: E4 fn-pointer slot (serde skip_serializing_if)
+fn tutorial_rate_is_default(rate: &f64) -> bool {
     (*rate - 1.0).abs() < f64::EPSILON
 }
 
@@ -2513,7 +2522,8 @@ pub enum TutorialArtifactEventKind {
     }
 }
 
-async fn tutorial_camera_up_z() -> [f64; 3] {
+// 🚫️async: E4 fn-pointer slot (serde default)
+fn tutorial_camera_up_z() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
@@ -2588,12 +2598,15 @@ pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 /// @emoji 🎬️ The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
 /// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
 pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
-    let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
+    let mut options = Vec::with_capacity(tutorials.len());
+    for t in tutorials {
+        options.push(ActionArgOption::new(t.id.clone(), t.title.clone()).await);
+    }
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View)
+        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View).await
     }
-    .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).required()])
+    .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required().await]).await
 }
 
 /// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
@@ -2605,7 +2618,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 pub async fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View)
+        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View).await
     }
 }
 
@@ -2636,14 +2649,14 @@ pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
         Ok(())
     }
 
-    sorted_by_at("chapters", &def.chapters, |c| c.at, def.duration_ms)?;
-    sorted_by_at("narration", &def.tracks.narration, |c| c.at, def.duration_ms)?;
-    sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms)?;
-    sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms)?;
-    sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms)?;
-    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms)?;
-    sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms)?;
-    sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms)?;
+    sorted_by_at("chapters", &def.chapters, |c| c.at, def.duration_ms).await?;
+    sorted_by_at("narration", &def.tracks.narration, |c| c.at, def.duration_ms).await?;
+    sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms).await?;
+    sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms).await?;
+    sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms).await?;
+    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms).await?;
+    sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms).await?;
+    sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms).await?;
 
     let mut chapter_ids = std::collections::HashSet::new();
     for chapter in &def.chapters {
@@ -2687,7 +2700,7 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
     let raw = ((at_ms - prev.at as f64) / span).clamp(0.0, 1.0);
     let t = match next.easing {
         TutorialEasing::Linear => raw,
-        TutorialEasing::EaseInOut => tutorial_ease_in_out(raw),
+        TutorialEasing::EaseInOut => tutorial_ease_in_out(raw).await,
         TutorialEasing::Hold => {
             if raw >= 1.0 {
                 1.0
@@ -2701,9 +2714,9 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
             TutorialCameraState::Orbit { position: p0, target: t0, up: u0, fov: f0 },
             TutorialCameraState::Orbit { position: p1, target: t1, up: u1, fov: f1 },
         ) => TutorialCameraState::Orbit {
-            position: tutorial_lerp3(*p0, *p1, t),
-            target: tutorial_lerp3(*t0, *t1, t),
-            up: tutorial_lerp3(*u0, *u1, t),
+            position: tutorial_lerp3(*p0, *p1, t).await,
+            target: tutorial_lerp3(*t0, *t1, t).await,
+            up: tutorial_lerp3(*u0, *u1, t).await,
             fov: match (f0, f1) {
                 (Some(a), Some(b)) => Some(a + (b - a) * t),
                 (Some(a), None) => Some(*a),
@@ -2737,7 +2750,7 @@ pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms
     for pair in keyframes.windows(2) {
         let (prev, next) = (pair[0], pair[1]);
         if at_ms <= next.at as f64 {
-            return Some(interpolate_tutorial_camera(prev, next, at_ms));
+            return Some(interpolate_tutorial_camera(prev, next, at_ms).await);
         }
     }
     Some(keyframes.last().unwrap().camera.clone())
@@ -2807,7 +2820,7 @@ pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> Tutori
         }
     }
     for change in deltas {
-        apply_tutorial_ui_change(&mut state, change);
+        apply_tutorial_ui_change(&mut state, change).await;
     }
     state
 }
@@ -2967,36 +2980,40 @@ pub struct NonEmptyVec<T> {
     rest: Vec<T>,
 }
 
+// 🚫️async: E1 transitive block — every method here is a pure accessor/iterator with no I/O, and
+// `iter`/`iter_mut` must feed directly into std `Iterator` combinators (`find`/`filter`/`map`, an
+// external trait) at call sites, so the whole inherent impl stays sync rather than forcing an
+// `.await` between every accessor and the combinator chain that consumes it (R9).
 impl<T> NonEmptyVec<T> {
-    pub async fn one(first: T) -> Self {
+    pub fn one(first: T) -> Self {
         Self { first, rest: Vec::new() }
     }
 
-    pub async fn new(first: T, rest: Vec<T>) -> Self {
+    pub fn new(first: T, rest: Vec<T>) -> Self {
         Self { first, rest }
     }
 
-    pub async fn first(&self) -> &T {
+    pub fn first(&self) -> &T {
         &self.first
     }
 
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         1 + self.rest.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         false
     }
 
-    pub async fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
         std::iter::once(&self.first).chain(self.rest.iter())
     }
 
-    pub async fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         std::iter::once(&mut self.first).chain(self.rest.iter_mut())
     }
 
-    pub async fn first_mut(&mut self) -> &mut T {
+    pub fn first_mut(&mut self) -> &mut T {
         &mut self.first
     }
 }
@@ -3022,7 +3039,8 @@ impl<'a, T> IntoIterator for &'a NonEmptyVec<T> {
 
 impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
     type Error = String;
-    async fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
+    // 🚫️async: E1 impl of external `TryFrom`; pure list-shape check, no I/O.
+    fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
         if values.is_empty() {
             return Err("expected a non-empty list, got zero entries".to_string());
         }
@@ -3032,7 +3050,8 @@ impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
 }
 
 impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
-    async fn from(value: NonEmptyVec<T>) -> Self {
+    // 🚫️async: E1 impl of external `From`; pure collection reshape, no I/O.
+    fn from(value: NonEmptyVec<T>) -> Self {
         std::iter::once(value.first).chain(value.rest).collect()
     }
 }
@@ -3181,7 +3200,7 @@ pub struct PanelTabDefinition {
 
 impl PanelTabDefinition {
     pub async fn id(&self) -> &str {
-        self.kind.id_str()
+        self.kind.id_str().await
     }
 }
 
@@ -3228,13 +3247,13 @@ pub struct AppRef {
 
 /// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
 pub async fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
-    format!("{}#{}", dialect.to_coordinate(), role.as_str())
+    format!("{}#{}", dialect.to_coordinate().await, role.as_str().await)
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
 pub async fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
     let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
-    let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
+    let dialect = ArtifactDialect::parse_coordinate(coordinate).await?;
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
     Ok((dialect, role))
 }
@@ -3413,7 +3432,9 @@ pub async fn missing_required_args(
 /// @emoji 🚦️ Whether an action is eligible to appear in a window's Actions panel — excludes the six
 /// framework History actions (rendered by the History rail) and the injected `setActiveUtility`/
 /// `setActiveTool` (internal View actions wired to the utility bar/tool panel, never the panel).
-async fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
+// 🚫️async: E1 transitive — the only consumer is `Iterator::filter` (external trait), which takes a
+// sync closure; pure comparison, no I/O (R9).
+fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History
         && action.id != SET_ACTIVE_UTILITY_ACTION_ID
         && action.id != SET_ACTIVE_TOOL_ACTION_ID
@@ -3462,16 +3483,16 @@ pub async fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &st
 /// 🗂️ Formats a window tab within its canonical app breadcrumb, resolved under the active terminology
 /// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
 pub async fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
-    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
+    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).await.to_vec();
     let normalized_window = window_label.trim().to_lowercase();
-    let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
+    let normalized_app = app.label.resolve(Terminology::parse(terminology).await.unwrap_or_default(), locale).trim().to_lowercase();
     if !normalized_window.is_empty()
         && normalized_window != normalized_app
         && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
     {
         breadcrumb.push(normalized_window);
     }
-    app_breadcrumb(&breadcrumb)
+    app_breadcrumb(&breadcrumb).await
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3552,12 +3573,16 @@ pub enum VersionParseError {
 }
 
 impl Version {
-    pub async fn new(major: u64, minor: u64, patch: u64) -> Self {
+    // 🚫️async: E1 transitive — `TryFrom<String>`/`FromStr` (external) construct this synchronously;
+    // pure field assembly, no I/O (R9).
+    pub fn new(major: u64, minor: u64, patch: u64) -> Self {
         Self { major, minor, patch }
     }
 
     /// 🔢️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
-    pub async fn parse(input: &str) -> Result<Self, VersionParseError> {
+    // 🚫️async: E1 transitive — `FromStr::from_str`/`TryFrom<String>` (external) call this
+    // synchronously; pure string parsing, no I/O (R9).
+    pub fn parse(input: &str) -> Result<Self, VersionParseError> {
         let mut segments = input.split('.');
         let (Some(major), Some(minor), Some(patch), None) = (segments.next(), segments.next(), segments.next(), segments.next()) else {
             return Err(VersionParseError::Malformed(input.to_string()));
@@ -3608,7 +3633,9 @@ pub enum VersionReq {
 
 impl VersionReq {
     /// 🔢️ Parses one of the five frozen grammar forms.
-    pub async fn parse(input: &str) -> Result<Self, VersionReqParseError> {
+    // 🚫️async: E1 transitive — `Deserialize::deserialize` (external) calls this synchronously; pure
+    // string parsing, no I/O (R9).
+    pub fn parse(input: &str) -> Result<Self, VersionReqParseError> {
         let trimmed = input.trim();
         if trimmed == "*" {
             return Ok(VersionReq::Any);
@@ -3629,7 +3656,8 @@ impl VersionReq {
     }
 
     /// ✅️ Whether `version` satisfies this requirement.
-    pub async fn matches(&self, version: &Version) -> bool {
+    // 🚫️async: E1 transitive — pure comparison consumed by `matches_raw`, itself required sync (R9).
+    pub fn matches(&self, version: &Version) -> bool {
         match self {
             VersionReq::Any => true,
             VersionReq::Exact(required) => version == required,
@@ -3649,7 +3677,9 @@ impl VersionReq {
 
     /// ✅️ Convenience for the dependency graph: parses `raw` and matches, treating an unparsable
     /// target version as non-matching (except `*`, which never needs to parse its target).
-    pub async fn matches_raw(&self, raw: &str) -> bool {
+    // 🚫️async: E1 transitive — dependency-graph validation calls this synchronously via `!`; pure
+    // parse-and-compare, no I/O (R9).
+    pub fn matches_raw(&self, raw: &str) -> bool {
         match self {
             VersionReq::Any => true,
             _ => Version::parse(raw).map(|version| self.matches(&version)).unwrap_or(false),
@@ -3866,7 +3896,7 @@ pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
     serde_json::json!({
         "pluginId": choice.app.plugin_id,
         "appId": choice.app.app_id,
-        "role": choice.role.as_str(),
+        "role": choice.role.as_str().await,
     })
     .to_string()
 }
@@ -3893,7 +3923,7 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
             if !roles.contains(&app.role) || app.io.document_schema.is_empty() {
                 continue;
             }
-            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
+            by_coordinate.entry(app.dialect.to_coordinate().await).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
         }
     }
     by_coordinate.into_values().collect()
@@ -3942,7 +3972,7 @@ async fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), D
 /// `validate_dependency_graph` first, so a missing dependency or version mismatch is reported
 /// before any cycle would be detected.
 pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<String>, DependencyGraphError> {
-    validate_dependency_graph(manifests)?;
+    validate_dependency_graph(manifests).await?;
 
     let mut in_degree: BTreeMap<&str, usize> = manifests.iter().map(|manifest| (manifest.plugin_id.as_str(), 0)).collect();
     let mut dependents_of: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
@@ -3979,7 +4009,7 @@ pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<Stri
             .filter(|id| !resolved.contains(id))
             .map(str::to_string)
             .collect();
-        return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover) });
+        return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover).await });
     }
     Ok(order)
 }
@@ -4058,7 +4088,7 @@ mod plugin_dependency_tests {
     }
 
     //#region 🔖️VersionAndVersionReq
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_parses_valid_triples_and_rejects_malformed_input() {
         assert_eq!(Version::parse("1.2.3").unwrap(), Version::new(1, 2, 3));
         assert_eq!(Version::parse("0.0.0").unwrap(), Version::new(0, 0, 0));
@@ -4068,7 +4098,7 @@ mod plugin_dependency_tests {
         assert_eq!(Version::new(1, 2, 3).to_string(), "1.2.3");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_ord_matches_semver_precedence() {
         assert!(Version::new(1, 0, 0) < Version::new(1, 0, 1));
         assert!(Version::new(1, 0, 0) < Version::new(1, 1, 0));
@@ -4076,7 +4106,7 @@ mod plugin_dependency_tests {
         assert!(Version::new(1, 9, 9) < Version::new(2, 0, 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_req_parses_all_five_grammar_forms_and_rejects_unknown_operators() {
         assert_eq!(VersionReq::parse("*").unwrap(), VersionReq::Any);
         assert_eq!(VersionReq::parse("=1.2.3").unwrap(), VersionReq::Exact(Version::new(1, 2, 3)));
@@ -4087,7 +4117,7 @@ mod plugin_dependency_tests {
         assert!(matches!(VersionReq::parse("^1.x.3").unwrap_err(), VersionReqParseError::Version(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_req_display_round_trips_through_parse() {
         for raw in ["*", "=1.2.3", "^1.2.3", "~1.2.3", ">=1.2.3"] {
             let parsed = VersionReq::parse(raw).unwrap();
@@ -4096,7 +4126,7 @@ mod plugin_dependency_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_req_matches_exact_and_at_least() {
         let exact = VersionReq::parse("=1.2.3").unwrap();
         assert!(exact.matches(&Version::new(1, 2, 3)));
@@ -4110,7 +4140,7 @@ mod plugin_dependency_tests {
         assert!(VersionReq::Any.matches(&Version::new(0, 0, 0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_req_matches_caret_semantics_across_leading_zero_tiers() {
         let caret_major = VersionReq::parse("^1.2.3").unwrap();
         assert!(caret_major.matches(&Version::new(1, 2, 3)));
@@ -4128,7 +4158,7 @@ mod plugin_dependency_tests {
         assert!(!caret_zero_minor.matches(&Version::new(0, 0, 4)), "0.0.x caret pins the exact patch");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn version_req_matches_tilde_semantics() {
         let tilde = VersionReq::parse("~1.2.3").unwrap();
         assert!(tilde.matches(&Version::new(1, 2, 3)));
@@ -4137,9 +4167,9 @@ mod plugin_dependency_tests {
         assert!(!tilde.matches(&Version::new(1, 2, 2)), "tilde forbids going below the required patch");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plugin_dependency_serde_round_trips_as_a_plain_string() {
-        let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap());
+        let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap()).await;
         let json = serde_json::to_value(&dependency).unwrap();
         assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
         let round_tripped: PluginDependency = serde_json::from_value(json).unwrap();
@@ -4148,61 +4178,61 @@ mod plugin_dependency_tests {
     //#endregion 🔖️VersionAndVersionReq
 
     //#region 🔖️DependencyGraphTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_toposorts_a_diamond() {
         // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
         // deterministically pick `left` before `right`.
         let manifests = vec![
-            manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any), PluginDependency::new("right", VersionReq::Any)]),
-            manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]),
-            manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]),
-            manifest("base", "1.0.0", vec![]),
+            manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any).await, PluginDependency::new("right", VersionReq::Any).await]).await,
+            manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any).await]).await,
+            manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any).await]).await,
+            manifest("base", "1.0.0", vec![]).await,
         ];
-        let order = resolve_load_order(&manifests).unwrap();
+        let order = resolve_load_order(&manifests).await.unwrap();
         assert_eq!(order, vec!["base", "left", "right", "top"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
         let forward = vec![
-            manifest("a", "1.0.0", vec![]),
-            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+            manifest("a", "1.0.0", vec![]).await,
+            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
         ];
         let mut shuffled = forward.clone();
         shuffled.reverse();
-        assert_eq!(resolve_load_order(&forward).unwrap(), resolve_load_order(&shuffled).unwrap());
-        assert_eq!(resolve_load_order(&forward).unwrap(), vec!["a", "b", "c"]);
+        assert_eq!(resolve_load_order(&forward).await.unwrap(), resolve_load_order(&shuffled).await.unwrap());
+        assert_eq!(resolve_load_order(&forward).await.unwrap(), vec!["a", "b", "c"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_reports_missing_dependency() {
-        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)])];
-        let error = resolve_load_order(&manifests).unwrap_err();
+        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any).await]).await];
+        let error = resolve_load_order(&manifests).await.unwrap_err();
         assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_reports_version_mismatch() {
         let manifests = vec![
-            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]),
-            manifest("b", "1.0.0", vec![]),
+            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap()).await]).await,
+            manifest("b", "1.0.0", vec![]).await,
         ];
-        let error = resolve_load_order(&manifests).unwrap_err();
+        let error = resolve_load_order(&manifests).await.unwrap_err();
         assert_eq!(
             error,
             DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() }
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_names_every_member_of_a_cycle() {
         let manifests = vec![
-            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]),
-            manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]),
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
+            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any).await]).await,
+            manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any).await]).await,
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
         ];
-        let error = resolve_load_order(&manifests).unwrap_err();
+        let error = resolve_load_order(&manifests).await.unwrap_err();
         match error {
             DependencyGraphError::Cycle { members } => {
                 let mut sorted = members.clone();
@@ -4214,27 +4244,27 @@ mod plugin_dependency_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
-        assert_eq!(resolve_load_order(&[]).unwrap(), Vec::<String>::new());
+        assert_eq!(resolve_load_order(&[]).await.unwrap(), Vec::<String>::new());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dependents_returns_direct_dependents_sorted() {
         let manifests = vec![
-            manifest("a", "1.0.0", vec![]),
-            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]),
-            manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]),
+            manifest("a", "1.0.0", vec![]).await,
+            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
+            manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any).await]).await,
         ];
-        assert_eq!(dependents(&manifests, "a"), vec!["b".to_string(), "c".to_string()]);
-        assert_eq!(dependents(&manifests, "b"), vec!["d".to_string()]);
-        assert!(dependents(&manifests, "d").is_empty());
+        assert_eq!(dependents(&manifests, "a").await, vec!["b".to_string(), "c".to_string()]);
+        assert_eq!(dependents(&manifests, "b").await, vec!["d".to_string()]);
+        assert!(dependents(&manifests, "d").await.is_empty());
     }
     //#endregion 🔖️DependencyGraphTests
 
     //#region 🔖️ManifestSerdeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plugin_manifest_dependencies_and_contributions_default_absent_on_the_wire() {
         let bare = serde_json::json!({
             "pluginId": "flow",
@@ -4252,7 +4282,7 @@ mod plugin_dependency_tests {
         assert!(serialized.get("contributions").is_none(), "empty contributions must be skipped, not emitted as []");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_contribution_descriptor_round_trips() {
         let descriptor = ArtifactContributionDescriptor {
             artifact_kind: "s.cad.building".into(),
@@ -4282,12 +4312,12 @@ mod plugin_dependency_tests {
         assert_eq!(round_tripped, descriptor);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
         let manifest = PluginManifest {
-            dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap())],
+            dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap()).await],
             contributions: vec![ArtifactContributionDescriptor { artifact_kind: "s.cad.building".into(), mutations: Vec::new(), inferences: Vec::new() }],
-            ..manifest("aec-building", "0.1.0", Vec::new())
+            ..manifest("aec-building", "0.1.0", Vec::new()).await
         };
         let json = serde_json::to_value(&manifest).unwrap();
         let round_tripped: PluginManifest = serde_json::from_value(json).unwrap();
@@ -4648,23 +4678,23 @@ impl AgentContributions {
 mod agent_contributions_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_is_empty_and_promoted_subset_holds_trivially() {
         let contributions = AgentContributions::default();
         assert!(contributions.capabilities.is_empty());
         assert!(contributions.promoted.is_empty());
-        assert!(contributions.promoted_is_subset_of_capabilities());
+        assert!(contributions.promoted_is_subset_of_capabilities().await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn promoted_subset_of_capabilities_holds_and_is_violated_correctly() {
         let ok = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.deleteSelection".into()] };
-        assert!(ok.promoted_is_subset_of_capabilities());
+        assert!(ok.promoted_is_subset_of_capabilities().await);
         let bad = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.addBlock".into()] };
-        assert!(!bad.promoted_is_subset_of_capabilities());
+        assert!(!bad.promoted_is_subset_of_capabilities().await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serde_round_trip_uses_camel_case_and_skips_empty_promoted() {
         let contributions = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
         let json = serde_json::to_value(&contributions).unwrap();
@@ -4673,7 +4703,7 @@ mod agent_contributions_tests {
         assert_eq!(round_tripped, contributions);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn never_conflated_with_capability_requests() {
         // 🚨️ `AgentContributions.capabilities` (what this package OFFERS) and
         // `PackageDescriptor.capability_requests: Vec<kernel::CapabilityRequest>` (what this
@@ -4928,7 +4958,7 @@ impl AppIo {
 
     /// 🔌️ The full port list, in stable order: the implicit document ports first, followed by every app-specific port declared in `self.ports`.
     pub async fn all_ports(&self) -> Vec<MediaPortSpec> {
-        let mut ports = vec![self.document_in_port(), self.document_out_port()];
+        let mut ports = vec![self.document_in_port().await, self.document_out_port().await];
         ports.extend(self.ports.clone());
         ports
     }
@@ -5099,7 +5129,7 @@ impl MediaFingerprint {
     pub async fn of(media: &Media) -> Self {
         match &media.payload {
             MediaPayload::Structured { schema, json } => {
-                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]))
+                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]).await)
             }
             MediaPayload::Binary { blob_hash, .. } => MediaFingerprint(blob_hash.clone()),
         }
@@ -5136,7 +5166,7 @@ mod media_vocabulary_tests {
     //! MediaError, so these tests moved with their types.
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_types_compatible_covers_direct_any_convert_and_reject() {
         let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
         let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
@@ -5145,37 +5175,37 @@ mod media_vocabulary_tests {
         let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
         let text = MediaType { class: MediaClass::Text, form: MediaForm::Document };
 
-        assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
-        assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the class");
-        assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
-        assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
-        assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
-        assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+        assert_eq!(media_types_compatible(&brep, &brep).await, MediaCompat::Direct);
+        assert_eq!(media_types_compatible(&brep, &any_3d).await, MediaCompat::Direct, "Any on the accepting side takes anything within the class");
+        assert!(matches!(media_types_compatible(&brep, &mesh_form).await, MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+        assert!(matches!(media_types_compatible(&vector, &raster).await, MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+        assert_eq!(media_types_compatible(&mesh_form, &brep).await, MediaCompat::Reject, "mesh->brep has no registered conversion");
+        assert_eq!(media_types_compatible(&brep, &text).await, MediaCompat::Reject, "class mismatch always rejects");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
         let structured = Media {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
         };
-        let fingerprint = MediaFingerprint::of(&structured);
-        assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+        let fingerprint = MediaFingerprint::of(&structured).await;
+        assert_eq!(fingerprint, MediaFingerprint::of(&structured).await, "fingerprint is deterministic");
 
         let mut changed = structured.clone();
         if let MediaPayload::Structured { json, .. } = &mut changed.payload {
             *json = "{\"a\":1}".into();
         }
-        assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+        assert_ne!(MediaFingerprint::of(&changed).await, fingerprint, "different json content hashes differently");
 
         let binary = Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             payload: MediaPayload::Binary { format_kind: "glb".into(), blob_hash: "abc123".into() },
         };
-        assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+        assert_eq!(MediaFingerprint::of(&binary).await, MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_error_messages_are_human_readable() {
         assert_eq!(MediaError::UnknownPort("in".into()).to_string(), "unknown media port `in`");
         let incompatible = MediaError::Incompatible {
@@ -5198,7 +5228,7 @@ mod app_label_tests {
     /// the fields inside a struct variant — those need `rename_all_fields` too, or `Partial`'s fields
     /// silently serialize as snake_case (`window_bodies`) while the TS `UiDirtyScope` type expects
     /// camelCase (`windowBodies`), desyncing the wire contract without any compile-time signal.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ui_dirty_scope_partial_serializes_fields_as_camel_case() {
         use crate::kernel::UiDirtyScope;
         let scope = UiDirtyScope::Partial {
@@ -5217,7 +5247,7 @@ mod app_label_tests {
         assert!(!json.contains("panel_bodies"), "{json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ui_dirty_scope_defaults_to_full() {
         use crate::kernel::UiDirtyScope;
         assert_eq!(UiDirtyScope::default(), UiDirtyScope::Full);
@@ -5233,10 +5263,10 @@ mod app_label_tests {
     }
     //#endregion UiDirtyScopeTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn formats_app_label_for_chrome() {
         assert_eq!(
-            app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]),
+            app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]).await,
             "semio · puzzle · 3d"
         );
     }
@@ -5272,57 +5302,58 @@ mod app_label_tests {
     use dsl::DslValue;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_arg_def_builder_chain() {
         let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
-            .required()
-            .default_value(1.0)
-            .describe("scale factor");
+            .await.required()
+            .await.default_value(1.0)
+            .await.describe("scale factor")
+            .await;
         assert_eq!(arg.id, "scale");
         assert!(arg.required);
         assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
         assert_eq!(arg.description.as_deref(), Some("scale factor"));
-        assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+        assert!(matches!(arg.control().await, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
     }
 
     /// @emoji 🧪️ D6 regression proof (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
     /// P3-manifest-schema): each of the six `ActionArgDef` builder helpers must still derive EXACTLY
     /// the `ActionArgControl` it used to construct directly, now that `control` is a stored→derived
     /// field — this is the whole refactor's regression guard for the ~236 call sites across 33 plugins.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
-        assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).control(), ActionArgControl::Text { placeholder: None });
-        assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None });
+        assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).await.control().await, ActionArgControl::Text { placeholder: None });
+        assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).await.control().await, ActionArgControl::Number { min: None, max: None, step: None });
         assert_eq!(
-            ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).control(),
+            ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control().await,
             ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None }
         );
-        assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).control(), ActionArgControl::Toggle);
-        let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X"))];
-        assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).control(), ActionArgControl::Select { options });
-        assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).control(), ActionArgControl::Vec3);
+        assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).await.control().await, ActionArgControl::Toggle);
+        let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await];
+        assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).await.control().await, ActionArgControl::Select { options });
+        assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).await.control().await, ActionArgControl::Vec3);
     }
 
     /// @emoji 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
     /// audit) still derive their pre-D6 controls too — `ArgFormat::ArtifactKind`/`SurfaceApp` exist
     /// solely so these keep working under the new stored/derived split.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
         let roles = vec![AppRole::Viewer];
         assert_eq!(
-            ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).control(),
+            ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control().await,
             ActionArgControl::ArtifactKind { roles: roles.clone() }
         );
         assert_eq!(
-            ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").control(),
+            ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control().await,
             ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() }
         );
     }
 
     /// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_semantics_for_kind_matches_the_defaults_table() {
-        let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
+        let mutation = ActionSemantics::for_kind(ActionKind::Mutation).await;
         assert!(mutation.effects.reversible);
         assert_eq!(mutation.execution.preview, PreviewMode::Diff);
         assert_eq!(mutation.execution.undo, UndoMode::Inverse);
@@ -5330,30 +5361,31 @@ mod app_label_tests {
         assert_eq!(mutation.policy.approval, ApprovalMode::WhenDestructive);
         assert_eq!(mutation.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
 
-        let view = ActionSemantics::for_kind(ActionKind::View);
-        let interaction = ActionSemantics::for_kind(ActionKind::Interaction);
+        let view = ActionSemantics::for_kind(ActionKind::View).await;
+        let interaction = ActionSemantics::for_kind(ActionKind::Interaction).await;
         assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
         assert_eq!(view.policy.scopes, vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())]);
 
-        assert_eq!(ActionSemantics::for_kind(ActionKind::History).policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
-        assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
+        assert_eq!(ActionSemantics::for_kind(ActionKind::History).await.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+        assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).await.policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
 
-        let shell = ActionSemantics::for_kind(ActionKind::Shell);
+        let shell = ActionSemantics::for_kind(ActionKind::Shell).await;
         assert!(!shell.effects.reversible);
         assert_eq!(shell.policy.scopes, vec![kernel::CapabilityId("shell.navigate".into())]);
     }
 
     /// @emoji 🧪️ `ActionDefinition::new`/`new_catalog` populate `semantics` from `kind` automatically,
     /// and `.destructive()`/`.use_when()`/`.example()` compose on top of it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_definition_semantics_default_from_kind_and_builders_compose() {
         let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
-        assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation));
+        assert_eq!(mutation.await.semantics, ActionSemantics::for_kind(ActionKind::Mutation).await);
 
         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
-            .destructive()
-            .use_when(["delete the selected objects", "remove selection"])
-            .example("deleteSelection removes every currently selected object");
+            .await.destructive()
+            .await.use_when(["delete the selected objects", "remove selection"])
+            .await.example("deleteSelection removes every currently selected object")
+            .await;
         assert!(action.semantics.effects.destructive);
         assert_eq!(action.semantics.policy.approval, ApprovalMode::WhenDestructive);
         assert_eq!(action.semantics.use_when, vec!["delete the selected objects".to_string(), "remove selection".to_string()]);
@@ -5362,40 +5394,40 @@ mod app_label_tests {
 
     /// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
     /// leaves for the shapes P3-manifest-schema actually introduces.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_arg_def_json_schema_covers_the_core_shapes() {
-        let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe("a name").json_schema();
+        let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).await.describe("a name").await.json_schema().await;
         assert_eq!(text["type"], serde_json::json!("string"));
         assert_eq!(text["description"], serde_json::json!("a name"));
 
-        let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")), ActionArgOption::new("stl", LocalizedLabel::data("STL"))];
-        let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).json_schema();
+        let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")).await, ActionArgOption::new("stl", LocalizedLabel::data("STL")).await];
+        let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).await.json_schema().await;
         assert_eq!(select["type"], serde_json::json!("string"));
         assert_eq!(select["enum"], serde_json::json!(["obj", "stl"]));
 
-        let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).json_schema();
+        let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.json_schema().await;
         assert_eq!(number["type"], serde_json::json!("number"));
         assert_eq!(number["minimum"], serde_json::json!(0.0));
         assert_eq!(number["maximum"], serde_json::json!(4.0));
 
-        let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).json_schema();
+        let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).await.json_schema().await;
         assert_eq!(vec3["type"], serde_json::json!("array"));
         assert_eq!(vec3["minItems"], serde_json::json!(3));
         assert_eq!(vec3["maxItems"], serde_json::json!(3));
 
-        let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).json_schema();
+        let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.json_schema().await;
         assert_eq!(toggle["type"], serde_json::json!("boolean"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn effective_args_prefer_staged_then_default() {
         let defs = vec![
-            ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"),
-            ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"),
-            ActionArgDef::text("c", LocalizedLabel::data("C")),
+            ActionArgDef::text("a", LocalizedLabel::data("A")).await.default_value("da").await,
+            ActionArgDef::text("b", LocalizedLabel::data("B")).await.default_value("db").await,
+            ActionArgDef::text("c", LocalizedLabel::data("C")).await,
         ];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
-        let effective = effective_action_args(&defs, &staged, None);
+        let effective = effective_action_args(&defs, &staged, None).await;
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
         assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
         assert!(!effective.as_object().is_some_and(|o| o.iter().any(|(k, _)| k == "c")), "no staged, no default ⇒ omitted");
@@ -5404,12 +5436,12 @@ mod app_label_tests {
     /// 👁️🔒 26/08/16 HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I: the framework-shared
     /// bug that dropped a dialog's seeded, non-form context arg (e.g. `shareSpace`'s `spaceId`) before
     /// it ever reached the dispatched descriptor, causing the hub to authorize against an empty id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
-        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
+        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")).await, ActionArgDef::text("role", LocalizedLabel::data("Role")).await.default_value("author").await];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "email": "user2@semio.dev" })).unwrap();
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1" })).unwrap();
-        let effective = effective_action_args(&defs, &staged, Some(&seed));
+        let effective = effective_action_args(&defs, &staged, Some(&seed)).await;
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the seeded, non-declared arg must reach the dispatched descriptor");
         assert_eq!(effective.get("email"), Some(&DslValue::String("user2@semio.dev".into())), "the form's own staged field still resolves");
         assert_eq!(effective.get("role"), Some(&DslValue::String("author".into())), "declared defaults still fill in alongside a seed");
@@ -5417,53 +5449,53 @@ mod app_label_tests {
 
     /// 🌱️ A seed value for a DECLARED field pre-fills it (e.g. `renameSpace` seeding the current name
     /// into its own editable `name` field) until the form stages its own edit, which then wins.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
-        let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
+        let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).await];
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "name": "Old Name" })).unwrap();
-        let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
+        let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed)).await;
         assert_eq!(untouched.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
         let staged = dsl::to_dsl_value(&serde_json::json!({ "name": "New Name" })).unwrap();
-        let edited = effective_action_args(&defs, &staged, Some(&seed));
+        let edited = effective_action_args(&defs, &staged, Some(&seed)).await;
         assert_eq!(edited.get("name"), Some(&DslValue::String("New Name".into())), "staged still wins over the seed");
         assert_eq!(edited.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the non-declared seed key survives regardless");
     }
 
     /// 🗑️ A zero-declared-field confirm dialog (`deleteSpace`'s confirm/cancel shape) must pass its
     /// entire seeded context through wholesale — there is no form field to carry it otherwise.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "confirmed": true })).unwrap();
-        let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
+        let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed)).await;
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
         assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_required_args_treats_unset_select_as_missing() {
         let defs = vec![
-            ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(),
-            ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required(),
+            ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await]).await.required().await,
+            ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.required().await,
         ];
         // Nothing staged, no defaults: both required ids are missing.
         let empty = DslValue::Object(Vec::new());
-        let effective = effective_action_args(&defs, &empty, None);
-        let missing = missing_required_args(&defs, &effective);
+        let effective = effective_action_args(&defs, &empty, None).await;
+        let missing = missing_required_args(&defs, &effective).await;
         assert!(missing.contains(&"mode".to_string()));
         assert!(missing.contains(&"flag".to_string()));
 
         let effective = dsl::to_dsl_value(&serde_json::json!({ "mode": "", "flag": false })).unwrap();
-        let missing = missing_required_args(&defs, &effective);
+        let missing = missing_required_args(&defs, &effective).await;
         assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_definition_and_utility_ref_construction() {
-        let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush");
+        let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await;
         assert_eq!(utility.id, "brush");
         assert!(!utility.allows_actions_while_active, "default gates actions while active");
-        assert_eq!(UtilityRef::new("brush").as_str(), "brush");
-        assert_eq!(UtilityRef::from("brush").as_str(), "brush");
+        assert_eq!(UtilityRef::new("brush").await.as_str().await, "brush");
+        assert_eq!(UtilityRef::from("brush").as_str().await, "brush");
     }
 
     async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
@@ -5524,38 +5556,38 @@ mod app_label_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: crate::ConfigSpec::empty(),
-            command_grammar: crate::CommandGrammar::empty(),
+            config: crate::ConfigSpec::empty().await,
+            command_grammar: crate::CommandGrammar::empty().await,
             io: crate::AppIo::default(),
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
-                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation),
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
+                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation).await,
             ],
-            vec![ActionRef::new("add")],
-        );
+            vec![ActionRef::new("add").await],
+        ).await;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "window ownership replaces app-level orphan fallback");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
-                crate::ui::set_active_utility_action_definition(),
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
+                ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History).await,
+                crate::ui::set_active_utility_action_definition().await,
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
             ],
             vec![],
-        );
+        ).await;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
         assert!(!resolved.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
     }
@@ -5580,18 +5612,18 @@ mod app_label_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_action_definitions_empty_when_app_has_no_interactions() {
-        let app = app_with(vec![], vec![]);
+        let app = app_with(vec![], vec![]).await;
         assert!(app.interactions.is_empty());
-        assert!(interaction_action_definitions(&app).is_empty());
+        assert!(interaction_action_definitions(&app).await.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_action_definitions_full_set_when_app_has_interactions() {
-        let mut app = app_with(vec![], vec![]);
-        app.interactions = vec![sample_interaction_definition("graph")];
-        let defs = interaction_action_definitions(&app);
+        let mut app = app_with(vec![], vec![]).await;
+        app.interactions = vec![sample_interaction_definition("graph").await];
+        let defs = interaction_action_definitions(&app).await;
         let ids: Vec<&str> = defs.iter().map(|action| action.id.as_str()).collect();
         assert_eq!(
             ids,
@@ -5616,14 +5648,14 @@ mod app_label_tests {
         assert_eq!(by_id(SELECT_ALL_ACTION_ID).keys.as_deref(), Some("mod+a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_window_actions_includes_injected_interaction_actions() {
-        let mut app = app_with(vec![], vec![]);
-        app.interactions = vec![sample_interaction_definition("graph")];
+        let mut app = app_with(vec![], vec![]).await;
+        app.interactions = vec![sample_interaction_definition("graph").await];
         let actions = interaction_action_definitions(&app);
-        app.window_kinds.first_mut().actions = actions;
+        app.window_kinds.first_mut().actions = actions.await;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
         for id in [
             INTERACTION_SELECT_ACTION_ID,
             INTERACTION_HOVER_ACTION_ID,
@@ -5636,26 +5668,26 @@ mod app_label_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_kind_interaction_round_trips_through_json() {
         let json = serde_json::to_string(&ActionKind::Interaction).unwrap();
         assert_eq!(json, "\"interaction\"");
         assert_eq!(serde_json::from_str::<ActionKind>(&json).unwrap(), ActionKind::Interaction);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
         let mut app = app_with(
-            vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View)],
-            vec![ActionRef::new("noop")],
-        );
-        app.interactions = vec![sample_interaction_definition("graph")];
-        app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph")];
+            vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View).await],
+            vec![ActionRef::new("noop").await],
+        ).await;
+        app.interactions = vec![sample_interaction_definition("graph").await];
+        app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph").await];
         let json = serde_json::to_string(&app).unwrap();
         assert!(json.contains("\"interactions\":[{\"id\":\"graph\""), "{json}");
         let parsed: AppDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, app);
-        assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph")]);
+        assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph").await]);
     }
     /// ⚖️ LAW: an EMPTY collection still reaches the wire as `[]`, never as an absent key.
     ///
@@ -5670,9 +5702,9 @@ mod app_label_tests {
     ///
     /// Deserialization stays tolerant (`#[serde(default)]`), so an absent key still parses; it is only
     /// the *emitted* form that is now total.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_collections_serialize_as_arrays_rather_than_vanishing_from_the_manifest() {
-        let app = app_with(vec![], vec![]);
+        let app = app_with(vec![], vec![]).await;
         assert!(app.commands.is_empty(), "this law is about the EMPTY case");
         let json = serde_json::to_string(&app).unwrap();
         for key in ["commands", "utilities", "tools", "interactions", "namedLayouts", "terminologies", "tutorials", "dialogs", "mediaInputs", "mediaOutputs", "artifactKinds"] {
@@ -5686,34 +5718,34 @@ mod app_label_tests {
     //#endregion 🔖️InteractionTests
 
     async fn app_with_modes_and_tools(mut modes: Vec<crate::ui::ModeDefinition>, tools: Vec<crate::ui::ToolDefinition>) -> AppDefinition {
-        let mut app = app_with(vec![], vec![]);
+        let mut app = app_with(vec![], vec![]).await;
         let first = modes.remove(0);
         app.modes = Modes::new(first, modes);
         app.tools = tools;
         app
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_mode_tools_declared_order() {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
-                tools: vec![ToolRef::new("fill"), ToolRef::new("brush")],
+                tools: vec![ToolRef::new("fill").await, ToolRef::new("brush").await],
                 layout_id: None,
                 commands: Vec::new(),
             }],
             vec![
-                crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush"),
-                crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket"),
+                crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await,
+                crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await,
             ],
-        );
-        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
+        ).await;
+        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill", "brush"], "resolves in the mode's declared ref order, not registry order");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_mode_tools_isolates_other_modes() {
         let app = app_with_modes_and_tools(
             vec![
@@ -5721,7 +5753,7 @@ mod app_label_tests {
                     id: "edit".into(),
                     label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
-                    tools: vec![ToolRef::new("fill")],
+                    tools: vec![ToolRef::new("fill").await],
                     layout_id: None,
                     commands: Vec::new(),
                 },
@@ -5734,31 +5766,31 @@ mod app_label_tests {
                     commands: Vec::new(),
                 },
             ],
-            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket")],
-        );
-        assert_eq!(resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
-        assert!(resolve_mode_tools(&app, "view").is_empty(), "tools are opt-in per mode, no orphan fallback");
-        assert!(resolve_mode_tools(&app, "nonexistent").is_empty());
+            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
+        ).await;
+        assert_eq!(resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
+        assert!(resolve_mode_tools(&app, "view").await.is_empty(), "tools are opt-in per mode, no orphan fallback");
+        assert!(resolve_mode_tools(&app, "nonexistent").await.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_mode_tools_skips_unresolvable_refs() {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
-                tools: vec![ToolRef::new("fill"), ToolRef::new("ghost")],
+                tools: vec![ToolRef::new("fill").await, ToolRef::new("ghost").await],
                 layout_id: None,
                 commands: Vec::new(),
             }],
-            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket")],
-        );
-        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
+            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
+        ).await;
+        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
         async fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
             ui_wgpu::wgpu::WindowLayout {
@@ -5770,60 +5802,60 @@ mod app_label_tests {
                 }),
             }
         }
-        let mut app = app_with(vec![], vec![]);
+        let mut app = app_with(vec![], vec![]).await;
         app.modes.first_mut().layout_id = Some("named".into());
         app.named_layouts.push(ui_wgpu::wgpu::NamedLayout {
             id: "named".into(),
             label: "Named".into(),
             icon_id: None,
-            layout: stack_layout("main"),
+            layout: stack_layout("main").await,
             origin: "app".into(),
             group_path: None,
         });
-        app.default_layout = Some(stack_layout("fallback"));
+        app.default_layout = Some(stack_layout("fallback").await);
 
-        assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main")), "named layout referenced by the mode wins");
+        assert_eq!(resolve_layout_for_mode(&app, "edit").await, Some(stack_layout("main").await), "named layout referenced by the mode wins");
 
         app.modes.first_mut().layout_id = Some("missing".into());
         assert_eq!(
-            resolve_layout_for_mode(&app, "edit"),
-            Some(stack_layout("fallback")),
+            resolve_layout_for_mode(&app, "edit").await,
+            Some(stack_layout("fallback").await),
             "unresolved named layout id falls back to default_layout"
         );
 
         app.default_layout = None;
-        assert_eq!(resolve_layout_for_mode(&app, "edit"), None, "no named layout and no default_layout ⇒ none");
-        assert_eq!(resolve_layout_for_mode(&app, "nonexistent"), None, "unknown mode id ⇒ none");
+        assert_eq!(resolve_layout_for_mode(&app, "edit").await, None, "no named layout and no default_layout ⇒ none");
+        assert_eq!(resolve_layout_for_mode(&app, "nonexistent").await, None, "unknown mode id ⇒ none");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
-        let mut app = app_with(vec![], vec![]);
+        let mut app = app_with(vec![], vec![]).await;
         app.terminology_breadcrumbs.insert("de".into(), vec!["semio".into(), "a-de".into()]);
-        assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
-        assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
-        assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
+        assert_eq!(resolve_app_breadcrumb(&app, "de").await, ["semio".to_string(), "a-de".to_string()]);
+        assert_eq!(resolve_app_breadcrumb(&app, "native").await, app.breadcrumb.as_slice());
+        assert_eq!(resolve_app_breadcrumb(&app, "unregistered").await, app.breadcrumb.as_slice());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
-        let mut app = app_with(vec![], vec![]);
+        let mut app = app_with(vec![], vec![]).await;
         app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
-        assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
-        assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "Layers").await, "semio · a · layers");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "").await, "semio · a", "empty window label appends nothing");
         assert_eq!(
-            app_window_label(&app, "native", Locale::En, "Draw"),
+            app_window_label(&app, "native", Locale::En, "Draw").await,
             "semio · a",
             "window label equal to the app label appends nothing"
         );
         assert_eq!(
-            app_window_label(&app, "native", Locale::En, "A"),
+            app_window_label(&app, "native", Locale::En, "A").await,
             "semio · a",
             "window label equal to the document's trailing segment appends nothing"
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_empty_vec_index_iter_first_mut_and_try_from() {
         let mut list = NonEmptyVec::new(1i32, vec![2, 3]);
         assert_eq!(list.len(), 3);
@@ -5842,21 +5874,21 @@ mod app_label_tests {
         assert!(err.contains("non-empty"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn panel_group_anchor_and_as_str_cover_all_variants() {
-        assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
-        assert_eq!(PanelGroup::Details.anchor(), "top-right");
-        assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
-        assert_eq!(PanelGroup::Settings.anchor(), "bottom-right");
-        assert_eq!(PanelGroup::Workbench.as_str(), "workbench");
-        assert_eq!(PanelGroup::Settings.as_str(), "settings");
+        assert_eq!(PanelGroup::Workbench.anchor().await, "top-left");
+        assert_eq!(PanelGroup::Details.anchor().await, "top-right");
+        assert_eq!(PanelGroup::Display.anchor().await, "bottom-left");
+        assert_eq!(PanelGroup::Settings.anchor().await, "bottom-right");
+        assert_eq!(PanelGroup::Workbench.as_str().await, "workbench");
+        assert_eq!(PanelGroup::Settings.as_str().await, "settings");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn panel_tab_kind_id_str_covers_framework_and_app_variants() {
-        assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
-        assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
-        assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
+        assert_eq!(PanelTabKind::WorkbenchCategory.id_str().await, "framework.category.workbench");
+        assert_eq!(PanelTabKind::DisplayWindows.id_str().await, "framework.display.windows");
+        assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str().await, "puzzle.catalogue");
         let tab = PanelTabDefinition {
             kind: PanelTabKind::App("puzzle.catalogue".into()),
             label: LocalizedLabel::data("Catalogue"),
@@ -5864,12 +5896,12 @@ mod app_label_tests {
             body_key: Some("puzzle.catalogue".into()),
             children: Vec::new(),
         };
-        assert_eq!(tab.id(), "puzzle.catalogue");
+        assert_eq!(tab.id().await, "puzzle.catalogue");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_definition_requires_and_serializes_args_field() {
-        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation);
+        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation).await;
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
         assert!(serde_json::from_value::<ActionDefinition>(json!({
@@ -5881,7 +5913,7 @@ mod app_label_tests {
         .is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_kind_deserializes_without_utilities_field() {
         let window: WindowKindDefinition = serde_json::from_str(
             r#"{"id":"main","label":{"native":{"en":"Main","de":"Main"},"reuse":{"en":"Main","de":"Main"}},"bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
@@ -5891,43 +5923,43 @@ mod app_label_tests {
         assert!(window.actions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn action_arg_control_serializes_tagged() {
-        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X"))] };
+        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await] };
         let json = serde_json::to_string(&control).unwrap();
         assert!(json.contains("\"kind\":\"select\""), "tagged with kind: {json}");
         let round: ActionArgControl = serde_json::from_str(&json).unwrap();
         assert_eq!(round, control);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
-        assert!(is_element_id("framework.navbar"));
-        assert!(is_element_id("ui.window.main.action.addLayer"));
-        assert!(is_element_id("brush"));
-        assert!(!is_element_id(""));
-        assert!(!is_element_id("framework.display.save-label"));
-        assert!(!is_element_id("Framework.navbar"));
-        assert!(!is_element_id("framework..navbar"));
-        assert!(!is_element_id("framework.navbar."));
+        assert!(is_element_id("framework.navbar").await);
+        assert!(is_element_id("ui.window.main.action.addLayer").await);
+        assert!(is_element_id("brush").await);
+        assert!(!is_element_id("").await);
+        assert!(!is_element_id("framework.display.save-label").await);
+        assert!(!is_element_id("Framework.navbar").await);
+        assert!(!is_element_id("framework..navbar").await);
+        assert!(!is_element_id("framework.navbar.").await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn element_id_segment_normalizes_and_is_idempotent() {
-        assert_eq!(element_id_segment("world-orbit-projection"), "worldOrbitProjection");
-        assert_eq!(element_id_segment("Some Name"), "someName");
-        assert_eq!(element_id_segment("myUtilityId"), "myUtilityId");
-        assert_eq!(element_id_segment("addLayer"), element_id_segment(&element_id_segment("addLayer")));
+        assert_eq!(element_id_segment("world-orbit-projection").await, "worldOrbitProjection");
+        assert_eq!(element_id_segment("Some Name").await, "someName");
+        assert_eq!(element_id_segment("myUtilityId").await, "myUtilityId");
+        assert_eq!(element_id_segment("addLayer").await, element_id_segment(&element_id_segment("addLayer").await).await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn child_element_id_suffixes_and_normalizes_segments() {
-        assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
-        assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
-        assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
+        assert_eq!(child_element_id("ui.chat", &["send"]).await, "ui.chat.send");
+        assert_eq!(child_element_id("ui.chat", &["message-row"]).await, "ui.chat.messageRow");
+        assert_eq!(child_element_id("ui.tree", &["row", "3"]).await, "ui.tree.row.3");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_step_serde_defaults() {
         let step: IntroductionStepDefinition = serde_json::from_str(
             r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
@@ -5940,35 +5972,36 @@ mod app_label_tests {
         assert_eq!(round, step);
 
         let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…"))
-            .introduce(window_element_id("puzzle3d-main"))
-            .show(vec![window_element_id("puzzle3d-secondary")]);
+            .await.introduce(window_element_id("puzzle3d-main").await)
+            .await.show(vec![window_element_id("puzzle3d-secondary").await])
+            .await;
         let json = serde_json::to_string(&with_targets).unwrap();
         assert!(json.contains("\"introduce\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, with_targets);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn element_id_authoring_helpers() {
-        assert_eq!(window_element_id("puzzle3d-main"), "framework.window.puzzle3dMain");
-        assert_eq!(panel_tab_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
+        assert_eq!(window_element_id("puzzle3d-main").await, "framework.window.puzzle3dMain");
+        assert_eq!(panel_tab_element_id("framework.panel.catalogue").await, "framework.panelTab.framework.panel.catalogue");
         assert_eq!(
-            panel_tab_first_draggable_element_id("framework.panel.catalogue"),
+            panel_tab_first_draggable_element_id("framework.panel.catalogue").await,
             "framework.panelTab.framework.panel.catalogue.firstDraggable"
         );
-        assert!(is_element_id(UI_NAVBAR_ELEMENT_ID));
-        assert!(is_element_id(UI_FOOTER_ELEMENT_ID));
-        assert!(is_element_id(&window_element_id("puzzle3d-main")));
-        assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue")));
-        assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue")));
+        assert!(is_element_id(UI_NAVBAR_ELEMENT_ID).await);
+        assert!(is_element_id(UI_FOOTER_ELEMENT_ID).await);
+        assert!(is_element_id(&window_element_id("puzzle3d-main").await).await);
+        assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue").await).await);
+        assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue").await).await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_interaction_kind_round_trips_tagged() {
         for (kind, tag) in [
-            (IntroductionInteractionKind::Action(ActionRef::new("add")), "action"),
-            (IntroductionInteractionKind::Utility(UtilityRef::new("brush")), "utility"),
-            (IntroductionInteractionKind::Tool(ToolRef::new("fill")), "tool"),
+            (IntroductionInteractionKind::Action(ActionRef::new("add").await), "action"),
+            (IntroductionInteractionKind::Utility(UtilityRef::new("brush").await), "utility"),
+            (IntroductionInteractionKind::Tool(ToolRef::new("fill").await), "tool"),
             (IntroductionInteractionKind::Panel("framework.panel.catalogue".into()), "panel"),
             (IntroductionInteractionKind::Expand("puzzle3d-play-kinds.objects".into()), "expand"),
             (IntroductionInteractionKind::Pan("puzzle3d-main".into()), "pan"),
@@ -5982,16 +6015,16 @@ mod app_label_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_interaction_round_trips_and_defaults() {
-        let interaction = IntroductionInteraction::zoom("puzzle3d-main", "Zoom in");
+        let interaction = IntroductionInteraction::zoom("puzzle3d-main", "Zoom in").await;
         assert_eq!(interaction.celebrate, None);
         let json = serde_json::to_string(&interaction).unwrap();
         assert!(!json.contains("celebrate"), "{json}");
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
         assert_eq!(round, interaction);
 
-        let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").celebrate(window_element_id("puzzle3d-main"));
+        let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main").await).await;
         let json = serde_json::to_string(&with_celebrate).unwrap();
         assert!(json.contains("\"celebrate\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
@@ -6004,11 +6037,11 @@ mod app_label_tests {
         assert!(step.interactions.is_empty());
         assert!(!step.ordered);
 
-        let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).interact_ordered(vec![
-            IntroductionInteraction::zoom("puzzle3d-main", "Zoom"),
-            IntroductionInteraction::pan("puzzle3d-main", "Pan"),
-            IntroductionInteraction::orbit("puzzle3d-main", "Orbit"),
-        ]);
+        let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).await.interact_ordered(vec![
+            IntroductionInteraction::zoom("puzzle3d-main", "Zoom").await,
+            IntroductionInteraction::pan("puzzle3d-main", "Pan").await,
+            IntroductionInteraction::orbit("puzzle3d-main", "Orbit").await,
+        ]).await;
         assert!(with_interactions.ordered);
         assert_eq!(with_interactions.interactions.len(), 3);
         let json = serde_json::to_string(&with_interactions).unwrap();
@@ -6016,22 +6049,22 @@ mod app_label_tests {
         assert_eq!(round, with_interactions);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_point_round_trips_tagged_camel_case() {
         for (point, tag) in [
             (IntroductionPoint::Element { id: "transform".into(), offset: None }, "element"),
             (IntroductionPoint::Element { id: "transform".into(), offset: Some([0.25, 0.75]) }, "element"),
             (IntroductionPoint::Screen { x: 10.0, y: 20.0 }, "screen"),
             (IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.5 }, "screenNormalized"),
-            (IntroductionPoint::Window { id: window_element_id("puzzle3d-main"), x: 40.0, y: 60.0 }, "window"),
-            (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main"), x: 0.5, y: 0.55 }, "windowNormalized"),
-            (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main"), position: [1.0, 2.0, 3.0] }, "scene"),
-            (IntroductionPoint::Canvas { id: window_element_id("puzzle3d-main"), x: 12.0, y: 34.0 }, "canvas"),
-            (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0"), "entity"),
-            (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex"), "entity"),
-            (IntroductionPoint::Entity { id: window_element_id("puzzle3d-main"), domain: "node".into(), entity: "add".into(), offset: Some([0.25, 0.75]) }, "entity"),
-            (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5), "curve"),
-            (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0), "domain"),
+            (IntroductionPoint::Window { id: window_element_id("puzzle3d-main").await, x: 40.0, y: 60.0 }, "window"),
+            (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main").await, x: 0.5, y: 0.55 }, "windowNormalized"),
+            (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main").await, position: [1.0, 2.0, 3.0] }, "scene"),
+            (IntroductionPoint::Canvas { id: window_element_id("puzzle3d-main").await, x: 12.0, y: 34.0 }, "canvas"),
+            (IntroductionPoint::entity(window_element_id("puzzle3d-main").await, "vortex", "seed-left-001:v0").await, "entity"),
+            (IntroductionPoint::any_entity(window_element_id("puzzle3d-main").await, "vortex").await, "entity"),
+            (IntroductionPoint::Entity { id: window_element_id("puzzle3d-main").await, domain: "node".into(), entity: "add".into(), offset: Some([0.25, 0.75]) }, "entity"),
+            (IntroductionPoint::curve(window_element_id("puzzle3d-main").await, "attraction", "a1", 0.5).await, "curve"),
+            (IntroductionPoint::domain_value(window_element_id("puzzle3d-main").await, "slider", "fillCount", 3.0).await, "domain"),
         ] {
             let json = serde_json::to_string(&point).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
@@ -6039,12 +6072,12 @@ mod app_label_tests {
             assert_eq!(round, point);
         }
         // 🏷️ "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
-        let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex");
+        let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main").await, "vortex").await;
         let json = serde_json::to_string(&wildcard).unwrap();
         assert!(json.contains("\"entity\":\"*\""), "{json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_gesture_round_trips_tagged_camel_case() {
         let at = IntroductionPoint::Element { id: "tool.fill".into(), offset: None };
         for (gesture, tag) in [
@@ -6080,7 +6113,7 @@ mod app_label_tests {
         assert!(!scroll_json.contains("delta_y"), "{scroll_json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
         let at = IntroductionPoint::Element { id: "puzzle3d-main".into(), offset: None };
         let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
@@ -6123,10 +6156,10 @@ mod app_label_tests {
         assert_eq!(round, middle_drag);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn introduction_demonstration_round_trips_and_defaults() {
         let at = IntroductionPoint::Element { id: "transform".into(), offset: None };
-        let demo = IntroductionDemonstration::left_click(at.clone());
+        let demo = IntroductionDemonstration::left_click(at.clone()).await;
         assert_eq!(demo.cursor, None);
         let json = serde_json::to_string(&demo).unwrap();
         assert!(!json.contains("cursor"), "{json}");
@@ -6151,11 +6184,11 @@ mod app_label_tests {
         assert!(json.contains("\"demonstrations\":[]"), "{json}");
 
         // 🎬️ A step can sequence several demonstrations (e.g. zoom, then pan, then orbit).
-        let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).demonstrate(vec![
-            IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0),
-            IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }),
-            IntroductionDemonstration::orbit(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 500.0, y: 300.0 }),
-        ]);
+        let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).await.demonstrate(vec![
+            IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0).await,
+            IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }).await,
+            IntroductionDemonstration::orbit(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 500.0, y: 300.0 }).await,
+        ]).await;
         assert_eq!(with_demos.demonstrations.len(), 3);
         let json = serde_json::to_string(&with_demos).unwrap();
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
@@ -6176,7 +6209,7 @@ mod app_label_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_definition_serde_defaults() {
         let json = r#"{"id":"t","title":{"native":{"en":"T","de":"T"},"reuse":{"en":"T","de":"T"}},"durationMs":1000,"base":{"ui":{}},"tracks":{}}"#;
         let def: TutorialDefinition = serde_json::from_str(json).unwrap();
@@ -6190,7 +6223,7 @@ mod app_label_tests {
         assert_eq!(round, def);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_asset_src_round_trips_tagged_camel_case() {
         for asset in [
             TutorialAssetSrc::Url { url: "https://example.test/clip.webm".into() },
@@ -6206,7 +6239,7 @@ mod app_label_tests {
         assert!(json.contains("\"mediaType\""), "field must be camelCase: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_event_kind_round_trips_tagged_camel_case() {
         let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::to_dsl_value(&serde_json::json!({"kindId": "beam"})).expect("tutorial action args")) };
         let json = serde_json::to_string(&action).unwrap();
@@ -6220,7 +6253,7 @@ mod app_label_tests {
         assert_eq!(round, key);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_ui_change_round_trips_tagged_camel_case() {
         let change = TutorialUiChange::ActiveUtility { window_id: "puzzle3d-main".into(), utility_id: Some("transform".into()) };
         let json = serde_json::to_string(&change).unwrap();
@@ -6242,7 +6275,7 @@ mod app_label_tests {
         assert_eq!(round, selection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
         let edit = TutorialArtifactEventKind::Edit {
             forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate"})).expect("tutorial forward operation")],
@@ -6261,7 +6294,7 @@ mod app_label_tests {
         assert_eq!(json, r#"{"kind":"undo"}"#);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_state_round_trips_tagged_camel_case() {
         let orbit = TutorialCameraState::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(50.0) };
         let json = serde_json::to_string(&orbit).unwrap();
@@ -6276,9 +6309,9 @@ mod app_label_tests {
         assert_eq!(round, canvas);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.tracks.narration = vec![
             TutorialNarrationCue {
                 id: "b".into(),
@@ -6301,9 +6334,9 @@ mod app_label_tests {
                 captions: vec![],
             },
         ];
-        assert!(validate_tutorial(&def).is_err(), "unsorted narration must be rejected");
+        assert!(validate_tutorial(&def).await.is_err(), "unsorted narration must be rejected");
 
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.tracks.narration = vec![TutorialNarrationCue {
             id: "a".into(),
             at: 999_999,
@@ -6314,25 +6347,25 @@ mod app_label_tests {
             rate: 1.0,
             captions: vec![],
         }];
-        assert!(validate_tutorial(&def).is_err(), "entry beyond durationMs must be rejected");
+        assert!(validate_tutorial(&def).await.is_err(), "entry beyond durationMs must be rejected");
 
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.chapters.push(TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Dup"), body: None });
-        assert!(validate_tutorial(&def).is_err(), "duplicate chapter id must be rejected");
+        assert!(validate_tutorial(&def).await.is_err(), "duplicate chapter id must be rejected");
 
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.base.cameras.push(TutorialCameraKeyframe {
             at: 5,
             window_id: "w".into(),
             camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 },
             easing: TutorialEasing::default(),
         });
-        assert!(validate_tutorial(&def).is_err(), "base camera keyframe must be at == 0");
+        assert!(validate_tutorial(&def).await.is_err(), "base camera keyframe must be at == 0");
 
-        assert!(validate_tutorial(&minimal_tutorial()).is_ok());
+        assert!(validate_tutorial(&minimal_tutorial().await).await.is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_interpolation_lerps_position_and_target() {
         let prev = TutorialCameraKeyframe {
             at: 0,
@@ -6346,7 +6379,7 @@ mod app_label_tests {
             camera: TutorialCameraState::Orbit { position: [10.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(60.0) },
             easing: TutorialEasing::Linear,
         };
-        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
         match mid {
             TutorialCameraState::Orbit { position, fov, .. } => {
                 assert!((position[0] - 5.0).abs() < 1e-9, "expected midpoint lerp, got {position:?}");
@@ -6354,48 +6387,48 @@ mod app_label_tests {
             }
             other => panic!("expected Orbit, got {other:?}"),
         }
-        let start = interpolate_tutorial_camera(&prev, &next, 0.0);
+        let start = interpolate_tutorial_camera(&prev, &next, 0.0).await;
         assert_eq!(start, prev.camera);
-        let end = interpolate_tutorial_camera(&prev, &next, 1000.0);
+        let end = interpolate_tutorial_camera(&prev, &next, 1000.0).await;
         assert_eq!(end, next.camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_interpolation_zooms_in_log_space() {
         let prev =
             TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
         let next =
             TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Linear };
-        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
         match mid {
             TutorialCameraState::Canvas { zoom, .. } => assert!((zoom - 2.0).abs() < 1e-9, "log-space midpoint of 1..4 is 2, got {zoom}"),
             other => panic!("expected Canvas, got {other:?}"),
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_interpolation_hold_snaps_at_keyframe() {
         let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Hold };
         let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Hold };
-        assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
-        assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0), next.camera);
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0).await, prev.camera);
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0).await, next.camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_at_holds_first_pose_before_first_keyframe_and_last_pose_after() {
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.tracks.camera = vec![
             TutorialCameraKeyframe { at: 100, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear },
             TutorialCameraKeyframe { at: 900, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }, easing: TutorialEasing::Linear },
         ];
-        assert_eq!(tutorial_camera_at(&def, "w", 0.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
-        assert_eq!(tutorial_camera_at(&def, "w", 10_000.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
-        assert_eq!(tutorial_camera_at(&def, "other-window", 500.0), None);
+        assert_eq!(tutorial_camera_at(&def, "w", 0.0).await, Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
+        assert_eq!(tutorial_camera_at(&def, "w", 10_000.0).await, Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
+        assert_eq!(tutorial_camera_at(&def, "other-window", 500.0).await, None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.base.ui.active_tool_id = Some("fill".into());
         def.tracks.ui = vec![
             TutorialUiKeyframe {
@@ -6413,30 +6446,30 @@ mod app_label_tests {
             },
         ];
         // Before any sample: the base snapshot alone.
-        let at_0 = compose_tutorial_ui(&def, 0.0);
+        let at_0 = compose_tutorial_ui(&def, 0.0).await;
         assert_eq!(at_0.active_tool_id, Some("fill".into()));
         assert_eq!(at_0.active_mode_id, None);
         // After the snapshot but before its deltas.
-        let at_100 = compose_tutorial_ui(&def, 100.0);
+        let at_100 = compose_tutorial_ui(&def, 100.0).await;
         assert_eq!(at_100.active_mode_id, Some("edit".into()));
         assert_eq!(at_100.active_tool_id, None, "snapshot replaces the base wholesale");
         // After one delta.
-        let at_200 = compose_tutorial_ui(&def, 250.0);
+        let at_200 = compose_tutorial_ui(&def, 250.0).await;
         assert_eq!(at_200.active_tool_id, Some("brush".into()));
         // After both deltas.
-        let at_300 = compose_tutorial_ui(&def, 300.0);
+        let at_300 = compose_tutorial_ui(&def, 300.0).await;
         assert_eq!(at_300.active_tool_id, Some("brush".into()));
         assert_eq!(at_300.active_panel_tab_by_group.get("top-left"), Some(&"catalogue".to_string()));
         // After the selection delta: the framework-owned domain selection lands in `interaction_selection`.
-        let at_400 = compose_tutorial_ui(&def, 400.0);
+        let at_400 = compose_tutorial_ui(&def, 400.0).await;
         let selection = at_400.interaction_selection.get("mesh").expect("mesh domain selection");
         assert_eq!(selection.granularity, "face");
         assert_eq!(selection.ids, vec!["f1".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.tracks.document = vec![
             TutorialArtifactEvent {
                 at: 100,
@@ -6457,42 +6490,42 @@ mod app_label_tests {
                 },
             },
         ];
-        let forward = tutorial_slice(&def, 0.0, 250.0);
+        let forward = tutorial_slice(&def, 0.0, 250.0).await;
         assert!(forward.forward);
         assert_eq!(forward.document.len(), 2);
         let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
-        let backward = tutorial_slice(&def, 250.0, 0.0);
+        let backward = tutorial_slice(&def, 250.0, 0.0).await;
         assert!(!backward.forward);
         assert_eq!(backward.document.len(), 2);
         let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
         let empty = tutorial_slice(&def, 250.0, 250.0);
-        assert!(empty.document.is_empty());
+        assert!(empty.await.document.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
-        let mut def = minimal_tutorial();
+        let mut def = minimal_tutorial().await;
         def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
         def.tracks.ui =
             vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
-        let slice = tutorial_slice(&def, 0.0, 100.0);
+        let slice = tutorial_slice(&def, 0.0, 100.0).await;
         assert_eq!(slice.events.len(), 1);
         assert_eq!(slice.ui_changes.len(), 1);
         assert!(slice.document.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn start_tutorial_action_definition_offers_declared_tutorials_as_select_options() {
-        let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial()));
+        let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial().await)).await;
         assert_eq!(action.id, START_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
         assert_eq!(action.args.len(), 1);
         assert!(action.args[0].required);
-        match action.args[0].control() {
+        match action.args[0].control().await {
             ActionArgControl::Select { options } => {
                 assert_eq!(options.len(), 1);
                 assert_eq!(options[0].value, "welcome-tour");
@@ -6501,18 +6534,18 @@ mod app_label_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn record_tutorial_action_definition_is_shell_intercepted_and_out_of_palette() {
-        let action = record_tutorial_action_definition();
+        let action = record_tutorial_action_definition().await;
         assert_eq!(action.id, RECORD_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette);
         assert_eq!(action.kind, ActionKind::View);
     }
     //#endregion 🔖️TutorialTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dialog_definition_round_trips_camel_case_with_defaults() {
-        let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection"));
+        let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection").await).await;
         let json = serde_json::to_string(&dialog).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"submitAction\":\"deleteSelection\""), "{json}");
@@ -6522,25 +6555,27 @@ mod app_label_tests {
         assert_eq!(round, dialog);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dialog_definition_builder_chain() {
-        let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind"))
-            .body(LocalizedLabel::data("Choose a kind"))
-            .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind"))])
-            .submit_label(LocalizedLabel::data("Add"))
-            .cancel_label(LocalizedLabel::data("Nevermind"))
-            .on_cancel(ActionRef::new("closeDialog"));
+        let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind").await)
+            .await.body(LocalizedLabel::data("Choose a kind"))
+            .await.args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind")).await])
+            .await.submit_label(LocalizedLabel::data("Add"))
+            .await.cancel_label(LocalizedLabel::data("Nevermind"))
+            .await.on_cancel(ActionRef::new("closeDialog").await)
+            .await;
         assert_eq!(dialog.body.as_ref().map(|b| b.resolve(Terminology::Native, Locale::En)), Some("Choose a kind"));
         assert_eq!(dialog.args.len(), 1);
         assert_eq!(dialog.submit_label.resolve(Terminology::Native, Locale::En), "Add");
         assert_eq!(dialog.cancel_label.as_ref().map(|c| c.resolve(Terminology::Native, Locale::En)), Some("Nevermind"));
-        assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog")));
+        assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog").await));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_definition_round_trips_camel_case_with_defaults() {
         let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell)
-            .with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs));
+            .await.with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs).await)
+            .await;
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
@@ -6553,7 +6588,7 @@ mod app_label_tests {
     }
 
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
         let command = CommandInvocation {
             address: CommandAddress {
@@ -6581,11 +6616,11 @@ mod app_label_tests {
         assert!(action_json.contains("\"windowInstanceId\":\"main-1\""), "{action_json}");
         assert_eq!(serde_json::from_str::<ActionInvocation>(&action_json).unwrap(), action);
 
-        let os = OsDefinition { commands: vec![CommandDefinition::new_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell)] };
+        let os = OsDefinition { commands: vec![CommandDefinition::new_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell).await] };
         assert_eq!(serde_json::from_str::<OsDefinition>(&serde_json::to_string(&os).unwrap()).unwrap(), os);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_dialog_effect_round_trips_camel_case() {
         let effect = Effect::OpenDialog { req: RequestId(1), dialog_id: "addObject".into(), args: None };
         let json = serde_json::to_string(&effect).unwrap();
@@ -6594,7 +6629,7 @@ mod app_label_tests {
         assert_eq!(round, effect);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_action_effect_round_trips_camel_case() {
         let effect = Effect::DispatchAction {
             req: RequestId(2),
@@ -6613,7 +6648,7 @@ mod app_label_tests {
         assert_eq!(serde_json::from_str::<Effect>(&bare_json).unwrap(), bare);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn request_file_open_effect_round_trips_multiple() {
         let effect = Effect::RequestFileOpen {
             req: RequestId(4),
@@ -6644,7 +6679,7 @@ mod app_label_tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn request_media_frames_effect_round_trips_camel_case() {
         let effect = Effect::RequestMediaFrames {
             req: RequestId(6),
@@ -6712,7 +6747,7 @@ mod app_label_tests {
     /// ⚖️ LAW (contract freeze §1 C1): `parse_surface_app_id(surface_app_id(d, r)) == (d, r)` for
     /// every dialect in a fixture set covering subset `*`, a dotted standard, and a hyphenated
     /// artifact kind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn surface_app_id_round_trips_through_parse_surface_app_id() {
         let fixtures = [
             (ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor),
@@ -6720,20 +6755,20 @@ mod app_label_tests {
             (ArtifactDialect { artifact_kind: "s.stdio.dwg-2d".into(), standard: "1".into(), subset: "cc6".into() }, AppRole::Editor),
         ];
         for (dialect, role) in fixtures {
-            let id = surface_app_id(&dialect, role);
-            let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).unwrap_or_else(|err| panic!("{id}: {err}"));
+            let id = surface_app_id(&dialect, role).await;
+            let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).await.unwrap_or_else(|err| panic!("{id}: {err}"));
             assert_eq!(parsed_dialect, dialect, "{id}");
             assert_eq!(parsed_role, role, "{id}");
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_surface_app_id_rejects_missing_hash_and_unknown_role() {
-        assert!(parse_surface_app_id("s.cad.cad@1/*").is_err(), "missing '#role' suffix");
-        assert!(parse_surface_app_id("s.cad.cad@1/*#owner").is_err(), "role outside viewer/editor");
+        assert!(parse_surface_app_id("s.cad.cad@1/*").await.is_err(), "missing '#role' suffix");
+        assert!(parse_surface_app_id("s.cad.cad@1/*#owner").await.is_err(), "role outside viewer/editor");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_role_serde_wire_strings_are_exactly_viewer_and_editor() {
         assert_eq!(serde_json::to_string(&AppRole::Viewer).unwrap(), "\"viewer\"");
         assert_eq!(serde_json::to_string(&AppRole::Editor).unwrap(), "\"editor\"");
@@ -6742,21 +6777,21 @@ mod app_label_tests {
         assert!(serde_json::from_str::<AppRole>("\"owner\"").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_role_as_str_and_from_str_round_trip() {
-        assert_eq!(AppRole::Viewer.as_str(), "viewer");
-        assert_eq!(AppRole::Editor.as_str(), "editor");
+        assert_eq!(AppRole::Viewer.as_str().await, "viewer");
+        assert_eq!(AppRole::Editor.as_str().await, "editor");
         assert_eq!("viewer".parse::<AppRole>().unwrap(), AppRole::Viewer);
         assert_eq!("editor".parse::<AppRole>().unwrap(), AppRole::Editor);
         assert!("owner".parse::<AppRole>().is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn panel_tab_kind_settings_default_apps_id_str() {
-        assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
+        assert_eq!(PanelTabKind::SettingsDefaultApps.id_str().await, "framework.settings.default-apps");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_ref_serde_round_trips_as_camel_case() {
         let app_ref = AppRef { plugin_id: "s.cad".into(), app_id: "s.cad.cad@1/*#editor".into() };
         let json = serde_json::to_string(&app_ref).unwrap();
@@ -6766,7 +6801,7 @@ mod app_label_tests {
     //#endregion 🔖️SurfaceTests
 
     #[cfg(feature = "typegen")]
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exports_typescript_bindings() {
         use ts_rs::TS;
         ui_wgpu::wgpu::IconName::export().unwrap();

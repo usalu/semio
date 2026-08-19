@@ -53,6 +53,11 @@ pub mod host {
         /// or rolled-back load, matching a manual operator restart.
         quarantined: HashSet<String>,
         //#endregion 🔖️Quarantine
+        //#region 🔖️ExtensionInstall
+        /// 🧩️ Installed `.sxt` extension descriptors, keyed by `extension_id` — see
+        /// `install_extension_package`.
+        installed_extensions: HashMap<String, InstalledExtension>,
+        //#endregion 🔖️ExtensionInstall
     }
 
     impl Default for PluginHost {
@@ -63,7 +68,7 @@ pub mod host {
 
     impl PluginHost {
         pub fn new() -> Self {
-            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), quarantined: HashSet::new() }
+            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), quarantined: HashSet::new(), installed_extensions: HashMap::new() }
         }
 
         pub fn is_quarantined(&self, plugin_id: &str) -> bool {
@@ -804,9 +809,37 @@ pub mod host {
         }
     }
 
+    /// @emoji 🧬️ Enum dispatch over every `OsBackbonePort` implementor (O1 — dyn dispatch dropped in
+    /// favor of enum/match dispatch, mirroring `🏪️store`'s `BackbonePorts` shape exactly —
+    /// `📓️terra-store-dedyn-report.md`). `Store` covers every `store::BackbonePort`-shaped transport
+    /// (in-memory, localStorage) via the blanket bridge above; `Space` covers the host-only
+    /// file/folder-backed `backbone::SpaceBackbonePort`. These are the only two implementors in the
+    /// tree (verified: one blanket impl over `store::BackbonePort`, one direct impl on
+    /// `backbone::SpaceBackbonePort` — `📓️terra-os-backbone-report.md`).
+    pub enum OsBackbonePorts {
+        Store(store::BackbonePorts),
+        Space(crate::backbone::SpaceBackbonePort),
+    }
+
+    impl OsBackbonePort for OsBackbonePorts {
+        fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
+            match self {
+                Self::Store(port) => OsBackbonePort::read(port, uri),
+                Self::Space(port) => OsBackbonePort::read(port, uri),
+            }
+        }
+
+        fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
+            match self {
+                Self::Store(port) => OsBackbonePort::write(port, uri, payload),
+                Self::Space(port) => OsBackbonePort::write(port, uri, payload),
+            }
+        }
+    }
+
     /// @emoji 🌉️ Writes any `BackboneDocument<P, Op>` to `uri`, stamping its own `backbone` ref first —
     /// shared by every catalog write path below (space manifests, collections).
-    fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError>
+    fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
@@ -845,15 +878,15 @@ pub mod host {
 
     static SPACE_CATALOG_URIS: LazyLock<Mutex<HashMap<usize, HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-    fn port_key(port: &Arc<dyn OsBackbonePort>) -> usize {
+    fn port_key(port: &Arc<OsBackbonePorts>) -> usize {
         Arc::as_ptr(port) as *const () as usize
     }
 
-    fn track_os_space_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
+    fn track_os_space_backbone_uri(port: &Arc<OsBackbonePorts>, uri: &str) {
         SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(port_key(port)).or_default().insert(uri.into());
     }
 
-    fn untrack_os_space_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
+    fn untrack_os_space_backbone_uri(port: &Arc<OsBackbonePorts>, uri: &str) {
         if let Some(uris) = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get_mut(&port_key(port)) {
             uris.remove(uri);
         }
@@ -878,7 +911,7 @@ pub mod host {
     }
 
     /// @emoji 📚️ Lists persisted space manifests from the dev backbone namespace.
-    pub fn list_os_space_catalog_entries(port: Arc<dyn OsBackbonePort>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
+    pub fn list_os_space_catalog_entries(port: Arc<OsBackbonePorts>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
         let mut entries = Vec::new();
         let uris: Vec<String> = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(&port)).cloned().unwrap_or_default().into_iter().collect();
         for uri in uris {
@@ -902,7 +935,7 @@ pub mod host {
     /// `## The inversion`/`Addressing` in the plan: a space no longer auto-creates a workflow artifact
     /// (that's an explicit, later user action), only the collection every space needs to hold artifacts
     /// in the first place.
-    pub fn create_os_space(name: &str, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn create_os_space(name: &str, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = create_os_id("space");
         let collection_id = create_os_id("collection");
         let mut space_snapshot = space::empty_space_snapshot(name.trim(), kind, visibility);
@@ -921,7 +954,7 @@ pub mod host {
     }
 
     /// @emoji 🗑️ Deletes a space manifest and every collection it references from the dev backbone.
-    pub fn delete_os_space(space_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
+    pub fn delete_os_space(space_id: &str, port: Arc<OsBackbonePorts>) -> Result<(), VcsError> {
         let uri = space::space_backbone_uri(space_id);
         if let Ok(document) = load_os_space_document(space_id, port.clone()) {
             if let Ok(snapshot) = materialize_backbone_snapshot(&document, &[]) {
@@ -938,7 +971,7 @@ pub mod host {
 
     /// @emoji 🌉️ Shared admission tail for `import_os_space_from_dsl`/`import_os_space_from_pack`:
     /// mints a fresh id when the source carried none, syncs, and tracks the catalog uri.
-    fn admit_os_space_document(mut document: OsSpaceDocument, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    fn admit_os_space_document(mut document: OsSpaceDocument, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = if document.id.is_empty() { create_os_id("space") } else { document.id.clone() };
         let backbone_uri = space::space_backbone_uri(&space_id);
         document.id = space_id;
@@ -950,7 +983,7 @@ pub mod host {
     /// @emoji 📥️ Imports a space manifest dsl text (`export_os_space_dsl`'s counterpart) onto the dev
     /// backbone. Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
-    pub fn import_os_space_from_dsl(dsl: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn import_os_space_from_dsl(dsl: &str, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs;
         admit_os_space_document(
@@ -969,7 +1002,7 @@ pub mod host {
     }
 
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
-    pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let cursor = parsed.envelope.cursor.ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
         let document = BackboneDocument {
@@ -996,7 +1029,7 @@ pub mod host {
     }
 
     /// @emoji 📂️ Loads a space manifest from the dev backbone.
-    pub fn load_os_space_document(space_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceDocument, VcsError> {
+    pub fn load_os_space_document(space_id: &str, port: Arc<OsBackbonePorts>) -> Result<OsSpaceDocument, VcsError> {
         let backbone_uri = space::space_backbone_uri(space_id);
         let payload = port.read(&backbone_uri)?;
         if payload.is_empty() {
@@ -1006,7 +1039,7 @@ pub mod host {
     }
 
     /// @emoji 🌱️ Seeds the demo space when the catalog is empty.
-    pub fn seed_os_space_catalog_if_empty(seed_document: OsSpaceDocument, port: Arc<dyn OsBackbonePort>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
+    pub fn seed_os_space_catalog_if_empty(seed_document: OsSpaceDocument, port: Arc<OsBackbonePorts>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
         if !list_os_space_catalog_entries(port.clone())?.is_empty() {
             return Ok(None);
         }
@@ -1019,6 +1052,95 @@ pub mod host {
         Ok(Some(os_space_catalog_entry_from_document(&backbone_uri, &seeded)?))
     }
     //#endregion 🔖️SpaceCatalog
+
+    //#region 🔖️ExtensionInstall
+    /// 🧩️ One verified, installed `.sxt` extension package — `manifest` is the byte-for-byte
+    /// unpacked `store::extension::ExtensionPackageManifest` (contract freeze §4 already re-checked
+    /// by `install_extension_package` below, not merely trusted from `verify`); `content_hash` is
+    /// the same blake3 digest `store::extension::content_hash` computes over the full `.sxt` bytes,
+    /// kept alongside so a re-install of byte-identical bytes is detectable without re-hashing.
+    ///
+    /// Deliberately the `.sxt`-shaped twin of `kernel::ExtensionDescriptor`
+    /// (`🧰️framework/🔨️modules/🎠️kernel`, this ticket's other owned path) rather than a shared type:
+    /// this crate has no mount of that file, and `semio-framework-os-kernel` must never depend on
+    /// `semio-framework` (the same dependency-edge-law reason `PackagePluginDependency`'s own
+    /// docstring in `🧩️extension/🦀️component.rs` gives for ITS wire-shape duplication) — so the two
+    /// shapes are duplicated on purpose, exactly like that established precedent.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct InstalledExtension {
+        pub manifest: store::extension::ExtensionPackageManifest,
+        pub content_hash: String,
+    }
+
+    /// ⚠️ Failures installing an `.sxt` extension package. `Package` bubbles `store::extension`'s own
+    /// verify/unpack errors; `ExtendsMismatch` re-checks contract freeze §4
+    /// (`extends == dependencies[0].plugin_id`) at INSTALL time rather than only trusting the guest
+    /// SDK-side `assert!` (`ExtensionBundle::assert_extends_matches_primary_dependency`, which only
+    /// fires when the extension is BUILT) — a hand-crafted or corrupted `.sxt` must still be rejected
+    /// here, at the one place every runtime-installed extension actually passes through.
+    #[derive(Debug, thiserror::Error)]
+    pub enum ExtensionInstallError {
+        #[error("extension package: {0}")]
+        Package(#[from] store::extension::ExtensionPackageError),
+        #[error("extension {extension_id:?} declares extends={extends:?} but its first dependency is {actual:?} — contract freeze §4 requires extends == dependencies[0].plugin_id")]
+        ExtendsMismatch { extension_id: String, extends: String, actual: String },
+    }
+
+    impl PluginHost {
+        /// 📥️ Verifies + unpacks an `.sxt` byte stream and registers its descriptor, keyed by
+        /// `extension_id` — idempotent for a byte-identical reinstall. This is the "install" half of
+        /// `important.md`'s extension-activation ruling: "verify/unpack an `.sxt` → register its
+        /// descriptor". `async` (unlike this impl block's sibling query methods below): every
+        /// `store::extension` fn it calls — `verify`/`content_hash`, and
+        /// `ExtensionPackageManifest::extends_matches_primary_dependency` — is itself `async fn` on
+        /// disk (O1, universal async), so this is the one method in the region that genuinely must be.
+        pub async fn install_extension_package(&mut self, bytes: &[u8]) -> Result<InstalledExtension, ExtensionInstallError> {
+            let manifest = store::extension::verify(bytes).await?;
+            if !manifest.extends_matches_primary_dependency().await {
+                let actual = manifest.dependencies.first().map(|dependency| dependency.plugin_id.clone()).unwrap_or_default();
+                return Err(ExtensionInstallError::ExtendsMismatch { extension_id: manifest.extension_id.clone(), extends: manifest.extends.clone(), actual });
+            }
+            let content_hash = store::extension::content_hash(bytes).await;
+            let installed = InstalledExtension { manifest, content_hash };
+            self.installed_extensions.insert(installed.manifest.extension_id.clone(), installed.clone());
+            Ok(installed)
+        }
+
+        /// 🗑️ Removes an installed extension's descriptor. Once uninstalled it is no longer handed out
+        /// by `extensions_extending_plugin`, whether or not an actor for it is still live — see that
+        /// method's own docstring for the deactivation-cascade gap this leaves open (`Kernel` itself
+        /// exposes no `deactivate(...)` yet; see the report).
+        pub fn uninstall_extension_package(&mut self, extension_id: &str) -> Option<InstalledExtension> {
+            self.installed_extensions.remove(extension_id)
+        }
+
+        pub fn installed_extension(&self, extension_id: &str) -> Option<&InstalledExtension> {
+            self.installed_extensions.get(extension_id)
+        }
+
+        /// 🔍️ Every installed extension descriptor whose `extends` names `plugin_id` — the exact
+        /// query `important.md`'s extension-activation ruling specifies: "on plugin activation, the
+        /// kernel queries installed descriptors for `extends == plugin_id` and activates each as
+        /// `ActorKind::Extension`". Data-driven over `self.installed_extensions`: correct for 0, 1, or
+        /// the scale fixture's 2,500 synthetic extensions with zero special-casing by count (proven at
+        /// that scale by `🧰️framework/🔨️modules/🎠️kernel`'s own `extensions_extending` test and this
+        /// packet's standalone verification script — see the report). The caller feeds each returned
+        /// descriptor's `extension_id`/`extends` into `ActorKind::Extension { plugin, extension_id }`
+        /// and `🎠️activation.rs`'s `NativeKernelRuntime::activate` — see this method's own docstring
+        /// in the report for why that final wiring step is not done HERE.
+        pub fn extensions_extending_plugin(&self, plugin_id: &str) -> Vec<&InstalledExtension> {
+            self.installed_extensions.values().filter(|installed| installed.manifest.extends == plugin_id).collect()
+        }
+
+        /// 🔒️ "capabilities scoped to the parent" — intersects an extension's own capability asks
+        /// (`manifest.capabilities`, dotted capability-id strings) with its parent plugin's own
+        /// already-effective set, so an extension actor can never end up holding a capability its
+        /// host plugin does not itself hold (`📓️design-abi.md` §5's admission formula).
+        pub fn extension_capabilities_scoped_to_parent<'a>(&self, extension: &'a InstalledExtension, parent_effective_capabilities: &[String]) -> Vec<&'a str> {
+            extension.manifest.capabilities.iter().map(String::as_str).filter(|capability| parent_effective_capabilities.iter().any(|granted| granted == capability)).collect()
+        }
+    }
+    //#endregion 🔖️ExtensionInstall
 
     #[cfg(test)]
     mod tests {
@@ -1552,7 +1674,7 @@ pub mod host {
 
         #[test]
         fn creates_and_lists_space_catalog_entries() {
-            let port = Arc::new(MemoryBackbonePort::new());
+            let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(MemoryBackbonePort::new())));
             let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
             let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, port.clone()).expect("create");
             assert_eq!(entry.collection_count, 1, "create_os_space must seed exactly one default collection");
@@ -1822,6 +1944,123 @@ pub mod host {
             store::test_support::assert_document_pack_round_trip(&store);
         }
         // #endregion 🔖️DslAndOpText
+
+        //#region 🔖️ExtensionInstall
+        /// 🚫️async: E5 executor bridge — test-only (`📌️important.md` R4 clause 5: a `#[test] fn`
+        /// body is a sanctioned executor entry point). Separate from `🎠️activation.rs`'s one
+        /// PRODUCTION bridge in this same crate — R2's "at most one per crate" governs production
+        /// code, and R4 clause 5 explicitly does not count a test bridge against that census.
+        /// `store::extension::pack`/`verify`/`content_hash` and this module's own
+        /// `install_extension_package` are I/O-free (pure zip/hash work over in-memory bytes), so
+        /// they resolve on the first poll by construction.
+        fn block_on<F: std::future::Future>(future: F) -> F::Output {
+            use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+            fn no_op(_: *const ()) {}
+            fn clone(_: *const ()) -> RawWaker {
+                RawWaker::new(std::ptr::null(), &VTABLE)
+            }
+            static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, no_op, no_op, no_op);
+            let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
+            let mut cx = Context::from_waker(&waker);
+            let mut future = std::pin::pin!(future);
+            match future.as_mut().poll(&mut cx) {
+                Poll::Ready(value) => value,
+                Poll::Pending => panic!("block_on: extension install/pack futures are documented I/O-free"),
+            }
+        }
+
+        fn sample_extension_sxt(extension_id: &str, extends: &str, capabilities: Vec<String>) -> Vec<u8> {
+            let manifest = store::extension::ExtensionPackageManifest {
+                extension_id: extension_id.into(),
+                label: extension_id.into(),
+                version: "0.1.0".into(),
+                extends: extends.into(),
+                capabilities,
+                topic_contributions: serde_json::json!([]),
+                dependencies: vec![store::extension::PackagePluginDependency { plugin_id: extends.into(), version: "^1.0.0".into() }],
+                contributions: serde_json::json!([]),
+                package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
+            };
+            let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
+            block_on(store::extension::pack(&manifest, &component, &[])).expect("pack a valid sample .sxt")
+        }
+
+        /// 🧫️ Installs 30 real `.sxt` packages (real zip bytes, real blake3 hash — not a mock)
+        /// across 3 distinct parent plugins and proves `extensions_extending_plugin` returns
+        /// exactly the matching subset for each, with none for a plugin that installed nothing —
+        /// the actual install→query pipeline, not just the pure filter (that claim, at the scale
+        /// fixture's full 2,500-descriptor shape, is proven separately by
+        /// `🧰️framework/🔨️modules/🎠️kernel`'s own `extensions_extending` test and this packet's
+        /// standalone verification script — see the report).
+        #[test]
+        fn install_extension_package_registers_descriptors_queryable_by_extends() {
+            let mut host = PluginHost::new();
+            for i in 0..30 {
+                let extends = format!("plugin-{}", i % 3);
+                let bytes = sample_extension_sxt(&format!("ext-{i}"), &extends, vec!["storage.read".into()]);
+                let installed = block_on(host.install_extension_package(&bytes)).expect("valid sample .sxt installs");
+                assert_eq!(installed.manifest.extension_id, format!("ext-{i}"));
+                assert!(!installed.content_hash.is_empty());
+            }
+
+            for plugin_index in 0..3 {
+                let plugin_id = format!("plugin-{plugin_index}");
+                let matched = host.extensions_extending_plugin(&plugin_id);
+                assert_eq!(matched.len(), 10, "10 of 30 synthetic extensions extend {plugin_id}");
+                assert!(matched.iter().all(|installed| installed.manifest.extends == plugin_id));
+            }
+            assert!(host.extensions_extending_plugin("plugin-nonexistent").is_empty());
+        }
+
+        #[test]
+        fn install_extension_package_rejects_extends_mismatch() {
+            // 🩹️ `sample_extension_sxt` always writes a matching dependency; to exercise the
+            // rejection path this test packs a manifest whose `extends` disagrees with its own
+            // first dependency directly, rather than corrupting bytes (which `verify`'s own
+            // envelope/zip checks would reject for an unrelated reason).
+            let mismatched_manifest = store::extension::ExtensionPackageManifest {
+                extension_id: "ext-mismatch".into(),
+                label: "Ext Mismatch".into(),
+                version: "0.1.0".into(),
+                extends: "flow".into(),
+                capabilities: vec![],
+                topic_contributions: serde_json::json!([]),
+                dependencies: vec![store::extension::PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() }],
+                contributions: serde_json::json!([]),
+                package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
+            };
+            let manifest_bytes_source = block_on(store::extension::pack(&mismatched_manifest, b"\0asm\x01\x00\x00\x00x", &[])).expect("pack a structurally-valid but contract-violating .sxt");
+
+            let mut host = PluginHost::new();
+            let error = block_on(host.install_extension_package(&manifest_bytes_source)).expect_err("extends != dependencies[0].plugin_id must be rejected at install time");
+            assert!(matches!(error, ExtensionInstallError::ExtendsMismatch { extension_id, extends, actual } if extension_id == "ext-mismatch" && extends == "flow" && actual == "cad"));
+            assert!(host.extensions_extending_plugin("flow").is_empty(), "a rejected install must not register a descriptor");
+        }
+
+        #[test]
+        fn extension_capabilities_scoped_to_parent_drops_what_the_parent_lacks() {
+            let mut host = PluginHost::new();
+            let bytes = sample_extension_sxt("ext-caps", "cad", vec!["storage.read".into(), "storage.write".into()]);
+            let installed = block_on(host.install_extension_package(&bytes)).expect("valid sample .sxt installs");
+
+            let parent_effective = vec!["storage.read".to_string(), "http:example.com".to_string()];
+            let scoped = host.extension_capabilities_scoped_to_parent(&installed, &parent_effective);
+            assert_eq!(scoped, vec!["storage.read"], "storage.write is not in the parent's effective set");
+        }
+
+        #[test]
+        fn uninstall_extension_package_removes_it_from_the_query() {
+            let mut host = PluginHost::new();
+            let bytes = sample_extension_sxt("ext-removable", "cad", vec![]);
+            block_on(host.install_extension_package(&bytes)).expect("valid sample .sxt installs");
+            assert_eq!(host.extensions_extending_plugin("cad").len(), 1);
+
+            let removed = host.uninstall_extension_package("ext-removable").expect("previously installed");
+            assert_eq!(removed.manifest.extension_id, "ext-removable");
+            assert!(host.extensions_extending_plugin("cad").is_empty());
+            assert!(host.uninstall_extension_package("ext-removable").is_none(), "uninstall is not idempotent-returning on a second call");
+        }
+        //#endregion 🔖️ExtensionInstall
     }
     // #endregion host
 }
@@ -1832,7 +2071,7 @@ pub mod backbone {
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
     //! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
-    use crate::host::OsBackbonePort;
+    use crate::host::{OsBackbonePort, OsBackbonePorts};
     use crate::space;
     #[cfg(not(target_arch = "wasm32"))]
     use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
@@ -1977,13 +2216,13 @@ pub mod backbone {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open_folder_space_backbone(folder_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
-        Ok(Arc::new(SpaceBackbonePort::folder(folder_path)?))
+    pub fn open_folder_space_backbone(folder_path: &str) -> Result<Arc<OsBackbonePorts>, VcsError> {
+        Ok(Arc::new(OsBackbonePorts::Space(SpaceBackbonePort::folder(folder_path)?)))
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open_file_space_backbone(file_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
-        Ok(Arc::new(SpaceBackbonePort::file(file_path)?))
+    pub fn open_file_space_backbone(file_path: &str) -> Result<Arc<OsBackbonePorts>, VcsError> {
+        Ok(Arc::new(OsBackbonePorts::Space(SpaceBackbonePort::file(file_path)?)))
     }
     // #endregion backbone
 }
@@ -4845,7 +5084,7 @@ pub use crate::workflow::{
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 #[cfg(feature = "os-host-full")]
 pub use host::{
-    BackboneDocument, LoadedProgram, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost,
+    BackboneDocument, LoadedProgram, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, OsBackbonePort, OsBackbonePorts, OsCollectionDocument, OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost,
     ProgramHotSwapEvent, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack,
     import_os_space_from_dsl, import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty,
 };

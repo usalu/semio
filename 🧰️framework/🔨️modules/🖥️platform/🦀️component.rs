@@ -1,7 +1,7 @@
 // #region platform
 //! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
-use crate::action_bus::ActionBus;
+use crate::action_bus::{ActionBus, NoActionHandlers};
 use crate::ui::AppDefinition;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -19,7 +19,7 @@ pub struct PlatformSpec {
 }
 
 pub struct Platform {
-    pub action_bus: ActionBus,
+    pub action_bus: ActionBus<NoActionHandlers>,
     pub apps: Vec<AppDefinition>,
     pub active_app_id: String,
     pub generation: u64,
@@ -52,7 +52,7 @@ impl Platform {
             self.active_app_id = app.id.clone();
         }
         self.apps.push(app);
-        self.notify();
+        self.notify().await;
     }
 
     pub async fn get_active_app(&self) -> Option<&AppDefinition> {
@@ -67,7 +67,7 @@ impl Platform {
             return;
         }
         self.active_app_id = id;
-        self.notify_chrome();
+        self.notify_chrome().await;
     }
 
     pub async fn set_panel_visibility(&mut self, next: PanelVisibility) {
@@ -75,7 +75,7 @@ impl Platform {
             return;
         }
         self.panel_visibility = next;
-        self.notify_chrome();
+        self.notify_chrome().await;
     }
 
     pub async fn notify(&mut self) {
@@ -93,9 +93,9 @@ mod tests {
     use crate::ui::{ModeDefinition, WindowKindDefinition};
     use ui_wgpu::wgpu::LocalizedLabel;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adds_first_app_as_active() {
-        let mut platform = Platform::new(None);
+        let mut platform = Platform::new(None).await;
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
             role: crate::ui::AppRole::Editor,
@@ -145,10 +145,10 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: crate::ConfigSpec::empty(),
-            command_grammar: crate::CommandGrammar::empty(),
+            config: crate::ConfigSpec::empty().await,
+            command_grammar: crate::CommandGrammar::empty().await,
             io: crate::AppIo::default(),
-        });
+        }).await;
         assert_eq!(platform.active_app_id, "draw-play");
     }
 
@@ -202,48 +202,48 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: crate::ConfigSpec::empty(),
-            command_grammar: crate::CommandGrammar::empty(),
+            config: crate::ConfigSpec::empty().await,
+            command_grammar: crate::CommandGrammar::empty().await,
             io: crate::AppIo::default(),
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_app_id_is_noop_when_unchanged() {
-        let mut platform = Platform::new(None);
-        platform.add_app(minimal_app("draw"));
+        let mut platform = Platform::new(None).await;
+        platform.add_app(minimal_app("draw").await).await;
         let generation_before = platform.chrome_generation;
-        platform.set_active_app_id("draw".into());
+        platform.set_active_app_id("draw".into()).await;
         assert_eq!(platform.chrome_generation, generation_before, "same id must not bump chrome_generation");
-        platform.set_active_app_id("other".into());
+        platform.set_active_app_id("other".into()).await;
         assert_eq!(platform.chrome_generation, generation_before + 1);
         assert_eq!(platform.active_app_id, "other");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_active_app_falls_back_to_first_when_active_id_unknown() {
-        let mut platform = Platform::new(None);
-        platform.add_app(minimal_app("draw"));
+        let mut platform = Platform::new(None).await;
+        platform.add_app(minimal_app("draw").await).await;
         platform.active_app_id = "missing".into();
-        assert_eq!(platform.get_active_app().unwrap().id, "draw");
+        assert_eq!(platform.get_active_app().await.unwrap().id, "draw");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_panel_visibility_is_noop_when_unchanged_else_bumps_chrome_generation() {
-        let mut platform = Platform::new(None);
+        let mut platform = Platform::new(None).await;
         let generation_before = platform.chrome_generation;
-        platform.set_panel_visibility(PanelVisibility::default());
+        platform.set_panel_visibility(PanelVisibility::default()).await;
         assert_eq!(platform.chrome_generation, generation_before, "same visibility must not bump generation");
-        platform.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+        platform.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false }).await;
         assert_eq!(platform.chrome_generation, generation_before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn notify_and_notify_chrome_increment_independently() {
-        let mut platform = Platform::new(None);
-        platform.notify();
-        platform.notify();
-        platform.notify_chrome();
+        let mut platform = Platform::new(None).await;
+        platform.notify().await;
+        platform.notify().await;
+        platform.notify_chrome().await;
         assert_eq!(platform.generation, 2);
         assert_eq!(platform.chrome_generation, 1);
     }

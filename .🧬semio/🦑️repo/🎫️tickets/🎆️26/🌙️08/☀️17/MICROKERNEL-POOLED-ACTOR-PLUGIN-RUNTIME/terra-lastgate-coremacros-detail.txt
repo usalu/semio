@@ -1,0 +1,1006 @@
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6782:9
+     |
+6782 |         assert_eq!(AppRole::Viewer.as_str(), "viewer");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = TutorialCameraState>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6391:9
+     |
+6391 |         assert_eq!(start, prev.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = TutorialCameraState>
+     |         TutorialCameraState
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5957:9
+     |
+5957 |         assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::string::String>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<WindowLayout>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5817:9
+     |
+5817 |         assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main")), "named layout referenced by the mode wins");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<WindowLayout>>
+     |         std::option::Option<impl Future<Output = WindowLayout>>
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5957:9
+     |
+5957 |         assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6782:9
+     |
+6782 |         assert_eq!(AppRole::Viewer.as_str(), "viewer");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0277]: `impl Future<Output = TutorialCameraState>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6391:9
+     |
+6391 |         assert_eq!(start, prev.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = TutorialCameraState>`
+
+
+error[E0277]: `impl Future<Output = std::option::Option<WindowLayout>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5817:9
+     |
+5817 |         assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main")), "named layout referenced by the mode wins");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<WindowLayout>>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = TutorialCameraState>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6393:9
+     |
+6393 |         assert_eq!(end, next.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = TutorialCameraState>
+     |         TutorialCameraState
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5958:9
+     |
+5958 |         assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::string::String>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6783:9
+     |
+6783 |         assert_eq!(AppRole::Editor.as_str(), "editor");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5958:9
+     |
+5958 |         assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0277]: `impl Future<Output = TutorialCameraState>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6393:9
+     |
+6393 |         assert_eq!(end, next.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = TutorialCameraState>`
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6783:9
+     |
+6783 |         assert_eq!(AppRole::Editor.as_str(), "editor");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0277]: `impl Future<Output = WindowLayout>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5817:9
+     |
+5817 |         assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main")), "named layout referenced by the mode wins");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = WindowLayout>`
+     |
+help: the trait `Debug` is conditionally implemented for `std::option::Option<T>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:592:16
+     |
+ 592 | #[derive(Copy, Debug, Hash)]
+     |                ^^^^^
+...
+ 598 | pub enum Option<T> {
+     |                 - unsatisfied requirement introduced here: `impl Future<Output = WindowLayout>: Debug`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5959:9
+     |
+5959 |         assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::string::String>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<WindowLayout>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5820:9
+     |
+5820 | /         assert_eq!(
+5821 | |             resolve_layout_for_mode(&app, "edit"),
+5822 | |             Some(stack_layout("fallback")),
+5823 | |             "unresolved named layout id falls back to default_layout"
+5824 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = std::option::Option<WindowLayout>>
+     |           std::option::Option<impl Future<Output = WindowLayout>>
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5959:9
+     |
+5959 |         assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6791:9
+     |
+6791 |         assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = std::option::Option<WindowLayout>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5820:9
+     |
+5820 | /         assert_eq!(
+5821 | |             resolve_layout_for_mode(&app, "edit"),
+5822 | |             Some(stack_layout("fallback")),
+5823 | |             "unresolved named layout id falls back to default_layout"
+5824 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<WindowLayout>>`
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6791:9
+     |
+6791 |         assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0277]: `impl Future<Output = WindowLayout>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5820:9
+     |
+5820 | /         assert_eq!(
+5821 | |             resolve_layout_for_mode(&app, "edit"),
+5822 | |             Some(stack_layout("fallback")),
+5823 | |             "unresolved named layout id falls back to default_layout"
+5824 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = WindowLayout>`
+     |
+help: the trait `Debug` is conditionally implemented for `std::option::Option<T>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:592:16
+     |
+ 592 | #[derive(Copy, Debug, Hash)]
+     |                ^^^^^
+...
+ 598 | pub enum Option<T> {
+     |                 - unsatisfied requirement introduced here: `impl Future<Output = WindowLayout>: Debug`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<WindowLayout>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5827:9
+     |
+5827 |         assert_eq!(resolve_layout_for_mode(&app, "edit"), None, "no named layout and no default_layout ⇒ none");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<WindowLayout>>
+     |         std::option::Option<_>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = TutorialCameraState>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6413:9
+     |
+6413 |         assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = TutorialCameraState>
+     |         TutorialCameraState
+
+
+error[E0277]: `impl Future<Output = std::option::Option<WindowLayout>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5827:9
+     |
+5827 |         assert_eq!(resolve_layout_for_mode(&app, "edit"), None, "no named layout and no default_layout ⇒ none");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<WindowLayout>>`
+
+
+error[E0277]: `impl Future<Output = TutorialCameraState>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6413:9
+     |
+6413 |         assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = TutorialCameraState>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<WindowLayout>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5828:9
+     |
+5828 |         assert_eq!(resolve_layout_for_mode(&app, "nonexistent"), None, "unknown mode id ⇒ none");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<WindowLayout>>
+     |         std::option::Option<_>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = TutorialCameraState>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6414:9
+     |
+6414 |         assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0), next.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = TutorialCameraState>
+     |         TutorialCameraState
+
+
+error[E0277]: `impl Future<Output = std::option::Option<WindowLayout>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5828:9
+     |
+5828 |         assert_eq!(resolve_layout_for_mode(&app, "nonexistent"), None, "unknown mode id ⇒ none");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<WindowLayout>>`
+
+
+error[E0277]: `impl Future<Output = TutorialCameraState>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6414:9
+     |
+6414 |         assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0), next.camera);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = TutorialCameraState>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<TutorialCameraState>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6424:9
+     |
+6424 |         assert_eq!(tutorial_camera_at(&def, "w", 0.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<TutorialCameraState>>
+     |         std::option::Option<TutorialCameraState>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &[std::string::String]>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5835:9
+     |
+5835 |         assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &[std::string::String]>
+     |         [std::string::String; 2]
+
+
+error[E0277]: `impl Future<Output = std::option::Option<TutorialCameraState>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6424:9
+     |
+6424 |         assert_eq!(tutorial_camera_at(&def, "w", 0.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<TutorialCameraState>>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<TutorialCameraState>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6425:9
+     |
+6425 |         assert_eq!(tutorial_camera_at(&def, "w", 10_000.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<TutorialCameraState>>
+     |         std::option::Option<TutorialCameraState>
+
+
+error[E0277]: `impl Future<Output = std::option::Option<TutorialCameraState>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6425:9
+     |
+6425 |         assert_eq!(tutorial_camera_at(&def, "w", 10_000.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<TutorialCameraState>>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<TutorialCameraState>>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6426:9
+     |
+6426 |         assert_eq!(tutorial_camera_at(&def, "other-window", 500.0), None);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::option::Option<TutorialCameraState>>
+     |         std::option::Option<_>
+
+
+error[E0277]: `impl Future<Output = &[std::string::String]>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5835:9
+     |
+5835 |         assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &[std::string::String]>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &[std::string::String]>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5836:9
+     |
+5836 |         assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &[std::string::String]>
+     |         &[std::string::String]
+
+
+error[E0277]: `impl Future<Output = std::option::Option<TutorialCameraState>>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6426:9
+     |
+6426 |         assert_eq!(tutorial_camera_at(&def, "other-window", 500.0), None);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::option::Option<TutorialCameraState>>`
+
+
+error[E0277]: `impl Future<Output = &[std::string::String]>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5836:9
+     |
+5836 |         assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &[std::string::String]>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &[std::string::String]>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5837:9
+     |
+5837 |         assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &[std::string::String]>
+     |         &[std::string::String]
+
+
+error[E0277]: `impl Future<Output = &[std::string::String]>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5837:9
+     |
+5837 |         assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &[std::string::String]>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5844:9
+     |
+5844 |         assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::string::String>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5844:9
+     |
+5844 |         assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5845:9
+     |
+5845 |         assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = std::string::String>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5268:9
+     |
+5268 | /         assert_eq!(
+5269 | |             app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]),
+5270 | |             "semio · puzzle · 3d"
+5271 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = std::string::String>
+     |           &str
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5845:9
+     |
+5845 |         assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5846:9
+     |
+5846 | /         assert_eq!(
+5847 | |             app_window_label(&app, "native", Locale::En, "Draw"),
+5848 | |             "semio · a",
+5849 | |             "window label equal to the app label appends nothing"
+5850 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = std::string::String>
+     |           &str
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5268:9
+     |
+5268 | /         assert_eq!(
+5269 | |             app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]),
+5270 | |             "semio · puzzle · 3d"
+5271 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5846:9
+     |
+5846 | /         assert_eq!(
+5847 | |             app_window_label(&app, "native", Locale::En, "Draw"),
+5848 | |             "semio · a",
+5849 | |             "window label equal to the app label appends nothing"
+5850 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::string::String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5851:9
+     |
+5851 | /         assert_eq!(
+5852 | |             app_window_label(&app, "native", Locale::En, "A"),
+5853 | |             "semio · a",
+5854 | |             "window label equal to the document's trailing segment appends nothing"
+5855 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = std::string::String>
+     |           &str
+
+
+error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5851:9
+     |
+5851 | /         assert_eq!(
+5852 | |             app_window_label(&app, "native", Locale::En, "A"),
+5853 | |             "semio · a",
+5854 | |             "window label equal to the document's trailing segment appends nothing"
+5855 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5325:9
+     |
+5325 |         assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).await.control(), ActionArgControl::Text { placeholder: None });
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = ActionArgControl>
+     |         ActionArgControl
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5325:9
+     |
+5325 |         assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).await.control(), ActionArgControl::Text { placeholder: None });
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5326:9
+     |
+5326 | ...   assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).await.control(), ActionArgControl::Number { min: None, max: None, step: None });
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = ActionArgControl>
+     |       ActionArgControl
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaCompat>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5178:9
+     |
+5178 |         assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaCompat>
+     |         manifest::MediaCompat
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5326:9
+     |
+5326 | ...   assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).await.control(), ActionArgControl::Number { min: None, max: None, step: None });
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5327:9
+     |
+5327 | /         assert_eq!(
+5328 | |             ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control(),
+5329 | |             ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None }
+5330 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = ActionArgControl>
+     |           ActionArgControl
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5879:9
+     |
+5879 |         assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaCompat>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5178:9
+     |
+5178 |         assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaCompat>`
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5327:9
+     |
+5327 | /         assert_eq!(
+5328 | |             ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control(),
+5329 | |             ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None }
+5330 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5879:9
+     |
+5879 |         assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaCompat>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5179:9
+     |
+5179 | ...   assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the class");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = manifest::MediaCompat>
+     |       manifest::MediaCompat
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5880:9
+     |
+5880 |         assert_eq!(PanelGroup::Details.anchor(), "top-right");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaCompat>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5179:9
+     |
+5179 | ...   assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the class");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaCompat>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5331:9
+     |
+5331 |         assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).await.control(), ActionArgControl::Toggle);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = ActionArgControl>
+     |         ActionArgControl
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5880:9
+     |
+5880 |         assert_eq!(PanelGroup::Details.anchor(), "top-right");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5881:9
+     |
+5881 |         assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaCompat>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5182:9
+     |
+5182 |         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaCompat>
+     |         manifest::MediaCompat
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5331:9
+     |
+5331 |         assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).await.control(), ActionArgControl::Toggle);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5881:9
+     |
+5881 |         assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5882:9
+     |
+5882 |         assert_eq!(PanelGroup::Settings.anchor(), "bottom-right");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaCompat>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5182:9
+     |
+5182 |         assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaCompat>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaCompat>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5183:9
+     |
+5183 |         assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaCompat>
+     |         manifest::MediaCompat
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5882:9
+     |
+5882 |         assert_eq!(PanelGroup::Settings.anchor(), "bottom-right");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5333:9
+     |
+5333 | ...   assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).await.control(), ActionArgControl::Select { options });
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = ActionArgControl>
+     |       ActionArgControl
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5883:9
+     |
+5883 |         assert_eq!(PanelGroup::Workbench.as_str(), "workbench");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaCompat>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5183:9
+     |
+5183 |         assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaCompat>`
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5333:9
+     |
+5333 | ...   assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).await.control(), ActionArgControl::Select { options });
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5883:9
+     |
+5883 |         assert_eq!(PanelGroup::Workbench.as_str(), "workbench");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5334:9
+     |
+5334 |         assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).await.control(), ActionArgControl::Vec3);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = ActionArgControl>
+     |         ActionArgControl
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5884:9
+     |
+5884 |         assert_eq!(PanelGroup::Settings.as_str(), "settings");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &'static str>
+     |         &str
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaFingerprint>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5193:9
+     |
+5193 |         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaFingerprint>
+     |         impl Future<Output = manifest::MediaFingerprint>
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5334:9
+     |
+5334 |         assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).await.control(), ActionArgControl::Vec3);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5497:9
+     |
+5497 |         assert_eq!(UtilityRef::new("brush").await.as_str(), "brush");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5884:9
+     |
+5884 |         assert_eq!(PanelGroup::Settings.as_str(), "settings");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &'static str>`
+
+
+error[E0277]: `impl Future<Output = manifest::MediaFingerprint>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5193:9
+     |
+5193 |         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaFingerprint>`
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5497:9
+     |
+5497 |         assert_eq!(UtilityRef::new("brush").await.as_str(), "brush");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5498:9
+     |
+5498 |         assert_eq!(UtilityRef::from("brush").as_str(), "brush");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaFingerprint>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5193:9
+     |
+5193 |         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaFingerprint>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaFingerprint>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5199:9
+     |
+5199 |         assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaFingerprint>
+     |         impl Future<Output = manifest::MediaFingerprint>
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5498:9
+     |
+5498 |         assert_eq!(UtilityRef::from("brush").as_str(), "brush");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5343:9
+     |
+5343 | /         assert_eq!(
+5344 | |             ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control(),
+5345 | |             ActionArgControl::ArtifactKind { roles: roles.clone() }
+5346 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = ActionArgControl>
+     |           ActionArgControl
+
+
+error[E0277]: `impl Future<Output = manifest::MediaFingerprint>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5199:9
+     |
+5199 |         assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaFingerprint>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5889:9
+     |
+5889 |         assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaFingerprint>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5199:9
+     |
+5199 |         assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaFingerprint>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = manifest::MediaFingerprint>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5205:9
+     |
+5205 |         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = manifest::MediaFingerprint>
+     |         manifest::MediaFingerprint
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5343:9
+     |
+5343 | /         assert_eq!(
+5344 | |             ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control(),
+5345 | |             ActionArgControl::ArtifactKind { roles: roles.clone() }
+5346 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5889:9
+     |
+5889 |         assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5890:9
+     |
+5890 |         assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = manifest::MediaFingerprint>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5205:9
+     |
+5205 |         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = manifest::MediaFingerprint>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionArgControl>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5347:9
+     |
+5347 | /         assert_eq!(
+5348 | |             ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control(),
+5349 | |             ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() }
+5350 | |         );
+     | |         ^
+     | |         |
+     | |_________impl Future<Output = ActionArgControl>
+     |           ActionArgControl
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5890:9
+     |
+5890 |         assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5891:9
+     |
+5891 |         assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = ActionArgControl>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5347:9
+     |
+5347 | /         assert_eq!(
+5348 | |             ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control(),
+5349 | |             ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() }
+5350 | |         );
+     | |_________^ the trait `Debug` is not implemented for `impl Future<Output = ActionArgControl>`
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5891:9
+     |
+5891 |         assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5899:9
+     |
+5899 |         assert_eq!(tab.id(), "puzzle.catalogue");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = &str>
+     |         &str
+
+
+error[E0277]: `impl Future<Output = &str>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5899:9
+     |
+5899 |         assert_eq!(tab.id(), "puzzle.catalogue");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = &str>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ActionSemantics>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5366:9
+     |
+5366 |         assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = ActionSemantics>
+     |         impl Future<Output = ActionSemantics>
+
+
+error[E0277]: `impl Future<Output = ActionSemantics>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5366:9
+     |
+5366 |         assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionSemantics>`
+
+
+error[E0277]: `impl Future<Output = ActionSemantics>` doesn't implement `Debug`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5366:9
+     |
+5366 |         assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = ActionSemantics>`
+
+

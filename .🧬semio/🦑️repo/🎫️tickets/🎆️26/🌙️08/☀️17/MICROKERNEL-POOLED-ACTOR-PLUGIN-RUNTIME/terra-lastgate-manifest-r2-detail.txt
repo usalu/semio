@@ -1,0 +1,69 @@
+L1616:56 [E0277] `std::string::String` is not a future
+L1616:22 [E0277] the size for values of type `str` cannot be known at compilation time
+L1616:56 [E0277] the size for values of type `str` cannot be known at compilation time
+L5503:81 [E0277] can't compare `std::string::String` with `impl Future<Output = &str>`
+L6309:48 [E0277] `TutorialDefinition` is not a future
+L6334:48 [E0277] `TutorialDefinition` is not a future
+L6347:48 [E0277] `TutorialDefinition` is not a future
+L6351:48 [E0277] `TutorialDefinition` is not a future
+L6565:48 [E0308] mismatched types
+L5948:77 [E0308] mismatched types
+L6414:48 [E0277] `TutorialDefinition` is not a future
+L5437:85 [E0308] mismatched types
+L6426:48 [E0277] `TutorialDefinition` is not a future
+L5972:76 [E0277] `std::string::String` is not a future
+L6467:48 [E0277] `TutorialDefinition` is not a future
+L5478:47 [E0308] mismatched types
+L6506:48 [E0277] `TutorialDefinition` is not a future
+L5479:23 [E0308] arguments to this function are incorrect
+L5484:45 [E0308] mismatched types
+L5571:58 [E0308] mismatched types
+L5586:58 [E0308] mismatched types
+L6572:42 [E0277] the trait bound `impl Future<Output = CommandDefinition>: serde::Serialize` is not satisfied
+L6188:42 [E0277] the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+L5973:42 [E0277] the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+L5682:42 [E0277] the trait bound `impl Future<Output = manifest::AppDefinition>: serde::Serialize` is not satisfied
+L5396:24 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5397:24 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5401:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5402:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5405:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5406:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5407:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5410:24 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5411:24 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5412:24 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5415:26 [E0608] cannot index into a value of type `impl Future<Output = serde_json::Value>`
+L5423:13 [E0308] mismatched types
+L5767:39 [E0308] mismatched types
+L5768:36 [E0308] mismatched types
+L5769:36 [E0308] mismatched types
+L5785:54 [E0308] mismatched types
+L6042:42 [E0277] the trait bound `impl Future<Output = IntroductionStepDefinition>: serde::Serialize` is not satisfied
+L6054:87 [E0277] `std::string::String` is not a future
+L6055:97 [E0277] `std::string::String` is not a future
+L6056:86 [E0277] `std::string::String` is not a future
+L6057:87 [E0277] `std::string::String` is not a future
+L6060:87 [E0277] `std::string::String` is not a future
+L4258:31 [E0308] mismatched types
+L4259:31 [E0308] mismatched types
+L4260:28 [E0308] mismatched types
+L4189:40 [E0308] mismatched types
+L4200:36 [E0599] the method `clone` exists for struct `Vec<impl Future<Output = manifest::PluginManifest>>`, but its trait bounds were not satisfied
+L4202:39 [E0308] mismatched types
+L4203:39 [E0308] mismatched types
+L4219:40 [E0308] mismatched types
+L4233:40 [E0308] mismatched types
+L6518:77 [E0716] temporary value dropped while borrowed
+L6520:18 [E0382] use of moved value: `action`
+L6521:20 [E0382] use of moved value: `action`
+L6522:17 [E0382] use of moved value: `action`
+L6523:15 [E0382] use of moved value: `action`
+L5452:55 [E0716] temporary value dropped while borrowed
+L5310:17 [E0382] use of moved value: `arg`
+L5311:20 [E0382] use of moved value: `arg`
+L5312:20 [E0382] use of moved value: `arg`
+L5313:26 [E0382] use of moved value: `arg`
+L5386:20 [E0382] use of moved value: `action`
+L5387:20 [E0382] use of moved value: `action`
+L5388:20 [E0382] use of moved value: `action`

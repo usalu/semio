@@ -100,11 +100,136 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
 }
 //#endregion EphemeralLane
 
+//#region 🔖️TurnOutcomeBroadcast
+/** 📨️ One instance's reply to whatever {@link PluginWasmHandle.enqueue} most recently queued for
+ * it — the async-stream replacement for the old handle's synchronous `(instanceId, frames) ->
+ * Promise<frames>` per-call RPC shape (`📌️important.md`'s "Replace, never wrap" list — the removed
+ * method's name is deliberately not repeated here, see that list). That old shape assumed a command's
+ * reply always lands on the SAME call that sent it; under
+ * the turn model a reply may arrive N turns later, so `enqueue` returns nothing and a caller
+ * correlates against this stream instead — `AppChannelClient` (`💻️os/🟦️component.ts`) is the
+ * host-side correlator (FIFO per `instanceId`, matching every real call site's own sequential-await
+ * usage today). `frames` mirrors what the old method used to resolve with directly; `error` covers
+ * what used to REJECT that promise (a turn submission failure, e.g. a trapped actor — an
+ * `AppFrame::Error` frame is still an ordinary `frames` entry, decoded by the caller exactly as
+ * before). */
+export type TurnOutcome = { readonly instanceId: number; readonly frames: readonly Uint8Array[] } | { readonly instanceId: number; readonly error: unknown };
+
+/** 📡️ Multicast queue backing {@link PluginWasmHandle.outcomes}: every independent
+ * `[Symbol.asyncIterator]()` call (one per live `AppChannelClient`) gets its OWN subscription fed
+ * every {@link push}ed value, rather than several callers racing to drain one shared FIFO — required
+ * because more than one live instance's client iterates the SAME handle-wide stream at once, each
+ * filtering to its own `instanceId`. A subscriber unregisters itself the instant its iterator's
+ * `return()` is called (what `for await...of`'s `break`/an uncaught throw triggers automatically, and
+ * what `AppChannelClient.dispose()` calls explicitly on teardown); {@link complete} force-closes every
+ * still-live subscriber at once, for {@link PluginWasmHandle.dispose}. */
+export function createTurnOutcomeBroadcast<T>(): { readonly push: (value: T) => void; readonly complete: () => void; readonly stream: AsyncIterable<T> } {
+  const subscribers = new Set<{ queue: T[]; resolve: ((result: IteratorResult<T>) => void) | null }>();
+  return {
+    push: (value) => {
+      for (const subscriber of subscribers) {
+        if (subscriber.resolve) {
+          const resolve = subscriber.resolve;
+          subscriber.resolve = null;
+          resolve({ value, done: false });
+        } else {
+          subscriber.queue.push(value);
+        }
+      }
+    },
+    complete: () => {
+      for (const subscriber of subscribers) subscriber.resolve?.({ value: undefined as unknown as T, done: true });
+      subscribers.clear();
+    },
+    stream: {
+      [Symbol.asyncIterator](): AsyncIterator<T> {
+        const subscriber: { queue: T[]; resolve: ((result: IteratorResult<T>) => void) | null } = { queue: [], resolve: null };
+        subscribers.add(subscriber);
+        return {
+          next: (): Promise<IteratorResult<T>> => {
+            if (subscriber.queue.length > 0) return Promise.resolve({ value: subscriber.queue.shift() as T, done: false });
+            return new Promise<IteratorResult<T>>((resolve) => {
+              subscriber.resolve = resolve;
+            });
+          },
+          return: (): Promise<IteratorResult<T>> => {
+            subscribers.delete(subscriber);
+            return Promise.resolve({ value: undefined as unknown as T, done: true });
+          },
+        };
+      },
+    },
+  };
+}
+//#endregion 🔖️TurnOutcomeBroadcast
+
+//#region 🧪️TurnOutcomeBroadcastTests
+/** 🧪️ Kept right against `createTurnOutcomeBroadcast` — this is the ONE new primitive
+ * `PluginWasmHandle.outcomes` and `AppChannelClient` (`💻️os/🟦️component.ts`) both depend on, so its
+ * multicast/unsubscribe/force-close contract is worth pinning here rather than only indirectly via a
+ * `loadPluginModule` integration test (which needs a real `Worker` this suite doesn't have — see
+ * `PluginRuntime/🟦️component.tsx`'s own header doc on that pre-existing limitation). */
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("createTurnOutcomeBroadcast", () => {
+    it("multicasts one pushed value to EVERY live subscriber, not a shared drain-once FIFO", async () => {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const iteratorA = broadcast.stream[Symbol.asyncIterator]();
+      const iteratorB = broadcast.stream[Symbol.asyncIterator]();
+      broadcast.push({ instanceId: 1, frames: [] });
+      const [stepA, stepB] = await Promise.all([iteratorA.next(), iteratorB.next()]);
+      expect(stepA).toEqual({ value: { instanceId: 1, frames: [] }, done: false });
+      expect(stepB).toEqual({ value: { instanceId: 1, frames: [] }, done: false });
+    });
+
+    it("queues a value pushed before next() is called, and delivers queued values in push order", async () => {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const iterator = broadcast.stream[Symbol.asyncIterator]();
+      broadcast.push({ instanceId: 2, frames: [] });
+      broadcast.push({ instanceId: 3, frames: [] });
+      expect(await iterator.next()).toEqual({ value: { instanceId: 2, frames: [] }, done: false });
+      expect(await iterator.next()).toEqual({ value: { instanceId: 3, frames: [] }, done: false });
+    });
+
+    it("return() unsubscribes immediately — a later push never reaches a next() called after it", async () => {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const iterator = broadcast.stream[Symbol.asyncIterator]();
+      expect(await iterator.return?.()).toEqual({ value: undefined, done: true });
+      const pending = iterator.next();
+      broadcast.push({ instanceId: 4, frames: [] });
+      // 🎯️ an unsubscribed iterator's next() must NOT resolve from this push — racing it against an
+      // already-resolved promise proves it is still pending, not that it settled "not yet" by luck.
+      const raceResult = await Promise.race([pending.then(() => "resolved" as const), Promise.resolve("not-yet" as const)]);
+      expect(raceResult).toBe("not-yet");
+    });
+
+    it("complete() force-closes every still-live subscriber at once", async () => {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const iteratorA = broadcast.stream[Symbol.asyncIterator]();
+      const iteratorB = broadcast.stream[Symbol.asyncIterator]();
+      const pendingA = iteratorA.next();
+      const pendingB = iteratorB.next();
+      broadcast.complete();
+      expect(await pendingA).toEqual({ value: undefined, done: true });
+      expect(await pendingB).toEqual({ value: undefined, done: true });
+    });
+  });
+}
+//#endregion 🧪️TurnOutcomeBroadcastTests
+
 export type PluginWasmHandle = {
   readonly manifest: () => Promise<Uint8Array>;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly exchange: (instanceId: number, frames: Uint8Array[]) => Promise<Uint8Array[]>;
+  /** 📤️ Fire-and-forget: queues `events` (encoded `AppCommand` frames) for `instanceId`'s next turn
+   * and returns immediately. The turn's result arrives later on {@link outcomes}, never as this call's
+   * return value — replaces the old handle's synchronous per-call method, whose `Promise<Uint8Array[]>`
+   * return shape wrongly assumed a reply always lands on the turn it was sent on (R2). */
+  readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void;
+  /** 📥️ Every live instance's turn outcomes, multicast (see {@link createTurnOutcomeBroadcast}) —
+   * a caller filters to the `instanceId`(s) it owns. */
+  readonly outcomes: AsyncIterable<TurnOutcome>;
   readonly dispose: () => void;
 };
 
@@ -193,8 +318,8 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
       return { type: "text", value: `Extension unavailable: ${pluginId}` };
     }
     // 🚧️ Rendering a contributor's UI body now goes through `AppChannelClient.refreshUi`
-    // (`RefreshUi` → `UiSection` over `exchange`, os-product `🔖️AppChannelClient` region) instead
-    // of the removed per-verb `render`/`renderWithDocument`. Wiring that dispatch loop into this
+    // (`RefreshUi` → `UiSection` over the app-channel handle, os-product `🔖️AppChannelClient` region)
+    // instead of the removed per-verb `render`/`renderWithDocument`. Wiring that dispatch loop into this
     // exact call site is the dedicated follow-up work package this ticket flags for the React
     // renderer's dispatch/refresh loops — until then an external slot degrades to unavailable
     // rather than silently guessing at `SectionProbe.kind`/body-key framing.
@@ -1449,7 +1574,7 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uin
  * `🟨️host-shim.js` now implements only the `pure` WIT interface (`log`/`now-ms`/`trace-span`) —
  * `backboneSend`/`backbonePoll`/`backboneStatus` were deleted (design-runtime.md §3), because
  * `world actor` has no synchronous host import for them anymore. Every read/write/network/backbone
- * -shaped exchange now flows through the effect/event turn loop instead (`events::message-event`
+ * -shaped call now flows through the effect/event turn loop instead (`events::message-event`
  * replaces "the `backbone-poll` push", per `component.wit`'s own doc comment on that variant).
  *
  * This function is kept — `pluginId` stays a real parameter, `ShellHost/🟦️component.tsx` (registrar-

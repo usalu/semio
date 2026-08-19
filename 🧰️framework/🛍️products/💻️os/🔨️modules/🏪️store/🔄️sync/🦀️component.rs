@@ -2344,7 +2344,7 @@ mod tests {
     }
 
     //#region 🧪️SyncSession
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).expect("valid receive fixture");
@@ -2354,7 +2354,7 @@ mod tests {
         assert_eq!(session.store.envelope().vcs.edits.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).expect("valid out-of-order fixture");
@@ -2371,7 +2371,7 @@ mod tests {
     //#endregion 🧪️SyncSession
 
     //#region 🧪️Helpers
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
         assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
         assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None), "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
@@ -2389,7 +2389,7 @@ mod tests {
     /// helper both actors call: sets both fields from the actor's own `session_color`/`hub_surface`
     /// state, overwriting whatever the shell handed in, and clears `surface` to `None` when the
     /// document has no hub binding (folder-only) even if `session_color` is somehow set.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         let mut peer = PresencePeer { actor: "actor-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: Some(99), surface: Some("shell-should-never-set-this".into()), views: Vec::new(), ui: None };
         stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor"));
@@ -2407,7 +2407,7 @@ mod tests {
     // local/wire bridge it tested (`to_wire_envelope`/`from_wire_envelope`) no longer exists; local
     // and wire envelopes are the same `crate::os_spr::MutationEnvelope` type now, an identity the type
     // system enforces, not something a round-trip test needs to prove.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
         let envelope = sample_operation_envelope("edit-1", 5);
         let rollback = rollback_envelope(&envelope);
@@ -2432,7 +2432,7 @@ mod tests {
     /// to 20 with `server-session.bin` (`ServerFrame::Session`, tag 9); `client-presence.bin`/
     /// `server-presence.bin` regenerate off `sample_presence_peer_with_interaction`'s v3 shape
     /// (`color`/`surface`/`views`/`ui`, no more `cursor`/`viewport`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
         std::fs::create_dir_all(&fixtures_dir).expect("fixtures dir");
@@ -2598,7 +2598,7 @@ mod tests {
     // pointer left behind.
 
     //#region 🧪️PresenceInteraction
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
         let mut producer = PresenceHeartbeatProducer::new(100);
         let mut first = sample_presence_peer_with_interaction();
@@ -2617,7 +2617,7 @@ mod tests {
         assert!(producer.pending().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
         let host = ArtifactHost::new();
         let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
@@ -2650,7 +2650,7 @@ mod tests {
     //#region 🧪️Helpers
 
     #[cfg(not(target_arch = "wasm32"))]
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         let edit = crate::os_spr::HistoryEdit {
             id: "ext-1".into(),
@@ -3190,7 +3190,7 @@ mod tests {
     /// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
     /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
     /// storage mechanics: per-id keying, upsert-in-place, and the folder-wide index.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folder_sqlite_storage_round_trips_by_document_id() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -3213,7 +3213,7 @@ mod tests {
     /// full write/read cycle through the ACTUAL `FolderSqliteStorage` byte storage (`store`'s own
     /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
     /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -3244,7 +3244,7 @@ mod tests {
     /// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
     /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
     /// `store`'s own test suite for that law, exercised correctly there).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
@@ -3279,7 +3279,7 @@ mod tests {
     /// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
     /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
     /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_pack() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
@@ -3324,7 +3324,7 @@ mod tests {
         assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blob_store_put_get_dedupes_idempotently() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());

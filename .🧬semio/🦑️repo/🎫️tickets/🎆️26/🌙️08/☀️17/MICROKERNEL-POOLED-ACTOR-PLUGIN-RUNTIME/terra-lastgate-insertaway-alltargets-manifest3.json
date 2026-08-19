@@ -1,0 +1,976 @@
+{
+  "crate": "semio-framework",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 583,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 192
+    }
+  ],
+  "residual_errors": 583,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:1447",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:1458",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2078",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2095",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2107",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2135",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2165",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2253",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2277",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2289",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2302",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2330",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2340",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2351",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2365",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2373",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2799",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2817",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2834",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2848",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2863",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2879",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2894",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2931",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:102",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:128",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:205",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:206",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5720",
+      "code": "E0382",
+      "msg": "use of moved value: `app`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5721",
+      "code": "E0382",
+      "msg": "use of moved value: `app`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:141",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:142",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/./../../🔨️modules/🕹️interaction/🦀️component.rs:143",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2533",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2647",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2648",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2649",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2649",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2658",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2826",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2827",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2788",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2506",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2789",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2507",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2791",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2792",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2793",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2638",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2833",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2639",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2834",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2835",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2836",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2640",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2541",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2640",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2866",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2877",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2557",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2642",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2675",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2676",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2677",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2678",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2879",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2562",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2567",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2689",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2691",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2885",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2887",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2718",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2569",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2571",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2888",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2891",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2901",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2573",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2578",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2579",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2579",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2581",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2582",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2589",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2590",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2594",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2595",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2597",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2742",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2597",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2599",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2600",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2743",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2605",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2606",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2607",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2607",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2609",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2610",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2746",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2615",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2618",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2619",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2621",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2622",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2622",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2753",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:99",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5933",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5934",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5935",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5936",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5937",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5938",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5939",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5940",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:148",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:149",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:152",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2627",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2628",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2629",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2630",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2631",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2632",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2633",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<WorkflowDelivery>>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2758",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:214",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2767",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2770",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:215",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2772",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2773",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2773",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2775",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2776",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2778",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2779",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2779",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2781",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2782",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:216",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:217",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:218",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:219",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:220",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:226",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:227",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:228",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:234",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5987",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5988",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5989",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5990",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5991",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:235",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:236",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:237",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:238",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:244",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5396",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5397",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:245",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5401",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5402",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5405",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5406",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5407",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5410",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5411",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5412",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5415",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = serde_json::Value>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:246",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:247",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🖥️platform/🦀️component.rs:248",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4684",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4690",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:4692",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6536",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:6537",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5465",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5467",
+      "code": "E0382",
+      "msg": "use of moved value: `effective`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5310",
+      "code": "E0382",
+      "msg": "use of moved value: `arg`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5311",
+      "code": "E0382",
+      "msg": "use of moved value: `arg`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5312",
+      "code": "E0382",
+      "msg": "use of moved value: `arg`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5313",
+      "code": "E0382",
+      "msg": "use of moved value: `arg`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5386",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5387",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    },
+    {
+      "at": "🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5388",
+      "code": "E0382",
+      "msg": "use of moved value: `action`"
+    }
+  ]
+}

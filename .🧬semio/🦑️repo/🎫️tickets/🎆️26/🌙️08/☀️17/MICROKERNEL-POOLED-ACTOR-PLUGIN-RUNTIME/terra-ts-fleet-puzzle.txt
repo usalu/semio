@@ -1,0 +1,35 @@
+
+> nx run @semio-tech/puzzle-js:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript
+
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships a non-empty dsl asset 4ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships nonempty op/pack/spr assets 7ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships a non-empty dsl asset 3ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships nonempty op/pack/spr assets 1ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️test.ts > example 🎬️demo-session > ships a non-empty cmd demo script 4ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships a non-empty dsl asset 3ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships nonempty op/pack/spr assets 1ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️test.ts > example 🎬️demo-session > ships a non-empty cmd demo script 3ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships a non-empty dsl asset 4ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🟦️test.ts > example 🏗️nakagin-capsule-tower > ships nonempty op/pack/spr assets 2ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships a non-empty dsl asset 3ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships nonempty op/pack/spr assets 1ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships a non-empty dsl asset 6ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🟦️test.ts > example 🌲️concrete-forest > ships nonempty op/pack/spr assets 1ms
+ ✓ |@semio-tech/puzzle-js| ../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️test.ts > example 🎬️demo-session > ships a non-empty cmd demo script 6ms
+
+ Test Files  9 passed (9)
+      Tests  15 passed (15)
+   Start at  21:24:46
+   Duration  407ms (transform 208ms, setup 0ms, import 399ms, tests 69ms, environment 2ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/puzzle-js
+
+

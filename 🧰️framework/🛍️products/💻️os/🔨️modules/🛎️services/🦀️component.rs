@@ -487,7 +487,7 @@ impl TimerWheel {
     /// the loop is a detached, indefinitely-recurring task; `ctx` identifies the DRIVER task itself
     /// (its own cancellation/lane), independent of the per-firing `actor`/`generation`/`lane` each
     /// [`TimerFired`] already carries.
-    pub fn spawn_driver(&self, runtime: &Arc<dyn HostAsyncRuntime>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
+    pub fn spawn_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
         let core = self.core.clone();
         let wake = self.wake.clone();
         let runtime_for_loop = runtime.clone();
@@ -559,7 +559,7 @@ impl ComputePool {
     /// `runtime.sleep_until(deadline)` whenever `ctx.deadline_ms` is set — either race losing
     /// returns [`ComputeError::DeadlineExceeded`] rather than letting a caller wait past its own
     /// stated deadline.
-    pub async fn run_blocking<T: Send + 'static>(&self, runtime: &dyn HostAsyncRuntime, scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+    pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
         let admission = self.admission.clone();
         let permit = match ctx.deadline_ms {
             Some(deadline_ms) => {
@@ -645,6 +645,19 @@ impl std::error::Error for HttpPoolError {}
 /// `self` — the same shape [`AsyncHttpTransport::start`] itself uses. This is the ONE body type fed
 /// to [`HttpPool::fetch`]'s [`HttpPoolBody`] wrapper; a later packet reuses it verbatim for the WASI
 /// `stream<u8>` writer and the poll world's chunked events — see the crate report's `## seam design`.
+// 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight.
+// `next_chunk` is plain sync (returns a `HostFuture`, doesn't take the `async` keyword), so `dyn
+// HttpBody` is not an E0038 violation and stays R1-legal. Neither de-dyn mechanism fits: (a) closed
+// set — the real production set is exactly ONE impl (`BufferedHttpBody`, R11 case 3 would apply),
+// but `AsyncHttpTransport::start` (a sibling trait, out of this packet's family list) returns
+// `Box<dyn HttpBody>` from its OWN trait-level signature, and a `#[cfg(test)]`-only second
+// implementor (`LocalSocketBody`, this file's own tests) implements that SAME trait method with a
+// genuinely different concrete body type — collapsing to one concrete type would break the test
+// impl, and fixing that means giving `AsyncHttpTransport` an associated type, out of scope here. (b)
+// `dyn_enum_close!` — its variant DSL has no per-variant `#[cfg]` (confirmed empirically for
+// `VersionGraph`'s own `#[cfg(feature = "vcs")]` case, same file family), so a `#[cfg(test)]`-only
+// variant cannot be expressed in one enum declaration. Revisit alongside `AsyncHttpTransport` if
+// that trait ever gains an associated `Body` type.
 pub trait HttpBody: Send {
     fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>>;
 }
@@ -665,6 +678,17 @@ pub trait AsyncHttpTransport: Send + Sync {
 /// HttpTransport>`, and a real transport (a `ureq`-backed one, or a real connection-pooling client)
 /// is later-packet wiring — see the crate report's `## honest gaps`. Kept as a trait rather than a
 /// concrete client so this crate adds no new external HTTP dependency of its own.
+// 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight. `call` is
+// plain sync (no `async fn`), so `dyn HttpTransport` is not an E0038 violation and stays R1-legal.
+// Closing it fully would need EITHER (a) `dyn_enum_close!`, impossible here: implementors span two
+// crates in a one-directional dependency (`semio-framework-os-kernel`'s `📇️directory::
+// UreqHttpTransport` implements a trait `semio-framework-os-services` defines, so `os-services`
+// cannot name `UreqHttpTransport` without a reverse dependency) — OR (b) generics, which would force
+// the widely-referenced, non-generic `HttpPool`/`HttpPoolTransport` (60 references across 5 files,
+// including `📺️renderer/…/Shell/🧊️component.rs` — flagged in `📌️important.md` as live/shared with
+// concurrent tickets right now) to become generic too, for a trait that costs nothing left as `dyn`.
+// Revisit if `HttpTransport` ever needs to become `async fn` (R2/universal-async) — an async trait
+// method genuinely cannot stay `dyn`, unlike this sync one.
 pub trait HttpTransport: Send + Sync {
     fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error>;
 }
@@ -697,20 +721,20 @@ impl HttpBody for BufferedHttpBody {
 /// CONSTRUCTION time (unlike `HttpPool::fetch`'s own `runtime`/`scope` parameters) because
 /// [`AsyncHttpTransport::start`] itself takes neither — a transport that needs to reach
 /// `ComputePool::run_blocking` must own that context itself.
-pub struct BlockingHttpTransport {
+pub struct BlockingHttpTransport<R: HostAsyncRuntime> {
     transport: Arc<dyn HttpTransport>,
     compute: Arc<ComputePool>,
-    runtime: Arc<dyn HostAsyncRuntime>,
+    runtime: Arc<R>,
     scope: ScopeHandle,
 }
 
-impl BlockingHttpTransport {
-    pub fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle) -> BlockingHttpTransport {
+impl<R: HostAsyncRuntime> BlockingHttpTransport<R> {
+    pub fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, runtime: Arc<R>, scope: ScopeHandle) -> BlockingHttpTransport<R> {
         BlockingHttpTransport { transport, compute, runtime, scope }
     }
 }
 
-impl AsyncHttpTransport for BlockingHttpTransport {
+impl<R: HostAsyncRuntime + 'static> AsyncHttpTransport for BlockingHttpTransport<R> {
     fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
         let transport = self.transport.clone();
         let compute = self.compute.clone();
@@ -831,7 +855,7 @@ impl HttpPool {
     /// then tops EVERY currently-tracked package's bucket back toward its cap, forever — the loop
     /// this crate's own doc comment used to admit did not exist now actually runs. `ctx` identifies
     /// the DRIVER task itself, same convention as [`TimerWheel::spawn_driver`].
-    pub fn spawn_refill_driver(&self, runtime: &Arc<dyn HostAsyncRuntime>, scope: &ScopeHandle, ctx: OperationContext) {
+    pub fn spawn_refill_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext) {
         let buckets = self.buckets.clone();
         let cap = self.bytes_per_minute_cap;
         let runtime_for_loop = runtime.clone();
@@ -855,7 +879,7 @@ impl HttpPool {
     /// crate report's `## honest gaps`) up front; RESPONSE bytes are charged separately, for real,
     /// per chunk, as [`HttpPoolBody::next_chunk`] pulls them — this is the fix for the estimate-only
     /// accounting this packet was measured against.
-    pub async fn fetch(&self, runtime: &dyn HostAsyncRuntime, scope: &ScopeHandle, ctx: OperationContext, package: PackageId, actor: ActorId, request: HttpRequest) -> Result<(HttpResponseHead, HttpPoolBody), HttpPoolError> {
+    pub async fn fetch<R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, package: PackageId, actor: ActorId, request: HttpRequest) -> Result<(HttpResponseHead, HttpPoolBody), HttpPoolError> {
         {
             let mut outstanding = self.outstanding.lock().expect("HttpPool outstanding mutex poisoned");
             let count = outstanding.entry(actor).or_insert(0);
@@ -904,7 +928,7 @@ impl HttpPool {
     /// 🌐️ The pre-streaming buffered shape: built ENTIRELY on [`HttpPool::fetch`] — collects every
     /// chunk into one `Vec<u8>` — so there is exactly ONE request/response code path in this crate;
     /// see the crate report's `## one-implementation argument`.
-    pub async fn request(&self, runtime: &dyn HostAsyncRuntime, scope: &ScopeHandle, ctx: OperationContext, package: PackageId, actor: ActorId, request: HttpRequest) -> Result<HttpResponse, HttpPoolError> {
+    pub async fn request<R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, package: PackageId, actor: ActorId, request: HttpRequest) -> Result<HttpResponse, HttpPoolError> {
         let (head, mut body) = self.fetch(runtime, scope, ctx, package, actor, request).await?;
         let mut collected = Vec::new();
         while let Some(chunk) = body.next_chunk().await? {
@@ -1019,8 +1043,8 @@ struct StorageJob {
     cancelled: Arc<AtomicBool>,
 }
 
-struct StorageState {
-    runtime: Arc<dyn HostAsyncRuntime>,
+struct StorageState<R: HostAsyncRuntime> {
+    runtime: Arc<R>,
     scope: ScopeHandle,
     queues: Mutex<BTreeMap<u8, VecDeque<StorageJob>>>,
     in_flight: AtomicU32,
@@ -1035,7 +1059,7 @@ struct StorageState {
 /// No separate background polling task exists: [`StorageScheduler::submit`] and every job's own
 /// completion both call this again, so a freed slot or a newly queued job always gets a chance to
 /// dispatch without a dedicated loop.
-fn storage_try_dispatch(state: &Arc<StorageState>) {
+fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<R>>) {
     loop {
         if state.in_flight.load(Ordering::SeqCst) >= state.max_in_flight {
             break;
@@ -1096,10 +1120,10 @@ fn storage_try_dispatch(state: &Arc<StorageState>) {
 /// `tokio::select!` idiom [`ComputePool::run_blocking`] already uses) — see that method's doc; a
 /// caller with its own external deadline-racing wrapper built against the OLD "not wired" gap (see
 /// the crate report's `## honest gaps`) can drop it.
-pub struct StorageScheduler(Arc<StorageState>);
+pub struct StorageScheduler<R: HostAsyncRuntime>(Arc<StorageState<R>>);
 
-impl StorageScheduler {
-    pub fn new(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler {
+impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
+    pub fn new(runtime: Arc<R>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler<R> {
         StorageScheduler(Arc::new(StorageState { runtime, scope, queues: Mutex::new(BTreeMap::new()), in_flight: AtomicU32::new(0), max_in_flight: max_in_flight.max(1), per_plugin_bytes: Mutex::new(HashMap::new()), byte_quota_per_plugin }))
     }
 
@@ -1108,7 +1132,7 @@ impl StorageScheduler {
     /// [`StorageError::BytesQuotaExceeded`] immediately if the reservation itself does not fit —
     /// the wheel is left untouched on that path, same discipline as [`WheelCore::arm`]. The ticket
     /// captures `ctx.deadline_ms` (if set) to race against in [`StorageTicket::await_result`].
-    pub fn submit(&self, ctx: &OperationContext, plugin: PackageId, bytes: u64, work: impl FnOnce() -> Result<Vec<u8>, std::io::Error> + Send + 'static) -> Result<StorageTicket, StorageError> {
+    pub fn submit(&self, ctx: &OperationContext, plugin: PackageId, bytes: u64, work: impl FnOnce() -> Result<Vec<u8>, std::io::Error> + Send + 'static) -> Result<StorageTicket<R>, StorageError> {
         {
             let mut usage = self.0.per_plugin_bytes.lock().expect("StorageScheduler per_plugin_bytes mutex poisoned");
             let current = usage.get(&plugin).copied().unwrap_or(0);
@@ -1133,13 +1157,13 @@ impl StorageScheduler {
 /// 🎫️ A handle to one [`StorageScheduler::submit`] call's eventual result — deliberately opaque:
 /// the tokio receiver it wraps is a PRIVATE field (never named on this struct's own declaration
 /// line), so nothing outside this crate can see or name a tokio type through it.
-pub struct StorageTicket {
+pub struct StorageTicket<R: HostAsyncRuntime> {
     receiver: tokio::sync::oneshot::Receiver<Result<Vec<u8>, StorageError>>,
     cancelled: Arc<AtomicBool>,
-    runtime: Arc<dyn HostAsyncRuntime>,
+    runtime: Arc<R>,
     deadline_ms: Option<u64>,
 }
-impl StorageTicket {
+impl<R: HostAsyncRuntime> StorageTicket<R> {
     /// 💾️ Awaits the eventual result, racing it against `ctx.deadline_ms` (captured at
     /// [`StorageScheduler::submit`] time) whenever one was set — a REAL race via
     /// [`HostAsyncRuntime::sleep_until`], not a documented-but-unenforced field. Losing the race
@@ -1640,7 +1664,7 @@ mod tests {
     #[test]
     fn timer_wheel_driver_posts_a_fired_timer_through_the_completion_sink() {
         let manual = ManualRuntime::new(0);
-        let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(manual.clone());
+        let runtime = Arc::new(manual.clone());
         let scope = runtime.open_scope(ScopeOwner::Service("timer-driver-test"), None);
         let wheel = TimerWheel::new(10);
         let sink = Arc::new(MockCompletionSink::new());
@@ -1670,7 +1694,7 @@ mod tests {
         let budget = ThreadBudget::from_plan(plan);
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-priority-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone() as Arc<dyn HostAsyncRuntime>, scope.clone(), 1, 1_000_000);
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 1_000_000);
         let order = Arc::new(Mutex::new(Vec::<&'static str>::new()));
 
         let (occupy_tx, occupy_rx) = std::sync::mpsc::channel::<()>();
@@ -1718,7 +1742,7 @@ mod tests {
         let budget = ThreadBudget::from_plan(plan);
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-cap-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone() as Arc<dyn HostAsyncRuntime>, scope.clone(), 2, 1_000_000);
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 2, 1_000_000);
         let mut tickets = Vec::new();
         for i in 0..8u32 {
             let ctx = test_ctx(0, scope.cancel.clone());
@@ -1765,7 +1789,7 @@ mod tests {
         let budget = ThreadBudget::from_plan(plan);
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-budget-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone() as Arc<dyn HostAsyncRuntime>, scope.clone(), 4, 100);
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 4, 100);
         let ctx = test_ctx(0, scope.cancel);
         let plugin = PackageId("p".to_string());
         let (hold_tx, hold_rx) = std::sync::mpsc::channel::<()>();
@@ -1799,7 +1823,7 @@ mod tests {
         let budget = ThreadBudget::from_plan(plan);
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-deadline-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone() as Arc<dyn HostAsyncRuntime>, scope.clone(), 1, 50);
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 50);
 
         let (occupy_tx, occupy_rx) = std::sync::mpsc::channel::<()>();
         let occupy_rx = Mutex::new(occupy_rx);
@@ -1983,7 +2007,7 @@ mod tests {
     #[test]
     fn http_pool_refill_driver_actually_refills_a_consumed_bucket_on_its_tick() {
         let manual = ManualRuntime::new(0);
-        let runtime: Arc<dyn HostAsyncRuntime> = Arc::new(manual.clone());
+        let runtime = Arc::new(manual.clone());
         let scope = runtime.open_scope(ScopeOwner::Service("http-refill-test"), None);
         let compute = Arc::new(ComputePool::new(2));
         let pool = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 4);
@@ -2010,7 +2034,7 @@ mod tests {
     struct LocalSocketBody {
         stream: Arc<Mutex<std::net::TcpStream>>,
         compute: Arc<ComputePool>,
-        runtime: Arc<dyn HostAsyncRuntime>,
+        runtime: Arc<TokioHostRuntime>,
         scope: ScopeHandle,
         ctx: OperationContext,
         /// 🔍️ Set when this value drops, so a test can OBSERVE that `HttpPoolBody`'s own `Drop`
@@ -2051,7 +2075,7 @@ mod tests {
     struct LocalSocketTransport {
         addr: std::net::SocketAddr,
         compute: Arc<ComputePool>,
-        runtime: Arc<dyn HostAsyncRuntime>,
+        runtime: Arc<TokioHostRuntime>,
         scope: ScopeHandle,
         dropped: Arc<AtomicBool>,
     }
@@ -2116,7 +2140,7 @@ mod tests {
         let chunks = vec![vec![1u8; 10], vec![2u8; 15], vec![3u8; 7]];
         let addr = spawn_chunk_server(chunks.clone());
         let dropped = Arc::new(AtomicBool::new(false));
-        let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone() as Arc<dyn HostAsyncRuntime>, scope: scope.clone(), dropped });
+        let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
         let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 4);
         let package = PackageId("pkg-stream".to_string());
         let actor = ActorId(11);
@@ -2153,7 +2177,7 @@ mod tests {
         let chunks: Vec<Vec<u8>> = (0..20).map(|_| vec![9u8; 8]).collect();
         let addr = spawn_chunk_server(chunks);
         let dropped = Arc::new(AtomicBool::new(false));
-        let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone() as Arc<dyn HostAsyncRuntime>, scope: scope.clone(), dropped: dropped.clone() });
+        let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone() });
         let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 1);
         let package = PackageId("pkg-cancel".to_string());
         let actor = ActorId(12);

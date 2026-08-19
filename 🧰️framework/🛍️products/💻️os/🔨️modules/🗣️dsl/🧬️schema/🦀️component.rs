@@ -334,7 +334,7 @@ mod json_schema_tests {
         assert_eq!(ref_schema["type"], serde_json::json!("string"));
         assert_eq!(ref_schema["x-semio-ref"], serde_json::json!("material"));
 
-        let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap()));
+        let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap()));
         assert_eq!(quantity_schema["type"], serde_json::json!("number"));
         assert_eq!(quantity_schema["x-semio-unit"], serde_json::json!("GPa"));
     }
@@ -386,7 +386,8 @@ mod json_schema_tests {
         assert_eq!(schema["properties"]["body"]["x-semio-lang"], serde_json::json!("jack"));
     }
 
-    async fn nested_point_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
+    fn nested_point_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
     }
 
@@ -1683,7 +1684,7 @@ impl Writer {
     }
 
     pub async fn key_value(&mut self, key: &str, value: impl AsRef<str>) {
-        self.atom(format!("{key}={}", value.as_ref()));
+        self.atom(format!("{key}={}", value.as_ref())).await;
     }
 
     pub async fn open_block(&mut self) {
@@ -2341,19 +2342,19 @@ mod tests {
 
     async fn assert_round_trip(text: &str, spec: &RecordSpec) {
         let opts = ParseOptions::default();
-        let value = parse(text, spec, &opts).unwrap_or_else(|e| panic!("parse failed for {text:?}: {e}"));
+        let value = parse(text, spec, &opts).await.unwrap_or_else(|e| panic!("parse failed for {text:?}: {e}"));
         let printed = print(&value, spec, JoinMode::Document);
-        let reparsed = parse(&printed, spec, &opts).unwrap_or_else(|e| panic!("reparse of printed output failed: {e}\nprinted:\n{printed}"));
+        let reparsed = parse(&printed, spec, &opts).await.unwrap_or_else(|e| panic!("reparse of printed output failed: {e}\nprinted:\n{printed}"));
         assert_eq!(value, reparsed, "round trip diverged;\noriginal print:\n{printed}");
     }
 
     async fn assert_document_inline_agree(text: &str, spec: &RecordSpec) {
         let doc_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Document };
-        let value = parse(text, spec, &doc_opts).expect("parse document");
+        let value = parse(text, spec, &doc_opts).await.expect("parse document");
         let inline_text = print(&value, spec, JoinMode::Inline);
-        assert!(!inline_text.contains('\n'), "inline render must be one line: {inline_text:?}");
+        assert!(!inline_text.await.contains('\n'), "inline render must be one line: {inline_text:?}");
         let inline_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Inline };
-        let reparsed = parse(&inline_text, spec, &inline_opts).unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
+        let reparsed = parse(&inline_text, spec, &inline_opts).await.unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
         assert_eq!(value, reparsed, "Document and Inline renders must parse to the same value");
     }
 
@@ -2374,10 +2375,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_optional_field_omits_on_print_and_absent_on_parse() {
         let spec = camera_spec();
-        let value = parse("camera x=1 y=2 zoom=1", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("camera x=1 y=2 zoom=1", &spec, &ParseOptions::default()).await.expect("parse");
         assert_eq!(value.get(3), Some(&FieldValue::Absent));
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(!printed.contains("label"), "optional absent field must be omitted: {printed}");
+        assert!(!printed.await.contains("label"), "optional absent field must be omitted: {printed}");
     }
 
     // --- primitive: embed — fenced verbatim text (Document) / escaped Text (Inline) ---
@@ -2400,22 +2401,22 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn embed_empty_lang_tag_is_accepted_and_canonicalizes_to_the_declared_lang() {
         let spec = writer_note_spec();
-        let value = parse("query q1 body=```\nMATCH (a) RETURN a\n```", &spec, &ParseOptions::default()).expect("parse with empty lang tag");
+        let value = parse("query q1 body=```\nMATCH (a) RETURN a\n```", &spec, &ParseOptions::default()).await.expect("parse with empty lang tag");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("```jack"), "empty lang tag must canonicalize to the field's declared lang: {printed}");
+        assert!(printed.await.contains("```jack"), "empty lang tag must canonicalize to the field's declared lang: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_rejects_a_mismatched_lang_tag() {
         let spec = writer_note_spec();
-        let error = parse("query q1 body=```python\nprint(1)\n```", &spec, &ParseOptions::default()).unwrap_err();
+        let error = parse("query q1 body=```python\nprint(1)\n```", &spec, &ParseOptions::default()).await.unwrap_err();
         assert!(error.message.contains("jack"), "{error}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_inline_mode_accepts_a_quoted_escaped_string_directly() {
         let spec = writer_note_spec();
-        let value = parse("query q1 body=\"MATCH (a) RETURN a\"", &spec, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline }).expect("inline parse");
+        let value = parse("query q1 body=\"MATCH (a) RETURN a\"", &spec, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline }).await.expect("inline parse");
         let FieldValue::Text(body) = value.get(1).expect("body field") else { panic!("expected Text") };
         assert_eq!(body, "MATCH (a) RETURN a");
     }
@@ -2441,7 +2442,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn expr_parses_with_correct_precedence() {
         let spec = formula_spec();
-        let value = parse("combine c value=(10-2*3)", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("combine c value=(10-2*3)", &spec, &ParseOptions::default()).await.expect("parse");
         let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
         assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(2.0)), Box::new(ExprValue::Num(3.0)))),), "10-2*3 must parse as 10-(2*3), not (10-2)*3");
     }
@@ -2450,10 +2451,10 @@ mod tests {
     async fn expr_right_nested_addition_round_trips_through_parens() {
         // a+(b+c) is structurally distinct from (a+b)+c; canonical print must keep the parens.
         let spec = formula_spec();
-        let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).await.expect("parse");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("(b + c)"), "right-nested addition must keep disambiguating parens: {printed}");
-        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse");
+        assert!(printed.await.contains("(b + c)"), "right-nested addition must keep disambiguating parens: {printed}");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).await.expect("reparse");
         assert_eq!(value, reparsed);
     }
 
@@ -2469,11 +2470,11 @@ mod tests {
         // Minus token; the Expr parser must still interpret it as subtraction, and re-print it with
         // real spacing so the ambiguity never reappears in canonical output.
         let spec = formula_spec();
-        let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).await.expect("parse");
         let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
         assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Num(2.0))));
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("10 - 2"), "canonical print must space out the operator: {printed}");
+        assert!(printed.await.contains("10 - 2"), "canonical print must space out the operator: {printed}");
     }
 
     // --- primitive: quantity/angle — a Shape::Float refinement that prints/parses a glued unit suffix ---
@@ -2482,9 +2483,9 @@ mod tests {
             Some("material"),
             RecordLayout::Inline,
             vec![
-                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
-                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::unit_by_symbol("kg/m3").unwrap())),
-                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap())),
+                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::unit_by_symbol("kg/m3").await.unwrap())),
+                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").await.unwrap())),
             ],
         )
     }
@@ -2500,16 +2501,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn quantity_accepts_a_compatible_alien_unit_and_canonicalizes_to_the_declared_one() {
         let spec = material_spec();
-        let value = parse("material e=210000MPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse alien unit");
+        let value = parse("material e=210000MPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse alien unit");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("e=210GPa"), "alien-unit input must canonicalize to the declared unit: {printed}");
+        assert!(printed.await.contains("e=210GPa"), "alien-unit input must canonicalize to the declared unit: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_with_no_suffix_is_already_in_the_declared_unit() {
         let spec = material_spec();
-        let with_suffix = parse("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse with suffix");
-        let bare = parse("material e=210 rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse bare number");
+        let with_suffix = parse("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse with suffix");
+        let bare = parse("material e=210 rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse bare number");
         assert_eq!(with_suffix.get(0), bare.get(0), "a bare number must equal the same value spelled with its declared unit's suffix");
     }
 
@@ -2547,20 +2548,20 @@ mod tests {
     async fn coord_dir_dim_range_count_reject_wrong_arity_or_form() {
         let spec = placement_spec();
         // Coord declared as 3 components; only 2 given.
-        let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
+        let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).await.unwrap_err();
         assert!(err.message.contains("coordinate") || err.message.contains("expected"), "{err}");
         // Dim declared as 3 components; only one number, no glued 'x' suffix at all.
-        let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
+        let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).await.unwrap_err();
         assert!(err2.message.contains("dimension"), "{err2}");
         // Count without the 'x' prefix is not a valid count literal.
-        let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).unwrap_err();
+        let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).await.unwrap_err();
         assert!(err3.message.contains("count"), "{err3}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_rejects_an_incompatible_unit() {
         let spec = material_spec();
-        let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).unwrap_err();
+        let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.unwrap_err();
         assert!(error.message.contains("not compatible"), "wrong-dimension suffix must be a parse error, got: {error}");
     }
 
@@ -2577,7 +2578,7 @@ mod tests {
     async fn primitive_statements_collection_preserves_order_and_round_trips() {
         let spec = document_with_layers_spec();
         assert_round_trip("schema=doc layer a opacity=1 layer b opacity=0.5 layer c opacity=1", &spec);
-        let value = parse("schema=doc layer a opacity=1 layer b opacity=0.5", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("schema=doc layer a opacity=1 layer b opacity=0.5", &spec, &ParseOptions::default()).await.expect("parse");
         let FieldValue::Statements(items) = value.get(1).unwrap() else { panic!("expected statements") };
         assert_eq!(items.len(), 2);
         assert_eq!(items[0].0, "layer");
@@ -2588,7 +2589,8 @@ mod tests {
     /// itself. Lazy `fn() -> RecordSpec` entries make this sound — `group_spec()` doesn't recurse
     /// just to build the table, only `parse`/`print` calling the stored fn pointer one level at a
     /// time (as deep as real input actually nests) ever evaluates it again.
-    async fn group_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` in `Shape::Statements` above
+    fn group_spec() -> RecordSpec {
         RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional()])
     }
 
@@ -2603,7 +2605,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_escaped_text_handles_quotes_newlines_and_trailing_position() {
         let spec = camera_spec();
-        let value = parse("camera x=1 y=1 zoom=1 label=\"line1\\nline2 with \\\"quotes\\\"\"", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("camera x=1 y=1 zoom=1 label=\"line1\\nline2 with \\\"quotes\\\"\"", &spec, &ParseOptions::default()).await.expect("parse");
         assert_eq!(value.get(3), Some(&FieldValue::Text("line1\nline2 with \"quotes\"".to_string())));
     }
 
@@ -2639,7 +2641,7 @@ mod tests {
     async fn call_layout_prints_name_equals_dotted_keyword_parens_args() {
         let spec = call_spec();
         let opts = ParseOptions::default();
-        let value = parse("extrude = brep.solid.extrude(w1 v1 height=6)", &spec, &opts).expect("parse");
+        let value = parse("extrude = brep.solid.extrude(w1 v1 height=6)", &spec, &opts).await.expect("parse");
         assert_eq!(value.get(0), Some(&FieldValue::Text("extrude".to_string())));
         assert_eq!(value.get(1), Some(&FieldValue::Text("w1".to_string())));
         let printed = print(&value, &spec, JoinMode::Inline);
@@ -2657,7 +2659,7 @@ mod tests {
     async fn call_layout_rejects_the_wrong_call_target() {
         let spec = call_spec();
         let opts = ParseOptions::default();
-        let err = parse("extrude = brep.solid.revolve(w1 v1)", &spec, &opts).unwrap_err();
+        let err = parse("extrude = brep.solid.revolve(w1 v1)", &spec, &opts).await.unwrap_err();
         assert!(err.to_string().contains("expected call target"), "unexpected error: {err}");
     }
 
@@ -2665,7 +2667,7 @@ mod tests {
     async fn call_layout_spec_without_a_call_name_field_is_a_clear_parse_error_not_a_panic() {
         let bad_spec = RecordSpec::new(Some("brep.solid.extrude"), RecordLayout::Call, vec![FieldSpec::new(0, "profile", Shape::Text).positional(0)]);
         let opts = ParseOptions::default();
-        let err = parse("extrude = brep.solid.extrude(w1)", &bad_spec, &opts).unwrap_err();
+        let err = parse("extrude = brep.solid.extrude(w1)", &bad_spec, &opts).await.unwrap_err();
         assert!(err.to_string().contains("call_name"), "unexpected error: {err}");
     }
 
@@ -2684,7 +2686,7 @@ mod tests {
         assert_round_trip("vertex 1,2,3", &spec);
         assert_round_trip("vertex 1,2,3 tags=[a b c]", &spec);
         assert_round_trip("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec);
-        let value = parse("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec, &ParseOptions::default()).await.expect("parse");
         assert_eq!(value.get(2), Some(&FieldValue::Bytes64(b"hello".to_vec())));
     }
 
@@ -2697,7 +2699,7 @@ mod tests {
     async fn primitive_dynamic_value_round_trips() {
         let spec = value_spec();
         assert_round_trip("payload data={a=1 b=[1 2 3] c=\"x\"}", &spec);
-        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).await.expect("parse");
         let FieldValue::Value(dsl_value) = value.get(0).unwrap().clone() else { panic!() };
         assert_eq!(dsl_value.get("a"), Some(&DslValue::Number(1.0)));
     }
@@ -2706,8 +2708,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_sparse_patch_distinguishes_absent_from_present() {
         let spec = camera_spec();
-        let with = parse("camera x=1 y=1 zoom=1 label=\"x\"", &spec, &ParseOptions::default()).expect("parse with");
-        let without = parse("camera x=1 y=1 zoom=1", &spec, &ParseOptions::default()).expect("parse without");
+        let with = parse("camera x=1 y=1 zoom=1 label=\"x\"", &spec, &ParseOptions::default()).await.expect("parse with");
+        let without = parse("camera x=1 y=1 zoom=1", &spec, &ParseOptions::default()).await.expect("parse without");
         assert_ne!(with.get(3), without.get(3));
         assert_eq!(without.get(3), Some(&FieldValue::Absent));
     }
@@ -2716,7 +2718,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_comments_are_skipped_as_trivia() {
         let spec = camera_spec();
-        let value = parse("# a comment\ncamera x=1 y=2 zoom=3 # trailing comment", &spec, &ParseOptions::default()).expect("parse with comments");
+        let value = parse("# a comment\ncamera x=1 y=2 zoom=3 # trailing comment", &spec, &ParseOptions::default()).await.expect("parse with comments");
         assert_eq!(value.get(0), Some(&FieldValue::Float(1.0)));
     }
 
@@ -2724,7 +2726,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_spans_are_real_on_parse_error() {
         let spec = camera_spec();
-        let error = parse("camera x=1\ny=notanumber zoom=1", &spec, &ParseOptions::default()).unwrap_err();
+        let error = parse("camera x=1\ny=notanumber zoom=1", &spec, &ParseOptions::default()).await.unwrap_err();
         assert_eq!(error.span.line, 2, "error span must point at the real line, not (1,1)");
     }
 
@@ -2733,10 +2735,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn bare_strings_print_unquoted_and_reserved_or_number_shaped_values_stay_quoted() {
         let spec = camera_spec();
-        let value = parse("camera x=1 y=2 zoom=3 label=alpha", &spec, &ParseOptions::default()).expect("parse");
+        let value = parse("camera x=1 y=2 zoom=3 label=alpha", &spec, &ParseOptions::default()).await.expect("parse");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("label=alpha"), "a bare-ident-shaped value must print unquoted: {printed}");
-        assert!(!printed.contains("\"alpha\""), "must not quote a value that already lexes as a bare ident: {printed}");
+        assert!(printed.await.contains("label=alpha"), "a bare-ident-shaped value must print unquoted: {printed}");
+        assert!(!printed.await.contains("\"alpha\""), "must not quote a value that already lexes as a bare ident: {printed}");
 
         for reserved in ["_", "true", "3", "two words"] {
             let mut writer = Writer::new().await;
@@ -2748,7 +2750,8 @@ mod tests {
 
     // --- `Writer::glue()`: exact-string spacing assertions for every composite shape's
     // `key=value` fusion (the "key= value" bug this replaces) ---
-    async fn nested_point_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
+    fn nested_point_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
     }
     async fn marker_spec() -> RecordSpec {
@@ -2765,38 +2768,38 @@ mod tests {
     async fn glue_removes_the_key_equals_space_for_every_composite_shape() {
         // List
         let spec = geometry_spec();
-        let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).expect("parse list");
+        let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).await.expect("parse list");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("tags=[ a b c ]"), "List field must glue key= directly onto '[': {printed}");
-        assert!(!printed.contains("tags= ["), "must never leave a stray space after 'key=': {printed}");
+        assert!(printed.await.contains("tags=[ a b c ]"), "List field must glue key= directly onto '[': {printed}");
+        assert!(!printed.await.contains("tags= ["), "must never leave a stray space after 'key=': {printed}");
 
         // Value (dynamic)
         let spec = value_spec();
-        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse value");
+        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).await.expect("parse value");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("data={"), "Value field must glue key= directly onto '{{': {printed}");
-        assert!(!printed.contains("data= {"), "must never leave a stray space before the glued brace: {printed}");
+        assert!(printed.await.contains("data={"), "Value field must glue key= directly onto '{{': {printed}");
+        assert!(!printed.await.contains("data= {"), "must never leave a stray space before the glued brace: {printed}");
 
         // Map
         let spec = tags_map_spec();
-        let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).expect("parse map");
+        let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).await.expect("parse map");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("props={"), "Map field must glue key= directly onto '{{': {printed}");
+        assert!(printed.await.contains("props={"), "Map field must glue key= directly onto '{{': {printed}");
         assert_round_trip("meta props={a=\"x\" b=\"y\"}", &spec);
 
         // Record (nested, un-blocked — prints inline without its own keyword)
         let spec = marker_spec();
-        let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).expect("parse record");
+        let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).await.expect("parse record");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("at=x=1"), "Record field must glue key= directly onto its first field: {printed}");
-        assert!(!printed.contains("at= x=1"), "must never leave a stray space before a nested record: {printed}");
+        assert!(printed.await.contains("at=x=1"), "Record field must glue key= directly onto its first field: {printed}");
+        assert!(!printed.await.contains("at= x=1"), "must never leave a stray space before a nested record: {printed}");
 
         // Wire (keyed, not positional)
         let spec = edge_keyed_wire_spec();
-        let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).expect("parse wire");
+        let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).await.expect("parse wire");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("link=a->b"), "Wire field must glue key= directly onto the wire literal: {printed}");
-        assert!(!printed.contains("link= a"), "must never leave a stray space before a keyed wire literal: {printed}");
+        assert!(printed.await.contains("link=a->b"), "Wire field must glue key= directly onto the wire literal: {printed}");
+        assert!(!printed.await.contains("link= a"), "must never leave a stray space before a keyed wire literal: {printed}");
     }
 
     // --- wire `<-` normalization: accepted sugar only, always stored/printed as `->` with
@@ -2804,17 +2807,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn wire_back_arrow_normalizes_to_forward_arrow_with_swapped_endpoints() {
         let spec = wire_spec();
-        let backward = parse("edge b<-a", &spec, &ParseOptions::default()).expect("parse backward");
-        let forward = parse("edge a->b", &spec, &ParseOptions::default()).expect("parse forward");
+        let backward = parse("edge b<-a", &spec, &ParseOptions::default()).await.expect("parse backward");
+        let forward = parse("edge a->b", &spec, &ParseOptions::default()).await.expect("parse forward");
         assert_eq!(backward, forward, "'b<-a' must parse to the same value as 'a->b'");
         let printed = print(&backward, &spec, JoinMode::Document);
-        assert!(printed.contains("a->b"), "must print using '->': {printed}");
-        assert!(!printed.contains("<-"), "must never print '<-': {printed}");
+        assert!(printed.await.contains("a->b"), "must print using '->': {printed}");
+        assert!(!printed.await.contains("<-"), "must never print '<-': {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parse_wire_text_parses_a_standalone_wire_literal_with_back_arrow() {
-        let value = parse_wire_text("b<-a").expect("parse_wire_text");
+        let value = parse_wire_text("b<-a").await.expect("parse_wire_text");
         assert_eq!(value.from.id, "a");
         let (directed, to) = value.edge.expect("edge");
         assert!(directed);
@@ -2822,7 +2825,8 @@ mod tests {
     }
 
     // --- primitive 17: `Shape::Table` — SoA columnar collection ---
-    async fn table_row_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
+    fn table_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "x", Shape::Float), FieldSpec::new(2, "y", Shape::Float), FieldSpec::new(3, "link", Shape::Wire).optional()])
     }
     async fn table_doc_spec() -> RecordSpec {
@@ -2834,7 +2838,7 @@ mod tests {
         let spec = table_doc_spec();
         let text = "scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }";
         assert_round_trip(text, &spec);
-        let value = parse(text, &spec, &ParseOptions::default()).expect("parse");
+        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
         assert_eq!(rows.len(), 2);
         let FieldValue::Record(row0) = &rows[0] else { panic!("expected a Record row") };
@@ -2843,18 +2847,18 @@ mod tests {
         assert!(matches!(row1.get(3), Some(FieldValue::Wire(_))), "the wire-typed column must parse as FieldValue::Wire");
 
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "header must print tight SoA, no inner spaces: {printed}");
+        assert!(printed.await.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "header must print tight SoA, no inner spaces: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_accepts_verbose_aos_input_and_canonicalizes_to_soa_output() {
         let spec = table_doc_spec();
         let aos_text = "scene nodes=[ {id=a x=1 y=2} {id=b x=3 y=4} ]";
-        let value = parse(aos_text, &spec, &ParseOptions::default()).expect("parse AoS-verbose");
+        let value = parse(aos_text, &spec, &ParseOptions::default()).await.expect("parse AoS-verbose");
         let printed = print(&value, &spec, JoinMode::Document);
-        assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "AoS input must canonicalize to the SoA header on print: {printed}");
-        assert!(!printed.contains("nodes="), "must never print the old AoS '=' form: {printed}");
-        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse canonicalized SoA");
+        assert!(printed.await.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "AoS input must canonicalize to the SoA header on print: {printed}");
+        assert!(!printed.await.contains("nodes="), "must never print the old AoS '=' form: {printed}");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).await.expect("reparse canonicalized SoA");
         assert_eq!(value, reparsed, "AoS-in/SoA-out must still round trip to the same value");
     }
 
@@ -2862,7 +2866,7 @@ mod tests {
     async fn table_header_without_explicit_type_tags_is_still_parseable() {
         let spec = table_doc_spec();
         let text = "scene nodes [id x y link] { a 1 2 _  b 3 4 a@out->b@in }";
-        let value = parse(text, &spec, &ParseOptions::default()).expect("parse header without explicit types");
+        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse header without explicit types");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
         assert_eq!(rows.len(), 2);
     }
@@ -2875,7 +2879,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_rejects_non_self_delimiting_column_shapes_at_spec_build_time() {
-        async fn unbounded_tuple_row_spec() -> RecordSpec {
+        // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
+        fn unbounded_tuple_row_spec() -> RecordSpec {
             RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "vals", Shape::Tuple(Box::new(Shape::Float), None))])
         }
         async fn bad_table_doc_spec() -> RecordSpec {
@@ -2883,15 +2888,17 @@ mod tests {
         }
         let spec = bad_table_doc_spec();
         let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default());
-        assert!(result.is_err(), "an unbounded Tuple column must be rejected, not silently accepted");
+        assert!(result.await.is_err(), "an unbounded Tuple column must be rejected, not silently accepted");
     }
 
     // --- regression: a table row whose own field is ITSELF a `#[dsl(table)]` (nested SoA output
     // used to break the parser's row-boundary counting; see `print_table_list`/`parse_table_list`) ---
-    async fn nested_inner_row_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
+    fn nested_inner_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "val", Shape::Float).optional()])
     }
-    async fn nested_outer_row_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
+    fn nested_outer_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Table(nested_inner_row_spec))])
     }
     async fn nested_table_doc_spec() -> RecordSpec {
@@ -2905,7 +2912,7 @@ mod tests {
         assert_round_trip(text, &spec);
         assert_document_inline_agree(text, &spec);
 
-        let value = parse(text, &spec, &ParseOptions::default()).expect("parse nested table");
+        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse nested table");
         let FieldValue::List(outer_rows) = value.get(0).unwrap() else { panic!("expected outer table (List)") };
         assert_eq!(outer_rows.len(), 2);
         let FieldValue::Record(row0) = &outer_rows[0] else { panic!("expected outer Record row") };
@@ -2918,10 +2925,12 @@ mod tests {
     // --- regression: a table row with 2+ columns of the exact same nested `DslRecord` type (the
     // greedy same-key consumption bug: an unset field on column N used to silently eat a later
     // column's same-named present value; see `print_table_cell`/`parse_table_cell`) ---
-    async fn quantity_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
+    fn quantity_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "target", Shape::Float).optional(), FieldSpec::new(1, "actual", Shape::Float).optional()])
     }
-    async fn duplicate_type_row_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
+    fn duplicate_type_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "area", Shape::Record(quantity_spec)), FieldSpec::new(2, "volume", Shape::Record(quantity_spec))])
     }
     async fn duplicate_type_table_doc_spec() -> RecordSpec {
@@ -2938,7 +2947,7 @@ mod tests {
         assert_round_trip(text, &spec);
         assert_document_inline_agree(text, &spec);
 
-        let value = parse(text, &spec, &ParseOptions::default()).expect("parse duplicate-type columns");
+        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse duplicate-type columns");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected table (List)") };
         let FieldValue::Record(row0) = &rows[0] else { panic!("expected Record row") };
         let FieldValue::Record(area) = row0.get(1).unwrap() else { panic!("expected area Record") };
@@ -2953,8 +2962,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn canonicalization_is_idempotent() {
         let spec = camera_spec();
-        let once = canonicalize("camera   zoom=3   x=1 y=2", &spec, &ParseOptions::default()).expect("canonicalize once");
-        let twice = canonicalize(&once, &spec, &ParseOptions::default()).expect("canonicalize twice");
+        let once = canonicalize("camera   zoom=3   x=1 y=2", &spec, &ParseOptions::default()).await.expect("canonicalize once");
+        let twice = canonicalize(&once, &spec, &ParseOptions::default()).await.expect("canonicalize twice");
         assert_eq!(once, twice, "canonicalize(canonicalize(x)) must equal canonicalize(x)");
     }
 
@@ -2977,11 +2986,11 @@ mod tests {
         let tiny_limits = Limits { max_depth: 10, ..Limits::default() };
         let opts = ParseOptions { limits: tiny_limits, mode: SourceMode::Document };
         let result = parse(&nested, &spec, &opts);
-        assert!(result.is_err(), "exceeding max_depth must produce an error, not a stack overflow");
+        assert!(result.await.is_err(), "exceeding max_depth must produce an error, not a stack overflow");
 
         let generous_limits = Limits { max_depth: 100, ..Limits::default() };
         let generous_opts = ParseOptions { limits: generous_limits, mode: SourceMode::Document };
-        assert!(parse(&nested, &spec, &generous_opts).is_ok(), "the same nesting must parse fine under a generous depth limit");
+        assert!(parse(&nested, &spec, &generous_opts).await.is_ok(), "the same nesting must parse fine under a generous depth limit");
     }
 
     // --- LanguageService ---
@@ -2989,17 +2998,17 @@ mod tests {
     async fn language_service_reports_semantic_tokens_and_diagnostics() {
         let spec = camera_spec();
         let service = LanguageService::new(&spec);
-        let classes = service.semantic_tokens("camera x=1 y=2 zoom=3");
-        assert!(classes.iter().any(|(class, _)| *class == TokenClass::Keyword));
-        assert!(service.diagnostics("camera x=1 y=2 zoom=3").is_empty());
-        assert!(!service.diagnostics("camera x=notanumber").is_empty());
+        let classes = service.await.semantic_tokens("camera x=1 y=2 zoom=3");
+        assert!(classes.await.iter().any(|(class, _)| *class == TokenClass::Keyword));
+        assert!(service.await.diagnostics("camera x=1 y=2 zoom=3").await.is_empty());
+        assert!(!service.await.diagnostics("camera x=notanumber").await.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn language_service_completions_include_every_declared_key() {
         let spec = camera_spec();
         let service = LanguageService::new(&spec);
-        let labels: Vec<String> = service.completions("", 0).into_iter().map(|c| c.label).collect();
+        let labels: Vec<String> = service.await.completions("", 0).into_iter().map(|c| c.label).collect();
         assert!(labels.contains(&"x".to_string()));
         assert!(labels.contains(&"zoom".to_string()));
         assert!(labels.contains(&"label".to_string()));

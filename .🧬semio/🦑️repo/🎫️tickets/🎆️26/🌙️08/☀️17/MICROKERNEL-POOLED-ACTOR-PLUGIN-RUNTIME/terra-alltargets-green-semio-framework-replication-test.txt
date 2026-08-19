@@ -1,0 +1,401 @@
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: `semio-framework-replication` (lib) generated 20 warnings
+warning: `semio-framework-replication` (lib test) generated 20 warnings (20 duplicates)
+    Finished `test` profile [unoptimized] target(s) in 7.27s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-at-green/debug/deps/protocol-97cf72630824bd1e)
+
+running 184 tests
+test causal::tests::envelope_binary_round_trips_with_empty_dependencies_and_payloads ... ok
+test causal::tests::frontier_delta_lesser_ordinal_is_behind ... ok
+test causal::tests::drains_applied_envelopes_in_causal_order ... ok
+test causal::tests::frontier_delta_same_ordinal_different_head_is_diverged ... ok
+test causal::tests::frontier_delta_identical_summaries_are_equal ... ok
+test causal::tests::frontier_delta_greater_ordinal_is_ahead ... ok
+test causal::tests::frontier_binary_round_trips ... ok
+test causal::tests::frontier_summary_serde_round_trips ... ok
+test causal::tests::envelopes_batch_binary_round_trips_including_empty ... ok
+test causal::tests::mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explicit_meta ... ok
+test causal::tests::mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_without_meta ... ok
+test causal::tests::envelope_binary_round_trips ... ok
+test causal::tests::envelope_binary_encoding_is_deterministic ... ok
+test causal::tests::operation_envelope_binary_round_trips ... ok
+test causal::tests::insert_already_applied_operation_returns_already_applied_without_erroring ... ok
+test causal::tests::opdagerror_display_is_non_empty ... ok
+test causal::tests::ops_vec_binary_round_trips_including_empty ... ok
+test causal::tests::insert_duplicate_pending_operation_id_errors ... ok
+test causal::tests::quick::topological_order_a_b_d_c_is_rejected_as_non_topological ... ok
+test causal::tests::quick::topological_order_a_c_b_d_converges ... ok
+test causal::tests::seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps ... ok
+test causal::tests::quick::topological_order_a_b_c_d_converges ... ok
+test causal::tests::mutation_envelope_from_edit_propagates_an_encode_failure ... ok
+test causal::tests::transform_transformed_when_deltas_differ ... ok
+test codec::component::tests::byte_reader_bounds_checked_reads_never_panic_on_truncated_input ... ok
+test causal::tests::inserts_pending_until_dependencies_arrive ... ok
+test codec::component::tests::byte_reader_writer_round_trip_all_types ... ok
+test codec::component::tests::crc32c_differs_for_different_inputs ... ok
+test codec::component::tests::crc32c_empty_input_is_zero ... ok
+test codec::component::tests::is_minimal_varint_rejects_non_minimal_encoding_of_zero ... ok
+test causal::tests::transform_unchanged_when_deltas_match ... ok
+test causal::tests::transform_conflict_case_carries_message ... ok
+test codec::component::tests::crc32c_matches_known_test_vector ... ok
+test codec::component::tests::is_minimal_varint_rejects_trailing_garbage ... ok
+test codec::component::tests::no_compression_decompress_rejects_raw_len_over_limit_before_allocating ... ok
+test codec::component::tests::no_compression_decompress_rejects_stored_len_mismatch ... ok
+test codec::component::tests::no_compression_round_trips_identity ... ok
+test codec::component::tests::pack_limits_default_matches_contract ... ok
+test codec::component::tests::varint_i64_round_trips_boundary_values ... ok
+test codec::component::tests::varint_read_tenth_byte_with_extra_bits_is_malformed ... ok
+test codec::component::tests::varint_multi_byte_sequence_reads_each_value_in_order ... ok
+test codec::component::tests::varint_read_truncated_input_errors_never_panics ... ok
+test codec::component::tests::varint_read_overlong_eleven_bytes_is_malformed ... ok
+test codec::component::tests::varint_u64_max_value_uses_ten_bytes ... ok
+test codec::component::tests::varint_u64_round_trips_boundary_values ... ok
+test codec::ids::tests::content_hash_display_is_lowercase_hex ... ok
+test codec::ids::tests::segment_kind_constants_match_contract ... ok
+test conflict::tests::conflict_id_is_deterministic_and_content_sensitive ... ok
+test conflict::tests::conflict_kind_status_resolution_are_distinct ... ok
+test format::tests::commit_chain_verifies_by_recomputation_on_a_hand_built_file ... ok
+test conflict::tests::dispatch_report_carries_worst_and_messages ... ok
+test format::tests::begin_rejects_unknown_required_flags ... ok
+test conflict::tests::merge_report_round_trips_through_serde ... ok
+test format::tests::blake3_hasher_matches_direct_blake3_call ... ok
+test format::tests::commit_chain_links_prev_commit_offset_across_multiple_commits ... ok
+test format::tests::cursor_surfaces_unrecognized_extension_kind_transparently ... ok
+test format::tests::frame_detects_crc_corruption ... ok
+test format::tests::frame_detects_back_len_tamper_via_reverse_cursor ... ok
+test format::tests::frame_len_matches_actual_bytes_consumed ... ok
+test format::tests::frame_round_trips_kind_flags_and_payload ... ok
+test format::tests::header_rejects_bad_magic ... ok
+test format::tests::header_rejects_corrupted_crc ... ok
+test format::tests::header_rejects_unknown_required_flags ... ok
+test format::tests::header_round_trips_via_begin_and_validate ... ok
+test format::tests::parse_commit_payload_is_public_for_downstream_frontier_summaries ... ok
+test format::tests::position_tracks_sink_length_across_writes ... ok
+test format::tests::read_header_exposes_decoded_fields_to_downstream_crates ... ok
+test format::tests::read_header_propagates_validation_failures ... ok
+test format::tests::recover_fast_path_trusts_a_cleanly_committed_file ... ok
+test format::tests::recover_fast_path_walks_multi_commit_chain_to_genesis ... ok
+test format::tests::recover_forward_scan_truncates_to_last_commit_on_torn_tail ... ok
+test format::tests::recover_header_only_file_reports_zero_records ... ok
+test format::tests::recover_last_valid_record_mode_trusts_past_the_last_commit ... ok
+test format::tests::recover_rejects_files_shorter_than_the_header ... ok
+test format::tests::reverse_cursor_at_start_of_stream_returns_none ... ok
+test format::tests::reverse_cursor_stops_exactly_at_record_stream_start ... ok
+test format::tests::reverse_cursor_yields_frames_in_reverse_order ... ok
+test source::tests::pack_sink_over_vec_appends_and_tracks_position ... ok
+test source::tests::pack_source_over_slice_reads_at_offset ... ok
+test source::tests::pack_source_over_slice_short_read_at_end_never_panics ... ok
+test source::tests::pack_source_over_vec_matches_slice_behavior ... ok
+test source::tests::pack_source_read_at_offset_past_end_errors_never_panics ... ok
+test source::tests::pack_source_read_exact_at_errors_on_truncated_input ... ok
+test value::dsl_value_serde::tests::newtype_struct_wrapping_scalar_round_trips ... ok
+test value::dsl_value_serde::tests::newtype_struct_wrapping_string_round_trips ... ok
+test value::dsl_value_serde::tests::tuple_enum_variant_round_trips ... ok
+test wire::codec::tests::dict_builder_interns_deterministically_and_dedupes ... ok
+test wire::codec::tests::dict_reader_reports_miss_past_the_end ... ok
+test wire::codec::tests::document_version_orders_numerically ... ok
+test wire::codec::tests::dict_reader_round_trips_builder_deltas_in_order ... ok
+test wire::codec::tests::frame_codec_id_masks_to_three_bits ... ok
+test wire::codec::tests::hlc_merge_adopts_the_greater_remote_tick_then_bumps ... ok
+test wire::codec::tests::frame_flags_round_trips_codec_id ... ok
+test wire::codec::tests::hlc_ordering_prioritizes_physical_then_logical_then_actor ... ok
+test format::tests::recover_never_panics_on_truncation_at_every_byte ... ok
+test wire::codec::tests::dict_reader_rejects_out_of_order_deltas ... ok
+test wire::codec::tests::hlc_tick_advances_on_newer_physical_time ... ok
+test wire::codec::tests::hlc_ordering_uses_actor_as_final_tiebreak ... ok
+test wire::codec::tests::hlc_tick_bumps_logical_on_equal_or_older_physical_time ... ok
+test wire::codec::tests::identifier_newtypes_serde_round_trip_transparently ... ok
+test wire::codec::tests::is_critical_kind_matches_contract_set ... ok
+test wire::codec::tests::kernel_artifact_inference_catalog_registers_independently_of_the_four_facet_descriptor ... ok
+test wire::codec::tests::merge_policy_as_u8_from_u8_round_trips ... ok
+test wire::codec::tests::merge_policy_default_is_normal ... ok
+test wire::codec::tests::merge_policy_rejects_matches_the_frozen_matrix ... ok
+test wire::codec::tests::pack_error_converts_into_protocol_error_via_from ... ok
+test wire::codec::tests::protocol_limits_default_matches_contract ... ok
+test wire::codec::tests::record_hasher_trait_is_object_usable ... ok
+test wire::codec::tests::record_kind_constants_match_contract ... ok
+test wire::codec::tests::scalars::id_dictref_dedupes_repeated_ids_through_intern_closure ... ok
+test wire::codec::tests::scalars::id_falls_back_to_dictref_tag_for_plain_strings ... ok
+test wire::codec::tests::scalars::id_raw_tag_is_readable_even_though_writer_never_emits_it ... ok
+test wire::codec::tests::scalars::id_round_trips_via_edit_ordinal_tag ... ok
+test wire::codec::tests::scalars::id_round_trips_via_prefix_uuid_tag ... ok
+test wire::codec::tests::scalars::timestamp_chain_uses_delta_tag_after_first_absolute ... ok
+test wire::codec::tests::scalars::timestamp_falls_back_to_raw_for_non_canonical_text ... ok
+test wire::codec::tests::scalars::timestamp_falls_back_to_raw_for_non_utc_offset ... ok
+test wire::codec::tests::scalars::timestamp_epoch_zero_round_trips ... ok
+test wire::codec::tests::scalars::timestamp_round_trips_canonical_utc_no_fraction ... ok
+test wire::codec::tests::scalars::timestamp_round_trips_canonical_utc_with_fraction ... ok
+test wire::codec::tests::undo_policy_and_state_class_serde_round_trip ... ok
+test wire::codec::tests::wire_bool_round_trips_as_a_single_byte ... ok
+test wire::codec::tests::wire_bytes_rejects_truncated_input ... ok
+test wire::codec::tests::wire_bytes_round_trips_and_consumes_exact_length ... ok
+test wire::codec::tests::wire_hash32_rejects_truncated_input ... ok
+test wire::codec::tests::wire_hash32_round_trips_fixed_width_no_length_prefix ... ok
+test wire::codec::tests::wire_str_empty_round_trips ... ok
+test wire::codec::tests::wire_str_rejects_truncated_input ... ok
+test wire::codec::tests::wire_str_round_trips_including_multibyte_utf8 ... ok
+test wire::codec::tests::wire_varint_u64_round_trips_via_pack_core ... ok
+test wire::frames::assemble_presence_interaction_tests::assemble_presence_interaction_omits_domains_with_broadcast_disabled ... ok
+test wire::frames::assemble_presence_interaction_tests::assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel ... ok
+test wire::frames::assemble_presence_interaction_tests::assemble_presence_interaction_respects_each_half_independently ... ok
+test wire::frames::assemble_presence_interaction_tests::assemble_presence_interaction_includes_broadcasting_domains ... ok
+test wire::frames::interaction_tests::empty_hover_targets_clears_the_channel ... ok
+test wire::frames::interaction_tests::additive_unions_batch_into_current_selection ... ok
+test wire::frames::interaction_tests::hierarchy_provider_serializes_internally_tagged_variants ... ok
+test wire::frames::interaction_tests::invertive_toggles_each_batch_target_independently ... ok
+test wire::frames::interaction_tests::range_falls_back_to_last_selected_id_when_no_anchor_recorded ... ok
+test wire::frames::interaction_tests::non_transitive_hover_replaces_with_raw_targets_only ... ok
+test wire::frames::interaction_tests::range_handles_target_before_anchor_in_topology_order ... ok
+test wire::frames::interaction_tests::range_slices_topology_order_between_anchor_and_target ... ok
+test wire::frames::interaction_tests::single_mode_clamps_to_last_target_regardless_of_merge ... ok
+test wire::frames::interaction_tests::replace_sets_selection_to_batch_targets ... ok
+test wire::frames::interaction_tests::subtractive_removes_batch_from_current_selection ... ok
+test wire::frames::interaction_tests::transitive_hover_expands_with_root_first ... ok
+test wire::frames::interaction_tests::transitive_select_expands_target_to_descendant_closure ... ok
+test wire::frames::interaction_tests::validate_state_drops_undeclared_domains_and_granularities ... ok
+test wire::frames::interaction_tests::validate_state_prunes_ids_absent_from_topology ... ok
+test wire::frames::presence_codec_tests::presence_peer_binary_round_trips_with_every_field_absent ... ok
+test wire::frames::interaction_tests::validate_state_clamps_single_mode_selection_to_first_id ... ok
+test wire::frames::presence_codec_tests::presence_peer_binary_round_trips_with_every_field_present ... ok
+test wire::frames::presence_codec_tests::presence_peer_bit_5_round_trips_with_interaction_present ... ok
+test wire::frames::presence_codec_tests::presence_peer_interaction_round_trips_with_multiple_domains ... ok
+test wire::frames::presence_codec_tests::presence_peer_rejects_unknown_flag_bits ... ok
+test wire::frames::presence_codec_tests::presence_peer_round_trips_views_ui_color_surface ... ok
+test wire::frames::presence_codec_tests::presence_peer_bit_5_round_trips_with_interaction_absent ... ok
+test wire::frames::tests::client_frame_bye_round_trips ... ok
+test wire::frames::tests::client_frame_commands_round_trips ... ok
+test wire::frames::tests::client_frame_frontier_advertise_round_trips ... ok
+test wire::frames::tests::client_frame_credit_grant_round_trips ... ok
+test wire::frames::tests::client_frame_hello_round_trips ... ok
+test wire::frames::tests::client_frame_presence_round_trips ... ok
+test wire::frames::tests::client_frame_hello_with_no_optionals_round_trips ... ok
+test wire::frames::tests::client_frame_preview_publish_round_trips ... ok
+test wire::frames::tests::decode_client_frame_rejects_empty_body_after_lane ... ok
+test wire::frames::tests::decode_client_frame_rejects_empty_bytes ... ok
+test wire::frames::tests::decode_client_frame_rejects_truncated_field ... ok
+test wire::frames::tests::decode_client_frame_rejects_unknown_lane_byte ... ok
+test wire::frames::tests::decode_client_frame_rejects_unknown_tag ... ok
+test wire::frames::tests::decode_server_frame_rejects_truncated_field ... ok
+test wire::frames::tests::decode_server_frame_rejects_unknown_tag ... ok
+test wire::frames::tests::different_lanes_produce_different_leading_bytes_but_same_body ... ok
+test wire::frames::tests::lane_byte_round_trips ... ok
+test wire::frames::tests::server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant ... ok
+test wire::frames::tests::server_frame_credit_grant_round_trips ... ok
+test wire::frames::tests::server_frame_commands_round_trips ... ok
+test wire::frames::tests::server_frame_presence_round_trips ... ok
+test wire::frames::tests::server_frame_error_round_trips ... ok
+test wire::frames::tests::server_frame_preview_round_trips ... ok
+test wire::frames::tests::server_frame_session_round_trips ... ok
+test wire::frames::tests::server_frame_snapshot_chunk_round_trips ... ok
+test wire::frames::tests::server_frame_snapshot_done_round_trips ... ok
+test wire::frames::tests::server_frame_welcome_round_trips_for_every_bootstrap_variant ... ok
+
+test result: ok. 184 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

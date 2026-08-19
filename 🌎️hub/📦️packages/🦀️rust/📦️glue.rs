@@ -4,5 +4,11 @@
 //! Contains no logic of its own — see `📇️directory/🦀️component.rs` for the trait/model and
 //! `📇️directory/{🪶️sqlite,🐘️postgres,🌐️neo4j}/🦀️component.rs` for each backend.
 
+// 🚫️async: R7 — `HubDirectory` is a public trait with `async fn` methods; callers cannot assume
+// `Send` from the signature alone, but R3 answers that structurally (every dyn seam is now the
+// concrete `HubDirectories` enum, so `Send` is derived at each call site from its variants, never
+// from a bound on the trait). Never take rustc's suggested `-> impl Future + Send` fix.
+#![allow(async_fn_in_trait)]
+
 #[path = "../../📇️directory/🦀️component.rs"]
 pub mod directory;

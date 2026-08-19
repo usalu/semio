@@ -5106,3 +5106,383 @@ differently-implemented searches — and **never** to edit another crate to unbl
 A 19th agent then runs an **independent repo-wide census**: first-party dyn by trait, std/lang residue
 reported separately as the R1-legal baseline, async-literal ratio and tag counts, real compile state with
 exit codes, and — most valuable — **every discrepancy between what an agent claimed and what it measures.**
+
+
+# 🟢️ MILESTONE — `semio-framework-os-kernel --lib` is **GREEN (exit 0, 0 errors)**
+
+The gate the entire program has been queued behind is open. Today it went **1,000+ → 0**.
+
+`kernel-finish` took it 37 → 1 and then **correctly refused the last error**, which is exactly what its
+brief asked for. Its root-cause work was better than the brief: it found `DslField::shape()` /
+`DslVariants::variants()` were **E4 by transitivity** — `Shape::Record/Table/Statements` hold a bare
+`fn() -> RecordSpec`, and the derive macro's generated `__dsl_spec()` calls them synchronously — which
+explained ~30 of the 37, not the 5 fn-pointer sites I had named. It also discovered that
+`🗣️dsl/✨️derive/🦀️component.rs` is a **stale, uncompiled duplicate** of the real derive source and left it
+alone rather than editing the wrong file.
+
+## 🔓️ The last error had a THIRD option neither of us had taken
+
+`🏪️store:3485` — a serde `#[serde(with = ...)]` bridge calling async `encode_envelope`/`decode_envelope`.
+Two routes were already known and both are wrong:
+- **de-asyncify the codec** — the packet measured the real blast radius at **220 call sites** across
+  `📡️replication` (a currently-GREEN crate) before declining. I had tried this exact route earlier and
+  reverted it. Correct refusal, and it measured rather than asserted.
+- **make the caller async** — impossible; serde owns that signature (E1).
+
+The third option is the repo's **own sanctioned E5 bridge**: `resolve_ready`. It polls once and requires
+the future to be ready — which **holds here by construction**: `📡️replication`'s envelope codec is pure
+byte work with **zero I/O markers anywhere in its call chain**, so every future in it completes on first
+poll. It is the same boundary `wire_artifact_compose` and `📡️spr`'s `EditIter::next` already use. One site,
+no cascade, and the failure mode if the codec ever gains a real suspension point is a **loud panic rather
+than silent data corruption** — the right failure for a sync ABI. Applied, tagged E1+E5 with the full
+reasoning inline. **Kernel: exit 0.**
+
+## 🕳️ Next gate found immediately — and it is a FEATURE-UNIFICATION trap
+
+`cargo check -p semio-framework-plugin --lib` now advances past the kernel and stops at
+**`semio-framework-ui`: 276 errors**. But:
+
+```
+cargo check -p semio-framework-ui --lib                 EXIT=0   0 errors
+cargo check -p semio-framework-plugin --lib            EXIT=101  276 errors, all inside 🖱️ui
+```
+
+**Both are true.** The SDK declares `ui_wgpu = { package = "semio-framework-ui", features = ["wgpu"] }`,
+while `🖱️ui`'s own `default = []`. So 276 errors live in `#[cfg(feature = "wgpu")]` code that a standalone
+check **never compiles**. This is the ticket's own recorded law — *acceptance must run the command the
+CONSUMER runs, feature flags included* — and the sibling of the "a `cfg` gate you cannot enable is
+indistinguishable from deleted code" trap that has now bitten this program three separate times.
+
+### 🔧️ The shared tool gained `--features` / `--all-features`
+It had no way to reach feature-gated code at all, so every packet using it was silently blind to exactly
+this class. Patched, with the incident written into `run_check`'s docstring. Re-run with `--features wgpu`:
+**276 → 141**, fixpoint reached, 33 diagnostics the tool declines (hand-work residue).
+
+That is the **sixth** defect found in this tool by real use — and, like the others, it was invisible to
+review and obvious the moment it met a real crate.
+
+
+## 📊️ 19-AGENT FAN-OUT RESULT — first-party `dyn` **576 → 173**, measured by me, not reported
+
+19 agents, **0 failures**. My own repo-wide census (python3 over absolute paths, comments excluded,
+237 first-party traits, 10,533 files):
+
+| | before | after |
+|---|---:|---:|
+| **first-party `dyn` total** | **576** | **173** |
+| fleet (`✏️s`) | 282 | **25** (−91%) |
+| framework + hub | 294 | 148 |
+| std/lang `dyn` (R1-LEGAL baseline) | — | 138 (`Fn` 50, `Future` 27, `FnMut` 23, `Any` 14, `FnOnce` 12, `Error` 8, `Iterator` 4) |
+| **async ratio** | — | **86.8%** (68,006 `async fn` / 10,302 plain) |
+| `🚫️async:` exception tags | — | **337** |
+
+`🎞️animate` alone went **155 → 0**, including `Sobject` (131 uses, 37 methods, closed 3-impl set) and
+`Animation` (**43 impls**) — both via `dyn_enum_close!`, which held at that scale exactly as its tests
+predicted. `📐️cad`'s 24 `BrepKernel` uses were resolved by **deleting the trait object** (R11 case 3): the
+agent verified the single impl itself and found every call site was **already being handed a concrete
+`Brep`**, so removing `dyn` removed a no-op coercion rather than changing behaviour.
+
+### 🧠 A seventh residue shape, found in production
+`🎞️animate` hit one no rule covered: a **blanket extension trait** (`impl<T: Sobject> AnimateExt for T`)
+breaks the moment its family is forced onto a concrete enum, because a blanket generic impl cannot call an
+enum-typed fn. Fixed by making the *extension* generic. Recorded for every remaining family that carries
+its own `…Ext` trait.
+
+## ❌️ A GAP IN MY OWN SCOPING — found by the census, not by an agent
+
+`Element` (20 uses, 8 methods, 13 impls) sits in **`✏️s/🔨️modules/🏗️fem`**. My fleet inventory walked only
+`✏️s/🔌️plugins`, and `✏️s/🔨️modules` is a **sibling directory of shared modules**. So **eleven fleet agents
+ran without ever being able to see it.** Nobody's fault but mine, and it is precisely the class of error
+this program keeps catching: *a negative from a query that cannot report its own failure is not evidence.*
+My inventory was silently scoped to one subtree and I read its zeros as completeness.
+
+The follow-up packet is briefed to **check `✏️s/🔨️modules` for other families beyond `Element`** and report
+whatever it finds even outside its fix scope — that gap matters more than the fix.
+
+## 🎯 THE SDK CLOSURE IS DOWN TO **TWO CRATES**
+
+`cargo check -p semio-framework-plugin --lib --keep-going` — the entire remaining closure:
+
+| crate | errors |
+|---|---:|
+| `semio-framework-ui` | 140 |
+| `semio-framework-schema` | 46 → **28** (I ran the fixpoint) |
+
+`semio-framework-os-kernel` is **holding EXIT 0**. Everything else upstream is green.
+
+### The `ui` numbers are only visible with the right feature
+`cargo check -p semio-framework-ui --lib` → **EXIT 0**. With `--features wgpu` (what the SDK enables) →
+**140 errors**. Both true simultaneously. The tool gained `--features`/`--all-features` for exactly this,
+and the flavour is now known: **`#[derive(Serialize)]` on fields whose default-value fns were blindly
+asyncified** — an E1/E4 class where a serde-generated call site needs a sync value.
+
+## ▶️ Final push dispatched — 7 agents (6 clear + 1 gate census)
+`gate-ui` and `gate-schema` (the two SDK gates), plus `dyn-fem` (my missed area), `dyn-os-backbone`,
+`dyn-os-misc`, `dyn-space-hub`. Every brief carries the seven hand-work shapes, the feature-unification
+warning, and — for the two touching `💻️os` — the standing instruction that **`os-kernel` must stay EXIT 0**,
+because regressing a crate that went green today after 1,000+ errors is the worst outcome available.
+
+`dyn-os-misc` is told two things it would otherwise have to discover: `BrepKernel`'s 92 methods have
+**exactly one impl** (delete, do not enumerate), and `HttpBody`/`RouterEffectHandler` are **still sync
+traits**, where `dyn` is not an error today — with an explicit warning **not to do half** of an
+asyncify-then-de-dyn on them, since a sync trait behind `dyn` is fine but an async one does not compile.
+
+
+## 🌊️ WIDEST WAVE — 13-agent workflow `wide-verification-fleet` (12 workers + 1 roll-up)
+
+Running alongside the 7-agent SDK-gate wave, so **20 agents concurrent**. The choice of surface is the
+point: everything here is work that does **NOT** depend on the guest SDK, so unlike the fleet it can be
+executed *and verified* right now rather than done blind.
+
+### 🕳️ The gap that motivated it: TypeScript has not been verified ONCE this session
+28 `🧪️vitest.config.ts` packages exist. The React renderer is already wired to the new pooled-actor
+runtime, the ShardClient gained a host-effect bridge, the bridge generator was rewritten for async jco, and
+`_shard` was added to the production vite config — **and not one TS suite has been run since any of it.**
+Six agents now cover: `ts-core` (framework 87 / actor 40→46 / kernel 29), `ts-os` (206/1), `ts-react`
+(325/336), `ts-rest` (dev 17 + ◻2d/🧊3d/replication/mcp), `ts-fleet` (10 plugin packages), `ts-hub`.
+
+Each carries the two suite-level traps this ticket has already paid for: **`include` + `includeSource`
+naming the same file makes vitest count it TWICE** (historical baselines were inflated 2×, and `mcp`, four
+cad extensions and `animate` are named as still carrying it), and **a config listing explicit filenames
+means a new test file silently does not run while the suite still reports green.** They must report UNIQUE
+counts and confirm tests **by name** with `--reporter=verbose`.
+
+### The other six
+- **`exchange-removal`** — deletes a banned symbol, with the reasoning that it cannot merely be renamed:
+  `exchange(instance, frames) -> frames` is a **synchronous-RPC shape**, and under the turn model a reply
+  may arrive N turns later. It becomes `enqueue` + an `outcomes` async-iterable, with request/reply
+  correlation via `request` events + the `respond` effect — the schema's own documented exception.
+- **`alltargets-kernel`** — `os-kernel --lib` is EXIT 0 but **`--all-targets` has never been run on it**.
+  Rule 26 exists precisely because neither is sufficient: on this ticket `--lib` hid a `cfg(test)` trait
+  impl and `--all-targets` hid a missing production feature.
+- **`alltargets-green`** — defends six already-green crates with named baselines (pack 44, geometry 57,
+  math 191, async 17, dispatch 28). With 20 agents editing concurrently, **a green crate silently going red
+  is exactly what a wide fan-out risks**, and finding that is its most valuable possible output.
+- **`fleet-modules-sweep`** — the blind spot I created. Briefed **census-first, fix-second**, because
+  knowing the true size of the gap matters more than closing it.
+- **`world-collapse-prep`** — designs the one-async-world change **without applying it**. Applying now,
+  with agents mid-flight against the current SDK, is exactly the interrupted-atomic-packet failure that
+  once cost 84 errors. It must also produce the schema-parity **re-spec**, including an assertion derived
+  from a real finding: every `host-async` func whose failure the guest must observe returns `result<T,…>`,
+  because a bare return type there **silently turns host errors into default values**.
+- **`descriptor-prep`** — 7 missing descriptors. Scope deliberately narrowed to the half that does not need
+  a wasm build, and told to **verify rather than inherit** `📓️luna-claims-audit.md`, whose own §4 admits
+  five of its seven plugins were never actually traced.
+
+The 13th agent rolls everything up independently: every exit code, the TS table, the banned-symbol census
+**split source vs generated** (a flat grep reports hundreds of false positives from build output), the dyn
+and async censuses — and, most valuably, **every discrepancy between what an agent claimed and what it
+measures.**
+
+
+## 🧱️ THE CHAIN, one crate at a time — `ui` ✅ `schema` ✅ and a systemic generated-code defect
+
+`gate-ui` took **141 → 3** and `gate-schema` **27 → 0** (`--all-targets` 0 too). Both did the work properly:
+- **ui**: 28 `#[serde(default = "…")]` value fns, the whole `theme.rs` pure colour/metric graph, `LocalizedLabel`,
+  `PresenceBar` colour helpers — all R9 reversions with **both halves verified** and tagged. Plus `Box::pin`
+  for three self-recursive async fns, repeated-await fixed at the constructor in ~8 spots, and awaits hoisted
+  out of `.collect()`/closures in ~6. It also separated out **one genuine pre-existing non-async defect**
+  (a stale call with string args against typed fields) rather than conflating it with conversion work.
+- **schema**: reverted four registries wholesale rather than piecemeal, reasoning that *"making only some
+  methods async and others sync on the same type would be internally inconsistent"* — and it found
+  **silently-dropped futures** (`register_kernel_artifact_schema_descriptor(...);` with no `.await`), which
+  the compiler does not flag and which are runtime no-ops, then fixed them proactively.
+
+### 🤖️ The last 3 errors were in MACHINE-GENERATED code — and it was systemic
+`gate-ui`'s residue was `IconName::as_str`/`from_str` in
+`🖱️ui/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs` — a **registrar-only, gitignored, generated** file. It
+correctly refused to edit it and filed a lease.
+
+**I checked the generator instead of patching the output — and the generator was already correct**, emitting
+`pub fn as_str(self)` sync with `impl Display` calling it. So the codemods had rewritten *generated output*
+whose source of truth was never wrong.
+
+Swept repo-wide: **22 generated `.rs` files carried 99 wrongly-`async` fns** (`🕸️graph` fixtures ×9 each,
+`🔌️plugin/📇️registry/🤖️generated/🦀️hosts.rs`, both icon-name files, …). **Rewriting generated output is
+undone by the next regeneration and silently breaks the build in the meantime** — so the fix had to be at
+the tool, not the file:
+
+- **Both codemods now skip `/🤖️generated`**, with the incident written into their skip-list comment.
+- All 22 files restored to what their generators emit.
+
+Result: **`ui --lib --features wgpu` EXIT 0 · `schema --lib` EXIT 0 · `os-kernel --lib` EXIT 0.**
+
+## 🚨 `os-kernel` REGRESSED under concurrency, and was repaired
+
+With ~20 agents live, `os-kernel` went red again on **three struct-literal shorthand parse errors** —
+`Conflict { timestamp.await, }`. A field shorthand cannot carry `.await`; it does not even parse.
+
+The correct repair is **not** to delete the await but to move it: `timestamp,` in the literal, and
+`let timestamp = HybridLogicalTimestamp::new(seed, seed).await;` at the binding. That is residue **shape 6**
+(constructor left un-awaited, uses written `x.await`) landing in a position where it becomes a syntax error.
+Fixed; **`os-kernel --lib` back to EXIT 0** and re-verified.
+
+This is the concrete cost of a wide fan-out, and the reason `alltargets-green` exists in the current wave:
+**a green crate silently going red is the failure mode of parallelism**, and only continuous re-measurement
+catches it.
+
+## ▶️ ONE crate left before the guest SDK
+`cargo check -p semio-framework-plugin --lib` now stops at exactly **`semio-framework`** — no other crate in
+the closure fails. I ran the await fixpoint (**278 → 199**, 80 edits, **0 ambiguous**), so the remainder is
+judgement: E0599 59 · E0308 45 · E0277 34, concentrated in `🛍️products/💻️os` and `🔨️modules/🛂️manifest`.
+
+`framework-last-gate` dispatched with the three visible shapes pre-diagnosed — trait-declares-async /
+impl-still-sync (**never resolved by making a first-party trait sync**), an `ActionBus` generic parameter a
+sibling's de-dyn work left unpropagated, and the struct-literal parse corruption with its correct repair —
+plus a standing instruction that **`os-kernel --lib` must stay EXIT 0**, since it has already regressed once
+today.
+
+
+# 🟢️ THE WHOLE CHAIN IS GREEN — the guest SDK's own errors are visible for the first time
+
+```
+semio-framework-os-kernel --lib   EXIT 0
+semio-framework          --lib   EXIT 0   ← the last gate, cleared
+semio-framework-plugin   --lib   EXIT 101, 1,845 errors  ← the SDK's OWN, at last
+```
+
+Every crate upstream of the guest SDK now compiles: `async` → `replication` → `pack` → `schema-derive` /
+`dsl-derive` / `mesh-engine` → `os-kernel` (**1,000+ → 0**) → `ui` → `schema` → `semio-framework`. The SDK's
+1,845 errors were **invisible all session** because the build never reached its source.
+
+Profile: **E0308 982 · E0277 375 · E0599 325 · E0609 107 · E0608 22** — i.e. **~91% is the mechanical
+missing-`.await` family**, which is precisely what the shared span-keyed tool automates. Fixpoint running.
+
+## ✅️ TYPESCRIPT VERIFIED — first time this session, and it held
+
+13-agent wave, **0 failures**. The TS side had not been run once despite the renderer being rewired to the
+pooled-actor runtime, a host-effect bridge landing in `ShardClient`, the bridge generator being rewritten
+for async jco, and the production vite config changing.
+
+| package | result |
+|---|---|
+| `@semio-tech/framework` | **87 / 0**, exit 0 — matches baseline |
+| `@semio-tech/framework-actor` | **46 / 0**, exit 0 — the 40→46 growth confirmed, **all 6 new `onHostEffect`/backpressure/shard-loss tests present BY NAME** |
+| `@semio-tech/framework-kernel` | **29 / 0**, exit 0 |
+| `@semio-tech/framework-os` | **206 / 1**, exit 1 — exact baseline; the 1 is the documented wasm-`pkg` build issue, **re-measured by name rather than re-labelled from memory** |
+| react renderer | **325 / 336** — all 11 failures verified as a **literal subset** of the 15-name baseline ⇒ **zero regression** |
+
+`ts-react` also confirmed the pooled-actor wiring survived everything: `ActivationRegistry` 30 refs,
+`ShardClient` 50 refs, `shard-worker` 3 refs in `PluginRuntime`.
+
+### 🕳️ A structural blind spot found by `ts-core` — worth more than the fixes
+It found **3 real type-only defects** (test fixtures missing an interface member; two types used as bare
+annotations with no local binding, because `export * from` does not create one; and an import from the wrong
+module that let TS silently degrade a type to `any`, **masking a second bug** — a stale fixture shape from
+before a schema migration).
+
+**None of these could ever fail a test run**: bun's runtime is strip-only, so type errors are invisible at
+runtime, and **none of those three packages has a `tsconfig.json` or an nx `typecheck` target at all.**
+That is a whole defect class — *compiles, type-checks red, tests green* — which no gate in this repo
+currently catches. The agent built a scoped synthetic tsconfig to find them, and correctly **flagged rather
+than fixed** the real remedy, since adding per-package typecheck targets means editing registrar-only
+`project.json` files.
+
+⚠️ It also reports the ticket's recorded "**19 pre-existing repo-wide `tsc` errors**" baseline is likely
+**stale or undercounted**: the root `tsconfig.json` lacks `allowImportingTsExtensions`, so a bare
+`tsc --noEmit` floods with TS5097 across nearly every first-party import, and the mechanism that once
+produced exactly 19 is not discoverable in `bunfig.toml`/`package.json`/`tsconfig.json` today. **Recorded as
+suspect rather than carried forward as fact.**
+
+
+## ✅️ `framework-last-gate` ACCEPTED — `semio-framework --lib` **EXIT 0**, and `os-kernel` re-verified unchanged
+
+The last crate in the SDK's dependency closure is green, and it re-checked `os-kernel --lib` as its final
+action rather than assuming — **EXIT 0, no regression** from the crate that took the most work today.
+`--all-targets` shows 29 remaining, **none in any file it owns**.
+
+### 🐛 It found a SEVENTH defect in the shared tool — and this one was MINE, introduced by my own fix
+
+Earlier today I hardened `insert-await.py` so a suggestion must itself contain `.await`, after it had
+applied a suggestion that landed text on the wrong token. **That fix was right in intent and wrong in
+implementation**: it assumed the dot comes *before* the token. On this nightly, rustc emits mid-chain
+insertions as the bare token **`await.`** — dot AFTER, none before — so the substring test
+`".await" not in repl` **silently discarded every candidate of that shape.**
+
+Measured consequence: **0 edits applied across a whole crate despite 100+ eligible diagnostics.** The tool
+still printed cheerful `applied N` lines for the shapes it *did* match, so the failure was invisible — a
+tool reporting partial success is far more dangerous than one that errors.
+
+Fixed properly with `AWAIT_TOKEN_RE = re.compile(r"\.?await\.?")` matched by `fullmatch` on the whole
+replacement. I verified the semantics myself against eight cases: it accepts `.await`, `await.`, `await`
+and rejects `foo.bar()`, `Some(x)`, `.expect("x")`, `as usize` — **all 8 pass**. That is strictly safer than
+my substring check *and* catches both dot positions, so it fixes the original wrong-token bug and this
+regression together.
+
+**Standing lesson, now the strongest one of the session**: my tool has been wrong seven times —
+substring `--scope`, missing ordering guard, over-broad E0728 abort, message-vs-replacement, ambiguity
+misdiagnosis, no feature support, and now a dot-position assumption **introduced while fixing a previous
+defect**. Every single one shipped on plausible reasoning and was caught only by real use. *A fix is a new
+claim about the world and needs its own evidence.*
+
+### 🕳️ Two silent-no-op bugs the conversion exposed
+`workflow`'s cycle-detection and topological-sort helpers were **recursive `async fn`s whose recursive
+calls were never awaited** — so the traversal never actually ran; it constructed futures and dropped them.
+Compiles clean, passes any test that does not assert on traversal results. This is the same class as the
+14-of-17 unawaited byte-writer calls found in `🏪️store`, and it is the strongest argument in this whole
+program for *"prove it RUNS, not that it compiles."*
+
+### 🧰️ Three more diagnostic-driven repair tools saved to the ticket folder
+`terra-lastgate-await-binding-fixer.py`, `terra-lastgate-chain-await-fixer.py`,
+`terra-lastgate-await-call-sites-whitelist.py` — all span/bracket-matched per **R10**, and preserved rather
+than discarded. It also disclosed that its own chain-fixer briefly stacked `.await.await.await` on ~9 lines
+before it caught and hand-repaired them on a second read — **reported rather than quietly cleaned up**,
+which is exactly the behaviour that makes these reports usable.
+
+## 📍️ Current gate state
+```
+semio-framework-os-kernel --lib   EXIT 0
+semio-framework          --lib   EXIT 0
+semio-framework-plugin   --lib   EXIT 101  — the guest SDK's own, 1,845 → 798 → ~719
+```
+`sdk-green` is on it, with the 439-still-sync judgement call delegated explicitly rather than blanket-applied.
+
+
+# 🚀 END-TO-END WAVE — 12-agent workflow, the full tiering the owner specified
+
+Plan authored by Fable 5 · coordination Opus 5 (this chat) · **7 Sonnet executors** · **4 Haiku read-only
+explorers** · 1 gate. Running alongside `sdk-green`, so **13 concurrent**.
+
+## Position at dispatch (measured, not remembered)
+| | |
+|---|---|
+| dependency chain | **fully green** — async → replication → pack → both ✨️derive → mesh-engine → os-kernel (1,000+→0) → ui → schema → semio-framework |
+| guest SDK | **1,845 → 339** errors, one agent on it; **63 fleet crates unblock when it lands** |
+| first-party `dyn` | **576 → 84** (framework 79, fleet **5**) |
+| async ratio | **86.7%** |
+| TypeScript | verified: framework 87/0 · actor 46/0 · kernel 29/0 · os 206/1 · react 325/336 (exact known subset) |
+
+## Sonnet executors — chosen because each is genuinely unblocked *now*
+- **`dyn-emit-runtime`** and **`dyn-http-tail`** — the last dyn families. The second carries a real
+  judgement: `HttpBody`/`RouterEffectHandler` are **still sync traits**, where `dyn` is not an error today,
+  with an explicit instruction **not to do half** of an asyncify-then-de-dyn.
+- **`alltargets-hard`** — `--all-targets` on the two crates that just went green. Rule 26 exists because
+  each flag has hidden a *different* real defect here.
+- **`run-kernel-wiring`** — because `🏃️run` **bypasses the microkernel entirely** (constructs a runtime
+  directly, mints its own actor ids). **That makes "33/33 native smoke" nearly meaningless as evidence** —
+  it exercises a path the product does not use. Fixing it is what makes native smoke mean something.
+- **`bench-web-rows`** — the web half of the scale proof **does not exist**: the bench emits
+  `benchWebSkippedRow` for react and wgpu, so the headline 50×50 claim has never been measured on the web.
+- **`parity-rebaseline`** — the 58-variant suite has been booting **react-new against wgpu-old**, i.e. a
+  **cross-architecture diff, not a regression check**; every historical parity number is worthless as a
+  baseline. Also told to make the harness distinguish "stale bridge" from a real regression, since the 48
+  materialised bridges cannot be regenerated until the fleet builds.
+- **`extension-activation`** — the 50-extensions-per-plugin half of the mission has **no host path at all**:
+  `ActorKind::Extension`, the `.sxt` format and 26 extension crates exist, but nothing ever loads or
+  activates one. Required to be **descriptor-driven** so the fixture's 2,500 synthetic extensions use the
+  identical code with zero special-casing.
+
+## Haiku explorers — read-only, one file each, every claim `path:line`
+`luna-e2e-path` traces the complete `dev s` → rendered frame path on both web renderers and native, hop by
+hop, and lists the **specific remaining blockers to a first successful plugin turn**. `luna-fleet-readiness`
+builds a per-crate readiness table for all 63 and proposes the fan-out batching for the moment the SDK lands
+(with `🗄️stdio` first — everything depends on it — and `🎪️demonstrator` last). `luna-runtime-audit` answers
+what must change, in what order, to mount a working async runtime natively — including that `⏳️runtime.rs`
+was **written against WIT interfaces that were never created**. `luna-exit-audit` grades every exit
+criterion MET/PARTIAL/NOT MET **against measured evidence**, classifying source vs generated output so build
+artifacts do not produce a false red.
+
+Each brief carries the session's hard-won traps: feature unification, suites that silently do not run,
+**silent no-ops that compile clean** (two found today — a traversal that never ran, an encoder writing
+almost nothing), never codemod generated output, and that the shared tool has been wrong **seven** times,
+twice from my own fixes — *a fix is a new claim about the world and needs its own evidence.*

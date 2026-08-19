@@ -1,0 +1,4 @@
+[pass 1] errors=2742 bad-await=8 out-of-scope=0
+  removed 8
+[pass 2] errors=2734 bad-await=0 out-of-scope=0
+  fixpoint reached

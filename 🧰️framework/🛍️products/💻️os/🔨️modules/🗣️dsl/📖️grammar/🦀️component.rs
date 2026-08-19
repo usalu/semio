@@ -388,7 +388,7 @@ impl Cursor {
 
     async fn skip_newlines(&mut self) {
         while self.peek().await.kind == GKind::Newline {
-            self.advance();
+            self.advance().await;
         }
     }
 
@@ -437,7 +437,7 @@ async fn parse_macro_args(cursor: &mut Cursor) -> Result<Vec<MacroArg>, TextErro
             };
             args.push(arg);
             if cursor.peek().await.kind == GKind::Comma {
-                cursor.advance();
+                cursor.advance().await;
                 continue;
             }
             break;
@@ -456,7 +456,7 @@ async fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
         // macro call. Reserving `( )` exclusively for macro-call argument lists keeps that
         // distinction unambiguous without needing whitespace-sensitive parsing.
         GKind::LBrace => {
-            cursor.advance();
+            cursor.advance().await;
             // 🔁 `parse_atom` -> `parse_alternatives` -> `parse_sequence` -> `parse_atom` is a
             // recursion cycle through async fns (E0733: an async fn's future can't be infinite-
             // sized) — `Box::pin` breaks it at this one edge, per R10 residue shape 3.
@@ -478,15 +478,15 @@ async fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
     };
     let quantified = match cursor.peek().await.kind {
         GKind::Question => {
-            cursor.advance();
+            cursor.advance().await;
             Symbol::Optional(Box::new(base))
         }
         GKind::Star => {
-            cursor.advance();
+            cursor.advance().await;
             Symbol::Star(Box::new(base))
         }
         GKind::Plus => {
-            cursor.advance();
+            cursor.advance().await;
             Symbol::Plus(Box::new(base))
         }
         _ => base,
@@ -511,7 +511,7 @@ async fn parse_sequence(cursor: &mut Cursor) -> Result<Alternative, TextError> {
 async fn parse_alternatives(cursor: &mut Cursor) -> Result<Vec<Alternative>, TextError> {
     let mut alts = vec![parse_sequence(cursor).await?];
     while cursor.peek().await.kind == GKind::Pipe {
-        cursor.advance();
+        cursor.advance().await;
         alts.push(parse_sequence(cursor).await?);
     }
     Ok(alts)
@@ -542,12 +542,12 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
 
     let tokens = lex(text).await?;
     let mut cursor = Cursor { tokens, pos: 0 };
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
 
     let dialect = if cursor.peek_ident("dialect").await {
         cursor.expect_ident("dialect").await?;
         let name = cursor.expect(GKind::Ident).await?.text;
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
         match name.as_str() {
             "grammar" => SemioDialect::Grammar,
             "protocol" => return Ok(project_protocol(parse_protocol(text).await?).await),
@@ -559,7 +559,7 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
 
     cursor.expect_ident("grammar").await?;
     let id = parse_grammar_id(&mut cursor).await?;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
 
     let mut extension = None;
     let mut uses = Vec::new();
@@ -581,15 +581,15 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
         match head.text.as_str() {
             "extension" => {
                 extension = Some(parse_grammar_id(&mut cursor).await?);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "use" => {
                 uses.push(cursor.expect(GKind::Ident).await?.text);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "start" => {
                 start = Some(cursor.expect(GKind::Ident).await?.text);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             // `comment none` / `comment line "MARKER"` / `comment line none` / `comment block "OPEN" "CLOSE"`
             "comment" => {
@@ -601,7 +601,7 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                     }
                     "line" => {
                         if cursor.peek_ident("none").await {
-                            cursor.advance();
+                            cursor.advance().await;
                             comment_line = None;
                         } else {
                             comment_line = Some(cursor.expect(GKind::Text).await?.text);
@@ -614,7 +614,7 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                     }
                     other => return Err(TextError::new(format!("unknown `comment` directive `{other}` (expected `none`/`line`/`block`)"), head.span.clone())),
                 }
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             // `string double|single raw|backslash|doubled` — declaring ANY `string` directive
             // replaces the default double-quote-Raw quote set entirely (a grammar that wants both
@@ -634,12 +634,12 @@ pub async fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                     other => return Err(TextError::new(format!("unknown `string` escape mode `{other}` (expected `raw`/`backslash`/`doubled`)"), head.span.clone())),
                 };
                 strings.push(StringMode { quote, escape });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             _ => {
                 cursor.pos -= 1;
                 productions.push(parse_production_line(&mut cursor).await?);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
         }
     }
@@ -689,7 +689,7 @@ async fn parse_u64_literal(cursor: &mut Cursor) -> Result<u64, TextError> {
         if cursor.peek().await.kind == GKind::Ident {
             let rest = cursor.peek().await.text.clone();
             if let Some(hex) = rest.strip_prefix('x').or_else(|| rest.strip_prefix('X')) {
-                cursor.advance();
+                cursor.advance().await;
                 return u64::from_str_radix(hex, 16).map_err(|_| TextError::new(format!("invalid hex literal `0{rest}`"), first.span.clone()));
             }
         }
@@ -703,18 +703,18 @@ async fn parse_u64_literal(cursor: &mut Cursor) -> Result<u64, TextError> {
 async fn parse_count(cursor: &mut Cursor) -> Result<Count, TextError> {
     match cursor.peek().await.kind {
         GKind::Ident if cursor.peek().await.text == "Varint" || cursor.peek().await.text == "varint" => {
-            cursor.advance();
+            cursor.advance().await;
             Ok(Count::Varint)
         }
         GKind::Ident if cursor.peek().await.text == "Fixed" || cursor.peek().await.text == "fixed" => {
-            cursor.advance();
+            cursor.advance().await;
             cursor.expect(GKind::LParen).await?;
             let n = parse_usize_token(&cursor.expect_ident_or_int().await?).await?;
             cursor.expect(GKind::RParen).await?;
             Ok(Count::Fixed(n))
         }
         GKind::Ident if cursor.peek().await.text == "Field" => {
-            cursor.advance();
+            cursor.advance().await;
             cursor.expect(GKind::LParen).await?;
             let name = cursor.expect(GKind::Ident).await?.text;
             cursor.expect(GKind::RParen).await?;
@@ -740,7 +740,7 @@ async fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                 "f64" => Ok(Prim::F64),
                 "varint" => {
                     if cursor.peek_ident("bytes").await {
-                        cursor.advance();
+                        cursor.advance().await;
                         Ok(Prim::Array(Box::new(Prim::U8), Count::Varint))
                     } else {
                         Ok(Prim::Varint)
@@ -797,7 +797,7 @@ async fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                 // P2-M2 item 6: `endian { "II"=le "MM"=be }` — TIFF-style runtime endian marker.
                 "endian" => {
                     cursor.expect(GKind::LBrace).await?;
-                    cursor.skip_newlines();
+                    cursor.skip_newlines().await;
                     let mut arms = Vec::new();
                     while cursor.peek().await.kind != GKind::RBrace && cursor.peek().await.kind != GKind::Eof {
                         let key = cursor.expect(GKind::Text).await?.text;
@@ -809,7 +809,7 @@ async fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                             other => return Err(TextError::new(format!("unknown `endian` mode `{other}` (expected `le`/`be`)"), cursor.peek().await.span.clone())),
                         };
                         arms.push((key, be));
-                        cursor.skip_newlines();
+                        cursor.skip_newlines().await;
                     }
                     cursor.expect(GKind::RBrace).await?;
                     Ok(Prim::Endian(arms))
@@ -845,7 +845,7 @@ async fn parse_field_pair(cursor: &mut Cursor) -> Result<Field, TextError> {
     let name = cursor.expect(GKind::Ident).await?.text;
     let ty = parse_prim(cursor).await?;
     let cond = if cursor.peek_ident("if").await {
-        cursor.advance();
+        cursor.advance().await;
         Some(parse_cond(cursor).await?)
     } else {
         None
@@ -853,7 +853,7 @@ async fn parse_field_pair(cursor: &mut Cursor) -> Result<Field, TextError> {
     Ok(Field { name, ty, cond })
 }
 
-/// @emoji 🏷️ P2-M2 item 1: an arm/`until` tag literal — a `TEXT` literal encodes to its raw ASCII
+/// @emoji 🏷️ P2-M2 item 1: an arm/`until` tag literal —.await a `TEXT` literal encodes to its raw ASCII
 /// bytes (PNG/GLB's 4-char chunk/type tags), an int/hex literal encodes big-endian, trimmed to the
 /// discriminator prim's own byte width (GIF/JPG's single-byte introducer/marker codes).
 async fn parse_tag_value(cursor: &mut Cursor, discriminator: &Prim) -> Result<Vec<u8>, TextError> {
@@ -879,40 +879,40 @@ async fn trim_be_bytes(value: u64) -> Vec<u8> {
 /// @emoji 🌿️ Parses one `arm <tag> { field... | nested <name> <prim> { arm ... } }` body.
 async fn parse_arm_body(cursor: &mut Cursor) -> Result<(Vec<Field>, Option<NestedDispatch>), TextError> {
     cursor.expect(GKind::LBrace).await?;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
     let mut fields = Vec::new();
     let mut nested = None;
     while cursor.peek().await.kind != GKind::RBrace && cursor.peek().await.kind != GKind::Eof {
         if cursor.peek_ident("nested").await {
-            cursor.advance();
+            cursor.advance().await;
             let name = cursor.expect(GKind::Ident).await?.text;
             let discriminator = parse_prim(cursor).await?;
             cursor.expect(GKind::LBrace).await?;
-            cursor.skip_newlines();
+            cursor.skip_newlines().await;
             let mut arms = Vec::new();
             while cursor.peek().await.kind != GKind::RBrace && cursor.peek().await.kind != GKind::Eof {
-                cursor.expect_ident("arm").await?;
+                cursor.expect_ident("arm.await").await?;
                 let tag = parse_tag_value(cursor, &discriminator).await?;
                 let (afields, anested) = Box::pin(parse_arm_body(cursor)).await?;
                 arms.push(RepeatArm { tag, fields: afields, nested: anested });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             cursor.expect(GKind::RBrace).await?;
             nested = Some(NestedDispatch { name, discriminator, arms });
         } else {
             fields.push(parse_field_pair(cursor).await?);
         }
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
     }
     cursor.expect(GKind::RBrace).await?;
     Ok((fields, nested))
 }
 
 /// @emoji 🔁️ P2-M2 item 1: `repeat <name> { tag <prim> length <prim>? order length-first?
-/// trailer <prim>? until <tag>? arm <tag> {...}* }`.
+/// trailer <prim.await>? until <tag>? arm <tag> {...}* }`.
 async fn parse_repeat_dispatch(cursor: &mut Cursor) -> Result<RepeatDispatch, TextError> {
     cursor.expect(GKind::LBrace).await?;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
     let mut discriminator: Option<Prim> = None;
     let mut length: Option<Prim> = None;
     let mut order = DispatchOrder::TagFirst;
@@ -945,7 +945,7 @@ async fn parse_repeat_dispatch(cursor: &mut Cursor) -> Result<RepeatDispatch, Te
             }
             other => return Err(TextError::new(format!("unknown `repeat` directive `{other}`"), head.span.clone())),
         }
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
     }
     cursor.expect(GKind::RBrace).await?;
     let discriminator = match discriminator {
@@ -965,11 +965,11 @@ async fn parse_fields_until_break(cursor: &mut Cursor) -> Result<Vec<Field>, Tex
 
 async fn parse_braced_fields(cursor: &mut Cursor) -> Result<Vec<Field>, TextError> {
     cursor.expect(GKind::LBrace).await?;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
     let mut fields = Vec::new();
     while cursor.peek().await.kind != GKind::RBrace && cursor.peek().await.kind != GKind::Eof {
         fields.push(parse_field_pair(cursor).await?);
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
     }
     cursor.expect(GKind::RBrace).await?;
     Ok(fields)
@@ -977,7 +977,7 @@ async fn parse_braced_fields(cursor: &mut Cursor) -> Result<Vec<Field>, TextErro
 
 async fn parse_enum_variants(cursor: &mut Cursor) -> Result<Vec<(String, u64)>, TextError> {
     cursor.expect(GKind::LBrace).await?;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
     let mut variants = Vec::new();
     while cursor.peek().await.kind != GKind::RBrace && cursor.peek().await.kind != GKind::Eof {
         let name = cursor.expect(GKind::Ident).await?.text;
@@ -985,9 +985,9 @@ async fn parse_enum_variants(cursor: &mut Cursor) -> Result<Vec<(String, u64)>, 
         let value = parse_u64_literal(cursor).await?;
         variants.push((name, value));
         if cursor.peek().await.kind == GKind::Comma {
-            cursor.advance();
+            cursor.advance().await;
         }
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
     }
     cursor.expect(GKind::RBrace).await?;
     Ok(variants)
@@ -1008,17 +1008,17 @@ async fn flush_open_segment(blocks: &mut Vec<Block>, open: &mut Option<Block>) {
 pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
     let tokens = lex(text).await?;
     let mut cursor = Cursor { tokens, pos: 0 };
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
 
     if cursor.peek_ident("dialect").await {
         cursor.expect_ident("dialect").await?;
         cursor.expect_ident("protocol").await?;
-        cursor.skip_newlines();
+        cursor.skip_newlines().await;
     }
 
     cursor.expect_ident("protocol").await?;
     let id = cursor.expect(GKind::Ident).await?.text;
-    cursor.skip_newlines();
+    cursor.skip_newlines().await;
 
     let mut version = 1u16;
     let mut schema = String::new();
@@ -1049,19 +1049,19 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
         match head.text.as_str() {
             "version" => {
                 version = parse_u64_literal(&mut cursor).await? as u16;
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "schema" => {
                 schema = cursor.expect(GKind::Ident).await?.text;
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "use" => {
                 uses.push(cursor.expect(GKind::Ident).await?.text);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "start" => {
                 start = Some(cursor.expect(GKind::Ident).await?.text);
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "framing" => {
                 let mode = cursor.expect(GKind::Ident).await?.text;
@@ -1071,16 +1071,16 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                     "chunked" => Framing::Chunked,
                     other => return Err(TextError::new(format!("unknown framing `{other}`"), head.span.clone())),
                 });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "header" => {
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 close_header(&mut blocks, &mut open_header);
                 cursor.expect_ident("fixed").await?;
                 let _size = parse_u64_literal(&mut cursor).await?;
                 open_header = Some(Vec::new());
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "field" => {
                 let field = parse_field_pair(&mut cursor).await?;
@@ -1095,7 +1095,7 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 } else {
                     open_header.get_or_insert_with(Vec::new).push(field);
                 }
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "segment" => {
                 close_header(&mut blocks, &mut open_header);
@@ -1103,20 +1103,20 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 let name = cursor.expect(GKind::Ident).await?.text;
                 // P2-M2 item 4: whole-segment presence guard — `segment palette if bpp le 8 {...}`.
                 let cond = if cursor.peek_ident("if").await {
-                    cursor.advance();
+                    cursor.advance().await;
                     Some(parse_cond(&mut cursor).await?)
                 } else {
                     None
                 };
                 if cursor.peek_ident("kind").await && cursor.tokens.get(cursor.pos + 1).is_some_and(|t| t.kind == GKind::Equals) {
-                    flush_open_segment(&mut blocks, &mut open_segment);
+                    flush_open_segment(&mut blocks, &mut open_segment).await;
                     cursor.expect_ident("kind").await?;
                     cursor.expect(GKind::Equals).await?;
                     let kind = parse_u64_literal(&mut cursor).await? as u8;
                     let fields = if cursor.peek().await.kind == GKind::LBrace { parse_braced_fields(&mut cursor).await? } else { Vec::new() };
                     blocks.push(Block::Segment { name, kind: Some(kind), fields, cond });
                 } else if cursor.peek().await.kind == GKind::LBrace {
-                    flush_open_segment(&mut blocks, &mut open_segment);
+                    flush_open_segment(&mut blocks, &mut open_segment).await;
                     let fields = parse_braced_fields(&mut cursor).await?;
                     blocks.push(Block::Segment { name, kind: None, fields, cond });
                 } else {
@@ -1128,11 +1128,11 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                         }
                     }
                 }
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "record" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 let mut tag = None;
@@ -1147,90 +1147,90 @@ pub async fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                     parse_fields_until_break(&mut cursor).await?
                 };
                 open_record = Some(Block::Record { name, tag, fields });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "struct" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 let fields = parse_braced_fields(&mut cursor).await?;
                 blocks.push(Block::Struct { name, fields });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "enum" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 let variants = parse_enum_variants(&mut cursor).await?;
                 blocks.push(Block::Enum { name, variants });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "footer" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 cursor.expect_ident("fixed").await?;
                 let size = parse_u64_literal(&mut cursor).await? as usize;
                 blocks.push(Block::Footer(size));
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             "chain" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 if cursor.peek().await.kind == GKind::Ident {
                     let maybe_name = cursor.peek().await.text.clone();
                     let prim_names = ["u8", "u16", "u32", "u64", "i32", "i64", "f32", "f64", "varint", "zigzag", "bytes", "utf8", "tag", "fixed", "Fixed", "Array", "array", "Ref"];
                     if !prim_names.contains(&maybe_name.as_str()) {
-                        cursor.advance();
+                        cursor.advance().await;
                     }
                 }
                 let ty = parse_prim(&mut cursor).await?;
                 blocks.push(Block::Chain(ty));
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             // P2-M2 item 1: `repeat <name> { tag <prim> ... arm <tag> {...} }`.
             "repeat" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 let dispatch = parse_repeat_dispatch(&mut cursor).await?;
                 blocks.push(Block::Repeat { name, dispatch });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             // P2-M2 item 5a: `backward <name> magic 0x... {...}` — scan backward from EOF.
             "backward" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 cursor.expect_ident("magic").await?;
                 let magic = trim_be_bytes(parse_u64_literal(&mut cursor).await?);
                 let fields = parse_braced_fields(&mut cursor).await?;
                 blocks.push(Block::BackwardScan { name, magic: magic.await, fields });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             // P2-M2 item 5b: `jump <name> from <field> {...}` — absolute-offset jump.
             "jump" => {
                 close_header(&mut blocks, &mut open_header);
-                flush_open_segment(&mut blocks, &mut open_segment);
+                flush_open_segment(&mut blocks, &mut open_segment).await;
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident).await?.text;
                 cursor.expect_ident("from").await?;
                 let offset_field = cursor.expect(GKind::Ident).await?.text;
                 let fields = parse_braced_fields(&mut cursor).await?;
                 blocks.push(Block::JumpTo { name, offset_field, fields });
-                cursor.skip_newlines();
+                cursor.skip_newlines().await;
             }
             other => return Err(TextError::new(format!("unknown protocol directive `{other}`"), head.span)),
         }
     }
 
     close_header(&mut blocks, &mut open_header);
-    flush_open_segment(&mut blocks, &mut open_segment);
+    flush_open_segment(&mut blocks, &mut open_segment).await;
     close_record(&mut blocks, &mut open_record);
 
     let start = match start {
@@ -1277,19 +1277,22 @@ async fn print_symbol(symbol: &Symbol, out: &mut String) {
         }
         Symbol::Group(alts) => {
             out.push('{');
-            print_alternatives(alts, out);
+            // 🔁️ Box::pin: print_symbol <-> print_alternatives is a mutual-recursion cycle, and
+            // an async fn's own opaque Future type cannot embed a cycle-partner's opaque type at
+            // an unboxed, unbounded size (R10 residue shape 3).
+            Box::pin(print_alternatives(alts, out)).await;
             out.push('}');
         }
         Symbol::Optional(inner) => {
-            print_symbol(inner, out);
+            Box::pin(print_symbol(inner, out)).await;
             out.push('?');
         }
         Symbol::Star(inner) => {
-            print_symbol(inner, out);
+            Box::pin(print_symbol(inner, out)).await;
             out.push('*');
         }
         Symbol::Plus(inner) => {
-            print_symbol(inner, out);
+            Box::pin(print_symbol(inner, out)).await;
             out.push('+');
         }
     }
@@ -1304,7 +1307,7 @@ async fn print_alternatives(alts: &[Alternative], out: &mut String) {
             if j > 0 {
                 out.push(' ');
             }
-            print_symbol(symbol, out);
+            Box::pin(print_symbol(symbol, out)).await;
         }
     }
 }
@@ -1378,7 +1381,7 @@ pub async fn print_grammar(grammar: &GrammarFile) -> String {
     for production in &grammar.productions {
         out.push_str(&production.name);
         out.push_str(" = ");
-        print_alternatives(&production.alternatives, &mut out);
+        print_alternatives(&production.alternatives, &mut out).await;
         out.push('\n');
     }
     out
@@ -1424,12 +1427,14 @@ async fn print_prim(prim: &Prim, out: &mut String) {
                 out.push_str("varint bytes");
             } else if matches!(count, Count::Varint) {
                 out.push_str("array ");
-                print_prim(inner, out);
+                // 🔁️ Box::pin: self-recursive async fn (R10 residue shape 3).
+                Box::pin(print_prim(inner, out)).await;
             } else {
                 out.push_str("Array(");
-                print_prim(inner, out);
+                // 🔁️ Box::pin: self-recursive async fn (R10 residue shape 3).
+                Box::pin(print_prim(inner, out)).await;
                 out.push_str(", ");
-                print_count(count, out);
+                print_count(count, out).await;
                 out.push(')');
             }
         }
@@ -1493,13 +1498,13 @@ async fn print_tag_bytes(tag: &[u8], out: &mut String) {
 
 async fn print_repeat_arm(arm: &RepeatArm, out: &mut String) {
     out.push_str("arm ");
-    print_tag_bytes(&arm.tag, out);
+    print_tag_bytes(&arm.tag, out).await;
     out.push_str(" {");
     for (i, field) in arm.fields.iter().enumerate() {
         if i > 0 {
             out.push(' ');
         }
-        print_field(field, out);
+        print_field(field, out).await;
     }
     if let Some(nested) = &arm.nested {
         if !arm.fields.is_empty() {
@@ -1508,13 +1513,14 @@ async fn print_repeat_arm(arm: &RepeatArm, out: &mut String) {
         out.push_str("nested ");
         out.push_str(&nested.name);
         out.push(' ');
-        print_prim(&nested.discriminator, out);
+        print_prim(&nested.discriminator, out).await;
         out.push_str(" {");
         for (i, narm) in nested.arms.iter().enumerate() {
             if i > 0 {
                 out.push(' ');
             }
-            print_repeat_arm(narm, out);
+            // 🔁️ Box::pin: self-recursive async fn (R10 residue shape 3).
+            Box::pin(print_repeat_arm(narm, out)).await;
         }
         out.push('}');
     }
@@ -1576,7 +1582,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 out.push('\n');
                 for field in fields {
                     out.push_str("field ");
-                    print_field(field, &mut out);
+                    print_field(field, &mut out).await;
                     out.push('\n');
                 }
             }
@@ -1584,7 +1590,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 if name.is_empty() && kind.is_none() && cond.is_none() {
                     for field in fields {
                         out.push_str("segment ");
-                        print_field(field, &mut out);
+                        print_field(field, &mut out).await;
                         out.push('\n');
                     }
                 } else {
@@ -1595,14 +1601,14 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                         out.push_str(&k.to_string());
                     }
                     if let Some(c) = cond {
-                        print_cond(c, &mut out);
+                        print_cond(c, &mut out).await;
                     }
                     out.push_str(" {");
                     for (i, field) in fields.iter().enumerate() {
                         if i > 0 {
                             out.push(' ');
                         }
-                        print_field(field, &mut out);
+                        print_field(field, &mut out).await;
                     }
                     out.push_str("}\n");
                 }
@@ -1611,7 +1617,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 if name.is_empty() && tag.is_none() {
                     for field in fields {
                         out.push_str("field ");
-                        print_field(field, &mut out);
+                        print_field(field, &mut out).await;
                         out.push('\n');
                     }
                 } else {
@@ -1626,7 +1632,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                         if i > 0 {
                             out.push(' ');
                         }
-                        print_field(field, &mut out);
+                        print_field(field, &mut out).await;
                     }
                     out.push('\n');
                 }
@@ -1639,7 +1645,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                     if i > 0 {
                         out.push(' ');
                     }
-                    print_field(field, &mut out);
+                    print_field(field, &mut out).await;
                 }
                 out.push_str("}\n");
             }
@@ -1664,7 +1670,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
             }
             Block::Chain(prim) => {
                 out.push_str("chain ");
-                print_prim(prim, &mut out);
+                print_prim(prim, &mut out).await;
                 out.push('\n');
             }
             Block::Repeat { name, dispatch } => {
@@ -1672,11 +1678,11 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 out.push_str(name);
                 out.push_str(" {\n");
                 out.push_str("tag ");
-                print_prim(&dispatch.discriminator, &mut out);
+                print_prim(&dispatch.discriminator, &mut out).await;
                 out.push('\n');
                 if let Some(length) = &dispatch.length {
                     out.push_str("length ");
-                    print_prim(length, &mut out);
+                    print_prim(length, &mut out).await;
                     out.push('\n');
                 }
                 if matches!(dispatch.order, DispatchOrder::LengthFirst) {
@@ -1684,16 +1690,16 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 }
                 if let Some(trailer) = &dispatch.trailer {
                     out.push_str("trailer ");
-                    print_prim(trailer, &mut out);
+                    print_prim(trailer, &mut out).await;
                     out.push('\n');
                 }
                 if let Some(until) = &dispatch.until {
                     out.push_str("until ");
-                    print_tag_bytes(until, &mut out);
+                    print_tag_bytes(until, &mut out).await;
                     out.push('\n');
                 }
                 for arm in &dispatch.arms {
-                    print_repeat_arm(arm, &mut out);
+                    print_repeat_arm(arm, &mut out).await;
                 }
                 out.push_str("}\n");
             }
@@ -1701,13 +1707,13 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                 out.push_str("backward ");
                 out.push_str(name);
                 out.push_str(" magic ");
-                print_tag_bytes(magic, &mut out);
+                print_tag_bytes(magic, &mut out).await;
                 out.push_str(" {");
                 for (i, field) in fields.iter().enumerate() {
                     if i > 0 {
                         out.push(' ');
                     }
-                    print_field(field, &mut out);
+                    print_field(field, &mut out).await;
                 }
                 out.push_str("}\n");
             }
@@ -1721,7 +1727,7 @@ pub async fn print_protocol(protocol: &ProtocolFile) -> String {
                     if i > 0 {
                         out.push(' ');
                     }
-                    print_field(field, &mut out);
+                    print_field(field, &mut out).await;
                 }
                 out.push_str("}\n");
             }
@@ -2756,7 +2762,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parses_minimal_grammar_header() {
-        let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").expect("parse_grammar");
+        let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").await.expect("parse_grammar");
         assert_eq!(g.id, "demo");
         assert_eq!(g.start, "doc");
         assert_eq!(g.productions.len(), 1);
@@ -2777,7 +2783,7 @@ mod tests {
         let g = parse_grammar(
             "grammar demo\nstart doc\n# illustrating an escape: \\\" and an alternation: a | b, plus a trailing comma? here\ndoc = \"hello\" | \"world\"\n",
         )
-        .expect("parse_grammar");
+        .await.expect("parse_grammar");
         assert_eq!(g.id, "demo");
         assert_eq!(g.productions[0].alternatives.len(), 2);
         assert_eq!(g.productions[0].alternatives[0].symbols, vec![Symbol::Literal("hello".to_string())]);
@@ -2787,7 +2793,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parses_extension_and_uses() {
         let g = parse_grammar("grammar fem2d\nextension fem2d\nuse core\nuse family-sheet\nstart document\ndocument = header\nheader = \"fem2d\" TEXT\n")
-            .expect("parse_grammar");
+            .await.expect("parse_grammar");
         assert_eq!(g.extension, Some("fem2d".to_string()));
         assert_eq!(g.uses, vec!["core".to_string(), "family-sheet".to_string()]);
         assert_eq!(g.productions.len(), 2);
@@ -2795,7 +2801,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parses_terminal_vs_ref_vs_macro() {
-        let g = parse_grammar("grammar demo\nstart doc\ndoc = TEXT node table(\"rows\", row)\nrow = IDENT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar demo\nstart doc\ndoc = TEXT node table(\"rows\", row)\nrow = IDENT\n").await.expect("parse_grammar");
         let symbols = &g.productions[0].alternatives[0].symbols;
         assert_eq!(symbols[0], Symbol::Terminal("TEXT".to_string()));
         assert_eq!(symbols[1], Symbol::Ref("node".to_string()));
@@ -2804,7 +2810,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parses_alternation_group_and_quantifiers() {
-        let g = parse_grammar("grammar demo\nstart doc\ndoc = {\"a\" | \"b\"}? node* row+\nnode = IDENT\nrow = IDENT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar demo\nstart doc\ndoc = {\"a\" | \"b\"}? node* row+\nnode = IDENT\nrow = IDENT\n").await.expect("parse_grammar");
         let symbols = &g.productions[0].alternatives[0].symbols;
         match &symbols[0] {
             Symbol::Optional(inner) => match inner.as_ref() {
@@ -2829,18 +2835,18 @@ mod tests {
             "grammar demo\nstart doc\ndoc = {\"a\" | \"b\"} node+\nnode = IDENT\n",
         ];
         for source in sources {
-            let parsed = parse_grammar(source).unwrap_or_else(|e| panic!("parse of {source:?} failed: {e:?}"));
+            let parsed = parse_grammar(source).await.unwrap_or_else(|e| panic!("parse of {source:?} failed: {e:?}"));
             let printed = print_grammar(&parsed);
-            let reparsed = parse_grammar(&printed).unwrap_or_else(|e| panic!("reparse of canonical {printed:?} failed: {e:?}"));
+            let reparsed = parse_grammar(&printed).await.unwrap_or_else(|e| panic!("reparse of canonical {printed:?} failed: {e:?}"));
             assert_eq!(reparsed, parsed, "round trip mismatch for {source:?} -> {printed:?}");
-            let canonical_twice = canonicalize(&printed).expect("canonicalize");
+            let canonical_twice = canonicalize(&printed).await.expect("canonicalize");
             assert_eq!(canonical_twice, printed, "canonicalize is not idempotent for {printed:?}");
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn missing_start_directive_is_an_error() {
-        let err = parse_grammar("grammar demo\ndoc = \"hello\"\n").unwrap_err();
+        let err = parse_grammar("grammar demo\ndoc = \"hello\"\n").await.unwrap_err();
         assert!(err.message.contains("start"), "unexpected message: {}", err.message);
     }
 
@@ -2849,39 +2855,39 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn self_hosting_grammar_grammar_parses_and_round_trips() {
         let source = include_str!("📖️grammar.grammar.semio");
-        let parsed = parse_grammar(source).expect("dsl_grammar's own grammar.grammar must parse under its own parser");
+        let parsed = parse_grammar(source).await.expect("dsl_grammar's own grammar.grammar must parse under its own parser");
         assert_eq!(parsed.id, "grammar");
         let printed = print_grammar(&parsed);
-        let reparsed = parse_grammar(&printed).expect("canonical print of grammar.grammar must reparse");
+        let reparsed = parse_grammar(&printed).await.expect("canonical print of grammar.grammar must reparse");
         assert_eq!(reparsed, parsed);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn recognizer_matches_plain_arrow_via_registered_edge_macro() {
-        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = edge\n").expect("parse_grammar");
+        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = edge\n").await.expect("parse_grammar");
         let recognizer = Recognizer::compile(&grammar);
-        assert!(recognizer.recognize("a->b").expect("recognize"));
-        assert!(recognizer.recognize("a -[e1:Connection]->b").expect("recognize"));
-        assert!(!recognizer.recognize("a-> ->").expect("recognize"));
+        assert!(recognizer.await.recognize("a->b").await.expect("recognize"));
+        assert!(recognizer.await.recognize("a -[e1:Connection]->b").await.expect("recognize"));
+        assert!(!recognizer.await.recognize("a-> ->").await.expect("recognize"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn recognizer_matches_literals_terminals_and_quantifiers() {
-        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = \"beam\" IDENT node*\nnode = IDENT\n").expect("parse_grammar");
+        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = \"beam\" IDENT node*\nnode = IDENT\n").await.expect("parse_grammar");
         let recognizer = Recognizer::compile(&grammar);
-        assert!(recognizer.recognize("beam e3 n1 n2").expect("recognize"));
-        assert!(recognizer.recognize("beam e3").expect("recognize"));
-        assert!(!recognizer.recognize("beam").expect("recognize"));
+        assert!(recognizer.await.recognize("beam e3 n1 n2").await.expect("recognize"));
+        assert!(recognizer.await.recognize("beam e3").await.expect("recognize"));
+        assert!(!recognizer.await.recognize("beam").await.expect("recognize"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parse_grammar_sets_dialect_grammar_vs_protocol() {
-        let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").expect("grammar");
+        let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").await.expect("grammar");
         assert_eq!(g.dialect, SemioDialect::Grammar);
         let p = parse_grammar(
             "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo\nstart frame\nframing magic 0x8953504B0D0A1A0A\nheader fixed 4\nfield flags u32\n",
         )
-        .expect("protocol");
+        .await.expect("protocol");
         assert_eq!(p.dialect, SemioDialect::Protocol);
         assert_eq!(p.start, "frame");
         assert_eq!(p.id, "demo.pack");
@@ -2908,17 +2914,17 @@ field tag varint
 field body bytes
 footer fixed 84
 "#;
-        let parsed = parse_protocol(source).expect("parse_protocol");
+        let parsed = parse_protocol(source).await.expect("parse_protocol");
         assert_eq!(parsed.id, "flow.pack");
         assert!(matches!(parsed.framing, Framing::Magic(_)));
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Header(_))));
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Segment { .. })));
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Footer(84))));
         let printed = print_protocol(&parsed);
-        let reparsed = parse_protocol(&printed).expect("reparse print_protocol");
+        let reparsed = parse_protocol(&printed).await.expect("reparse print_protocol");
         assert_eq!(reparsed, parsed);
-        let once = canonicalize(source).expect("canonicalize");
-        let twice = canonicalize(&once).expect("canonicalize twice");
+        let once = canonicalize(source).await.expect("canonicalize");
+        let twice = canonicalize(&once).await.expect("canonicalize twice");
         assert_eq!(once, twice);
     }
 
@@ -2935,12 +2941,12 @@ enum Op { ObjectsAdd=1 ObjectsRemove=2 }
 segment Objects kind=1 { count varint items Array(Ref(Object), Field(count)) }
 footer fixed 84
 "#;
-        let parsed = parse_protocol(source).expect("parse rich protocol");
+        let parsed = parse_protocol(source).await.expect("parse rich protocol");
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Struct { name, .. } if name == "Vertex")));
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Enum { name, .. } if name == "Op")));
         assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Segment { name, kind: Some(1), .. } if name == "Objects")));
         let printed = print_protocol(&parsed);
-        assert_eq!(parse_protocol(&printed).expect("reparse"), parsed);
+        assert_eq!(parse_protocol(&printed).await.expect("reparse"), parsed);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2961,7 +2967,7 @@ segment flags u8
 segment payload varint bytes
 footer fixed 84
 "#;
-        let spec = parse_protocol(source).expect("parse");
+        let spec = parse_protocol(source).await.expect("parse");
         let mut bytes = vec![0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
         bytes.extend_from_slice(&1u16.to_le_bytes());
         bytes.extend_from_slice(&0u16.to_le_bytes());
@@ -2971,13 +2977,13 @@ footer fixed 84
         bytes.push(0);
         bytes.push(0);
         bytes.extend(std::iter::repeat(0u8).take(84));
-        let trace = walk_protocol(&spec, &bytes).expect("walk Shape A");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk Shape A");
         assert_eq!(trace.consumed, bytes.len());
-        verify_protocol_bytes(&project_protocol(spec.clone()), &bytes).expect("shallow verify");
-        verify_protocol_source(source, &bytes).expect("deep verify");
+        verify_protocol_bytes(&project_protocol(spec.clone()), &bytes).await.expect("shallow verify");
+        verify_protocol_source(source, &bytes).await.expect("deep verify");
         let mut bad = bytes.clone();
         bad[0] = 0x00;
-        assert!(walk_protocol(&spec, &bad).is_err());
+        assert!(walk_protocol(&spec, &bad).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2992,21 +2998,21 @@ field format u8
 field ordinal varint
 field body bytes
 "#;
-        let spec = parse_protocol(source).expect("parse spr");
+        let spec = parse_protocol(source).await.expect("parse spr");
         let bytes = vec![1u8, 0x00, 0xAA, 0xBB];
-        let trace = walk_protocol(&spec, &bytes).expect("walk OpBinary");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk OpBinary");
         assert_eq!(trace.consumed, 4);
-        assert!(walk_protocol(&spec, &[]).is_err());
+        assert!(walk_protocol(&spec, &[]).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn self_hosting_protocol_grammar_semio_parses_as_grammar() {
         let source = include_str!("📖️protocol.grammar.semio");
-        let parsed = parse_grammar(source).expect("protocol.grammar.semio must parse as dialect grammar");
+        let parsed = parse_grammar(source).await.expect("protocol.grammar.semio must parse as dialect grammar");
         assert_eq!(parsed.dialect, SemioDialect::Grammar);
         assert_eq!(parsed.id, "protocol");
         let printed = print_grammar(&parsed);
-        let reparsed = parse_grammar(&printed).expect("canonical protocol grammar reparses");
+        let reparsed = parse_grammar(&printed).await.expect("canonical protocol grammar reparses");
         assert_eq!(reparsed, parsed);
     }
 
@@ -3014,36 +3020,36 @@ field body bytes
     #[semio_framework_async_macros::async_test]
     async fn parse_protocol_roundtrips_magic_pack() {
         let source = "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo.v1\nstart frame\nframing magic 0x8953454D0D0A1A0A\nheader fixed 4\nfield flags u32\n";
-        let parsed = parse_protocol(source).expect("parse_protocol");
+        let parsed = parse_protocol(source).await.expect("parse_protocol");
         let printed = print_protocol(&parsed);
-        let reparsed = parse_protocol(&printed).expect("reparse");
+        let reparsed = parse_protocol(&printed).await.expect("reparse");
         assert_eq!(parsed, reparsed);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn walk_protocol_consumes_magic_and_header() {
         let source = "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo.v1\nstart frame\nframing magic 0x8953454D0D0A1A0A\nheader fixed 4\nfield flags u32\n";
-        let spec = parse_protocol(source).expect("parse");
+        let spec = parse_protocol(source).await.expect("parse");
         let mut bytes = vec![0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
         bytes.extend_from_slice(&7u32.to_le_bytes());
-        walk_protocol(&spec, &bytes).expect("walk");
-        assert!(walk_protocol(&spec, &bytes[..8]).is_err());
+        walk_protocol(&spec, &bytes).await.expect("walk");
+        assert!(walk_protocol(&spec, &bytes[..8]).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn walk_protocol_spr_record_body_as_rest() {
         let source = "dialect protocol\nprotocol demo.spr\nversion 1\nschema demo.op\nstart record\nframing record\nfield format u8\nfield body bytes\n";
-        let spec = parse_protocol(source).expect("parse");
-        walk_protocol(&spec, &[1u8, 9, 9, 9]).expect("spr walk");
+        let spec = parse_protocol(source).await.expect("parse");
+        walk_protocol(&spec, &[1u8, 9, 9, 9]).await.expect("spr walk");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn recognizer_matches_bool_terminal() {
-        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = BOOL\n").expect("grammar");
+        let grammar = parse_grammar("grammar demo\nstart doc\ndoc = BOOL\n").await.expect("grammar");
         let rec = Recognizer::compile(&grammar);
-        assert_eq!(rec.recognize("true").unwrap(), true);
-        assert_eq!(rec.recognize("false").unwrap(), true);
-        assert_eq!(rec.recognize("maybe").unwrap(), false);
+        assert_eq!(rec.await.recognize("true").await.unwrap(), true);
+        assert_eq!(rec.await.recognize("false").await.unwrap(), true);
+        assert_eq!(rec.await.recognize("maybe").await.unwrap(), false);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3051,7 +3057,7 @@ field body bytes
         let source = "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo.v1\nstart frame\nframing magic 0x8953454D0D0A1A0A\nheader fixed 4\nfield flags u32\n";
         let mut bytes = vec![0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
         bytes.extend_from_slice(&0u32.to_le_bytes());
-        verify_protocol_source(source, &bytes).expect("verify_protocol_source");
+        verify_protocol_source(source, &bytes).await.expect("verify_protocol_source");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3067,9 +3073,9 @@ field body bytes
         };
         let mut bytes = vec![0x89];
         bytes.extend(std::iter::repeat(0u8).take(31));
-        verify_protocol_bytes(&g, &bytes).expect("any 0x89");
+        verify_protocol_bytes(&g, &bytes).await.expect("any 0x89");
         bytes[0] = 0x00;
-        assert!(verify_protocol_bytes(&g, &bytes).is_err());
+        assert!(verify_protocol_bytes(&g, &bytes).await.is_err());
         let spr = GrammarFile {
             dialect: SemioDialect::Protocol,
             id: "demo.spr".into(),
@@ -3079,93 +3085,93 @@ field body bytes
             productions: vec![],
             lex: LexOptions::default(),
         };
-        verify_protocol_bytes(&spr, &[1u8]).expect("spr non-empty");
-        assert!(verify_protocol_bytes(&spr, &[]).is_err());
+        verify_protocol_bytes(&spr, &[1u8]).await.expect("spr non-empty");
+        assert!(verify_protocol_bytes(&spr, &[]).await.is_err());
     }
 
     //#region 🔖️P2M1Grammar
     // Item 1: `string`/`comment` header directives parse and drive the Recognizer's own lexing.
     #[semio_framework_async_macros::async_test]
     async fn string_header_directive_drives_backslash_decode_end_to_end() {
-        let g = parse_grammar("grammar jsontest\nstring double backslash\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar jsontest\nstring double backslash\nstart doc\ndoc = TEXT\n").await.expect("parse_grammar");
         assert_eq!(g.lex.strings, vec![StringMode { quote: '"', escape: StringEscape::Backslash }]);
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize(r#""café""#).expect("recognize"), "the json-dialect grammar must recognize a \\uXXXX-escaped string");
+        assert!(rec.await.recognize(r#""café""#).await.expect("recognize"), "the json-dialect grammar must recognize a \\uXXXX-escaped string");
         // Prove real decoding happened (not just successful lexing) by relexing with the grammar's
         // own compiled dialect and inspecting the Text token's content.
-        let tokens = core_lex_with(r#""café""#, &Limits::default(), false, &g.lex).expect("lex_with");
+        let tokens = core_lex_with(r#""café""#, &Limits::default(), false, &g.lex).await.expect("lex_with");
         let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
         assert_eq!(text.text.as_str().as_ref(), "café");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn string_header_directive_drives_csv_doubled_quote_decode() {
-        let g = parse_grammar("grammar csvtest\nstring double doubled\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar csvtest\nstring double doubled\nstart doc\ndoc = TEXT\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize(r#""a""b""#).expect("recognize"));
-        let tokens = core_lex_with(r#""a""b""#, &Limits::default(), false, &g.lex).expect("lex_with");
+        assert!(rec.await.recognize(r#""a""b""#).await.expect("recognize"));
+        let tokens = core_lex_with(r#""a""b""#, &Limits::default(), false, &g.lex).await.expect("lex_with");
         let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
         assert_eq!(text.text.as_str().as_ref(), "a\"b");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn string_header_directive_supports_single_and_double_quote_together_xml_style() {
-        let g = parse_grammar("grammar xmltest\nstring double raw\nstring single raw\nstart doc\ndoc = TEXT TEXT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar xmltest\nstring double raw\nstring single raw\nstart doc\ndoc = TEXT TEXT\n").await.expect("parse_grammar");
         assert_eq!(g.lex.strings.len(), 2);
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize(r#""a" 'b'"#).expect("recognize a mix of both quote chars"));
+        assert!(rec.await.recognize(r#""a" 'b'"#).await.expect("recognize a mix of both quote chars"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn string_header_directive_supports_step_single_quote_doubling() {
-        let g = parse_grammar("grammar steptest\nstring single doubled\nstart doc\ndoc = TEXT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar steptest\nstring single doubled\nstart doc\ndoc = TEXT\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize("'it''s a beam'").expect("recognize"));
-        let tokens = core_lex_with("'it''s a beam'", &Limits::default(), false, &g.lex).expect("lex_with");
+        assert!(rec.await.recognize("'it''s a beam'").await.expect("recognize"));
+        let tokens = core_lex_with("'it''s a beam'", &Limits::default(), false, &g.lex).await.expect("lex_with");
         let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
         assert_eq!(text.text.as_str().as_ref(), "it's a beam");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn grammar_without_string_or_comment_directives_keeps_default_lex_options() {
-        let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").expect("parse_grammar");
+        let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").await.expect("parse_grammar");
         assert_eq!(g.lex, LexOptions::default());
         // print_grammar must NOT emit comment/string lines for the default case (round trip proof
         // already covered by `round_trip_matrix_over_representative_grammars`; this asserts the
         // specific absence).
         let printed = print_grammar(&g);
-        assert!(!printed.contains("comment"), "default comment config must not be printed");
-        assert!(!printed.contains("\nstring "), "default string config must not be printed");
+        assert!(!printed.await.contains("comment"), "default comment config must not be printed");
+        assert!(!printed.await.contains("\nstring "), "default string config must not be printed");
     }
 
     // Item 2: the "raw span" terminal — `LINE` (rest-of-physical-line) and `REST` (rest-of-EOF).
     #[semio_framework_async_macros::async_test]
     async fn line_terminal_captures_rest_of_physical_line_verbatim_stl_style() {
-        let g = parse_grammar("grammar stltest\nstart doc\ndoc = \"solid\" LINE\n").expect("parse_grammar");
+        let g = parse_grammar("grammar stltest\nstart doc\ndoc = \"solid\" LINE\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
         // "My Cube" is two Ident tokens with a space between them — LINE must swallow both AND
         // the space, ending exactly at end-of-input since there's no trailing newline.
-        assert!(rec.recognize("solid My Cube").expect("recognize"), "LINE must capture the whole 'My Cube' rest-of-line as one span");
-        assert!(rec.recognize("solid").expect("recognize"), "a raw span may legitimately be empty (no name)");
+        assert!(rec.await.recognize("solid My Cube").await.expect("recognize"), "LINE must capture the whole 'My Cube' rest-of-line as one span");
+        assert!(rec.await.recognize("solid").await.expect("recognize"), "a raw span may legitimately be empty (no name)");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rest_terminal_captures_to_eof_txt_style_over_out_of_alphabet_characters() {
-        let g = parse_grammar("grammar txttest\nstart doc\ndoc = \"BODY\" REST\n").expect("parse_grammar");
+        let g = parse_grammar("grammar txttest\nstart doc\ndoc = \"BODY\" REST\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
         // `~` and `%` are still outside the fixed token alphabet even after P2-M1's promotions —
         // REST must swallow them without the whole document failing to lex (forgiving mode) and
         // without needing to re-tokenize the interior.
-        assert!(rec.recognize("BODY arbitrary prose with ~weird~ %chars% and trailing punctuation!!!").expect("recognize"));
+        assert!(rec.await.recognize("BODY arbitrary prose with ~weird~ %chars% and trailing punctuation!!!").await.expect("recognize"));
     }
 
     // Item 3: promoted single-char tokens `< > & $ ;`, real Terminal matching through the Recognizer.
     #[semio_framework_async_macros::async_test]
     async fn promoted_tokens_are_real_terminals_the_recognizer_can_require_positionally() {
-        let g = parse_grammar("grammar xmlish\nstart tag\ntag = LT IDENT GT AMP IDENT SEMICOLON DOLLAR IDENT\n").expect("parse_grammar");
+        let g = parse_grammar("grammar xmlish\nstart tag\ntag = LT IDENT GT AMP IDENT SEMICOLON DOLLAR IDENT\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize("<tag>&amp;$VAR").expect("recognize"));
-        assert!(!rec.recognize("tag").expect("recognize"), "without the promoted LT/GT/AMP/SEMICOLON/DOLLAR tokens present, the sequence must not match");
+        assert!(rec.await.recognize("<tag>&amp;$VAR").await.expect("recognize"));
+        assert!(!rec.await.recognize("tag").await.expect("recognize"), "without the promoted LT/GT/AMP/SEMICOLON/DOLLAR tokens present, the sequence must not match");
     }
 
     // Item 4: per-grammar comment dialect — line marker override, disabled, block comment.
@@ -3175,20 +3181,20 @@ field body bytes
         // grammar overrides it), so a real STEP entity sigil needs `comment none`/`comment line
         // none`; DOLLAR stands in for it here as a real promoted token (item 3) — the point of
         // THIS test is the comment dialect (item 4), proven directly against `g.lex` below.
-        let g = parse_grammar("grammar steplike\ncomment none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = DOLLAR INT EQUALS IDENT LPAREN TEXT RPAREN SEMICOLON\n").expect("parse_grammar");
+        let g = parse_grammar("grammar steplike\ncomment none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = DOLLAR INT EQUALS IDENT LPAREN TEXT RPAREN SEMICOLON\n").await.expect("parse_grammar");
         assert_eq!(g.lex.comment.line, None);
         assert_eq!(g.lex.comment.block, Some(("/*".to_string(), "*/".to_string())));
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize("$10=IFCWALL('a');").expect("recognize"), "with comment.line=None, '$' must lex as a real Dollar token, not be eaten by a comment");
-        assert!(rec.recognize("/* a comment */\n$10=IFCWALL('a');").expect("recognize"), "a leading block comment must be trivia, not part of the document");
+        assert!(rec.await.recognize("$10=IFCWALL('a');").await.expect("recognize"), "with comment.line=None, '$' must lex as a real Dollar token, not be eaten by a comment");
+        assert!(rec.await.recognize("/* a comment */\n$10=IFCWALL('a');").await.expect("recognize"), "a leading block comment must be trivia, not part of the document");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn print_grammar_round_trips_comment_and_string_header_directives() {
         let source = "grammar steplike\ncomment line none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = TEXT\n";
-        let parsed = parse_grammar(source).expect("parse_grammar");
+        let parsed = parse_grammar(source).await.expect("parse_grammar");
         let printed = print_grammar(&parsed);
-        let reparsed = parse_grammar(&printed).expect("reparse printed steplike grammar");
+        let reparsed = parse_grammar(&printed).await.expect("reparse printed steplike grammar");
         assert_eq!(reparsed, parsed, "comment/string header directives must round trip through print_grammar");
         assert_eq!(parsed.lex.comment.line, None);
         assert_eq!(parsed.lex.comment.block, Some(("/*".to_string(), "*/".to_string())));
@@ -3198,10 +3204,10 @@ field body bytes
     // Item 5: trailing-dot floats + leading-dot enum literals, matched through real FLOAT/DOTENUM terminals.
     #[semio_framework_async_macros::async_test]
     async fn trailing_dot_float_and_leading_dot_enum_literal_terminals_match_through_recognizer() {
-        let g = parse_grammar("grammar stepvalues\nstart doc\ndoc = FLOAT DOTENUM\n").expect("parse_grammar");
+        let g = parse_grammar("grammar stepvalues\nstart doc\ndoc = FLOAT DOTENUM\n").await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
-        assert!(rec.recognize("10. .T.").expect("recognize"), "a trailing-dot float and a leading-dot enum literal must each match their own terminal");
-        assert!(!rec.recognize("10 .T.").expect("recognize"), "a plain Int must NOT satisfy a FLOAT terminal");
+        assert!(rec.await.recognize("10. .T.").await.expect("recognize"), "a trailing-dot float and a leading-dot enum literal must each match their own terminal");
+        assert!(!rec.await.recognize("10 .T.").await.expect("recognize"), "a plain Int must NOT satisfy a FLOAT terminal");
     }
 
     // Item 6: `Ref` self-recursion — pptx's shape-tree shape (`grpSp` recursively contains more
@@ -3209,19 +3215,19 @@ field body bytes
     #[semio_framework_async_macros::async_test]
     async fn ref_self_recursion_matches_a_three_level_nested_shape_tree_pptx_style() {
         let source = "grammar shapetree\nstart tree\ntree = \"spTree\" group\ngroup = \"{\" node* \"}\"\nnode = leaf | nested\nleaf = \"sp\" IDENT\nnested = \"grpSp\" group\n";
-        let g = parse_grammar(source).expect("parse_grammar");
+        let g = parse_grammar(source).await.expect("parse_grammar");
         let rec = Recognizer::compile(&g);
         // Level 0 (tree) -> level 1 group contains a leaf and a grpSp -> level 2 group contains a
         // leaf and ANOTHER grpSp -> level 3 group contains one leaf. `nested` recursively refers
         // back to `group`, which refers back to `node`, which refers back to `nested` — genuine
         // mutual/self recursion through three real nesting levels, not a synthetic single hop.
         let fixture = "spTree { sp a grpSp { sp b grpSp { sp c } sp d } }";
-        assert!(rec.recognize(fixture).expect("recognize"), "3-level self-recursive Ref chain must match a real nested fixture");
+        assert!(rec.await.recognize(fixture).await.expect("recognize"), "3-level self-recursive Ref chain must match a real nested fixture");
         // A malformed variant (unclosed innermost group) must NOT spuriously match.
-        assert!(!rec.recognize("spTree { sp a grpSp { sp b grpSp { sp c } sp d }").expect("recognize"));
+        assert!(!rec.await.recognize("spTree { sp a grpSp { sp b grpSp { sp c } sp d }").await.expect("recognize"));
         // Confirm every production in the recursive chain was actually exercised, not merely
         // present — `uncovered_productions` must report none of them as unreached.
-        let uncovered = rec.uncovered_productions(fixture).expect("uncovered_productions");
+        let uncovered = rec.await.uncovered_productions(fixture).await.expect("uncovered_productions");
         assert!(uncovered.is_empty(), "every production in the recursive shape-tree grammar should be covered by the 3-level fixture, got uncovered: {uncovered:?}");
     }
     //#endregion 🔖️P2M1Grammar
@@ -3247,7 +3253,7 @@ arm "IHDR" { width u32be height u32be }
 arm "IEND" { }
 }
 "#;
-        let spec = parse_protocol(source).expect("parse pngish");
+        let spec = parse_protocol(source).await.expect("parse pngish");
         let mut bytes = Vec::new();
         // Known arm: IHDR, length=8, two u32be fields, then a crc32be trailer.
         bytes.extend_from_slice(&8u32.to_be_bytes());
@@ -3265,14 +3271,14 @@ arm "IEND" { }
         bytes.extend_from_slice(b"IEND");
         bytes.extend_from_slice(&0xCAFE_BABEu32.to_be_bytes());
 
-        let trace = walk_protocol(&spec, &bytes).expect("walk pngish");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk pngish");
         assert_eq!(trace.consumed, bytes.len(), "every declared+skipped+trailer byte must be consumed exactly");
 
         // Truncating the unknown chunk's declared payload must fail (proves the skip genuinely
         // reads `length`, not a fixed/guessed amount).
         let mut truncated = bytes.clone();
         truncated.truncate(bytes.len() - 9);
-        assert!(walk_protocol(&spec, &truncated).is_err());
+        assert!(walk_protocol(&spec, &truncated).await.is_err());
     }
 
     // Item 1b: two-level nested tag dispatch — GIF 89a shape (outer introducer byte, extension
@@ -3299,7 +3305,7 @@ arm 0xFE { }
 arm 0x3B { }
 }
 "#;
-        let spec = parse_protocol(source).expect("parse gifish");
+        let spec = parse_protocol(source).await.expect("parse gifish");
         let mut bytes = Vec::new();
         // Image descriptor (0x2C): left/top u16 LE.
         bytes.push(0x2C);
@@ -3313,14 +3319,14 @@ arm 0x3B { }
         // Trailer (0x3B) — sentinel, empty fields, loop must stop right after.
         bytes.push(0x3B);
 
-        let trace = walk_protocol(&spec, &bytes).expect("walk gifish");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk gifish");
         assert_eq!(trace.consumed, bytes.len());
 
         // An unrecognized nested label must fail (proves the second dispatch level is real, not a
         // no-op fallthrough).
         let mut bad = bytes.clone();
         bad[5] = 0xAA; // corrupt the label byte inside the extension block
-        assert!(walk_protocol(&spec, &bad).is_err());
+        assert!(walk_protocol(&spec, &bad).await.is_err());
     }
 
     // Item 1c: marker-prefix scanning — JPG shape. `marker(0xFF)` skips fill bytes before reading
@@ -3341,7 +3347,7 @@ arm 0xE0 { version u16be }
 arm 0xD9 { }
 }
 "#;
-        let spec = parse_protocol(source).expect("parse jpgish");
+        let spec = parse_protocol(source).await.expect("parse jpgish");
         let mut bytes = Vec::new();
         // SOI preceded by an extra 0xFF fill byte — the scan must skip both leading 0xFFs and land
         // on the real 0xD8 marker code.
@@ -3352,7 +3358,7 @@ arm 0xD9 { }
         // EOI (0xD9) — sentinel.
         bytes.extend_from_slice(&[0xFF, 0xD9]);
 
-        let trace = walk_protocol(&spec, &bytes).expect("walk jpgish");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk jpgish");
         assert_eq!(trace.consumed, bytes.len());
     }
 
@@ -3362,15 +3368,15 @@ arm 0xD9 { }
     #[semio_framework_async_macros::async_test]
     async fn be_prim_variants_round_trip_and_decode_big_endian_for_real() {
         let source = "dialect protocol\nprotocol demo.be\nversion 1\nschema demo.be\nstart frame\nframing record\nfield count u16be\nfield items Array(u8, Field(count))\n";
-        let spec = parse_protocol(source).expect("parse");
+        let spec = parse_protocol(source).await.expect("parse");
         let printed = print_protocol(&spec);
-        assert!(printed.contains("u16be"), "u16be must round trip through the printer");
-        assert_eq!(parse_protocol(&printed).expect("reparse"), spec);
+        assert!(printed.await.contains("u16be"), "u16be must round trip through the printer");
+        assert_eq!(parse_protocol(&printed).await.expect("reparse"), spec);
 
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&3u16.to_be_bytes());
         bytes.extend_from_slice(&[9, 9, 9]);
-        let trace = walk_protocol(&spec, &bytes).expect("walk be-driven array");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk be-driven array");
         assert_eq!(trace.consumed, bytes.len());
 
         // The same 2 count bytes read as LE (0x0900 = 2304) must NOT satisfy the buffer — proves a
@@ -3379,7 +3385,7 @@ arm 0xD9 { }
         let _ = le_misread_would_want; // documentation only; the real proof is the failing walk below
         let mut too_short = bytes.clone();
         too_short.truncate(2); // count bytes only, no item bytes at all
-        assert!(walk_protocol(&spec, &too_short).is_err());
+        assert!(walk_protocol(&spec, &too_short).await.is_err());
     }
 
     // Item 3: cross-block field-env threading — a HEADER block's field is consumed by a LATER,
@@ -3399,18 +3405,18 @@ segment payload {
 items Array(u8, Field(count))
 }
 "#;
-        let spec = parse_protocol(source).expect("parse crossblock");
+        let spec = parse_protocol(source).await.expect("parse crossblock");
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&4u16.to_le_bytes());
         bytes.extend_from_slice(&[1, 2, 3, 4]);
-        let trace = walk_protocol(&spec, &bytes).expect("segment must resolve `count` decoded by the earlier header block");
+        let trace = walk_protocol(&spec, &bytes).await.expect("segment must resolve `count` decoded by the earlier header block");
         assert_eq!(trace.consumed, bytes.len());
 
         // A `count` that doesn't match the actual trailing bytes must fail, proving the segment
         // genuinely used the decoded value (not silently accepting anything).
         let mut wrong = bytes.clone();
         wrong[0] = 9; // count now claims 9 items but only 4 bytes of payload exist
-        assert!(walk_protocol(&spec, &wrong).is_err());
+        assert!(walk_protocol(&spec, &wrong).await.is_err());
     }
 
     // Item 4: conditional field/segment presence — bmp shape (`if compression eq 3` gates one
@@ -3429,7 +3435,7 @@ field bpp u8
 segment palette if bpp le 8 { colors u8 }
 field trailer u8
 "#;
-        let spec = parse_protocol(source).expect("parse bmpish");
+        let spec = parse_protocol(source).await.expect("parse bmpish");
 
         // compression==3 -> mask present; bpp==8 -> palette present.
         let mut present = Vec::new();
@@ -3438,7 +3444,7 @@ field trailer u8
         present.push(8u8);
         present.push(200u8); // palette.colors
         present.push(1u8); // trailer
-        let trace = walk_protocol(&spec, &present).expect("walk with mask+palette present");
+        let trace = walk_protocol(&spec, &present).await.expect("walk with mask+palette present");
         assert_eq!(trace.consumed, present.len());
 
         // compression==0 -> mask absent; bpp==24 -> palette absent.
@@ -3446,12 +3452,12 @@ field trailer u8
         absent.push(0u8);
         absent.push(24u8);
         absent.push(1u8); // trailer
-        let trace2 = walk_protocol(&spec, &absent).expect("walk with mask+palette absent");
+        let trace2 = walk_protocol(&spec, &absent).await.expect("walk with mask+palette absent");
         assert_eq!(trace2.consumed, absent.len());
 
         // A buffer sized for the ABSENT shape must not satisfy the PRESENT shape's byte demands
         // (proves presence genuinely changes how many bytes are consumed, not a no-op guard).
-        assert!(walk_protocol(&spec, &absent[..2]).is_err());
+        assert!(walk_protocol(&spec, &absent[..2]).await.is_err());
     }
 
     // Item 5: ZIP-shaped backward-scan (EOCD located by scanning backward from EOF for its magic)
@@ -3473,7 +3479,7 @@ entry_tag u32
 entry_value u32
 }
 "#;
-        let spec = parse_protocol(source).expect("parse zipish");
+        let spec = parse_protocol(source).await.expect("parse zipish");
 
         let mut bytes = Vec::new();
         // 16 bytes standing in for a "local header region" this protocol doesn't describe at all.
@@ -3487,7 +3493,7 @@ entry_value u32
         bytes.extend_from_slice(&central_dir_offset.to_le_bytes());
         bytes.extend_from_slice(&1u16.to_le_bytes());
 
-        let trace = walk_protocol(&spec, &bytes).expect("walk zipish");
+        let trace = walk_protocol(&spec, &bytes).await.expect("walk zipish");
         // The walk's FINAL position is wherever the last-declared block (the jump) left `pos` —
         // NOT bytes.len(), since a jump is a deliberate exception to linear forward accounting
         // (see `walk_protocol`'s own doc comment). Here that's right after the jumped-to entry's
@@ -3498,13 +3504,13 @@ entry_value u32
         let mut corrupt_magic = bytes.clone();
         let magic_at = bytes.len() - 10;
         corrupt_magic[magic_at] = 0x00;
-        assert!(walk_protocol(&spec, &corrupt_magic).is_err());
+        assert!(walk_protocol(&spec, &corrupt_magic).await.is_err());
 
         // Print/reparse round trip for the new block syntax itself.
         let printed = print_protocol(&spec);
-        assert!(printed.contains("backward eocd magic"));
-        assert!(printed.contains("jump central from cd_offset"));
-        assert_eq!(parse_protocol(&printed).expect("reparse zipish"), spec);
+        assert!(printed.await.contains("backward eocd magic"));
+        assert!(printed.await.contains("jump central from cd_offset"));
+        assert_eq!(parse_protocol(&printed).await.expect("reparse zipish"), spec);
     }
 
     // Item 6: TIFF-style runtime-selected endianness — a leading marker field's VALUE selects
@@ -3512,14 +3518,14 @@ entry_value u32
     #[semio_framework_async_macros::async_test]
     async fn endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_walk_tiff_style() {
         let source = "dialect protocol\nprotocol demo.tiffish\nversion 1\nschema demo.tiffish\nstart frame\nframing record\nfield byte_order endian { \"II\"=le \"MM\"=be }\nfield count u16\nfield items Array(u8, Field(count))\n";
-        let spec = parse_protocol(source).expect("parse tiffish");
+        let spec = parse_protocol(source).await.expect("parse tiffish");
 
         // "II" -> little-endian mode for the rest of the walk.
         let mut le_bytes = Vec::new();
         le_bytes.extend_from_slice(b"II");
         le_bytes.extend_from_slice(&2u16.to_le_bytes());
         le_bytes.extend_from_slice(&[7, 8]);
-        let trace_le = walk_protocol(&spec, &le_bytes).expect("walk II/LE");
+        let trace_le = walk_protocol(&spec, &le_bytes).await.expect("walk II/LE");
         assert_eq!(trace_le.consumed, le_bytes.len());
 
         // "MM" -> big-endian mode for the rest of the walk — the SAME declared field (`count u16`,
@@ -3529,18 +3535,18 @@ entry_value u32
         be_bytes.extend_from_slice(b"MM");
         be_bytes.extend_from_slice(&2u16.to_be_bytes());
         be_bytes.extend_from_slice(&[7, 8]);
-        let trace_be = walk_protocol(&spec, &be_bytes).expect("walk MM/BE");
+        let trace_be = walk_protocol(&spec, &be_bytes).await.expect("walk MM/BE");
         assert_eq!(trace_be.consumed, be_bytes.len());
 
         // An unrecognized marker must be rejected outright.
         let mut bad = le_bytes.clone();
         bad[0] = b'X';
-        assert!(walk_protocol(&spec, &bad).is_err());
+        assert!(walk_protocol(&spec, &bad).await.is_err());
 
         // Round trip the `endian {...}` syntax itself.
         let printed = print_protocol(&spec);
-        assert!(printed.contains("endian {"));
-        assert_eq!(parse_protocol(&printed).expect("reparse tiffish"), spec);
+        assert!(printed.await.contains("endian {"));
+        assert_eq!(parse_protocol(&printed).await.expect("reparse tiffish"), spec);
     }
     //#endregion 🔖️P2M2Protocol
 }

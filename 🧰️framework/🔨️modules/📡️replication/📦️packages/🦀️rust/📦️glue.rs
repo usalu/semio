@@ -3,6 +3,10 @@
 //! The crate's `[lib] name` is `protocol`: every replica, authority and plugin crate speaks the
 //! replication contract through that one canonical name.
 
+// 🔕 async_fn_in_trait warns that callers can't assume Send on the returned future; R3 answers this
+// structurally — every former dyn seam becomes a concrete enum so Send falls out at the spawn site.
+// Never resolve this by adding `+ Send` to a trait method or by making it sync (R7).
+#![allow(async_fn_in_trait)]
 #![allow(ambiguous_glob_reexports, unused_imports)]
 
 #[path = "."]

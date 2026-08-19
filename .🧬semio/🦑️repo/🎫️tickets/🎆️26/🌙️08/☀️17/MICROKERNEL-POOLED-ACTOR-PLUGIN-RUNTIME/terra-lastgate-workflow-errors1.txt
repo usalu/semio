@@ -1,0 +1,829 @@
+error[E0053]: method `shape` has an incompatible type for trait
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1880:25
+     |
+1880 |     async fn shape() -> dsl::Shape {
+     |                         ^^^^^^^^^^ expected `Shape`, found future
+     |
+     = note: expected signature `fn() -> Shape`
+                found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0053]: method `shape` has an incompatible type for trait
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1834:25
+     |
+1834 |     async fn shape() -> dsl::Shape {
+     |                         ^^^^^^^^^^ expected `Shape`, found future
+     |
+     = note: expected signature `fn() -> Shape`
+                found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0053]: method `shape` has an incompatible type for trait
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1013:25
+     |
+1013 |     async fn shape() -> dsl::Shape {
+     |                         ^^^^^^^^^^ expected `Shape`, found future
+     |
+     = note: expected signature `fn() -> Shape`
+                found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0053]: method `shape` has an incompatible type for trait
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:253:25
+    |
+253 |     async fn shape() -> dsl::Shape {
+    |                         ^^^^^^^^^^ expected `Shape`, found future
+    |
+    = note: expected signature `fn() -> Shape`
+               found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0053]: method `shape` has an incompatible type for trait
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:398:25
+    |
+398 |     async fn shape() -> dsl::Shape {
+    |                         ^^^^^^^^^^ expected `Shape`, found future
+    |
+    = note: expected signature `fn() -> Shape`
+               found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0053]: method `shape` has an incompatible type for trait
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1968:25
+     |
+1968 |     async fn shape() -> dsl::Shape {
+     |                         ^^^^^^^^^^ expected `Shape`, found future
+     |
+     = note: expected signature `fn() -> Shape`
+                found signature `fn() -> impl Future<Output = Shape>`
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:254:28
+    |
+254 |         dsl::Shape::Record(media_contract_spec)
+    |         ------------------ ^^^^^^^^^^^^^^^^^^^ expected fn pointer, found fn item
+    |         |
+    |         arguments to this enum variant are incorrect
+    |
+    = note: expected fn pointer `fn() -> RecordSpec`
+                  found fn item `fn() -> impl Future<Output = RecordSpec> {media_contract_spec}`
+note: tuple variant defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:50:5
+    |
+ 50 |     Record(fn() -> RecordSpec),
+    |     ^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:399:28
+    |
+399 |         dsl::Shape::Record(workflow_media_port_spec)
+    |         ------------------ ^^^^^^^^^^^^^^^^^^^^^^^^ expected fn pointer, found fn item
+    |         |
+    |         arguments to this enum variant are incorrect
+    |
+    = note: expected fn pointer `fn() -> RecordSpec`
+                  found fn item `fn() -> impl Future<Output = RecordSpec> {workflow_media_port_spec}`
+note: tuple variant defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:50:5
+    |
+ 50 |     Record(fn() -> RecordSpec),
+    |     ^^^^^^
+
+
+error[E0277]: a value of type `Vec<WorkflowMediaPort>` cannot be built from an iterator over elements of type `impl Future<Output = WorkflowMediaPort>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:480:168
+     |
+ 480 | ...map(|spec| workflow_media_port(node_id, spec)).collect();
+     |                                                   ^^^^^^^ value of type `Vec<WorkflowMediaPort>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = WorkflowMediaPort>>`
+     |
+help: the trait `FromIterator<impl Future<Output = WorkflowMediaPort>>` is not implemented for `Vec<WorkflowMediaPort>`
+      but trait `FromIterator<WorkflowMediaPort>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:3938:1
+     |
+3938 | impl<T> FromIterator<T> for Vec<T> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `WorkflowMediaPort`, found `impl Future<Output = WorkflowMediaPort>`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:480:121
+     |
+ 480 | ... = all_ports.await.iter().filter(|spec| spec.direction == MediaPortDirection::In).map(|spec| workflow_media_port(node_id, spec)).co...
+     |       --------------- ------ ------------------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `impl Future<Output = WorkflowMediaPort>` here
+     |       |               |      |
+     |       |               |      `Iterator::Item` remains `&MediaPortSpec` here
+     |       |               `Iterator::Item` is `&MediaPortSpec` here
+     |       this expression has type `Vec<MediaPortSpec>`
+note: required by a bound in `collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+
+error[E0277]: a value of type `Vec<WorkflowMediaPort>` cannot be built from an iterator over elements of type `impl Future<Output = WorkflowMediaPort>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:481:170
+     |
+ 481 | ...map(|spec| workflow_media_port(node_id, spec)).collect();
+     |                                                   ^^^^^^^ value of type `Vec<WorkflowMediaPort>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = WorkflowMediaPort>>`
+     |
+help: the trait `FromIterator<impl Future<Output = WorkflowMediaPort>>` is not implemented for `Vec<WorkflowMediaPort>`
+      but trait `FromIterator<WorkflowMediaPort>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:3938:1
+     |
+3938 | impl<T> FromIterator<T> for Vec<T> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `WorkflowMediaPort`, found `impl Future<Output = WorkflowMediaPort>`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:481:123
+     |
+ 481 | ... = all_ports.await.iter().filter(|spec| spec.direction == MediaPortDirection::Out).map(|spec| workflow_media_port(node_id, spec)).co...
+     |       --------------- ------ -------------------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `impl Future<Output = WorkflowMediaPort>` here
+     |       |               |      |
+     |       |               |      `Iterator::Item` remains `&MediaPortSpec` here
+     |       |               `Iterator::Item` is `&MediaPortSpec` here
+     |       this expression has type `Vec<MediaPortSpec>`
+note: required by a bound in `collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+
+error[E0277]: `&impl Future<Output = Vec<std::string::String>>` is not an iterator
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:607:20
+    |
+607 |     for node_id in &order {
+    |                    ^^^^^^ `&impl Future<Output = Vec<std::string::String>>` is not an iterator
+    |
+    = help: the trait `Iterator` is not implemented for `&impl Future<Output = Vec<std::string::String>>`
+    = note: required for `&impl Future<Output = Vec<std::string::String>>` to implement `IntoIterator`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:656:31
+     |
+ 656 |         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+     |                    ---------- ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2228:14
+     |
+2228 | pub async fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
+     |              ^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:658:51
+    |
+658 |         store::semio_format::wrap_text(&envelope, &body)
+    |         ------------------------------            ^^^^^ expected `&str`, found `&impl Future<Output = String>`
+    |         |
+    |         arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧬️semio/🦀️component.rs:182:8
+    |
+182 | pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
+    |        ^^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:664:74
+     |
+ 664 |         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
+     |                     -------------------------------                      ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1252:18
+     |
+1252 |     pub async fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackErro...
+     |                  ^^^^^^^^^^^^^^^
+
+
+error[E0277]: can't compare `std::string::String` with `impl Future<Output = &'static str>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:671:35
+    |
+671 |         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+    |                                   ^^ no implementation for `std::string::String == impl Future<Output = &'static str>`
+    |
+    = help: the trait `PartialEq<impl Future<Output = &'static str>>` is not implemented for `std::string::String`
+    = help: `std::string::String` implements trait `PartialEq<Rhs>`:
+              PartialEq<&str>
+              PartialEq<ByteStr>
+              PartialEq<ByteString>
+              PartialEq<Cow<'_, str>>
+              PartialEq<Path>
+              PartialEq<PathBuf>
+              PartialEq<serde_json::Value>
+              PartialEq<str>
+              PartialEq
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:672:104
+    |
+672 | ... envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+    |                                 --           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `impl Future<Output = &'static str>` cannot be formatted with the default formatter
+    |                                 |
+    |                                 required by this formatting parameter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = &'static str>`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:675:9
+    |
+675 |         Self::__dsl_from_record(&record).await.map_err(store::text_error_to_pack_error)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<WorkflowFixture, PackError>`, found `Result<WorkflowFixture, ...>`
+    |
+    = note: expected enum `Result<_, PackError>`
+               found enum `Result<_, impl Future<Output = PackError>>`
+
+
+error[E0271]: expected `create_workflow_parameter_id` to return `String`, but it returns `impl Future<Output = String>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:791:62
+     |
+ 791 |     let parameter_id = id.map(str::to_string).unwrap_or_else(create_workflow_parameter_id);
+     |                                               -------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `String`, found future
+     |                                               |
+     |                                               required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:791:62
+     |
+ 791 |     let parameter_id = id.map(str::to_string).unwrap_or_else(create_workflow_parameter_id);
+     |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `std::option::Option::<T>::unwrap_or_else`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1061:32
+     |
+1059 |     pub const fn unwrap_or_else<F>(self, f: F) -> T
+     |                  -------------- required by a bound in this associated function
+1060 |     where
+1061 |         F: [const] FnOnce() -> T + [const] Destruct,
+     |                                ^ required by this bound in `Option::<T>::unwrap_or_else`
+help: consider `await`ing on the `Future`
+     |
+ 791 |     let parameter_id = id.map(str::to_string).unwrap_or_else(create_workflow_parameter_id.await);
+     |                                                                                          ++++++
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:824:97
+    |
+824 |     let name = patch.get("name").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| workflow_parameter_name(parameter));
+    |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `String`, found future
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:917:91
+    |
+917 |         let Some(parameter) = parameters.iter().find(|entry| workflow_parameter_id(entry) == binding.parameter_id) else {
+    |                                                              ---------------------------- ^^ -------------------- std::string::String
+    |                                                              |
+    |                                                              impl Future<Output = &str>
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:922:5
+    |
+920 |         values.insert(binding.field_path.clone(), workflow_parameter_value(parameter));
+    |         ------                                    ----------------------------------- this argument has type `impl Future<Output = serde_json::Value>`...
+    |         |
+    |         ... which causes `values` to have type `HashMap<std::string::String, impl Future<Output = serde_json::Value>>`
+921 |     }
+922 |     values
+    |     ^^^^^^ expected `HashMap<String, Value>`, found `HashMap<String, ...>`
+    |
+    = note: expected struct `HashMap<_, serde_json::Value>`
+               found struct `HashMap<_, impl Future<Output = serde_json::Value>>`
+
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:955:64
+    |
+955 |     let base_inputs: Vec<_> = node.inputs.iter().filter(|port| !is_workflow_parameter_port_id(&port.id)).cloned().collect();
+    |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:959:17
+    |
+959 |             id: workflow_parameter_port_id(&node.id, &binding.parameter_id),
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `String`, found future
+
+
+error[E0277]: a value of type `Vec<WorkflowNode>` cannot be built from an iterator over elements of type `impl Future<Output = WorkflowNode>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:977:137
+     |
+ 977 | ...workflow_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
+     |                                                   ^^^^^^^ value of type `Vec<WorkflowNode>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = WorkflowNode>>`
+     |
+help: the trait `FromIterator<impl Future<Output = WorkflowNode>>` is not implemented for `Vec<WorkflowNode>`
+      but trait `FromIterator<WorkflowNode>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:3938:1
+     |
+3938 | impl<T> FromIterator<T> for Vec<T> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `WorkflowNode`, found `impl Future<Output = WorkflowNode>`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:977:74
+     |
+ 977 | ...EMA.into(), nodes: graph.nodes.iter().map(|node| sync_workflow_node_parameter_ports(node, bindings)).collect(), edges: graph.ed...
+     |                       ----------- ------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `impl Future<Output = WorkflowNode>` here
+     |                       |           |
+     |                       |           `Iterator::Item` is `&WorkflowNode` here
+     |                       this expression has type `Vec<WorkflowNode>`
+note: required by a bound in `collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1014:28
+     |
+1014 |         dsl::Shape::Record(workflow_input_spec)
+     |         ------------------ ^^^^^^^^^^^^^^^^^^^ expected fn pointer, found fn item
+     |         |
+     |         arguments to this enum variant are incorrect
+     |
+     = note: expected fn pointer `fn() -> RecordSpec`
+                   found fn item `fn() -> impl Future<Output = RecordSpec> {workflow_input_spec}`
+note: tuple variant defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:50:5
+     |
+  50 |     Record(fn() -> RecordSpec),
+     |     ^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1114:31
+     |
+1114 |         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+     |                    ---------- ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2228:14
+     |
+2228 | pub async fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
+     |              ^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1116:51
+     |
+1116 |         store::semio_format::wrap_text(&envelope, &body)
+     |         ------------------------------            ^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |         |
+     |         arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧬️semio/🦀️component.rs:182:8
+     |
+ 182 | pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
+     |        ^^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1123:74
+     |
+1123 |         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
+     |                     -------------------------------                      ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1252:18
+     |
+1252 |     pub async fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackErro...
+     |                  ^^^^^^^^^^^^^^^
+
+
+error[E0277]: can't compare `std::string::String` with `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1129:35
+     |
+1129 |         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+     |                                   ^^ no implementation for `std::string::String == impl Future<Output = &'static str>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = &'static str>>` is not implemented for `std::string::String`
+     = help: `std::string::String` implements trait `PartialEq<Rhs>`:
+               PartialEq<&str>
+               PartialEq<ByteStr>
+               PartialEq<ByteString>
+               PartialEq<Cow<'_, str>>
+               PartialEq<Path>
+               PartialEq<PathBuf>
+               PartialEq<serde_json::Value>
+               PartialEq<str>
+               PartialEq
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1130:104
+     |
+1130 | ... envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+     |                                 --           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `impl Future<Output = &'static str>` cannot be formatted with the default formatter
+     |                                 |
+     |                                 required by this formatting parameter
+     |
+     = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = &'static str>`
+     = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1133:9
+     |
+1133 |         Self::__dsl_from_record(&record).await.map_err(store::text_error_to_pack_error)
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<WorkflowSnapshot, PackError>`, found `Result<WorkflowSnapshot, ...>`
+     |
+     = note: expected enum `Result<_, PackError>`
+                found enum `Result<_, impl Future<Output = PackError>>`
+
+
+error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1207:88
+     |
+1207 |             next.parameters.retain(|parameter| workflow_parameter_entity_id(parameter) != *parameter_id);
+     |                                                --------------------------------------- ^^ ------------- std::string::String
+     |                                                |
+     |                                                impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1213:56
+     |
+1213 |                 if workflow_parameter_entity_id(entry) == *parameter_id {
+     |                    ----------------------------------- ^^ ------------- std::string::String
+     |                    |
+     |                    impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1358:95
+     |
+1358 |                 if document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == parameter_id) {
+     |                                                           ----------------------------------- ^^ ------------ impl Future<Output = &str>
+     |                                                           |
+     |                                                           impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1363:104
+     |
+1363 |                 if !document.parameters.iter().any(|parameter| workflow_parameter_entity_id(parameter) == parameter_id) {
+     |                                                                --------------------------------------- ^^ ------------ &std::string::String
+     |                                                                |
+     |                                                                impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1368:96
+     |
+1368 |                 if !document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == parameter_id) {
+     |                                                            ----------------------------------- ^^ ------------ &std::string::String
+     |                                                            |
+     |                                                            impl Future<Output = &str>
+
+
+error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1372:27
+     |
+1372 |                 if new_id != parameter_id && document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == new_id) {
+     |                    ------ ^^ ------------ &std::string::String
+     |                    |
+     |                    impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1372:121
+     |
+1372 |                 if new_id != parameter_id && document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == new_id) {
+     |                                                                                     ----------------------------------- ^^ ------ impl Future<Output = &str>
+     |                                                                                     |
+     |                                                                                     impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1380:104
+     |
+1380 |                 if !document.parameters.iter().any(|parameter| workflow_parameter_entity_id(parameter) == binding.parameter_id) {
+     |                                                                --------------------------------------- ^^ -------------------- std::string::String
+     |                                                                |
+     |                                                                impl Future<Output = &str>
+
+
+error[E0277]: the trait bound `std::string::String: From<impl Future<Output = &str>>` is not satisfied
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1514:156
+     |
+1514 | ...y_id(parameter).into() }],
+     |                    ^^^^ the trait `From<impl Future<Output = &str>>` is not implemented for `std::string::String`
+     |
+     = help: `std::string::String` implements trait `From<T>`:
+               From<&mut str>
+               From<&std::string::String>
+               From<&str>
+               From<Cow<'_, str>>
+               From<LabelText>
+               From<Version>
+               From<char>
+               From<std::boxed::Box<str>>
+     = note: required for `impl Future<Output = &str>` to implement `Into<std::string::String>`
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1517:123
+     |
+1517 | ....iter().find(|parameter| workflow_parameter_entity_id(parameter) == *parameter_id) else { return Vec::new() };
+     |                             --------------------------------------- ^^ ------------- std::string::String
+     |                             |
+     |                             impl Future<Output = &str>
+
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = &str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1525:67
+     |
+1525 |                 .find(|entry| workflow_parameter_entity_id(entry) == *parameter_id)
+     |                               ----------------------------------- ^^ ------------- std::string::String
+     |                               |
+     |                               impl Future<Output = &str>
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1732:61
+     |
+1732 |         <WorkflowMutationDsl as protocol::OpText>::print_op(&workflow_mutation_to_dsl(self)).await
+     |         --------------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&WorkflowMutationDsl`, found `&impl Future<Output = ...>`
+     |         |
+     |         arguments to this function are incorrect
+     |
+     = note: expected reference `&WorkflowMutationDsl`
+                found reference `&impl Future<Output = WorkflowMutationDsl>`
+note: method defined here
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:330:14
+     |
+ 330 |     async fn print_op(&self) -> String;
+     |              ^^^^^^^^
+
+
+error[E0599]: no method named `encode_op` found for opaque type `impl Future<Output = WorkflowMutationDsl>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1738:40
+     |
+1738 |         workflow_mutation_to_dsl(self).encode_op()
+     |                                        ^^^^^^^^^ method not found in `impl Future<Output = WorkflowMutationDsl>`
+
+
+error[E0382]: use of moved value: `validation`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1759:13
+     |
+1754 |     let mut validation = validate_workflow(&document.graph);
+     |         -------------- move occurs because `validation` has type `impl Future<Output = WorkflowValidation>`, which does not implement the `Copy` trait
+...
+1757 |     for binding in &document.input_bindings {
+     |     --------------------------------------- inside of this loop
+1758 |         if !input_ids.contains(binding.input_id.as_str()) {
+1759 |             validation.await.errors.push(format!("input binding targets unknown input '{}'", binding.input_id));
+     |             ^^^^^^^^^^ ----- `validation` moved due to this await, in previous iteration of loop
+
+
+error[E0382]: use of moved value: `validation`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1767:13
+     |
+1754 |     let mut validation = validate_workflow(&document.graph);
+     |         -------------- move occurs because `validation` has type `impl Future<Output = WorkflowValidation>`, which does not implement the `Copy` trait
+...
+1757 |     for binding in &document.input_bindings {
+     |     --------------------------------------- inside of this loop
+1758 |         if !input_ids.contains(binding.input_id.as_str()) {
+1759 |             validation.await.errors.push(format!("input binding targets unknown input '{}'", binding.input_id));
+     |                        ----- `validation` moved due to this await, in previous iteration of loop
+...
+1764 |     for binding in &document.output_bindings {
+     |     ---------------------------------------- inside of this loop
+...
+1767 |             validation.await.errors.push(format!("output binding targets unknown node/port '{}:{}'", binding.node_id, binding.port...
+     |             ^^^^^^^^^^ ----- `validation` moved due to this await, in previous iteration of loop
+
+
+error[E0382]: use of moved value: `validation`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1786:5
+     |
+1754 |     let mut validation = validate_workflow(&document.graph);
+     |         -------------- move occurs because `validation` has type `impl Future<Output = WorkflowValidation>`, which does not implement the `Copy` trait
+...
+1786 |     validation.await.ok = validation.await.errors.is_empty();
+     |     ^^^^^^^^^^                       ----- `validation` moved due to this await
+     |     |
+     |     value used here after move
+
+
+error[E0382]: use of moved value: `validation`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1786:27
+     |
+1754 |     let mut validation = validate_workflow(&document.graph);
+     |         -------------- move occurs because `validation` has type `impl Future<Output = WorkflowValidation>`, which does not implement the `Copy` trait
+...
+1757 |     for binding in &document.input_bindings {
+     |     --------------------------------------- inside of this loop
+1758 |         if !input_ids.contains(binding.input_id.as_str()) {
+1759 |             validation.await.errors.push(format!("input binding targets unknown input '{}'", binding.input_id));
+     |                        ----- `validation` moved due to this await, in previous iteration of loop
+...
+1764 |     for binding in &document.output_bindings {
+     |     ---------------------------------------- inside of this loop
+...
+1767 |             validation.await.errors.push(format!("output binding targets unknown node/port '{}:{}'", binding.node_id, binding.port...
+     |                        ----- `validation` moved due to this await, in previous iteration of loop
+...
+1771 |     for node in &document.graph.nodes {
+     |     ---------------------------------
+     |     |
+     |     inside of this loop
+     |     inside of this loop
+1772 |         for port in &node.inputs {
+     |         ------------------------
+     |         |
+     |         inside of this loop
+     |         inside of this loop
+...
+1779 |                 validation.await.errors.push(format!("required port {} on node {} has both a wire and an input binding", port.id, ...
+     |                            ----- `validation` moved due to this await, in previous iteration of loop
+1780 |             } else if !has_edge && !has_binding {
+1781 |                 validation.await.errors.push(format!("required port {} on node {} has neither a wire nor an input binding", port.i...
+     |                            ----- `validation` moved due to this await, in previous iteration of loop
+...
+1786 |     validation.await.ok = validation.await.errors.is_empty();
+     |                           ^^^^^^^^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `validation`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+
+error[E0382]: use of moved value: `validation`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1787:5
+     |
+1754 |     let mut validation = validate_workflow(&document.graph);
+     |         -------------- move occurs because `validation` has type `impl Future<Output = WorkflowValidation>`, which does not implement the `Copy` trait
+...
+1786 |     validation.await.ok = validation.await.errors.is_empty();
+     |                ----- `validation` moved due to this await
+1787 |     validation.await
+     |     ^^^^^^^^^^ value used here after move
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1969:28
+     |
+1969 |         dsl::Shape::Record(run_trigger_spec)
+     |         ------------------ ^^^^^^^^^^^^^^^^ expected fn pointer, found fn item
+     |         |
+     |         arguments to this enum variant are incorrect
+     |
+     = note: expected fn pointer `fn() -> RecordSpec`
+                   found fn item `fn() -> impl Future<Output = RecordSpec> {run_trigger_spec}`
+note: tuple variant defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:50:5
+     |
+  50 |     Record(fn() -> RecordSpec),
+     |     ^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2118:31
+     |
+2118 |         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+     |                    ---------- ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2228:14
+     |
+2228 | pub async fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
+     |              ^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2120:51
+     |
+2120 |         store::semio_format::wrap_text(&envelope, &body)
+     |         ------------------------------            ^^^^^ expected `&str`, found `&impl Future<Output = String>`
+     |         |
+     |         arguments to this function are incorrect
+     |
+     = note: expected reference `&str`
+                found reference `&impl Future<Output = std::string::String>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧬️semio/🦀️component.rs:182:8
+     |
+ 182 | pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
+     |        ^^^^^^^^^
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2127:74
+     |
+2127 |         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
+     |                     -------------------------------                      ^^^^^^^^^^^^^^^^^^^^^^^ expected `&RecordValue`, found `&impl Future<Output = RecordValue>`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+     = note: expected reference `&RecordValue`
+                found reference `&impl Future<Output = RecordValue>`
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1252:18
+     |
+1252 |     pub async fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackErro...
+     |                  ^^^^^^^^^^^^^^^
+
+
+error[E0277]: can't compare `std::string::String` with `impl Future<Output = &'static str>`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2133:35
+     |
+2133 |         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+     |                                   ^^ no implementation for `std::string::String == impl Future<Output = &'static str>`
+     |
+     = help: the trait `PartialEq<impl Future<Output = &'static str>>` is not implemented for `std::string::String`
+     = help: `std::string::String` implements trait `PartialEq<Rhs>`:
+               PartialEq<&str>
+               PartialEq<ByteStr>
+               PartialEq<ByteString>
+               PartialEq<Cow<'_, str>>
+               PartialEq<Path>
+               PartialEq<PathBuf>
+               PartialEq<serde_json::Value>
+               PartialEq<str>
+               PartialEq
+
+
+error[E0277]: `impl Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2134:104
+     |
+2134 | ... envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+     |                                 --           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `impl Future<Output = &'static str>` cannot be formatted with the default formatter
+     |                                 |
+     |                                 required by this formatting parameter
+     |
+     = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = &'static str>`
+     = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2137:9
+     |
+2137 |         Self::__dsl_from_record(&record).await.map_err(store::text_error_to_pack_error)
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<RunArtifact, PackError>`, found `Result<RunArtifact, ...>`
+     |
+     = note: expected enum `Result<_, PackError>`
+                found enum `Result<_, impl Future<Output = PackError>>`
+
+
+error[E0308]: mismatched types
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2426:56
+     |
+2426 |         <RunMutationDsl as protocol::OpText>::print_op(&run_mutation_to_dsl(self)).await
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&RunMutationDsl`, found `&impl Future<Output = RunMutationDsl>`
+     |         |
+     |         arguments to this function are incorrect
+     |
+     = note: expected reference `&RunMutationDsl`
+                found reference `&impl Future<Output = RunMutationDsl>`
+note: method defined here
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:330:14
+     |
+ 330 |     async fn print_op(&self) -> String;
+     |              ^^^^^^^^
+
+
+error[E0599]: no method named `encode_op` found for opaque type `impl Future<Output = RunMutationDsl>` in the current scope
+    --> 🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2432:35
+     |
+2432 |         run_mutation_to_dsl(self).encode_op()
+     |                                   ^^^^^^^^^ method not found in `impl Future<Output = RunMutationDsl>`
+
+

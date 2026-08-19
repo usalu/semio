@@ -71,7 +71,7 @@ pub async fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<
     let body: serde_json::Value = serde_json::from_slice(request).map_err(|err| err.to_string())?;
     let kind_id = body.get("kindId").and_then(|v| v.as_str()).ok_or_else(|| "missing kindId".to_string())?;
     let input_json = body.get("input").map(|v| v.to_string()).unwrap_or_else(|| "{}".to_string());
-    Ok(evaluate_json(registry, kind_id, &input_json).into_bytes())
+    Ok(evaluate_json(registry, kind_id, &input_json).await.into_bytes())
 }
 // #endregion 🔖️Evaluate
 
@@ -96,7 +96,7 @@ pub async fn imperative_module_contribution(
 ) -> ProgramContributionEntry {
     ProgramContributionEntry {
         plugin_id: extension_id.into(),
-        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)),
+        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json).await),
     }
 }
 // #endregion 🔖️Constants
@@ -115,7 +115,7 @@ pub async fn imperative_module_topic_contribution(
     registry: &Registry,
     catalogue_json: Option<&str>,
 ) -> TopicContribution {
-    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
+    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json).await;
     TopicContribution::new(
         "imperative.module",
         serde_json::json!({

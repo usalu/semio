@@ -57,7 +57,7 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// single-plugin wasm instance every entry with `owner == plugin_id` is this package's own.
 async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     crate::app::list_artifact_inference_services()
-        .unwrap_or_default()
+        .await.unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
         .map(|metadata| ContributedInferenceMetadata {
@@ -94,8 +94,8 @@ async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceM
 async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Vec<ComposerEntryDescriptor>) {
     let mut io_entries = Vec::new();
     let mut composer_entries = Vec::new();
-    for (writes, reads) in io::list_composer_entries().unwrap_or_default() {
-        if !owns_artifact_kind(plugin_id, &writes.artifact_kind) {
+    for (writes, reads) in io::list_composer_entries().await.unwrap_or_default() {
+        if !owns_artifact_kind(plugin_id, &writes.artifact_kind).await {
             continue;
         }
         for read in &reads {
@@ -110,16 +110,16 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
 /// actually declare — see each field helper's own doc. `menus`/`themes` stay empty (E1's own survey,
 /// unchanged); `mutation_services` stays empty (see `plugin_io_contributions`'s doc).
 async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
-    let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id);
+    let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id).await;
     ContributionSet {
         commands: manifest.commands.clone(),
         menus: Vec::new(),
-        file_types: plugin_file_types(&manifest.apps),
-        panels: plugin_panels(&manifest.apps),
+        file_types: plugin_file_types(&manifest.apps).await,
+        panels: plugin_panels(&manifest.apps).await,
         themes: Vec::new(),
         topic_contributions: manifest.topic_contributions.clone(),
         artifact_contributions: manifest.contributions.clone(),
-        inference_services: plugin_inference_services(&manifest.plugin_id),
+        inference_services: plugin_inference_services(&manifest.plugin_id).await,
         mutation_services: Vec::new(),
         io_entries,
         composer_entries,
@@ -127,9 +127,9 @@ async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
 }
 
 pub async fn describe_plugin() -> Vec<u8> {
-    let manifest = crate::plugin_runtime::plugin_manifest();
-    let extras = crate::plugin_runtime::plugin_descriptor_extras();
-    let contributions = plugin_contributions(&manifest);
+    let manifest = crate::plugin_runtime::plugin_manifest().await;
+    let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
+    let contributions = plugin_contributions(&manifest).await;
     let descriptor = PackageDescriptor {
         descriptor_version: 1,
         role: PackageRole::Plugin,
@@ -143,7 +143,7 @@ pub async fn describe_plugin() -> Vec<u8> {
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
+    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null)).await
 }
 
 /// 🧩️ E1-describe: the `extension_exports!` counterpart of `describe_plugin` — added alongside it
@@ -159,7 +159,7 @@ pub async fn describe_plugin() -> Vec<u8> {
 /// never by the extension attaching to one; an extension's own activation is entirely driven by the
 /// host's `ExtensionPointDeclaration.activation`, not a declaration of its own.
 pub async fn describe_extension() -> Vec<u8> {
-    let extension = crate::plugin_runtime::extension_manifest();
+    let extension = crate::plugin_runtime::extension_manifest().await;
     let manifest = PluginManifest {
         plugin_id: extension.extension_id,
         label: extension.label,
@@ -199,5 +199,5 @@ pub async fn describe_extension() -> Vec<u8> {
         assets: Vec::new(),
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
+    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null)).await
 }

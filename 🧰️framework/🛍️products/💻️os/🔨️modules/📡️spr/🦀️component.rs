@@ -195,7 +195,7 @@ mod tests {
     /// its own commit generation so multi-commit paths (`extract_range`, `content_frontier`) get
     /// exercised too. Returns the raw bytes.
     async fn build_history_bytes(doc_id: &str, schema: &str, edit_count: usize) -> Vec<u8> {
-        let mut appender = HistoryAppender::begin(Vec::new(), doc_id, schema, &WriteOptions::default()).unwrap();
+        let mut appender = HistoryAppender::begin(Vec::new(), doc_id, schema, &WriteOptions::default()).await.unwrap();
         for i in 0..edit_count {
             let edit = HistoryEdit {
                 id: format!("e{i}"),
@@ -208,10 +208,10 @@ mod tests {
                 inverse: Vec::new(),
                 meta: None,
             };
-            appender.append_edit(&edit).unwrap();
-            appender.commit().unwrap();
+            appender.append_edit(&edit).await.unwrap();
+            appender.commit().await.unwrap();
         }
-        appender.into_sink()
+        appender.into_sink().await
     }
 
     //#region 🔖️Reexports
@@ -220,7 +220,7 @@ mod tests {
         let limits = ProtocolLimits::default();
         assert!(limits.max_file_len > 0);
         let hlt = HybridLogicalTimestamp::new(1, 1000);
-        assert_eq!(hlt.physical_ms, 1000);
+        assert_eq!(hlt.await.physical_ms, 1000);
         let _ = ActorId("actor-1".to_string());
         let _ = ArtifactId("doc-1".to_string());
     }
@@ -254,18 +254,18 @@ mod tests {
             composition: None,
             conflicts: Vec::new(),
         };
-        let ops_text = print_ops_text(&log).unwrap();
+        let ops_text = print_ops_text(&log).await.unwrap();
 
-        let compiled = compile_ops(&ops_text, &EncodeOptions::default()).unwrap();
-        let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).unwrap();
+        let compiled = compile_ops(&ops_text, &EncodeOptions::default()).await.unwrap();
+        let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).await.unwrap();
 
-        assert_eq!(parse_ops_text(&decompiled).unwrap(), parse_ops_text(&ops_text).unwrap());
-        assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+        assert_eq!(parse_ops_text(&decompiled).await.unwrap(), parse_ops_text(&ops_text).await.unwrap());
+        assert_eq!(parse_ops_text(&decompiled).await.unwrap().cursor, log.cursor);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn compile_ops_rejects_malformed_text() {
-        assert!(compile_ops("not a valid ops line", &EncodeOptions::default()).is_err());
+        assert!(compile_ops("not a valid ops line", &EncodeOptions::default()).await.is_err());
     }
     //#endregion 🔖️Compile
 
@@ -277,14 +277,14 @@ mod tests {
         // Independently compute each edit frame's [offset, offset+frame_len) span for cross-check.
         let mut cursor = FrameCursor::new(&bytes, crate::os_spr::format::HEADER_SIZE as u64).await;
         let mut edit_spans = Vec::new();
-        while let Some(frame) = cursor.next_frame().unwrap() {
+        while let Some(frame) = cursor.next_frame().await.unwrap() {
             if frame.kind == crate::os_spr::REC_EDIT {
                 edit_spans.push((frame.offset, frame.offset + frame.frame_len().await));
             }
         }
         assert_eq!(edit_spans.len(), 4);
 
-        let slice = extract_range(&bytes, 1..3).unwrap();
+        let slice = extract_range(&bytes, 1..3).await.unwrap();
         assert_eq!(slice.first_edit_ordinal, 1);
         assert_eq!(slice.last_edit_ordinal, 2);
         assert_eq!(slice.count, 2);
@@ -293,7 +293,7 @@ mod tests {
         // The slice must itself be a structurally valid record stream (re-parseable from offset 0).
         let mut inner = FrameCursor::new(slice.bytes, 0).await;
         let mut edit_kinds_in_slice = 0;
-        while let Some(frame) = inner.next_frame().unwrap() {
+        while let Some(frame) = inner.next_frame().await.unwrap() {
             if frame.kind == crate::os_spr::REC_EDIT {
                 edit_kinds_in_slice += 1;
             }
@@ -304,29 +304,29 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn extract_range_rejects_empty_and_out_of_bounds_ranges() {
         let bytes = build_history_bytes("doc-1", "schema-1", 2);
-        assert!(extract_range(&bytes, 1..1).is_err());
-        assert!(extract_range(&bytes, 0..5).is_err());
+        assert!(extract_range(&bytes, 1..1).await.is_err());
+        assert!(extract_range(&bytes, 0..5).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn verify_slice_accepts_genuine_content_and_rejects_tamper() {
         let bytes = build_history_bytes("doc-1", "schema-1", 3);
-        let slice = extract_range(&bytes, 0..2).unwrap();
+        let slice = extract_range(&bytes, 0..2).await.unwrap();
 
-        let expected = slice_content_chain(slice.bytes).unwrap();
-        assert!(verify_slice(slice.bytes, &expected).is_ok());
+        let expected = slice_content_chain(slice.bytes).await.unwrap();
+        assert!(verify_slice(slice.bytes, &expected).await.is_ok());
 
         let mut tampered = slice.bytes.to_vec();
         tampered[0] ^= 0xFF;
-        assert!(verify_slice(&tampered, &expected).is_err());
+        assert!(verify_slice(&tampered, &expected).await.is_err());
 
-        assert!(verify_slice(slice.bytes, &[0u8; 32]).is_err());
+        assert!(verify_slice(slice.bytes, &[0u8; 32]).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn content_frontier_reports_head_edit_and_chain_tip() {
         let bytes = build_history_bytes("doc-1", "schema-1", 3);
-        let frontier = content_frontier(&bytes).unwrap();
+        let frontier = content_frontier(&bytes).await.unwrap();
 
         assert_eq!(frontier.document_id, "doc-1");
         assert_eq!(frontier.head_edit_ordinal, 2);
@@ -337,19 +337,19 @@ mod tests {
         // Cross-check chain_hash independently via the last REC_COMMIT frame's payload.
         let mut reverse = ReverseFrameCursor::at_end(&bytes[crate::os_spr::format::HEADER_SIZE..]);
         let last_commit = loop {
-            let frame = reverse.prev_frame().unwrap().unwrap();
+            let frame = reverse.await.prev_frame().await.unwrap().unwrap();
             if frame.kind == crate::os_spr::REC_COMMIT {
                 break frame;
             }
         };
-        let expected = crate::os_spr::format::parse_commit_payload(last_commit.payload()).unwrap();
+        let expected = crate::os_spr::format::parse_commit_payload(last_commit.payload().await).await.unwrap();
         assert_eq!(frontier.chain_hash, expected.chain_hash);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn content_frontier_on_empty_history_reports_zero_head_and_no_alternatives() {
         let bytes = build_history_bytes("doc-1", "schema-1", 0);
-        let frontier = content_frontier(&bytes).unwrap();
+        let frontier = content_frontier(&bytes).await.unwrap();
         assert_eq!(frontier.head_edit_ordinal, 0);
         assert_eq!(frontier.head_edit_id, "");
         assert_eq!(frontier.last_commit_seq, 0);

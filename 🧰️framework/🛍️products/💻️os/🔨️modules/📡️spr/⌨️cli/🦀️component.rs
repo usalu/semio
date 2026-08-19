@@ -784,7 +784,7 @@ async fn print_help() {
 /// failure, `2` usage error.
 pub async fn main_impl(args: &[String]) -> i32 {
     let Some((command, rest)) = args.split_first() else {
-        print_help();
+        print_help().await;
         return 2;
     };
     match command.as_str() {
@@ -799,12 +799,12 @@ pub async fn main_impl(args: &[String]) -> i32 {
         "repair" => cmd_repair(rest).await,
         "upgrade" => cmd_upgrade(rest).await,
         "help" | "--help" | "-h" => {
-            print_help();
+            print_help().await;
             0
         }
         other => {
             eprintln!("protocol: unknown subcommand '{other}'\n");
-            print_help();
+            print_help().await;
             2
         }
     }
@@ -843,37 +843,37 @@ mod tests {
     /// commit generation), an optional checkpoint landing on the last edit, and an alternative
     /// pointing at that checkpoint. Returns the file path and the raw bytes written.
     async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_alternative: bool) -> (PathBuf, Vec<u8>) {
-        let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
+        let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
         let mut edit_ids = Vec::new();
         for i in 0..edit_count {
             let id = format!("e{i:02}");
             let actor = if i % 2 == 0 { Some("actor-a") } else { Some("actor-b") };
-            appender.append_edit(&sample_edit(&id, actor, Some("an edit"), None)).unwrap();
-            appender.commit().unwrap();
+            appender.append_edit(&sample_edit(&id, actor, Some("an edit"), None)).await.unwrap();
+            appender.commit().await.unwrap();
             edit_ids.push(id);
         }
         if with_checkpoint_and_alternative && !edit_ids.is_empty() {
-            appender.append_change(&crate::os_spr::HistoryChange { id: "c0".to_string(), saved_at: "2026-07-27T00:01:00Z".to_string(), edit_ids: edit_ids.clone(), description: None }).unwrap();
-            appender.append_checkpoint(&crate::os_spr::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None }).unwrap();
-            appender.append_alternative(&crate::os_spr::HistoryAlternative { id: "alt-main".to_string(), name: "main".to_string(), checkpoint_ids: vec!["cp0".to_string()] }).unwrap();
-            appender.set_active(Some("alt-main")).unwrap();
-            appender.commit().unwrap();
+            appender.append_change(&crate::os_spr::HistoryChange { id: "c0".to_string(), saved_at: "2026-07-27T00:01:00Z".to_string(), edit_ids: edit_ids.clone(), description: None }).await.unwrap();
+            appender.append_checkpoint(&crate::os_spr::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None }).await.unwrap();
+            appender.append_alternative(&crate::os_spr::HistoryAlternative { id: "alt-main".to_string(), name: "main".to_string(), checkpoint_ids: vec!["cp0".to_string()] }).await.unwrap();
+            appender.set_active(Some("alt-main")).await.unwrap();
+            appender.commit().await.unwrap();
         }
         let bytes = appender.into_sink();
         let path = temp_path(name);
         std::fs::write(&path, &bytes).unwrap();
-        (path, bytes)
+        (path.await, bytes.await)
     }
 
     /// 🧪️ Round-trips a small `HistoryLog` through `HistoryAppender` -> `decompile_ops` to obtain
     /// ground-truth `.ops` text without hand-writing the grammar (see the module's design note on
     /// why `parse_ops_text`/`print_ops_text` are not directly reachable from this crate).
     async fn sample_ops_text() -> String {
-        let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
-        appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit"), None)).unwrap();
-        appender.commit().unwrap();
+        let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+        appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit"), None)).await.unwrap();
+        appender.commit().await.unwrap();
         let bytes = appender.into_sink();
-        crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).unwrap()
+        crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).await.unwrap()
     }
     //#endregion 🔖️Fixtures
 
@@ -881,7 +881,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_args_splits_flags_and_positionals() {
         let args = vec![String::from("a.spr"), String::from("--level=full"), String::from("--actor"), String::from("actor-1"), String::from("b.spr")];
-        let (positional, flags) = parse_args(&args);
+        let (positional, flags) = parse_args(&args).await;
         assert_eq!(positional, vec!["a.spr".to_string(), "b.spr".to_string()]);
         assert_eq!(flags.get("level"), Some(&"full".to_string()));
         assert_eq!(flags.get("actor"), Some(&"actor-1".to_string()));
@@ -890,7 +890,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_log_args_extracts_reverse_without_disturbing_value_flags() {
         let args = vec![String::from("file.spr"), String::from("--reverse"), String::from("--limit"), String::from("3")];
-        let (positional, flags, reverse) = parse_log_args(&args);
+        let (positional, flags, reverse) = parse_log_args(&args).await;
         assert_eq!(positional, vec!["file.spr".to_string()]);
         assert!(reverse);
         assert_eq!(flags.get("limit"), Some(&"3".to_string()));
@@ -899,7 +899,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_repair_args_extracts_both_boolean_flags() {
         let args = vec![String::from("file.spr"), String::from("--truncate-torn-tail"), String::from("--rebuild-indexes")];
-        let (positional, truncate, rebuild) = parse_repair_args(&args);
+        let (positional, truncate, rebuild) = parse_repair_args(&args).await;
         assert_eq!(positional, vec!["file.spr".to_string()]);
         assert!(truncate);
         assert!(rebuild);
@@ -908,11 +908,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_level_accepts_known_values_and_rejects_unknown() {
         let mut flags = HashMap::new();
-        assert!(matches!(parse_level(&flags), Ok(crate::os_spr::VerificationLevel::Standard)));
+        assert!(matches!(parse_level(&flags).await, Ok(crate::os_spr::VerificationLevel::Standard)));
         flags.insert("level".to_string(), "full".to_string());
-        assert!(matches!(parse_level(&flags), Ok(crate::os_spr::VerificationLevel::Full)));
+        assert!(matches!(parse_level(&flags).await, Ok(crate::os_spr::VerificationLevel::Full)));
         flags.insert("level".to_string(), "bogus".to_string());
-        assert!(parse_level(&flags).is_err());
+        assert!(parse_level(&flags).await.is_err());
     }
     //#endregion 🔖️Args
 
@@ -984,7 +984,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cli_inspect_reports_error_on_missing_file() {
-        let missing = temp_path("missing.spr").to_string_lossy().to_string();
+        let missing = temp_path("missing.spr").await.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("inspect"), missing]), 1);
     }
     //#endregion 🔖️Inspect
@@ -1059,16 +1059,16 @@ mod tests {
         let ops_text = sample_ops_text();
         let ops_path = temp_path("roundtrip.ops");
         std::fs::write(&ops_path, &ops_text).unwrap();
-        let ops_path_str = ops_path.to_string_lossy().to_string();
+        let ops_path_str = ops_path.await.to_string_lossy().to_string();
 
         let spr_path = temp_path("roundtrip.spr");
-        let spr_path_str = spr_path.to_string_lossy().to_string();
+        let spr_path_str = spr_path.await.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("compile"), ops_path_str, String::from("--out"), spr_path_str.clone()]), 0);
-        assert!(spr_path.exists());
+        assert!(spr_path.await.exists());
         assert_eq!(main_impl(&[String::from("verify"), spr_path_str.clone()]), 0);
 
         let decompiled_path = temp_path("roundtrip.decompiled.ops");
-        let decompiled_path_str = decompiled_path.to_string_lossy().to_string();
+        let decompiled_path_str = decompiled_path.await.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("decompile"), spr_path_str, String::from("--out"), decompiled_path_str]), 0);
         let decompiled_text = std::fs::read_to_string(&decompiled_path).unwrap();
         assert_eq!(decompiled_text, ops_text);
@@ -1082,7 +1082,7 @@ mod tests {
     async fn cli_compile_rejects_malformed_ops_text() {
         let ops_path = temp_path("bad.ops");
         std::fs::write(&ops_path, "not a valid ops line\n").unwrap();
-        assert_eq!(main_impl(&[String::from("compile"), ops_path.to_string_lossy().to_string()]), 1);
+        assert_eq!(main_impl(&[String::from("compile"), ops_path.await.to_string_lossy().to_string()]), 1);
         std::fs::remove_file(&ops_path).ok();
     }
     //#endregion 🔖️Compile
@@ -1104,15 +1104,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
-        let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
-        appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None, None)).unwrap();
-        appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None, None)).unwrap();
-        appender_a.commit().unwrap();
+        let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+        appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None, None)).await.unwrap();
+        appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None, None)).await.unwrap();
+        appender_a.commit().await.unwrap();
         let bytes_a = appender_a.into_sink();
 
-        let mut appender_b = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
-        appender_b.append_edit(&sample_edit("e00", Some("actor-a"), None, None)).unwrap();
-        appender_b.commit().unwrap();
+        let mut appender_b = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+        appender_b.append_edit(&sample_edit("e00", Some("actor-a"), None, None)).await.unwrap();
+        appender_b.commit().await.unwrap();
         let bytes_b = appender_b.into_sink();
 
         let path_a = temp_path("diff_prefix_a.spr");
@@ -1120,7 +1120,7 @@ mod tests {
         std::fs::write(&path_a, &bytes_a).unwrap();
         std::fs::write(&path_b, &bytes_b).unwrap();
 
-        assert_eq!(main_impl(&[String::from("diff"), path_a.to_string_lossy().to_string(), path_b.to_string_lossy().to_string()]), 1);
+        assert_eq!(main_impl(&[String::from("diff"), path_a.await.to_string_lossy().to_string(), path_b.await.to_string_lossy().to_string()]), 1);
 
         std::fs::remove_file(&path_a).ok();
         std::fs::remove_file(&path_b).ok();
@@ -1136,9 +1136,9 @@ mod tests {
         assert_eq!(main_impl(&[String::from("verify"), path_str.clone()]), 0);
 
         let out_path = temp_path("compact_out.spr");
-        let out_path_str = out_path.to_string_lossy().to_string();
+        let out_path_str = out_path.await.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("compact"), path_str, String::from("--out"), out_path_str.clone()]), 0);
-        assert!(out_path.exists());
+        assert!(out_path.await.exists());
         assert_eq!(main_impl(&[String::from("verify"), out_path_str]), 0);
 
         std::fs::remove_file(&path).ok();
@@ -1167,7 +1167,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cli_repair_reports_error_on_missing_file() {
-        let missing = temp_path("missing_repair.spr").to_string_lossy().to_string();
+        let missing = temp_path("missing_repair.spr").await.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("repair"), missing]), 1);
     }
     //#endregion 🔖️Repair

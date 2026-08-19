@@ -1,0 +1,11 @@
+[pass 1] errors=3611 await-edits=540 ambiguous=0 other=369
+  applied 539
+[pass 2] errors=3141 await-edits=9 ambiguous=0 other=387
+  applied 9
+[pass 3] errors=3135 await-edits=3 ambiguous=0 other=387
+  applied 3
+[pass 4] errors=3134 await-edits=2 ambiguous=0 other=387
+  applied 2
+[pass 5] errors=3132 await-edits=0 ambiguous=0 other=387
+  fixpoint reached (no unambiguous .await edits left)
+report -> /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-alltargets-kernel-apply1.json

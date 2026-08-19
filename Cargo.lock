@@ -6586,6 +6586,7 @@ version = "0.1.0"
 dependencies = [
  "gltf",
  "pretty_assertions",
+ "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
@@ -6716,6 +6717,7 @@ name = "semio-framework-machine"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-dispatch-macros",
  "semio-framework-machine-derive",
  "serde",
  "serde_json",
@@ -6765,8 +6767,11 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-plugin-host",
  "semio-framework-ui",
  "semio-s-plugin-stdio",
  "serde",
@@ -6893,6 +6898,7 @@ dependencies = [
  "neo4rs",
  "rusqlite",
  "semio-framework-async",
+ "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",
  "semio-framework-replication",
  "serde",
@@ -6931,6 +6937,7 @@ dependencies = [
  "schemars 0.8.22",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-plugin-host",
@@ -7113,6 +7120,7 @@ dependencies = [
 name = "semio-framework-repo-cli"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dispatch-macros",
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "serde",
@@ -7125,6 +7133,7 @@ version = "0.1.0"
 dependencies = [
  "jsonschema",
  "schemars 0.8.22",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-schema-derive",
  "serde",
@@ -7148,6 +7157,8 @@ dependencies = [
  "axum 0.8.9",
  "dashmap",
  "futures",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-replication",
  "serde",
  "serde_json",
@@ -7184,6 +7195,7 @@ dependencies = [
  "libc",
  "parley",
  "pollster",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
@@ -7209,7 +7221,6 @@ version = "0.1.0"
 name = "semio-hub"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "axum 0.8.9",
  "dashmap",
  "futures",
