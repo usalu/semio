@@ -190,4 +190,3 @@ Remaining P2 documentation only:
 
 1. Chrome kinds share one default frame (plan freeze: no family per leaf).
 2. `\SemioVizDemo` prefers mark registry; `74/icon` / `79/text` / `79/image` draw marks.
-3. Custom scale `apisym` with domain `-10,10` as an axis still hits `Invalid operation (0)/(0)` (scale storage via expl3 cs names). `apiq` with domain `0,10` compiles.

@@ -24,9 +24,10 @@
 \end{VizFigure}
 \section{Layout, axis, grid, legend}
 \begin{VizFigure}[title={Layout, axis, grid, legend}, width=80, height=40]
+\SemioVizScale{apisym}{symlog}{-10, 10}{8, 32}
 \SemioVizScale{apiq}{quantize}{0, 10}{8, 32}
 \SemioVizLayout{dot}[data=demo, x=cat, y=val]
-\SemioVizAxis[orient=left, scale=y]
+\SemioVizAxis[orient=left, scale=apisym]
 \SemioVizAxis[orient=bottom, scale=apiq]
 \SemioVizGrid
 \SemioVizLegend[legend=gradient]

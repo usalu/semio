@@ -13,7 +13,7 @@ Layers still match the original split: umbrella + data + scale + mark + axis + l
 - `\SemioVizChart{vertical-bar-chart}`
 - `\SemioVizMark` / `\SemioVizPath`
 - `\SemioVizLayout{dot}`
-- `\SemioVizAxis` on figure scale `y` (left) and `apiq` (bottom). Binding `apisym` with a negative domain still hits `Invalid operation (0)/(0)` in tick mapping; that is a documented P2 of custom-scale storage, not an unused-command hole.
+- `\SemioVizAxis[orient=left, scale=apisym]` and `\SemioVizAxis[orient=bottom, scale=apiq]` (custom symlog with domain `-10,10` and quantize with `0,10`)
 - `\SemioVizGrid` / `\SemioVizLegend[legend=gradient]`
 - `\SemioVizDemo{dot}`
 

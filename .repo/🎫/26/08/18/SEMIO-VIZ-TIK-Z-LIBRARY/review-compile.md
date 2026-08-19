@@ -6,7 +6,7 @@
 
 ## P1 gallery recompile
 
-`compile-p1-fix.log`: 1, 2, 3, 6, 7, 8, 10, 15, 17, 26, 51, 76, 78, 79 all PASS (underfull `\vbox` only). `viz-api` failed once on `\SemioVizAxis[scale=apisym]` with domain `-10, 10` (`Invalid operation (0)/(0)` in tick mapping). After binding left to figure scale `y` and bottom to `apiq` with domain `0, 10`, `bun ./print/script.ts build viz api` exits 0 (light + dark).
+`compile-p1-fix.log`: 1, 2, 3, 6, 7, 8, 10, 15, 17, 26, 51, 76, 78, 79 all PASS (underfull `\vbox` only). `viz-api` initially failed on `\SemioVizAxis[scale=apisym]` with domain `-10, 10` (`Invalid operation (0)/(0)` in symlog tick mapping). Fixed in `semio-viz-scale.sty` by expanding domain endpoints via `\fp_use:N` before `\semio_viz_asinh:nN`; `bun ./print/script.ts build viz api` now exits 0 (light + dark) with `scale=apisym` on the left axis.
 
 `viz-79` chapter title still overfull `\hbox`; tectonic exit 0.
 
